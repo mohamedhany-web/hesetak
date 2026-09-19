@@ -85,8 +85,9 @@ if (! function_exists('versioned_asset')) {
 
 if (! function_exists('public_img_url')) {
     /**
-     * رابط صورة من public/img/{folder}/{file} عبر route Laravel
-     * (على الاستضافة الملفات الثابتة تحت /img/* غالباً ترجع 404).
+     * رابط صورة من public/img/{folder}/{file}.
+     * يستخدم مسارًا نسبيًا لنفس الدومين (مثل versioned_asset) حتى لا ينكسر عند APP_URL خاطئ،
+     * والـ route Laravel يخدم الملف لأن الملفات الثابتة تحت /img/* على الاستضافة غالبًا 404.
      *
      * @param  string  $relative  مثال: brand/hesetak-mark.png أو img/mycourses/hero.png
      */
@@ -99,30 +100,17 @@ if (! function_exists('public_img_url')) {
 
         $parts = explode('/', $relative, 2);
         if (count($parts) !== 2 || $parts[0] === '' || $parts[1] === '') {
-            return versioned_asset('img/'.$relative);
-        }
-
-        [$folder, $file] = $parts;
-        $file = basename($file);
-
-        if (\Illuminate\Support\Facades\Route::has('assets.landing.img')) {
-            $url = route('assets.landing.img', ['folder' => $folder, 'file' => $file]);
+            $path = 'img/'.$relative;
         } else {
-            $url = versioned_asset("img/{$folder}/{$file}");
-            if (! $version) {
-                return strtok($url, '?') ?: $url;
-            }
-
-            return $url;
+            $path = 'img/'.$parts[0].'/'.basename($parts[1]);
         }
 
         if (! $version) {
-            return $url;
+            $basePath = \App\Support\ApplicationUrl::scriptBasePath();
+
+            return ($basePath !== '' ? $basePath : '').'/'.$path;
         }
 
-        $full = public_path("img/{$folder}/{$file}");
-        $v = is_file($full) ? (string) filemtime($full) : (string) time();
-
-        return $url.(str_contains($url, '?') ? '&' : '?').'v='.$v;
+        return versioned_asset($path);
     }
 }
