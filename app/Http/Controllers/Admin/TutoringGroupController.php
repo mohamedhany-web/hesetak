@@ -22,6 +22,12 @@ class TutoringGroupController extends Controller
                 abort(403);
             }
 
+            if (! config('admin_ui.show_group_classes', false)) {
+                return redirect()
+                    ->route('admin.dashboard')
+                    ->with('warning', 'نظام المجموعات والفصول الجماعية خارج نطاق حصتك الحالي (دروس فردية 1:1 فقط).');
+            }
+
             return $next($request);
         });
     }

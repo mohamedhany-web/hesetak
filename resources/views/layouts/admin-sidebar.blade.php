@@ -357,7 +357,7 @@
                     </li>
                     @endif
 
-                    @if(($isFull || $u->hasPermission('manage.tutoring-groups')) && Route::has('admin.tutoring-group-bookings.index'))
+                    @if(config('admin_ui.show_group_bookings', false) && ($isFull || $u->hasPermission('manage.tutoring-groups')) && Route::has('admin.tutoring-group-bookings.index'))
                     <li>
                         <a href="{{ route('admin.tutoring-group-bookings.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.tutoring-group-bookings.*') ? 'active' : '' }}">
                             <i class="fas fa-calendar-check"></i><span>تسكين الفصول والحجوزات</span>
@@ -365,7 +365,7 @@
                     </li>
                     @endif
 
-                    @if(($isFull || $u->hasPermission('manage.tutoring-groups')) && Route::has('admin.tutoring-groups.index'))
+                    @if(config('admin_ui.show_group_classes', false) && ($isFull || $u->hasPermission('manage.tutoring-groups')) && Route::has('admin.tutoring-groups.index'))
                     <li>
                         <a href="{{ route('admin.tutoring-groups.index', 'collective') }}" class="sidebar-sub-link {{ request()->routeIs('admin.tutoring-groups.*') && request()->route('type') === 'collective' ? 'active' : '' }}">
                             <i class="fas fa-school"></i><span>فصول المدرسة</span>

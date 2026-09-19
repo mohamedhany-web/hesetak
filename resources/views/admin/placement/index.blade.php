@@ -176,13 +176,13 @@
                 <p class="mt-1 text-xs text-muted">إذا الطالب غير مشترك — امنحه رصيداً ثم اسكنه</p>
             </a>
         @endif
-        @if(Route::has('admin.tutoring-group-bookings.index'))
+        @if(config('admin_ui.show_group_bookings', false) && Route::has('admin.tutoring-group-bookings.index'))
             <a href="{{ route('admin.tutoring-group-bookings.index') }}" class="rounded-2xl border border-line bg-surface p-4 transition hover:border-accent/40">
                 <p class="text-sm font-semibold text-ink"><i class="fas fa-calendar-check me-2 text-accent"></i>تسكين الفصول والحجوزات</p>
                 <p class="mt-1 text-xs text-muted">متابعة حجوزات المجموعات وإعادة التسكين</p>
             </a>
         @endif
-        @if(Route::has('admin.tutoring-groups.index'))
+        @if(config('admin_ui.show_group_classes', false) && Route::has('admin.tutoring-groups.index'))
             <a href="{{ route('admin.tutoring-groups.index', 'collective') }}" class="rounded-2xl border border-line bg-surface p-4 transition hover:border-accent/40">
                 <p class="text-sm font-semibold text-ink"><i class="fas fa-school me-2 text-accent"></i>فصول المدرسة</p>
                 <p class="mt-1 text-xs text-muted">إدارة الفصول الجماعية المرتبطة بالطلاب</p>

@@ -27,6 +27,12 @@ class TutoringGroupBookingController extends Controller
                 abort(403);
             }
 
+            if (! config('admin_ui.show_group_bookings', false) && ! config('admin_ui.show_group_classes', false)) {
+                return redirect()
+                    ->route('admin.dashboard')
+                    ->with('warning', 'حجوزات وتسكين المجموعات خارج نطاق حصتك الحالي (دروس فردية 1:1 فقط).');
+            }
+
             return $next($request);
         });
     }
