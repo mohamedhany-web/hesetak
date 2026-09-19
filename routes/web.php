@@ -108,25 +108,24 @@ Route::get('/sitemap.xml', function () {
     // الصفحة الرئيسية
     $urls[] = ['loc' => url('/'), 'lastmod' => now()->toDateString(), 'changefreq' => 'daily', 'priority' => '1.0'];
 
-    // الصفحات العامة الثابتة
+    // الصفحات العامة الثابتة — خريطة حصتك الحالية
     $staticPages = [
-        ['url' => '/courses',      'priority' => '0.9', 'changefreq' => 'daily'],
-        ['url' => '/instructors',  'priority' => '0.8', 'changefreq' => 'weekly'],
-        ['url' => '/pricing',      'priority' => '0.8', 'changefreq' => 'weekly'],
-        ['url' => '/about',        'priority' => '0.8', 'changefreq' => 'monthly'],
-        ['url' => '/contact',      'priority' => '0.7', 'changefreq' => 'monthly'],
-        ['url' => '/services',     'priority' => '0.75', 'changefreq' => 'weekly'],
-        ['url' => '/faq',          'priority' => '0.7', 'changefreq' => 'monthly'],
-        ['url' => '/team',         'priority' => '0.6', 'changefreq' => 'monthly'],
-        ['url' => '/events',       'priority' => '0.6', 'changefreq' => 'weekly'],
-        ['url' => '/testimonials', 'priority' => '0.6', 'changefreq' => 'monthly'],
-        ['url' => '/partners',     'priority' => '0.6', 'changefreq' => 'monthly'],
-        ['url' => '/media',        'priority' => '0.6', 'changefreq' => 'weekly'],
-        ['url' => '/help',         'priority' => '0.6', 'changefreq' => 'monthly'],
-        ['url' => '/certificates', 'priority' => '0.5', 'changefreq' => 'weekly'],
-        ['url' => '/terms',        'priority' => '0.4', 'changefreq' => 'yearly'],
-        ['url' => '/privacy',      'priority' => '0.4', 'changefreq' => 'yearly'],
-        ['url' => '/refund',       'priority' => '0.4', 'changefreq' => 'yearly'],
+        ['url' => '/instructors',    'priority' => '0.9', 'changefreq' => 'daily'],
+        ['url' => '/curricula',      'priority' => '0.9', 'changefreq' => 'weekly'],
+        ['url' => '/courses',        'priority' => '0.9', 'changefreq' => 'daily'],
+        ['url' => '/pricing',        'priority' => '0.85', 'changefreq' => 'weekly'],
+        ['url' => '/about',          'priority' => '0.8', 'changefreq' => 'monthly'],
+        ['url' => '/how-it-works',   'priority' => '0.75', 'changefreq' => 'monthly'],
+        ['url' => '/for-students',   'priority' => '0.7', 'changefreq' => 'monthly'],
+        ['url' => '/for-teachers',   'priority' => '0.7', 'changefreq' => 'monthly'],
+        ['url' => '/faq',            'priority' => '0.7', 'changefreq' => 'monthly'],
+        ['url' => '/contact',        'priority' => '0.7', 'changefreq' => 'monthly'],
+        ['url' => '/tutor/apply',    'priority' => '0.65', 'changefreq' => 'monthly'],
+        ['url' => '/certificates/verify', 'priority' => '0.5', 'changefreq' => 'monthly'],
+        ['url' => '/help',           'priority' => '0.5', 'changefreq' => 'monthly'],
+        ['url' => '/terms',          'priority' => '0.4', 'changefreq' => 'yearly'],
+        ['url' => '/privacy',        'priority' => '0.4', 'changefreq' => 'yearly'],
+        ['url' => '/refund',         'priority' => '0.4', 'changefreq' => 'yearly'],
     ];
 
     foreach ($staticPages as $page) {
@@ -182,41 +181,7 @@ Route::get('/sitemap.xml', function () {
     } catch (\Exception $e) {
     }
 
-    // مقالات Media المنشورة
-    try {
-        $mediaItems = \App\Models\Media::where('is_published', true)
-            ->select('id', 'updated_at')
-            ->orderBy('updated_at', 'desc')
-            ->limit(500)
-            ->get();
-
-        foreach ($mediaItems as $item) {
-            $urls[] = [
-                'loc' => route('public.media.show', $item),
-                'lastmod' => optional($item->updated_at)->format('Y-m-d') ?: now()->toDateString(),
-                'changefreq' => 'monthly',
-                'priority' => '0.5',
-            ];
-        }
-    } catch (\Exception $e) {
-    }
-
-    // صفحات الخدمات النشطة
-    try {
-        $siteServices = \App\Models\SiteService::where('is_active', true)
-            ->select('slug', 'updated_at')
-            ->orderBy('sort_order')
-            ->get();
-        foreach ($siteServices as $svc) {
-            $urls[] = [
-                'loc' => route('public.services.show', $svc->slug),
-                'lastmod' => optional($svc->updated_at)->format('Y-m-d') ?: now()->toDateString(),
-                'changefreq' => 'monthly',
-                'priority' => '0.65',
-            ];
-        }
-    } catch (\Exception $e) {
-    }
+    // معرض الوسائط القديم غير مُدرَج في الـ sitemap
 
     // بناء XML مع دعم Image Sitemap
     $sitemap = '<?xml version="1.0" encoding="UTF-8"?>'.PHP_EOL;
@@ -446,6 +411,7 @@ Route::get('/path', [\App\Http\Controllers\Public\PageController::class, 'path']
 Route::get('/for-students', [\App\Http\Controllers\Public\PageController::class, 'forStudents'])->name('public.for-students');
 Route::get('/for-teachers', [\App\Http\Controllers\Public\PageController::class, 'forTeachers'])->name('public.for-teachers');
 Route::get('/how-it-works', [\App\Http\Controllers\Public\PageController::class, 'how'])->name('public.how');
+Route::redirect('/how', '/how-it-works', 301);
 Route::get('/curricula', [\App\Http\Controllers\Public\CurriculaController::class, 'index'])->name('public.curricula');
 Route::get('/curricula/{year}', [\App\Http\Controllers\Public\CurriculaController::class, 'show'])->name('public.curricula.show');
 

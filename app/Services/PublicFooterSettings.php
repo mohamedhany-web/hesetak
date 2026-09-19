@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Cache;
 
 class PublicFooterSettings
 {
-    public const CACHE_KEY = 'public_footer_payload_v1';
+    public const CACHE_KEY = 'public_footer_payload_v2';
 
     /** @return array<string, string> */
     public static function defaults(): array
@@ -15,14 +15,14 @@ class PublicFooterSettings
         return [
             'footer_brand_tagline' => 'حصص فردية أونلاين، مناهج خليجية، وكورسات مستقلة.',
             'footer_blurb' => 'منصة حصتك للطلاب وأولياء الأمور: احجز مع معلمين معتمدين، تابع منهجك الرسمي، أو ابدأ كورسًا مستقلًا.',
-            'footer_email' => 'info@hesetak.com',
+            'footer_email' => 'info@hissatak.online',
             'footer_phone' => '920000000',
             'footer_whatsapp_url' => 'https://wa.me/966500000000',
             'footer_bottom_tagline' => 'معلمون معتمدون، مناهج خليجية، حصص فردية',
-            'social_facebook_url' => 'https://www.facebook.com/',
-            'social_x_url' => 'https://x.com/',
-            'social_instagram_url' => 'https://www.instagram.com/',
-            'social_youtube_url' => 'https://www.youtube.com/',
+            'social_facebook_url' => '',
+            'social_x_url' => '',
+            'social_instagram_url' => '',
+            'social_youtube_url' => '',
             'social_linkedin_url' => '',
             'social_tiktok_url' => '',
             'social_telegram_url' => '',

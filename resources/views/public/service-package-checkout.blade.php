@@ -1,3 +1,5 @@
+@extends('layouts.mycourses-public')
+
 @php
   $locale = app()->getLocale();
   $isRtl = $locale === 'ar';
@@ -19,26 +21,13 @@
   $gifts = collect($package->giftList())->filter()->take(4)->values();
   $user = auth()->user();
 @endphp
-<!DOCTYPE html>
-<html lang="{{ $locale }}" dir="{{ $isRtl ? 'rtl' : 'ltr' }}">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes">
-  <title>{{ $isRtl ? 'إتمام شراء' : 'Checkout' }} · {{ $package->name }} — {{ $brand }}</title>
-  <meta name="robots" content="noindex">
-  <meta name="theme-color" content="#1E4E8C">
-  <meta name="csrf-token" content="{{ csrf_token() }}">
-  @include('partials.favicon-links')
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700;800&family=Lato:wght@400;700;900&family=Rubik:wght@400;500;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-  <link rel="stylesheet" href="{{ route('assets.landing.css', ['sheet' => 'mycourses']) }}?v={{ $mcVer }}">
-</head>
-<body class="mc-body mc-body--checkout">
-@include('partials.landing.mycourses.nav')
 
-<main class="mc-co">
+@push('head')
+<meta name="robots" content="noindex">
+@endpush
+
+@section('content')
+<div class="mc-co mc-body--checkout">
   <section class="mc-co-top">
     <div class="mc-container">
       <nav class="mc-co-crumb" aria-label="{{ $isRtl ? 'مسار التنقل' : 'Breadcrumb' }}">
@@ -280,7 +269,7 @@
       </section>
     </div>
   </section>
-</main>
+</div>
 
 <div class="mc-co-dock" id="mc-co-dock">
   <div class="mc-co-dock__inner">
@@ -310,8 +299,6 @@
   io.observe(pay);
 })();
 </script>
-
-@include('partials.landing.mycourses.footer')
 
 @if($fawaterakActive && ! $fawaterakMis && $fawaterakIntegration === 'iframe')
 <script>
@@ -551,5 +538,4 @@
 })();
 </script>
 @endif
-</body>
-</html>
+@endsection

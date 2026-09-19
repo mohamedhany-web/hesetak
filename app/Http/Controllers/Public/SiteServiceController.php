@@ -4,24 +4,29 @@ namespace App\Http\Controllers\Public;
 
 use App\Http\Controllers\Controller;
 use App\Models\SiteService;
-use Illuminate\Http\RedirectResponse;
+use Illuminate\View\View;
 
-/**
- * صفحات CMS «الخدمات» القديمة — ليست حلقة منتج حصتك.
- */
 class SiteServiceController extends Controller
 {
-    public function index(): RedirectResponse
+    public function index(): View
     {
-        return redirect()
-            ->route('public.pricing')
-            ->with('info', app()->getLocale() === 'ar'
-                ? 'تصفّح باقات الحصص والمسارات التعليمية من صفحة الباقات.'
-                : 'Browse session packages and learning paths from Pricing.');
+        $services = SiteService::active()->ordered()->get();
+
+        return view('public.services.index', compact('services'));
     }
 
-    public function show(SiteService $siteService): RedirectResponse
+    public function show(SiteService $siteService): View
     {
-        return redirect()->route('public.pricing');
+        if (! $siteService->is_active) {
+            abort(404);
+        }
+
+        $others = SiteService::active()
+            ->where('id', '!=', $siteService->id)
+            ->ordered()
+            ->limit(6)
+            ->get();
+
+        return view('public.services.show', compact('siteService', 'others'));
     }
 }

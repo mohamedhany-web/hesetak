@@ -114,12 +114,20 @@ class PageController extends Controller
 
     public function team()
     {
-        return view('public.team');
+        return view('public.team', [
+            'pageTitle' => (__('public.team_page_title') ?: 'الفريق').' — '.__('landing.nav.brand'),
+            'pageDescription' => 'فريق حصتك يعمل على تقديم تجربة دروس خصوصية أونلاين موثوقة.',
+            'mcActive' => '',
+        ]);
     }
 
     public function certificates()
     {
-        return view('public.certificates');
+        return view('public.certificates', [
+            'pageTitle' => (__('public.certificates_page_title') ?: 'الشهادات').' — '.__('landing.nav.brand'),
+            'pageDescription' => 'شهادات إتمام رقمية للكورسات المؤهلة مع التحقق من صحتها.',
+            'mcActive' => '',
+        ]);
     }
 
     public function help()
@@ -152,16 +160,29 @@ class PageController extends Controller
             ->ordered()
             ->get();
 
-        return view('public.testimonials', compact('testimonials'));
+        return view('public.testimonials', [
+            'testimonials' => $testimonials,
+            'pageTitle' => (__('public.testimonials_page_title') ?: 'آراء المتعلمين').' — '.__('landing.nav.brand'),
+            'pageDescription' => __('public.home_testimonials_sub'),
+            'mcActive' => '',
+        ]);
     }
 
     public function events()
     {
-        return view('public.events');
+        return view('public.events', [
+            'pageTitle' => (__('public.events_page_title') ?: 'التعلم المباشر').' — '.__('landing.nav.brand'),
+            'pageDescription' => 'تعلم أونلاين طوال العام عبر حصص فردية ومناهج وكورسات.',
+            'mcActive' => '',
+        ]);
     }
 
     public function partners()
     {
-        return view('public.partners');
+        return view('public.partners', [
+            'pageTitle' => (__('public.partners_page_title') ?: 'الشراكات').' — '.__('landing.nav.brand'),
+            'pageDescription' => 'تعاون مع حصتك لتوسيع الوصول إلى دروس خصوصية أونلاين.',
+            'mcActive' => '',
+        ]);
     }
 }

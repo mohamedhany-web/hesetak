@@ -351,12 +351,12 @@
         </div>
         <div class="mc-tracks">
           @foreach($privateGroups as $group)
-            <a href="{{ route('public.groups.show', $group->slug) }}" class="mc-track mc-track--featured">
+            <a href="#mc-tp-book" class="mc-track mc-track--featured">
               <span class="mc-track__badge">1:1</span>
               <span class="mc-track__icon" aria-hidden="true"><i class="fas fa-user"></i></span>
               <h3>{{ $group->title }}</h3>
               <p>{{ (int) $group->duration_minutes }} {{ $isRtl ? 'دقيقة' : 'min' }}، {{ $group->formattedPrice() }}</p>
-              <span class="mc-track__cta">{{ $isRtl ? 'عرض التفاصيل' : 'View details' }} →</span>
+              <span class="mc-track__cta">{{ $isRtl ? 'احجز حصة' : 'Book a session' }} →</span>
             </a>
           @endforeach
           @foreach($oneToOneCourses as $course)

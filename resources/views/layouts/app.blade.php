@@ -597,10 +597,10 @@ function themeManager() {
                         </div>
 
                         <div class="hidden lg:flex items-center gap-2 ms-2">
-                            @if(Route::has('public.groups'))
-                                <a href="{{ route('public.groups') }}" class="app-quick-link app-quick-link--gold">
-                                    <i class="fas fa-users text-[10px]"></i>
-                                    {{ $appRtl ? 'المجموعات' : 'Groups' }}
+                            @if(Route::has('public.instructors.index'))
+                                <a href="{{ route('public.instructors.index') }}" class="app-quick-link app-quick-link--gold">
+                                    <i class="fas fa-chalkboard-teacher text-[10px]"></i>
+                                    {{ $appRtl ? 'المعلمون' : 'Teachers' }}
                                 </a>
                             @endif
                             @if(Route::has('student.live-sessions.index'))

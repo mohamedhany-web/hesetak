@@ -3,7 +3,7 @@
     $siteName    = config('app.name');
     $title       = $title       ?? $siteName . ' — ' . __('landing.hero.headline');
     $description = $description ?? __('landing.meta.description');
-    $keywords    = $keywords    ?? (__('landing.meta.keywords') ?: ('حصتك, تطوير مهني للمعلمين, حصتك, ' . $siteName));
+    $keywords    = $keywords    ?? (__('landing.meta.keywords') ?: ('حصتك, دروس خصوصية, معلم خصوصي, مناهج, كورسات أونلاين, ' . $siteName));
     $image       = $image       ?? \App\Services\SeoAssets::ogImageUrl();
     $imageAlt    = $imageAlt    ?? $title;
     $url         = $url         ?? url()->current();
@@ -12,6 +12,10 @@
     $ogLocale    = $locale === 'ar' ? 'ar_AR' : 'en_US';
     $ogLocaleAlt = $locale === 'ar' ? 'en_US' : 'ar_AR';
     $langCode    = $locale === 'ar' ? 'Arabic' : 'English';
+    $twitterHandle = trim((string) config('platform.twitter_handle', '@hesetak'));
+    if ($twitterHandle !== '' && ! str_starts_with($twitterHandle, '@')) {
+        $twitterHandle = '@'.$twitterHandle;
+    }
 @endphp
 
 <!-- ═══ Primary Meta Tags ═══ -->
@@ -43,8 +47,10 @@
 
 <!-- ═══ Twitter / X Card ═══ -->
 <meta name="twitter:card"        content="summary_large_image">
-<meta name="twitter:site"        content="@tadrislab">
-<meta name="twitter:creator"     content="@tadrislab">
+@if($twitterHandle !== '')
+<meta name="twitter:site"        content="{{ $twitterHandle }}">
+<meta name="twitter:creator"     content="{{ $twitterHandle }}">
+@endif
 <meta name="twitter:url"         content="{{ $url }}">
 <meta name="twitter:title"       content="{{ $title }}">
 <meta name="twitter:description" content="{{ $description }}">

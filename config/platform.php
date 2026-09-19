@@ -20,4 +20,11 @@ return [
     |--------------------------------------------------------------------------
     */
     'academy_timezone' => env('ACADEMY_TIMEZONE', 'Africa/Cairo'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Twitter / X handle for public SEO meta (optional)
+    |--------------------------------------------------------------------------
+    */
+    'twitter_handle' => env('PLATFORM_TWITTER_HANDLE', '@hesetak'),
 ];
