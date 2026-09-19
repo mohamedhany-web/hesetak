@@ -60,7 +60,7 @@ class ClassroomMeetingRoomChromeTitleTest extends TestCase
             'user_id' => $instructor->id,
             'one_to_one_session_id' => $session->id,
             'code' => 'TITLE001',
-            'room_name' => 'Glottical-TITLE001',
+            'room_name' => 'حصتك-TITLE001',
             'title' => 'حصة 1:1: كورس فردي — mohamed hany',
         ]);
 

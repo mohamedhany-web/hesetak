@@ -284,7 +284,7 @@ class WithdrawalRequestController extends Controller
             ActivityLog::create([
                 'user_id' => Auth::id(),
                 'action' => 'withdrawal_completed',
-                'description' => 'تم إكمال طلب سحب رقم: ' . ($withdrawal->request_number ?? $withdrawal->id) . ' - المبلغ: ' . number_format($withdrawal->amount, 2) . ' $',
+                'description' => 'تم إكمال طلب سحب رقم: ' . ($withdrawal->request_number ?? $withdrawal->id) . ' - المبلغ: ' . number_format($withdrawal->amount, 2) . ' ' . currency_symbol(),
                 'ip_address' => $request->ip(),
             ]);
 

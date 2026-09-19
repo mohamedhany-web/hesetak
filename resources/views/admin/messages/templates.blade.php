@@ -1,6 +1,6 @@
-﻿@extends('layouts.admin')
+@extends('layouts.admin')
 
-@section('title', 'قوالب الرسائل - Glottical')
+@section('title', 'قوالب الرسائل - حصتك')
 @section('header', 'قوالب الرسائل')
 
 @section('content')
@@ -9,7 +9,7 @@
         <div class="flex items-center justify-between mb-2">
             <div>
                 <h1 class="text-2xl font-bold text-gray-900">{{ __('قوالب الرسائل') }}</h1>
-                <p class="text-gray-600">{{ __('إدارة قوالب الرسائل المستخدمة داخل منصة Glottical') }}</p>
+                <p class="text-gray-600">{{ __('إدارة قوالب الرسائل المستخدمة داخل منصة حصتك') }}</p>
             </div>
             <div class="flex space-x-2 space-x-reverse">
                 <button onclick="showCreateTemplateModal()" 

@@ -2,515 +2,59 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5">
-  <title>منصة Sana لتعليم الأطفال أونلاين بثقة ومتعة</title>
-  <meta name="theme-color" content="#5B21B6">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@800;900&family=Tajawal:wght@500;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-  <!-- CSS مستخرج حرفياً من resources/views/landing/sana/theme.blade.php -->
-  <link rel="stylesheet" href="assets/sana-theme.css">
-  <style>
-    /* شارة ملفات التصميم فقط — لا توجد في الإنتاج */
-    .design-mirror-badge {
-      position: fixed; z-index: 99999; bottom: 12px; inset-inline-start: 12px;
-      background: #1e1b4b; color: #fff; font: 700 .72rem/1 Tajawal,sans-serif;
-      padding: .45rem .7rem; border-radius: 999px; opacity: .85; pointer-events: none;
-    }
-  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>الرئيسية — حصتك (مرآة MyCourses)</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Rubik:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../public/css/landing/mycourses.css">
 </head>
-<body class="sana-home">
-<div class="design-mirror-badge">مرآة تصميم الإنتاج · welcome + theme.blade.php</div>
-<div id="sana-scroll-progress"></div>
-
-<!-- ===== navbar — landing/sana/navbar.blade.php ===== -->
-<header id="sana-nav" class="sana-nav sana-nav--hero">
-  <div class="sana-container">
-    <div class="sana-nav__inner">
-      <a href="01-home.html" class="sana-nav__brand">
-        <span class="sana-nav__logo-text">SANA</span>
-      </a>
-      <nav class="sana-nav__links" aria-label="القائمة">
-        <a href="01-home.html" class="is-active">الرئيسية</a>
-        <a href="03-courses.html" class="sana-nav__path sana-nav__path--family">للطلاب وأولياء الأمور</a>
-        <a href="02-about.html">كيف تعمل سنا؟</a>
-        <a href="05-contact.html">تواصل معنا</a>
-      </nav>
-      <div class="sana-nav__actions">
-        <a href="06-auth-login.html" class="sana-nav__login">تسجيل الدخول</a>
-        <a href="05-contact.html" class="sana-nav__signup">احجز تقييم مستوى</a>
-      </div>
-      <button type="button" id="sana-mobile-toggle" class="sana-nav__burger" aria-expanded="false" aria-controls="sana-mobile-menu" aria-label="فتح القائمة">
-        <i class="fas fa-bars" aria-hidden="true"></i>
-      </button>
-    </div>
-    <div id="sana-mobile-menu" class="sana-nav__mobile" aria-hidden="true">
-      <a href="01-home.html" class="is-active">الرئيسية</a>
-      <a href="03-courses.html" class="sana-nav__path sana-nav__path--family">للطلاب وأولياء الأمور</a>
-      <a href="02-about.html">كيف تعمل سنا؟</a>
-      <a href="05-contact.html">تواصل معنا</a>
-      <a href="06-auth-login.html">تسجيل الدخول</a>
-      <a href="05-contact.html" class="sana-nav__signup sana-nav__signup--block">احجز تقييم مستوى</a>
-      <a href="05-contact.html" class="sana-nav__signup sana-nav__signup--block sana-nav__signup--wa">تواصل عبر واتساب</a>
-    </div>
+<body class="mc-body">
+<header class="mc-nav"><div class="mc-container mc-nav__inner">
+  <a class="mc-brand" href="#"><span class="mc-brand__mark">ح</span>حصتك</a>
+  <nav class="mc-nav__links">
+    <a class="is-active" href="#">الرئيسية</a>
+    <a href="03-courses.html">المسارات</a>
+    <a href="10-path.html">المسار</a>
+    <a href="09-instructors.html">المعلمون</a>
+    <a href="04-pricing.html">الأسعار</a>
+    <a href="05-contact.html">تواصل</a>
+  </nav>
+  <div class="mc-nav__actions">
+    <a class="mc-btn mc-btn--md mc-btn--ghost" href="06-auth-login.html">تسجيل دخول</a>
+    <a class="mc-btn mc-btn--md mc-btn--primary" href="07-auth-register.html">انشاء حساب</a>
   </div>
-</header>
-<div id="sana-mobile-backdrop" class="sana-nav__backdrop" aria-hidden="true"></div>
-
+</div></header>
 <main>
-
-<!-- ===== hero — sections/hero.blade.php + hero-scene ===== -->
-<section class="sana-hero-wrap" id="top">
-  <div class="sana-hero">
-    <div class="sana-hero__bg-deco" aria-hidden="true">
-      <div class="sana-hero__glow sana-hero__glow--1"></div>
-      <div class="sana-hero__glow sana-hero__glow--2"></div>
-      <div class="sana-hero__glow sana-hero__glow--3"></div>
-      <div class="sana-hero__glow sana-hero__glow--4"></div>
-      <div class="sana-hero__dotgrid"></div>
-      <span class="sana-hero__bokeh sana-hero__bokeh--1"></span>
-      <span class="sana-hero__bokeh sana-hero__bokeh--2"></span>
-      <span class="sana-hero__bokeh sana-hero__bokeh--3"></span>
-      <span class="sana-hero__bokeh sana-hero__bokeh--4"></span>
-      <span class="sana-hero__geo sana-hero__geo--1"></span>
-      <span class="sana-hero__geo sana-hero__geo--2"></span>
-      <span class="sana-hero__geo sana-hero__geo--3"></span>
-      <span class="sana-hero__cross sana-hero__cross--1"></span>
-      <span class="sana-hero__cross sana-hero__cross--2"></span>
-      <svg class="sana-hero__wave" viewBox="0 0 1440 120" preserveAspectRatio="none" aria-hidden="true">
-        <path d="M0,64 C240,120 480,0 720,48 C960,96 1200,24 1440,64 L1440,120 L0,120 Z" fill="rgba(255,255,255,0.04)"/>
-        <path d="M0,88 C360,40 720,100 1080,56 C1260,36 1380,72 1440,80 L1440,120 L0,120 Z" fill="rgba(167,139,250,0.08)"/>
-      </svg>
-      <svg class="sana-hero__arc sana-hero__arc--1" viewBox="0 0 200 200" aria-hidden="true">
-        <circle cx="100" cy="100" r="80" fill="none" stroke="rgba(255,255,255,0.07)" stroke-width="1.5" stroke-dasharray="6 10"/>
-      </svg>
-      <svg class="sana-hero__arc sana-hero__arc--2" viewBox="0 0 120 120" aria-hidden="true">
-        <circle cx="60" cy="60" r="48" fill="none" stroke="rgba(251,191,36,0.12)" stroke-width="1.5" stroke-dasharray="4 8"/>
-      </svg>
-    </div>
-    <div class="sana-container sana-hero__container">
-      <div class="sana-hero__grid">
-        <div class="sana-hero__content sana-reveal">
-          <p class="sana-hero__eyebrow">
-            <span class="sana-hero__eyebrow-dot"></span>
-            للطلاب وأولياء الأمور
-          </p>
-          <h1 class="sana-hero__title">
-            منصة Sana لتعليم الأطفال أونلاين
-            <span class="hl">بثقة ومتعة</span>
-          </h1>
-          <p class="sana-hero__desc">حصص مباشرة، متابعة لولي الأمر، ومعلمون متخصصون لمساعدة طفلك في الرياضيات والمواد الدراسية خطوة بخطوة.</p>
-          <div class="sana-hero__actions">
-            <div class="sana-site-cta sana-site-cta--hero">
-              <a href="05-contact.html" class="sana-btn sana-btn--yellow sana-btn--lg">
-                <i class="fas fa-clipboard-check"></i> احجز تقييم مستوى مجاني
-              </a>
-              <a href="05-contact.html" class="sana-btn sana-btn--wa sana-btn--lg">
-                <i class="fab fa-whatsapp"></i> تواصل عبر واتساب
-              </a>
-            </div>
-          </div>
-          <ul class="sana-hero__trust" aria-label="خطوات الرحلة">
-            <li><i class="fas fa-clipboard-check"></i> احجز تقييم مستوى مجاني</li>
-            <li><i class="fas fa-user-check"></i> نختار المعلّم أو الباقة</li>
-            <li><i class="fas fa-chart-line"></i> ابدأ الحصص وتابع التقدّم</li>
-          </ul>
-          <div class="sana-hero__badges">
-            <span class="sana-hero__badge"><i class="fas fa-shield-halved"></i> منصة آمنة للأطفال</span>
-            <span class="sana-hero__badge"><i class="fas fa-chalkboard-user"></i> معلّمون مختارون</span>
-          </div>
-        </div>
-        <div class="sana-hero__visual sana-reveal" aria-hidden="true">
-          <div class="sana-hero-illus">
-            <div class="sana-hero-illus__deco" aria-hidden="true">
-              <span class="sana-hero-illus__glow"></span>
-              <span class="sana-hero-illus__ring sana-hero-illus__ring--1"></span>
-              <span class="sana-hero-illus__ring sana-hero-illus__ring--2"></span>
-              <span class="sana-hero-illus__blob sana-hero-illus__blob--1"></span>
-              <span class="sana-hero-illus__blob sana-hero-illus__blob--2"></span>
-              <span class="sana-hero-illus__cloud sana-hero-illus__cloud--1"></span>
-              <span class="sana-hero-illus__cloud sana-hero-illus__cloud--2"></span>
-              <span class="sana-hero-illus__cloud sana-hero-illus__cloud--3"></span>
-              <span class="sana-hero-illus__cloud sana-hero-illus__cloud--4"></span>
-              <span class="sana-hero-illus__spark sana-hero-illus__spark--1">✦</span>
-              <span class="sana-hero-illus__spark sana-hero-illus__spark--2">✦</span>
-              <span class="sana-hero-illus__spark sana-hero-illus__spark--3">✦</span>
-              <span class="sana-hero-illus__star sana-hero-illus__star--1">⭐</span>
-              <span class="sana-hero-illus__star sana-hero-illus__star--2">⭐</span>
-              <span class="sana-hero-illus__float sana-hero-illus__float--bulb">💡</span>
-              <span class="sana-hero-illus__float sana-hero-illus__float--planet">🪐</span>
-              <span class="sana-hero-illus__dot sana-hero-illus__dot--1"></span>
-              <span class="sana-hero-illus__dot sana-hero-illus__dot--2"></span>
-              <span class="sana-hero-illus__dot sana-hero-illus__dot--3"></span>
-              <span class="sana-hero-illus__bokeh sana-hero-illus__bokeh--1"></span>
-              <span class="sana-hero-illus__bokeh sana-hero-illus__bokeh--2"></span>
-              <span class="sana-hero-illus__bokeh sana-hero-illus__bokeh--3"></span>
-              <span class="sana-hero-illus__shape sana-hero-illus__shape--sq"></span>
-              <span class="sana-hero-illus__shape sana-hero-illus__shape--ci"></span>
-              <span class="sana-hero-illus__cross"></span>
-            </div>
-            <div class="sana-hero-illus__char-wrap">
-              <img src="../../public/img/sanua/imagehome.png" alt="" class="sana-hero-illus__char" width="1536" height="1024" loading="eager">
-            </div>
-          </div>
-        </div>
+  <section class="mc-hero"><div class="mc-container mc-hero__grid">
+    <div>
+      <p class="mc-eyebrow">منصة تطوير المعلم</p>
+      <h1 class="mc-hero__title">طوّر ممارستك المهنية مع <strong>حصتك</strong></h1>
+      <p class="mc-hero__lead">شخص تحدياتك الصفية، وصل إلى ممارسات وأدوات تطبيقية، وقِس تقدّمك.</p>
+      <div class="mc-hero__actions">
+        <a class="mc-btn mc-btn--lg mc-btn--primary" href="#">ابدأ الآن</a>
+        <a class="mc-btn mc-btn--lg mc-btn--outline" href="03-courses.html">استكشف المسارات</a>
       </div>
     </div>
-  </div>
-
-  <div class="sana-container">
-    <div class="sana-hero-stats sana-hero-stats--trust sana-reveal" aria-label="لماذا تثق بسنا">
-      <div class="sana-hero-stats__item">
-        <span class="sana-hero-stats__icon"><i class="fas fa-seedling"></i></span>
-        <div>
-          <strong>دفعات تعليمية محدودة</strong>
-          <span>نركّز على جودة التجربة قبل التوسع</span>
-        </div>
-      </div>
-      <div class="sana-hero-stats__item">
-        <span class="sana-hero-stats__icon"><i class="fas fa-comments"></i></span>
-        <div>
-          <strong>متابعة بعد كل حصة</strong>
-          <span>تواصل مستمر مع العائلة حول تقدّم الطالب</span>
-        </div>
-      </div>
-      <div class="sana-hero-stats__item">
-        <span class="sana-hero-stats__icon"><i class="fas fa-chart-simple"></i></span>
-        <div>
-          <strong>تقارير واضحة لولي الأمر</strong>
-          <span>ملخصات مفهومة — بدون أرقام غير مؤكدة</span>
-        </div>
-      </div>
+    <div class="mc-hero__art"><span class="mc-hero__blob"></span>
+      <div class="mc-hero__art-card"><strong>تشخيص → تطوير → قياس</strong><span>مسار واضح لممارسة صفية أفضل</span></div>
     </div>
-  </div>
-</section>
-
-<!-- ===== audience paths ===== -->
-<section class="sana-section sana-section--paths" id="paths">
-  <div class="sana-container sana-container--wide">
-    <div class="sana-paths-band sana-paths-band--wide sana-reveal">
-      <div class="sana-paths-band__dots" aria-hidden="true"></div>
-      <div class="sana-paths-band__glow sana-paths-band__glow--1" aria-hidden="true"></div>
-      <div class="sana-paths-band__glow sana-paths-band__glow--2" aria-hidden="true"></div>
-      <div class="sana-paths-band__shell">
-        <div class="sana-paths-band__row-top">
-          <div class="sana-paths-band__main">
-            <span class="sana-paths-band__eyebrow"><i class="fas fa-child-reaching"></i> للعائلات والطلاب</span>
-            <h2 class="sana-paths-band__title">ابدأ رحلة التعلّم</h2>
-            <p class="sana-paths-band__sub">خطوات بسيطة للطلاب وأولياء الأمور — من التقييم إلى الحصص والمتابعة.</p>
-            <div class="sana-paths-band__meta">
-              <h3>وليّ أمر / طالب</h3>
-              <p>ابدأ بتقييم مستوى مجاني — نحدّد معك المعلّم أو الباقة المناسبة، ثم تبدأ الحصص.</p>
-            </div>
-          </div>
-          <div class="sana-paths-band__actions">
-            <div class="sana-site-cta sana-paths-band__cta">
-              <a href="05-contact.html" class="sana-btn sana-btn--yellow sana-btn--lg"><i class="fas fa-clipboard-check"></i> احجز تقييم مستوى مجاني</a>
-              <a href="05-contact.html" class="sana-btn sana-btn--wa sana-btn--lg"><i class="fab fa-whatsapp"></i> تواصل عبر واتساب</a>
-            </div>
-            <a href="02-about.html" class="sana-paths-band__link"><i class="fas fa-circle-info"></i> كيف تعمل سنا؟</a>
-          </div>
-        </div>
-        <div class="sana-paths-band__steps" aria-label="خطوات العائلات">
-          <article class="sana-paths-band__step">
-            <span class="sana-paths-band__step-num">الخطوة 1</span>
-            <div class="sana-paths-band__step-icon"><i class="fas fa-clipboard-check"></i></div>
-            <p class="sana-paths-band__step-text">احجز تقييم مستوى مجاني</p>
-          </article>
-          <article class="sana-paths-band__step">
-            <span class="sana-paths-band__step-num">الخطوة 2</span>
-            <div class="sana-paths-band__step-icon"><i class="fas fa-user-check"></i></div>
-            <p class="sana-paths-band__step-text">نختار المعلّم أو الباقة</p>
-          </article>
-          <article class="sana-paths-band__step">
-            <span class="sana-paths-band__step-num">الخطوة 3</span>
-            <div class="sana-paths-band__step-icon"><i class="fas fa-graduation-cap"></i></div>
-            <p class="sana-paths-band__step-text">ابدأ الحصص وتابع التقدّم</p>
-          </article>
-        </div>
-      </div>
+  </div></section>
+  <section class="mc-section mc-section--muted"><div class="mc-container">
+    <div class="mc-stats">
+      <div class="mc-stat"><div class="mc-stat__num">2K+</div><div class="mc-stat__label">معلم متعلّم</div></div>
+      <div class="mc-stat"><div class="mc-stat__num">120+</div><div class="mc-stat__label">مسار وممارسة</div></div>
+      <div class="mc-stat"><div class="mc-stat__num">50+</div><div class="mc-stat__label">ميسّر خبير</div></div>
+      <div class="mc-stat"><div class="mc-stat__num">4.9</div><div class="mc-stat__label">تقييم</div></div>
     </div>
-  </div>
-</section>
-
-<!-- ===== features — sections/features.blade.php ===== -->
-<section class="sana-section sana-section--white" id="features">
-  <div class="sana-container">
-    <div class="sana-head sana-reveal">
-      <h2 class="sana-head__title">لماذا تختار <span class="hl">منصتنا؟</span></h2>
-      <span class="sana-head__line"></span>
+  </div></section>
+  <section class="mc-section"><div class="mc-container">
+    <div class="mc-cta">
+      <div><h2>جاهز تبدأ مسار التطوير؟</h2><p>أنشئ حسابك كمعلم وابدأ من التشخيص إلى قياس التقدّم.</p></div>
+      <a class="mc-btn mc-btn--lg mc-btn--secondary" href="07-auth-register.html">إنشاء حساب</a>
     </div>
-    <div class="sana-features-m">
-      <article class="sana-feature-m sana-reveal">
-        <div class="sana-feature-m__icon" style="background:#EDE9FE">🗺️</div>
-        <h3>تعلّم تفاعلي</h3>
-        <p>دروس gamified تجعل التعلّم مغامرة ممتعة مع نقاط ومكافآت.</p>
-      </article>
-      <article class="sana-feature-m sana-reveal">
-        <div class="sana-feature-m__icon" style="background:#DBEAFE">🎧</div>
-        <h3>دعم مباشر</h3>
-        <p>تواصل مع المعلّمين واحصل على إجابات فورية خلال الحصص.</p>
-      </article>
-      <article class="sana-feature-m sana-reveal">
-        <div class="sana-feature-m__icon" style="background:#FEF3C7">📜</div>
-        <h3>شهادات إتمام رقمية</h3>
-        <p>شهادات قابلة للتحقق تُصدَر تلقائياً بعد إتمام المسارات.</p>
-      </article>
-      <article class="sana-feature-m sana-reveal">
-        <div class="sana-feature-m__icon" style="background:#D1FAE5">📊</div>
-        <h3>لوحة متابعة</h3>
-        <p>تتبّع تقدّمك وإنجازاتك لحظة بلحظة.</p>
-      </article>
-      <article class="sana-feature-m sana-reveal">
-        <div class="sana-feature-m__icon" style="background:#FCE7F3">📈</div>
-        <h3>تقارير ذكية</h3>
-        <p>تحليلات تفصيلية لنقاط القوة والتحسين.</p>
-      </article>
-      <article class="sana-feature-m sana-reveal">
-        <div class="sana-feature-m__icon" style="background:#E0E7FF">🎬</div>
-        <h3>دروس مسجّلة</h3>
-        <p>محتوى عالي الجودة متاح للمشاهدة في أي وقت.</p>
-      </article>
-    </div>
-  </div>
-</section>
-
-<!-- ===== categories (sample mirrors dynamic subjects) ===== -->
-<section class="sana-section" id="categories">
-  <div class="sana-container">
-    <div class="sana-head-row sana-reveal">
-      <div class="sana-head">
-        <h2 class="sana-head__title">تصفّح <span class="hl">التصنيفات</span></h2>
-        <span class="sana-head__line"></span>
-      </div>
-      <a href="03-courses.html" class="sana-link-more">عرض الكل <i class="fas fa-arrow-left"></i></a>
-    </div>
-    <div class="sana-cats-row sana-reveal">
-      <a href="03-courses.html" class="sana-cat-m" style="background:linear-gradient(145deg,#EDE9FE,#C4B5FD)"><span class="sana-cat-m__emoji">🔢</span><span class="sana-cat-m__name">رياضيات</span></a>
-      <a href="03-courses.html" class="sana-cat-m" style="background:linear-gradient(145deg,#D1FAE5,#6EE7B7)"><span class="sana-cat-m__emoji">🔬</span><span class="sana-cat-m__name">علوم</span></a>
-      <a href="03-courses.html" class="sana-cat-m" style="background:linear-gradient(145deg,#DBEAFE,#93C5FD)"><span class="sana-cat-m__emoji">💻</span><span class="sana-cat-m__name">تقنية</span></a>
-      <a href="03-courses.html" class="sana-cat-m" style="background:linear-gradient(145deg,#FFEDD5,#FDBA74)"><span class="sana-cat-m__emoji">🌍</span><span class="sana-cat-m__name">إنجليزي</span></a>
-      <a href="03-courses.html" class="sana-cat-m" style="background:linear-gradient(145deg,#FCE7F3,#F9A8D4)"><span class="sana-cat-m__emoji">📚</span><span class="sana-cat-m__name">عربي</span></a>
-    </div>
-  </div>
-</section>
-
-<!-- ===== courses sample ===== -->
-<section class="sana-section sana-section--white" id="courses">
-  <div class="sana-container">
-    <div class="sana-head-row sana-reveal">
-      <div class="sana-head">
-        <h2 class="sana-head__title">أحدث <span class="hl">الدورات</span></h2>
-        <span class="sana-head__line"></span>
-      </div>
-      <a href="03-courses.html" class="sana-link-more">عرض الكل <i class="fas fa-arrow-left"></i></a>
-    </div>
-    <div class="sana-courses-m">
-      <article class="sana-course-card sana-course-card--featured sana-reveal">
-        <div class="sana-course-card__media">
-          <a href="03-courses.html" class="sana-course-card__img-link" tabindex="-1" aria-hidden="true">
-            <img src="../../public/img/sanua/landing-hero-3d-books.png" alt="دورة نموذجية" loading="lazy">
-          </a>
-          <div class="sana-course-card__shine" aria-hidden="true"></div>
-          <div class="sana-course-card__badges">
-            <span class="sana-course-card__badge sana-course-card__badge--subject">رياضيات</span>
-            <span class="sana-course-card__badge sana-course-card__badge--level">مبتدئ</span>
-          </div>
-        </div>
-        <div class="sana-course-card__body">
-          <h3 class="sana-course-card__title"><a href="03-courses.html">دورة نموذجية (من قاعدة البيانات)</a></h3>
-          <p class="sana-course-card__desc">دورة تعليمية تفاعلية مصمّمة لتجربة تعلّم ممتعة وفعّالة.</p>
-          <div class="sana-course-card__instructor">
-            <span class="sana-course-card__avatar sana-course-card__avatar--initial">م</span>
-            <div class="sana-course-card__instructor-info">
-              <span class="sana-course-card__instructor-label">المعلّم</span>
-              <span class="sana-course-card__instructor-name">معلّم</span>
-            </div>
-          </div>
-        </div>
-      </article>
-    </div>
-  </div>
-</section>
-
-<!-- ===== teachers sample ===== -->
-<section class="sana-section" id="instructors">
-  <div class="sana-container">
-    <div class="sana-head-row sana-reveal">
-      <div class="sana-head">
-        <h2 class="sana-head__title">تعرّف على <span class="hl">معلّمينا</span></h2>
-        <span class="sana-head__line"></span>
-      </div>
-      <a href="09-instructors.html" class="sana-link-more">عرض الكل <i class="fas fa-arrow-left"></i></a>
-    </div>
-    <div class="sana-teachers-m">
-      <a href="09-instructors.html" class="sana-teacher-m sana-reveal" style="text-decoration:none;color:inherit">
-        <div class="sana-teacher-m__ring"><span class="av">أ</span></div>
-        <h3>اسم المعلّم</h3>
-        <p class="role">معلّم على المنصة</p>
-        <span class="sana-teacher-m__book"><i class="fas fa-calendar-check"></i> احجز مع هذا المعلم</span>
-      </a>
-    </div>
-  </div>
-</section>
-
-<!-- ===== journey ===== -->
-<section class="sana-section sana-section--white" id="journey">
-  <div class="sana-container">
-    <div class="sana-head sana-reveal">
-      <h2 class="sana-head__title">رحلة وليّ الأمر <span class="hl">في 4 خطوات</span></h2>
-      <span class="sana-head__line"></span>
-    </div>
-    <div class="sana-journey-m sana-reveal">
-      <div class="sana-journey-m__line" aria-hidden="true"></div>
-      <div class="sana-journey-m__step">
-        <div class="sana-journey-m__icon"><i class="fas fa-clipboard-check"></i></div>
-        <span>احجز تقييم مستوى مجاني</span>
-      </div>
-      <div class="sana-journey-m__step">
-        <div class="sana-journey-m__icon"><i class="fas fa-user-check"></i></div>
-        <span>نختار المعلّم أو الباقة</span>
-      </div>
-      <div class="sana-journey-m__step">
-        <div class="sana-journey-m__icon"><i class="fas fa-video"></i></div>
-        <span>ابدأ الحصص</span>
-      </div>
-      <div class="sana-journey-m__step">
-        <div class="sana-journey-m__icon"><i class="fas fa-chart-line"></i></div>
-        <span>تابع التقدّم</span>
-      </div>
-    </div>
-    <div class="sana-reveal" style="margin-top:28px;display:flex;flex-direction:column;align-items:center;gap:12px">
-      <div class="sana-site-cta">
-        <a href="05-contact.html" class="sana-btn sana-btn--yellow sana-btn--lg"><i class="fas fa-clipboard-check"></i> احجز تقييم مستوى</a>
-        <a href="05-contact.html" class="sana-btn sana-btn--wa sana-btn--lg"><i class="fab fa-whatsapp"></i> تواصل عبر واتساب</a>
-      </div>
-      <a href="02-about.html" class="sana-link-more">كيف تعمل سنا؟ <i class="fas fa-arrow-left"></i></a>
-    </div>
-  </div>
-</section>
-
-<!-- ===== certificates ===== -->
-<section class="sana-section" id="achievements">
-  <div class="sana-container">
-    <div class="sana-achieve-box sana-reveal">
-      <div class="sana-achieve-box__glow sana-achieve-box__glow--1"></div>
-      <div class="sana-achieve-box__glow sana-achieve-box__glow--2"></div>
-      <div class="sana-achieve-box__inner">
-        <div class="sana-achieve-box__content">
-          <span class="sana-achieve-box__tag"><i class="fas fa-certificate"></i> شهادات إتمام · قابلة للتحقق</span>
-          <h2 class="sana-achieve-box__title">إنجازاتك... <span class="hl">تفخر بها</span></h2>
-          <p class="sana-achieve-box__desc">شهادات رقمية قابلة للتحقق تُصدَر تلقائياً بعد إتمام المسارات — يمكن مشاركتها وطباعتها في أي وقت.</p>
-          <ul class="sana-achieve-box__highlights">
-            <li><i class="fas fa-check-circle"></i> شهادة رقمية فور إتمام المسار</li>
-            <li><i class="fas fa-qrcode"></i> رمز تحقق ومشاركة آمنة</li>
-            <li><i class="fas fa-shield-halved"></i> هوية أكاديمية سنا الرسمية</li>
-          </ul>
-        </div>
-        <div class="sana-achieve-box__visual" aria-hidden="true">
-          <div class="sana-cert-mock">
-            <div class="sana-cert-mock__corner sana-cert-mock__corner--tl"></div>
-            <div class="sana-cert-mock__corner sana-cert-mock__corner--tr"></div>
-            <div class="sana-cert-mock__corner sana-cert-mock__corner--bl"></div>
-            <div class="sana-cert-mock__corner sana-cert-mock__corner--br"></div>
-            <div class="sana-cert-mock__seal"><i class="fas fa-star"></i></div>
-            <p class="sana-cert-mock__label">شهادة إتمام</p>
-            <h3 class="sana-cert-mock__brand">Sana</h3>
-            <div class="sana-cert-mock__line"></div>
-            <p class="sana-cert-mock__to">يُمنَح هذه الشهادة لـ</p>
-            <p class="sana-cert-mock__name">الطالب المتميّز</p>
-            <p class="sana-cert-mock__course">لإتمام المسار التعليمي بنجاح</p>
-            <div class="sana-cert-mock__footer">
-              <span><i class="fas fa-qrcode"></i> قابلة للتحقق</span>
-              <span><i class="fas fa-shield-halved"></i> صادرة من المنصة</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ===== FAQ ===== -->
-<section class="sana-section sana-section--white" id="faq">
-  <div class="sana-container">
-    <div class="sana-head sana-reveal">
-      <h2 class="sana-head__title">الأسئلة <span class="hl">الشائعة</span></h2>
-      <span class="sana-head__line"></span>
-    </div>
-    <div class="sana-faq-m sana-reveal">
-      <div class="sana-faq-m__visual">
-        <img src="../../public/img/sanua/landing-hero-boy.png" alt="">
-        <span class="bubble bubble--1">🤔</span>
-        <span class="bubble bubble--2">💡</span>
-      </div>
-      <div class="sana-faq" id="sana-faq">
-        <div class="sana-faq-item is-open">
-          <button type="button" class="sana-faq-q">هل المنصة مناسبة لجميع الأعمار؟ <i class="fas fa-chevron-down"></i></button>
-          <div class="sana-faq-a">نعم، محتوىنا مصمّم للأطفال من 8 إلى 16 سنة مع مسارات حسب العمر والمستوى.</div>
-        </div>
-        <div class="sana-faq-item">
-          <button type="button" class="sana-faq-q">كيف أبدأ مع ابني على المنصة؟ <i class="fas fa-chevron-down"></i></button>
-          <div class="sana-faq-a">احجز تقييم مستوى مجاني — نحدّد معك المعلّم أو الباقة المناسبة قبل أي التزام.</div>
-        </div>
-        <div class="sana-faq-item">
-          <button type="button" class="sana-faq-q">كيف أتابع تقدّم ابني؟ <i class="fas fa-chevron-down"></i></button>
-          <div class="sana-faq-a">لوحة وليّ الأمر تعرض التقدّم والحضور والاختبارات بوضوح.</div>
-        </div>
-        <div class="sana-faq-item">
-          <button type="button" class="sana-faq-q">ما نوع الشهادات التي تُصدَر؟ <i class="fas fa-chevron-down"></i></button>
-          <div class="sana-faq-a">شهادات إتمام رقمية قابلة للتحقق عبر رابط ورمز فريد — تثبت إنجازك على المنصة.</div>
-        </div>
-        <div class="sana-faq-item">
-          <button type="button" class="sana-faq-q">هل الحصص المباشرة مسجّلة؟ <i class="fas fa-chevron-down"></i></button>
-          <div class="sana-faq-a">نعم، معظم الحصص متاحة للمشاهدة لاحقاً من حساب الطالب.</div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
+  </div></section>
 </main>
-
-<!-- ===== footer ===== -->
-<footer class="sana-foot-m">
-  <div class="sana-container">
-    <div class="sana-foot-m__grid">
-      <div class="sana-foot-m__brand">
-        <a href="01-home.html" class="sana-foot-m__logo"><span>SANA</span></a>
-        <p>منصة تعليمية عربية تفاعلية للأطفال والطلاب — تعلّم بمتعة وثقة.</p>
-      </div>
-      <div>
-        <h4>تصفّح</h4>
-        <ul>
-          <li><a href="02-about.html">كيف تعمل سنا؟</a></li>
-          <li><a href="03-courses.html">الكورسات</a></li>
-          <li><a href="09-instructors.html">المعلّمون</a></li>
-          <li><a href="04-pricing.html">الأسعار</a></li>
-          <li><a href="#categories">التصنيفات</a></li>
-        </ul>
-      </div>
-      <div>
-        <h4>روابط مهمة</h4>
-        <ul>
-          <li><a href="02-about.html">من نحن</a></li>
-          <li><a href="05-contact.html">اتصل بنا</a></li>
-          <li><a href="#faq">الأسئلة الشائعة</a></li>
-          <li><a href="08-tutor-apply.html">تسجيل معلّم</a></li>
-        </ul>
-      </div>
-      <div>
-        <h4>تواصل معنا</h4>
-        <ul>
-          <li><a href="05-contact.html"><i class="fab fa-whatsapp"></i> واتساب</a></li>
-        </ul>
-      </div>
-    </div>
-    <p class="sana-foot-m__copy">&copy; 2026 Sana. جميع الحقوق محفوظة.</p>
-  </div>
-</footer>
-
-<script src="assets/sana-scripts.js"></script>
+<footer class="mc-footer"><div class="mc-container">
+  <p class="mc-footer__copy">© 2026 حصتك. جميع الحقوق محفوظة.</p>
+</div></footer>
 </body>
 </html>

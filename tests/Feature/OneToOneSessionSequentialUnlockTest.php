@@ -167,7 +167,7 @@ class OneToOneSessionSequentialUnlockTest extends TestCase
             'user_id' => $instructor->id,
             'one_to_one_session_id' => $session->id,
             'code' => $code,
-            'room_name' => 'Glottical-'.$code,
+            'room_name' => 'حصتك-'.$code,
             'title' => 'Session '.$number,
             'max_participants' => 4,
             'settings' => ['allow_guest_join' => false, 'private_lesson' => true],

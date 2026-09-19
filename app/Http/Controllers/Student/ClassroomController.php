@@ -105,7 +105,7 @@ class ClassroomController extends Controller
     }
 
     /**
-     * Glottical Whiteboard — صفحة لوحة كاملة منفصلة (خارج غرفة الاجتماع).
+     * حصتك Whiteboard — صفحة لوحة كاملة منفصلة (خارج غرفة الاجتماع).
      */
     public function whiteboardStandalone()
     {
@@ -136,7 +136,7 @@ class ClassroomController extends Controller
         ]);
 
         $code = ClassroomMeeting::generateCode();
-        $roomName = 'Glottical-'.$code;
+        $roomName = 'حصتك-'.$code;
         $startNow = (string) ($data['start_now'] ?? '1') === '1';
 
         $meeting = ClassroomMeeting::create([
@@ -164,7 +164,7 @@ class ClassroomController extends Controller
     {
         $limits = $this->classroomLimits();
         $request->merge([
-            'title' => $request->input('title') ?: 'غرفة Glottical - '.now()->format('H:i'),
+            'title' => $request->input('title') ?: 'غرفة حصتك - '.now()->format('H:i'),
             'max_participants' => (string) $limits['classroom_max_participants'],
             'planned_duration_minutes' => (string) $limits['classroom_default_duration_minutes'],
             'start_now' => '1',

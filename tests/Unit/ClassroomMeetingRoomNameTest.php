@@ -9,7 +9,7 @@ class ClassroomMeetingRoomNameTest extends TestCase
 {
     public function test_canonical_room_name_uses_glottical_prefix(): void
     {
-        $this->assertSame('Glottical-ABC12345', ClassroomMeeting::canonicalRoomName('abc12345'));
+        $this->assertSame('حصتك-ABC12345', ClassroomMeeting::canonicalRoomName('abc12345'));
     }
 
     public function test_live_room_name_prefers_stored_room_name(): void
@@ -29,6 +29,6 @@ class ClassroomMeetingRoomNameTest extends TestCase
             'room_name' => null,
         ]);
 
-        $this->assertSame('Glottical-ABCDEFGH', $meeting->liveRoomName());
+        $this->assertSame('حصتك-ABCDEFGH', $meeting->liveRoomName());
     }
 }

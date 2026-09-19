@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', ($mode === 'create' ? 'دفعة جديدة' : 'تعديل دفعة').' - Glottical')
+@section('title', ($mode === 'create' ? 'دفعة جديدة' : 'تعديل دفعة').' - حصتك')
 @section('page_title', $mode === 'create' ? 'دفعة جديدة' : 'تعديل دفعة')
 
 @section('content')

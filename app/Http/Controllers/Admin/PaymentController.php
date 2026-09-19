@@ -115,7 +115,7 @@ class PaymentController extends Controller
             'payment_method' => $validated['payment_method'],
             'wallet_id' => $request->wallet_id ?? null,
             'amount' => $validated['amount'],
-            'currency' => 'USD',
+            'currency' => platform_currency(),
             'status' => 'completed',
             'paid_at' => now(),
             'processed_by' => auth()->id(),
@@ -133,7 +133,7 @@ class PaymentController extends Controller
             'type' => 'credit', // دائن (إيراد)
             'category' => $invoice->type === 'subscription' ? 'subscription' : 'course_payment',
             'amount' => $validated['amount'],
-            'currency' => 'USD',
+            'currency' => platform_currency(),
             'description' => 'دفعة للفاتورة: ' . $invoice->invoice_number . ' - ' . $invoice->description,
             'status' => 'completed',
             'metadata' => [

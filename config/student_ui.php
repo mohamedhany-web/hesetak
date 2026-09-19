@@ -1,35 +1,41 @@
 <?php
 
 /**
- * واجهة الطالب — إخفاء احتياطي بدون حذف بيانات.
- * غيّر أي قيمة إلى true لإعادة إظهار القسم في السايدبار/اللوحة.
+ * واجهة الطالب — حصتك (فردي 1:1 + كورسات + رصيد).
+ * غيّر أي قيمة لإظهار/إخفاء القسم دون حذف بيانات.
  */
 return [
-    // أقسام غير مستخدمة حالياً (نظام الكورسات وما يتبعه)
-    'show_courses' => false,
-    'show_exams' => false,
-    'show_certificates' => false,
-    'show_achievements' => false,
-    'show_wallet' => false,
-    'show_invoices' => false,
-    'show_orders' => true,
-    'show_referrals' => true,
-    'show_consultations' => false,
-    'show_legacy_calendar' => false,
-    'show_course_progress' => false,
-    'show_live_broadcast' => true,
-    'show_support' => true,
+    // مسار الكورسات المستقلة
+    'show_courses' => true,
+    'show_course_progress' => true,
+    'show_certificates' => true,
 
-    // أقسام نشطة
-    'show_school' => true,
-    'show_classes' => true,
+    // مالية الطالب
+    'show_wallet' => true,
+    'show_invoices' => true,
+    'show_orders' => true,
+    'show_entitlements' => true,
+
+    // الحصة الفردية (الأساسي)
     'show_private_lessons' => true,
-    'show_assignments' => true,
-    'show_libraries' => true,
+
+    // دعم وحساب
+    'show_support' => true,
     'show_notifications' => true,
     'show_profile' => true,
     'show_settings' => true,
-    'show_entitlements' => true,
+    'show_referrals' => true,
+
+    // موروث مدرسي/جماعي/بث — معطّل (مرجعي)
+    'show_school' => false,
+    'show_classes' => false,
+    'show_live_broadcast' => false,
+    'show_libraries' => false,
+    'show_assignments' => false,
+    'show_exams' => false,
+    'show_achievements' => false,
+    'show_consultations' => false,
+    'show_legacy_calendar' => false,
 
     // تذكير قبل الموعد (دقائق)
     'reminder_minutes' => 30,

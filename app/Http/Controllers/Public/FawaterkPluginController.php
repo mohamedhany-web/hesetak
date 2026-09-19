@@ -26,7 +26,7 @@ class FawaterkPluginController extends Controller
                 $httpResponse = Http::timeout(60)
                     ->withHeaders([
                         'Accept' => 'application/javascript,text/javascript,*/*;q=0.1',
-                        'User-Agent' => 'Glottical/1.0 (Fawaterak plugin proxy)',
+                        'User-Agent' => 'حصتك/1.0 (Fawaterak plugin proxy)',
                     ])
                     ->get($upstream);
             } catch (\Throwable $e) {

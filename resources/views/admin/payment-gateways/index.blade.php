@@ -190,7 +190,7 @@
                     <div>
                         <label class="{{ $label }}" for="paypal_currency">عملة PayPal الافتراضية</label>
                         <select name="paypal_currency" id="paypal_currency" class="{{ $input }}">
-                            @foreach(['USD' => 'USD — دولار', 'EUR' => 'EUR — يورو', 'GBP' => 'GBP — إسترليني'] as $code => $labelText)
+                            @foreach(['SAR' => 'SAR — ريال سعودي', 'USD' => 'USD — دولار', 'EUR' => 'EUR — يورو', 'GBP' => 'GBP — إسترليني', 'EGP' => 'EGP — جنيه'] as $code => $labelText)
                                 <option value="{{ $code }}" @selected(old('paypal_currency', $paypalCurrency) === $code)>{{ $labelText }}</option>
                             @endforeach
                         </select>
@@ -280,7 +280,7 @@
                     <div>
                         <label class="{{ $label }}" for="kashier_currency">العملة</label>
                         <select name="kashier_currency" id="kashier_currency" class="{{ $input }}">
-                            @foreach(['USD' => 'USD — دولار', 'EUR' => 'EUR — يورو', 'GBP' => 'GBP — إسترليني'] as $code => $labelText)
+                            @foreach(['SAR' => 'SAR — ريال سعودي', 'USD' => 'USD — دولار', 'EUR' => 'EUR — يورو', 'GBP' => 'GBP — إسترليني', 'EGP' => 'EGP — جنيه'] as $code => $labelText)
                                 <option value="{{ $code }}" @selected(old('kashier_currency', $kashierCurrency) === $code)>{{ $labelText }}</option>
                             @endforeach
                         </select>

@@ -5,31 +5,26 @@
 @section('enable-content-protection', 'true')
 
 @section('content')
-<div class="min-h-screen bg-black">
-    <!-- شريط التحكم العلوي -->
-    <div class="bg-gray-900 text-white px-6 py-3 flex items-center justify-between">
-        <div class="flex items-center space-x-4 space-x-reverse">
-            <button onclick="exitLesson()" 
-                    class="text-gray-400 hover:text-white transition-colors">
-                <i class="fas fa-times text-xl"></i>
+<div class="st-lesson-viewer min-h-screen bg-[#0b1220]">
+    <div class="st-lesson-viewer__bar px-4 sm:px-6 py-3 flex items-center justify-between gap-3">
+        <div class="flex items-center gap-3 min-w-0">
+            <button type="button" onclick="exitLesson()" class="st-lesson-viewer__icon-btn" aria-label="{{ __('common.close') }}">
+                <i class="fas fa-times"></i>
             </button>
-            <div>
-                <h1 class="text-lg font-semibold">{{ $lesson->title }}</h1>
-                <p class="text-sm text-gray-400">{{ $course->title }}</p>
+            <div class="min-w-0">
+                <h1 class="text-base sm:text-lg font-bold text-white truncate">{{ $lesson->title }}</h1>
+                <p class="text-xs sm:text-sm text-white/60 truncate">{{ $course->title }}</p>
             </div>
         </div>
-        
-        <div class="flex items-center space-x-4 space-x-reverse">
-            <!-- التقدم في الدرس -->
-            <div class="flex items-center space-x-2 space-x-reverse">
-                <span class="text-sm text-gray-400">التقدم:</span>
-                <span id="lesson-progress" class="text-sm font-medium text-white">0%</span>
+
+        <div class="hidden sm:flex items-center gap-4 text-sm">
+            <div class="flex items-center gap-2">
+                <span class="text-white/50">{{ __('student.progress') }}:</span>
+                <span id="lesson-progress" class="font-bold text-[var(--st-gold,#C9952A)]">0%</span>
             </div>
-            
-            <!-- الوقت المتبقي -->
-            <div class="flex items-center space-x-2 space-x-reverse">
-                <span class="text-sm text-gray-400">الوقت:</span>
-                <span id="time-display" class="text-sm font-medium text-white">00:00 / {{ gmdate('i:s', ($lesson->duration_minutes ?? 0) * 60) }}</span>
+            <div class="flex items-center gap-2">
+                <span class="text-white/50">الوقت:</span>
+                <span id="time-display" class="font-medium text-white">00:00 / {{ gmdate('i:s', ($lesson->duration_minutes ?? 0) * 60) }}</span>
             </div>
         </div>
     </div>
@@ -53,7 +48,7 @@
                 {{ config('app.name') }}
             </div>
             <div class="watermark-3 absolute text-white opacity-5 text-3xl font-bold select-none animate-bounce">
-                منصة التعلم
+                {{ config('app.name') }}
             </div>
         </div>
         
@@ -74,7 +69,7 @@
                 </div>
             @else
                 <div class="text-center text-white">
-                    <i class="fas fa-exclamation-triangle text-4xl mb-4"></i>
+                    <i class="fas fa-exclamation-triangle text-4xl mb-4 text-[var(--st-gold,#C9952A)]"></i>
                     <p>لا يوجد فيديو متاح لهذا الدرس</p>
                 </div>
             @endif
@@ -85,26 +80,26 @@
             <div class="flex items-center space-x-4 space-x-reverse mb-4">
                 <!-- زر التشغيل/الإيقاف -->
                 <button id="play-pause-btn" onclick="togglePlayPause()" 
-                        class="w-12 h-12 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-full flex items-center justify-center text-white transition-colors">
+                        class="w-12 h-12 bg-[#1E4E8C] hover:bg-[#152A4A] rounded-full flex items-center justify-center text-white transition-colors">
                     <i id="play-pause-icon" class="fas fa-play"></i>
                 </button>
                 
                 <!-- شريط التقدم -->
                 <div class="flex-1">
-                    <div class="w-full bg-gray-600 rounded-full h-2 cursor-pointer" onclick="seekTo(event)">
-                        <div id="progress-bar" class="bg-blue-500 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+                    <div class="w-full bg-white/20 rounded-full h-2 cursor-pointer" onclick="seekTo(event)">
+                        <div id="progress-bar" class="bg-[var(--st-gold,#C9952A)] h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
                     </div>
                 </div>
                 
                 <!-- التحكم في الصوت -->
                 <button onclick="toggleMute()" 
-                        class="w-10 h-10 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-full flex items-center justify-center text-white transition-colors">
+                        class="w-10 h-10 bg-white/15 hover:bg-white/25 rounded-full flex items-center justify-center text-white transition-colors">
                     <i id="volume-icon" class="fas fa-volume-up"></i>
                 </button>
                 
                 <!-- ملء الشاشة -->
                 <button onclick="toggleFullscreen()" 
-                        class="w-10 h-10 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-full flex items-center justify-center text-white transition-colors">
+                        class="w-10 h-10 bg-white/15 hover:bg-white/25 rounded-full flex items-center justify-center text-white transition-colors">
                     <i class="fas fa-expand"></i>
                 </button>
             </div>
@@ -116,7 +111,7 @@
                 {{ auth()->user()->name }}
             </div>
             <div class="absolute top-3/4 right-1/4 text-white opacity-10 text-4xl font-bold -rotate-45 select-none">
-                منصة التعلم
+                {{ config('app.name') }}
             </div>
             <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-white opacity-5 text-8xl font-bold select-none">
                 {{ config('app.name') }}
@@ -125,19 +120,17 @@
     </div>
 
     <!-- تحذير الخروج -->
-    <div id="exit-warning" class="hidden fixed inset-0 bg-black bg-opacity-75 z-50 flex items-center justify-center">
-        <div class="bg-white rounded-lg p-6 max-w-md mx-4">
+    <div id="exit-warning" class="hidden fixed inset-0 bg-black/75 z-50 flex items-center justify-center">
+        <div class="bg-white rounded-2xl p-6 max-w-md mx-4 border border-slate-200 shadow-xl">
             <div class="text-center">
-                <i class="fas fa-exclamation-triangle text-4xl text-yellow-500 mb-4"></i>
+                <i class="fas fa-exclamation-triangle text-4xl text-[var(--st-gold,#C9952A)] mb-4"></i>
                 <h3 class="text-lg font-bold text-gray-900 mb-2">تأكيد الخروج</h3>
                 <p class="text-gray-600 mb-6">هل تريد الخروج من الدرس؟ سيتم حفظ تقدمك الحالي.</p>
-                <div class="flex space-x-4 space-x-reverse">
-                    <button onclick="confirmExit()" 
-                            class="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded-lg font-medium transition-colors">
+                <div class="flex gap-3">
+                    <button onclick="confirmExit()" class="flex-1 st-pill st-pill--solid" style="background:#dc2626;color:#fff;justify-content:center">
                         نعم، اخرج
                     </button>
-                    <button onclick="cancelExit()" 
-                            class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-700 py-2 px-4 rounded-lg font-medium transition-colors">
+                    <button onclick="cancelExit()" class="flex-1 st-pill st-pill--outline" style="justify-content:center">
                         إلغاء
                     </button>
                 </div>
@@ -145,6 +138,27 @@
         </div>
     </div>
 </div>
+
+@push('styles')
+<style>
+.st-lesson-viewer__bar {
+  background: linear-gradient(135deg, #1E4E8C 0%, #152A4A 100%);
+  border-bottom: 1px solid rgba(255,255,255,.12);
+}
+.st-lesson-viewer__icon-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,.2);
+  background: rgba(255,255,255,.08);
+  color: #fff;
+  display: inline-grid;
+  place-items: center;
+  cursor: pointer;
+}
+.st-lesson-viewer__icon-btn:hover { background: rgba(255,255,255,.16); }
+</style>
+@endpush
 
 @push('scripts')
 <script>

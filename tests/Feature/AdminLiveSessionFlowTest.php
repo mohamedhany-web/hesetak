@@ -92,7 +92,7 @@ class AdminLiveSessionFlowTest extends TestCase
             'livekit.livekit.api_secret' => 'test-secret-value-1234567890',
             'livekit.livekit.url' => 'wss://live.glottical.com',
             'livekit.livekit.host' => 'live.glottical.com',
-            'currency.code' => 'USD',
+            'currency.code' => 'SAR',
         ]);
     }
 
@@ -122,7 +122,7 @@ class AdminLiveSessionFlowTest extends TestCase
         $admin = $this->admin();
 
         LiveServer::create([
-            'name' => 'Glottical LiveKit',
+            'name' => 'حصتك LiveKit',
             'domain' => 'live.glottical.com',
             'provider' => 'livekit',
             'status' => 'active',
@@ -160,7 +160,7 @@ class AdminLiveSessionFlowTest extends TestCase
     {
         $admin = $this->admin();
         $server = LiveServer::create([
-            'name' => 'Glottical LiveKit',
+            'name' => 'حصتك LiveKit',
             'domain' => 'live.glottical.com',
             'provider' => 'livekit',
             'status' => 'active',
@@ -212,10 +212,10 @@ class AdminLiveSessionFlowTest extends TestCase
             ->assertSee('إنهاء البث', false);
     }
 
-    public function test_currency_helper_defaults_to_usd(): void
+    public function test_currency_helper_defaults_to_sar(): void
     {
-        $this->assertSame('USD', platform_currency());
-        $this->assertSame('$', currency_symbol());
-        $this->assertSame('USD', config('currency.code'));
+        $this->assertSame('SAR', platform_currency());
+        $this->assertSame('ر.س', currency_symbol());
+        $this->assertSame('SAR', config('currency.code'));
     }
 }

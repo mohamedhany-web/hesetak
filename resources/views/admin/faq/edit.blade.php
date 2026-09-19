@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'تعديل السؤال - Glottical')
+@section('title', 'تعديل السؤال - حصتك')
 @section('page_title', 'تعديل السؤال')
 
 @section('content')

@@ -5,12 +5,12 @@
 
 @section('content')
 @php
-    $isRtl = app()->getLocale() === 'ar';
+    $locale = app()->getLocale();
     $prioChip = match ($task->priority) {
-        'urgent' => 'su-chip--off',
-        'high' => 'su-chip--warn',
-        'medium' => 'su-soft-1',
-        default => '',
+        'urgent' => 'id-chip--rose',
+        'high' => 'id-chip--warn',
+        'medium' => 'id-chip--muted',
+        default => 'id-chip--muted',
     };
     $prioLabel = match ($task->priority) {
         'urgent' => __('instructor.urgent'),
@@ -19,9 +19,9 @@
         default => __('instructor.low'),
     };
     $stChip = match ($task->status) {
-        'completed' => 'su-chip--ok',
-        'in_progress' => 'su-soft-1',
-        default => 'su-chip--warn',
+        'completed' => 'id-chip--ok',
+        'in_progress' => 'id-chip--muted',
+        default => 'id-chip--warn',
     };
     $stLabel = match ($task->status) {
         'completed' => __('instructor.completed'),
@@ -29,123 +29,146 @@
         default => __('instructor.pending'),
     };
 @endphp
-<div class="su-page">
-    <div class="su-page-head">
-        <div class="min-w-0">
-            <nav class="su-crumb-inline" aria-label="breadcrumb">
-                <a href="{{ route('instructor.tasks.index') }}">{{ __('instructor.tasks_from_management') }}</a>
-                <span>/</span>
-                <strong style="color:var(--su-ink)">{{ $task->title }}</strong>
-            </nav>
-            <h1 class="su-page-head__title">{{ $task->title }}</h1>
-            <div class="su-chip-row">
+
+<div class="id-page">
+    <section class="id-hero" aria-label="{{ $task->title }}">
+        <div class="id-hero__copy">
+            <p class="id-hero__kicker">{{ __('instructor.tasks_from_management') }}</p>
+            <h2 class="id-hero__title">{{ $task->title }}</h2>
+            <p class="id-hero__meta" style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
                 @if($task->assigner)
-                    <span class="su-chip">{{ __('instructor.from_management') }}</span>
+                    <span class="id-chip" style="background:rgba(255,255,255,.18);color:#fff;border:1px solid rgba(255,255,255,.35)">{{ __('instructor.from_management') }}</span>
                 @endif
-                <span class="su-chip {{ $prioChip }}">{{ $prioLabel }}</span>
-                <span class="su-chip {{ $stChip }}">{{ $stLabel }}</span>
-            </div>
+                <span class="id-chip" style="background:rgba(255,255,255,.18);color:#fff;border:1px solid rgba(255,255,255,.35)">{{ $prioLabel }}</span>
+                <span class="id-chip" style="background:rgba(255,255,255,.18);color:#fff;border:1px solid rgba(255,255,255,.35)">{{ $stLabel }}</span>
+            </p>
         </div>
-        <div class="su-page-head__actions">
-            @if(!$task->assigned_by)
-                <a href="{{ route('instructor.tasks.edit', $task) }}" class="su-btn">
+        <div class="id-hero__actions">
+            @if(! $task->assigned_by)
+                <a href="{{ route('instructor.tasks.edit', $task) }}" class="id-btn id-btn--gold">
                     <i class="fas fa-edit" aria-hidden="true"></i>
                     {{ __('common.edit') }}
                 </a>
             @endif
-            <a href="{{ route('instructor.tasks.index') }}" class="su-btn">
-                <i class="fas fa-arrow-{{ $isRtl ? 'right' : 'left' }}" aria-hidden="true"></i>
+            <a href="{{ route('instructor.tasks.index') }}" class="id-btn id-btn--ghost">
+                <i class="fas fa-arrow-{{ $locale === 'ar' ? 'right' : 'left' }}" aria-hidden="true"></i>
                 {{ __('instructor.back') }}
             </a>
         </div>
-    </div>
+    </section>
 
     @if($task->description)
-        <section class="su-card" style="margin-bottom:16px">
-            <h2 class="su-card__title"><i class="fas fa-align-left" aria-hidden="true"></i> {{ __('instructor.description') }}</h2>
-            <div class="su-prose-body" style="white-space:pre-wrap">{{ $task->description }}</div>
+        <section class="id-panel">
+            <header class="id-panel__head">
+                <h2>{{ __('instructor.description') }}</h2>
+            </header>
+            <p style="margin:0;font-size:14px;font-weight:600;line-height:1.8;color:#3A4A63;white-space:pre-wrap">{{ $task->description }}</p>
         </section>
     @endif
 
-    <section class="su-card" style="margin-bottom:16px">
-        <h2 class="su-card__title"><i class="fas fa-info-circle" aria-hidden="true"></i> {{ __('instructor.additional_details') }}</h2>
-        <div class="su-meta-list">
+    <section class="id-panel">
+        <header class="id-panel__head">
+            <h2>{{ __('instructor.additional_details') }}</h2>
+        </header>
+        <div class="id-meta">
             @if($task->relatedCourse)
-                <div class="su-meta-row">
-                    <span class="su-meta-ico su-soft-1"><i class="fas fa-book" aria-hidden="true"></i></span>
-                    <span>{{ __('instructor.course') }}:</span>
+                <div class="id-meta__row">
+                    <span class="id-meta__ico"><i class="fas fa-book" aria-hidden="true"></i></span>
+                    <span>{{ __('instructor.course') }}</span>
                     <strong>{{ $task->relatedCourse->title }}</strong>
                 </div>
             @endif
             @if($task->relatedLecture)
-                <div class="su-meta-row">
-                    <span class="su-meta-ico su-soft-2"><i class="fas fa-chalkboard-teacher" aria-hidden="true"></i></span>
-                    <span>{{ __('instructor.lecture') }}:</span>
+                <div class="id-meta__row">
+                    <span class="id-meta__ico"><i class="fas fa-chalkboard-teacher" aria-hidden="true"></i></span>
+                    <span>{{ __('instructor.lecture') }}</span>
                     <strong>{{ $task->relatedLecture->title }}</strong>
                 </div>
             @endif
             @if($task->due_date)
-                <div class="su-meta-row">
-                    <span class="su-meta-ico su-soft-3"><i class="fas fa-calendar-alt" aria-hidden="true"></i></span>
-                    <span>{{ __('instructor.due_date') }}:</span>
-                    <strong>{{ $task->due_date->format('Y-m-d H:i') }}</strong>
-                    @if($task->due_date->isPast() && $task->status != 'completed')
-                        <span class="su-chip su-chip--off">{{ __('instructor.late') }}</span>
-                    @endif
+                <div class="id-meta__row">
+                    <span class="id-meta__ico"><i class="fas fa-calendar-alt" aria-hidden="true"></i></span>
+                    <span>{{ __('instructor.due_date') }}</span>
+                    <strong>
+                        {{ $task->due_date->format('Y-m-d H:i') }}
+                        @if($task->due_date->isPast() && $task->status != 'completed')
+                            <span class="id-chip id-chip--rose" style="margin-inline-start:8px">{{ __('instructor.late') }}</span>
+                        @endif
+                    </strong>
                 </div>
             @endif
             @if($task->completed_at)
-                <div class="su-meta-row">
-                    <span class="su-meta-ico su-soft-4"><i class="fas fa-check-double" aria-hidden="true"></i></span>
-                    <span>{{ __('instructor.completed') }}:</span>
+                <div class="id-meta__row">
+                    <span class="id-meta__ico"><i class="fas fa-check-double" aria-hidden="true"></i></span>
+                    <span>{{ __('instructor.completed') }}</span>
                     <strong>{{ $task->completed_at->format('Y-m-d H:i') }}</strong>
                 </div>
             @endif
             @if($task->assigned_by && isset($task->progress))
-                <div class="su-meta-row">
-                    <span class="su-meta-ico su-soft-1"><i class="fas fa-chart-line" aria-hidden="true"></i></span>
-                    <span>{{ __('instructor.progress_label') }}:</span>
-                    <strong class="tabular-nums">{{ (int)($task->progress ?? 0) }}%</strong>
+                <div class="id-meta__row">
+                    <span class="id-meta__ico"><i class="fas fa-chart-line" aria-hidden="true"></i></span>
+                    <span>{{ __('instructor.progress_label') }}</span>
+                    <strong class="tabular-nums">{{ (int) ($task->progress ?? 0) }}%</strong>
                 </div>
             @endif
+            <div class="id-meta__row">
+                <span class="id-meta__ico"><i class="fas fa-flag" aria-hidden="true"></i></span>
+                <span>{{ __('instructor.priority') }}</span>
+                <strong><span class="id-chip {{ $prioChip }}">{{ $prioLabel }}</span></strong>
+            </div>
+            <div class="id-meta__row">
+                <span class="id-meta__ico"><i class="fas fa-info-circle" aria-hidden="true"></i></span>
+                <span>{{ __('common.status') }}</span>
+                <strong><span class="id-chip {{ $stChip }}">{{ $stLabel }}</span></strong>
+            </div>
         </div>
     </section>
 
     @if($task->assigned_by)
-        <section class="su-card" style="margin-bottom:16px">
-            <h2 class="su-card__title"><i class="fas fa-tasks" aria-hidden="true"></i> {{ __('instructor.update_progress') }}</h2>
-            <form action="{{ route('instructor.tasks.update-progress', $task) }}" method="POST" class="su-form-grid" style="grid-template-columns:1fr 1fr auto;align-items:end">
+        <section class="id-panel">
+            <header class="id-panel__head">
+                <h2>{{ __('instructor.update_progress') }}</h2>
+            </header>
+            <form action="{{ route('instructor.tasks.update-progress', $task) }}" method="POST" class="id-form">
                 @csrf
                 @method('PUT')
-                <div class="su-field">
-                    <label>{{ __('common.status') }}</label>
-                    <select name="status" class="su-select">
-                        <option value="pending" {{ $task->status === 'pending' ? 'selected' : '' }}>{{ __('instructor.pending') }}</option>
-                        <option value="in_progress" {{ $task->status === 'in_progress' ? 'selected' : '' }}>{{ __('instructor.in_progress') }}</option>
-                        <option value="completed" {{ $task->status === 'completed' ? 'selected' : '' }}>{{ __('instructor.completed') }}</option>
-                    </select>
+                <div class="id-form-grid" style="align-items:end">
+                    <div class="id-field">
+                        <label for="task-prog-status">{{ __('common.status') }}</label>
+                        <select name="status" id="task-prog-status" class="id-select">
+                            <option value="pending" @selected($task->status === 'pending')>{{ __('instructor.pending') }}</option>
+                            <option value="in_progress" @selected($task->status === 'in_progress')>{{ __('instructor.in_progress') }}</option>
+                            <option value="completed" @selected($task->status === 'completed')>{{ __('instructor.completed') }}</option>
+                        </select>
+                    </div>
+                    <div class="id-field">
+                        <label for="task-prog">{{ __('instructor.progress_percent') }}</label>
+                        <input type="number" name="progress" id="task-prog" min="0" max="100"
+                               value="{{ (int) ($task->progress ?? 0) }}" class="id-input">
+                    </div>
                 </div>
-                <div class="su-field">
-                    <label>{{ __('instructor.progress_percent') }}</label>
-                    <input type="number" name="progress" min="0" max="100" value="{{ (int)($task->progress ?? 0) }}" class="su-input">
+                <div>
+                    <button type="submit" class="id-btn id-btn--navy">
+                        <i class="fas fa-save" aria-hidden="true"></i>
+                        {{ __('instructor.save_progress') }}
+                    </button>
                 </div>
-                <button type="submit" class="su-btn su-btn--primary" style="height:40px">
-                    <i class="fas fa-save" aria-hidden="true"></i>
-                    {{ __('instructor.save_progress') }}
-                </button>
             </form>
         </section>
 
-        <section class="su-card">
-            <h2 class="su-card__title"><i class="fas fa-paper-plane" aria-hidden="true"></i> {{ __('instructor.my_submissions') }}</h2>
+        <section class="id-panel id-panel--wide">
+            <header class="id-panel__head">
+                <h2>{{ __('instructor.my_submissions') }}</h2>
+            </header>
+
             @if($task->deliverables->count() > 0)
-                <div class="su-list" style="margin-bottom:20px">
+                <div class="id-list" style="margin-bottom:16px">
                     @foreach($task->deliverables as $d)
                         @php
                             $dChip = match ($d->status) {
-                                'approved' => 'su-chip--ok',
-                                'rejected', 'needs_revision' => 'su-chip--off',
-                                default => 'su-soft-1',
+                                'approved' => 'id-chip--ok',
+                                'rejected', 'needs_revision' => 'id-chip--rose',
+                                default => 'id-chip--muted',
                             };
                             $dLabel = match ($d->status) {
                                 'approved' => __('instructor.approved'),
@@ -154,14 +177,15 @@
                                 default => __('instructor.submitted_status'),
                             };
                         @endphp
-                        <div class="su-list-item">
-                            <div class="su-list-item__body">
-                                <div class="su-list-item__title">{{ $d->title }}</div>
+                        <article class="id-list__row">
+                            <span class="id-list__ico id-list__ico--gold" aria-hidden="true"><i class="fas fa-paper-plane"></i></span>
+                            <div class="id-list__body">
+                                <div class="id-list__title">{{ $d->title }}</div>
                                 @if($d->description)
-                                    <p style="margin:4px 0 0;font-size:13px;color:var(--su-ink-40)">{{ $d->description }}</p>
+                                    <div class="id-list__meta">{{ $d->description }}</div>
                                 @endif
-                                <div class="su-list-item__meta">
-                                    <span>{{ $d->submitted_at?->format('Y-m-d H:i') }}</span>
+                                <div class="id-list__meta" style="margin-top:4px">
+                                    {{ $d->submitted_at?->format('Y-m-d H:i') }}
                                     @if($d->delivery_type === 'link' && $d->link_url)
                                         · <a href="{{ $d->link_url }}" target="_blank" rel="noopener">{{ __('instructor.open_link') }}</a>
                                     @endif
@@ -170,49 +194,53 @@
                                     @endif
                                 </div>
                                 @if($d->feedback)
-                                    <p style="margin:8px 0 0;padding:8px 10px;border-radius:8px;background:rgba(245,158,11,.1);font-size:13px">
+                                    <div class="id-alert id-alert--info" style="margin-top:8px;padding:8px 10px">
                                         <strong>{{ __('instructor.admin_notes_label') }}:</strong> {{ $d->feedback }}
-                                    </p>
+                                    </div>
                                 @endif
                             </div>
-                            <span class="su-chip {{ $dChip }}">{{ $dLabel }}</span>
-                        </div>
+                            <span class="id-chip {{ $dChip }}">{{ $dLabel }}</span>
+                        </article>
                     @endforeach
                 </div>
             @endif
-            <form action="{{ route('instructor.tasks.submit-deliverable', $task) }}" method="POST" enctype="multipart/form-data">
+
+            <form action="{{ route('instructor.tasks.submit-deliverable', $task) }}" method="POST" enctype="multipart/form-data" class="id-form">
                 @csrf
-                <div class="su-form-grid" style="grid-template-columns:1fr 1fr">
-                    <div class="su-field">
-                        <label>{{ __('instructor.submission_title_label') }} <span style="color:#b91c1c">*</span></label>
-                        <input type="text" name="title" required maxlength="255" value="{{ old('title') }}" class="su-input"
-                               placeholder="{{ __('instructor.submission_title_placeholder') }}">
+                <div class="id-form-grid">
+                    <div class="id-field">
+                        <label for="deliv-title">{{ __('instructor.submission_title_label') }} <span style="color:#B91C1C">*</span></label>
+                        <input type="text" name="title" id="deliv-title" required maxlength="255" value="{{ old('title') }}"
+                               class="id-input" placeholder="{{ __('instructor.submission_title_placeholder') }}">
                     </div>
-                    <div class="su-field">
-                        <label>{{ __('instructor.submission_type_label') }}</label>
-                        <select name="delivery_type" id="delivery_type" class="su-select">
+                    <div class="id-field">
+                        <label for="delivery_type">{{ __('instructor.submission_type_label') }}</label>
+                        <select name="delivery_type" id="delivery_type" class="id-select">
                             <option value="file">{{ __('instructor.file_type') }}</option>
                             <option value="image">{{ __('instructor.image_type') }}</option>
                             <option value="link">{{ __('instructor.link_type') }}</option>
                         </select>
                     </div>
-                    <div class="su-field" style="grid-column:1 / -1">
-                        <label>{{ __('instructor.description_optional') }}</label>
-                        <textarea name="description" rows="2" class="su-input" style="min-height:64px;resize:vertical"
+                    <div class="id-field id-field--span2">
+                        <label for="deliv-desc">{{ __('instructor.description_optional') }}</label>
+                        <textarea name="description" id="deliv-desc" rows="2" class="id-input"
+                                  style="min-height:64px;padding-top:10px;padding-bottom:10px;resize:vertical"
                                   placeholder="{{ __('instructor.submission_description_placeholder') }}">{{ old('description') }}</textarea>
                     </div>
-                    <div class="su-field" id="file_input" style="grid-column:1 / -1">
-                        <label>{{ __('instructor.file_label') }}</label>
-                        <input type="file" name="file" accept=".pdf,.doc,.docx,.xls,.xlsx,image/*" class="su-input">
-                        <span style="font-size:12px;color:var(--su-ink-40)">{{ __('instructor.max_10mb') }}</span>
+                    <div class="id-field id-field--span2" id="file_input">
+                        <label for="deliv-file">{{ __('instructor.file_label') }}</label>
+                        <input type="file" name="file" id="deliv-file" accept=".pdf,.doc,.docx,.xls,.xlsx,image/*"
+                               class="id-input" style="padding-top:10px;padding-bottom:10px">
+                        <p class="id-field__hint">{{ __('instructor.max_10mb') }}</p>
                     </div>
-                    <div class="su-field" id="link_input" style="display:none;grid-column:1 / -1">
-                        <label>{{ __('instructor.submission_link_label') }}</label>
-                        <input type="url" name="link_url" value="{{ old('link_url') }}" placeholder="https://..." class="su-input">
+                    <div class="id-field id-field--span2" id="link_input" style="display:none">
+                        <label for="deliv-link">{{ __('instructor.submission_link_label') }}</label>
+                        <input type="url" name="link_url" id="deliv-link" value="{{ old('link_url') }}"
+                               placeholder="https://..." class="id-input">
                     </div>
                 </div>
-                <div class="su-form-actions" style="margin-top:12px">
-                    <button type="submit" class="su-btn su-btn--primary">
+                <div>
+                    <button type="submit" class="id-btn id-btn--navy">
                         <i class="fas fa-paper-plane" aria-hidden="true"></i>
                         {{ __('instructor.submit_work') }}
                     </button>
@@ -225,7 +253,7 @@
 
 @push('scripts')
 <script>
-document.getElementById('delivery_type')?.addEventListener('change', function() {
+document.getElementById('delivery_type')?.addEventListener('change', function () {
     var type = this.value;
     var fileInput = document.getElementById('file_input');
     var linkInput = document.getElementById('link_input');

@@ -12,9 +12,9 @@
 <div class="space-y-5" x-data="{ activeTab: '{{ $activeTab }}' }">
     <section class="flex flex-wrap items-end justify-between gap-4">
         <div class="min-w-0">
-            <p class="text-xs font-medium text-muted">التجارة · تسعير Glottical</p>
+            <p class="text-xs font-medium text-muted">التجارة · تسعير حصتك</p>
             <h2 class="mt-1 text-2xl font-semibold tracking-tight text-ink md:text-[28px]">الباقات والأسعار</h2>
-            <p class="mt-1 max-w-2xl text-sm text-muted">مركز موحّد لباقات البرامج المسجّلة، أسعار البرامج، وباقات الحصص المباشرة وفق مواصفات المنصة (USD + حساب تلقائي).</p>
+            <p class="mt-1 max-w-2xl text-sm text-muted">مركز موحّد لباقات البرامج المسجّلة، أسعار البرامج، وباقات الحصص المباشرة وفق مواصفات المنصة ({{ currency_label() }} + حساب تلقائي).</p>
         </div>
         <div class="flex flex-wrap items-center gap-2">
             <a href="{{ route('admin.packages.create') }}"
@@ -134,7 +134,7 @@
                                 <th class="px-4 py-3">الباقة</th>
                                 <th class="px-4 py-3">المسار</th>
                                 <th class="px-4 py-3">البرامج</th>
-                                <th class="px-4 py-3">السعر (USD)</th>
+                                <th class="px-4 py-3">السعر ({{ currency_label() }})</th>
                                 <th class="px-4 py-3">الحالة</th>
                                 <th class="px-4 py-3">إجراءات</th>
                             </tr>
@@ -202,7 +202,7 @@
             <article class="rounded-2xl border border-dashed border-line bg-surface px-6 py-14 text-center shadow-soft">
                 <div class="mx-auto inline-flex size-14 items-center justify-center rounded-2xl bg-[#f2f5f4] text-accent"><i class="fas fa-box text-xl"></i></div>
                 <h3 class="mt-4 text-lg font-semibold text-ink">لا توجد باقات برامج</h3>
-                <p class="mt-1 text-sm text-muted">أنشئ باقة تجمع عدة برامج بسعر موحّد بالدولار.</p>
+                <p class="mt-1 text-sm text-muted">أنشئ باقة تجمع عدة برامج بسعر موحّد بالريال السعودي.</p>
                 <a href="{{ route('admin.packages.create') }}" class="btn-press mt-5 inline-flex h-10 items-center gap-2 rounded-xl bg-accent px-4 text-sm font-medium text-white">إضافة باقة</a>
             </article>
         @endif
@@ -229,7 +229,7 @@
             <article class="rounded-2xl border border-line bg-surface p-4 shadow-soft">
                 <div class="inline-flex size-9 items-center justify-center rounded-xl bg-[#f2f5f4] text-accent"><i class="fas fa-chart-line text-sm"></i></div>
                 <p class="mt-3 text-xs font-medium text-muted">إجمالي قيمة الأسعار</p>
-                <p class="mt-1 text-2xl font-semibold tabular-nums text-ink">{{ number_format($courseStats['total_revenue'] ?? 0, 0) }} <span class="text-sm font-medium text-muted">USD</span></p>
+                <p class="mt-1 text-2xl font-semibold tabular-nums text-ink">{{ number_format($courseStats['total_revenue'] ?? 0, 0) }} <span class="text-sm font-medium text-muted">{{ currency_label() }}</span></p>
             </article>
         </section>
 
@@ -355,7 +355,7 @@
                                 @if($course->is_free || (float) $course->price == 0)
                                     <span class="font-medium text-emerald-700">مجاني</span>
                                 @else
-                                    <span class="font-semibold tabular-nums text-ink">{{ number_format((float) $course->price, 2) }} USD</span>
+                                    <span class="font-semibold tabular-nums text-ink">{{ number_format((float) $course->price, 2) }} {{ currency_label() }}</span>
                                 @endif
                             </div>
 
@@ -395,7 +395,7 @@
     {{-- ===== باقات الحصص المباشرة ===== --}}
     <div x-show="activeTab === 'tutoring'" x-cloak class="space-y-5">
         <div class="rounded-2xl border border-accent/20 bg-accent-soft/40 px-4 py-4 text-sm text-ink shadow-soft">
-            <p class="font-semibold text-ink">حساب الباقة تلقائيًا (مواصفات Glottical)</p>
+            <p class="font-semibold text-ink">حساب الباقة تلقائيًا (مواصفات حصتك)</p>
             <p class="mt-1 text-muted">السعر الأصلي = سعر الساعة × حصص/شهر × عدد الأشهر. يمكن خفض السعر النهائي لمنح خصم على طبقات الاشتراك.</p>
             <div class="mt-3 flex flex-wrap items-center gap-2 text-xs font-medium">
                 <span class="rounded-xl border border-line bg-surface px-3 py-1.5">سعر الساعة 10$</span>
@@ -500,7 +500,7 @@
                                     </td>
                                     <td class="px-4 py-3 tabular-nums">{{ $tp->duration_months }}</td>
                                     <td class="px-4 py-3 tabular-nums">{{ $tp->sessions_per_month }}</td>
-                                    <td class="px-4 py-3 tabular-nums">{{ number_format((float) $tp->hourly_rate, 2) }} {{ $tp->currency ?: 'USD' }}</td>
+                                    <td class="px-4 py-3 tabular-nums">{{ number_format((float) $tp->hourly_rate, 2) }} {{ $tp->currency ?: '{{ currency_label() }}' }}</td>
                                     <td class="px-4 py-3">
                                         <div class="tabular-nums text-muted line-through text-xs">{{ number_format((float) ($tp->original_price ?? 0), 0) }}</div>
                                         <div class="font-semibold tabular-nums text-ink">{{ $tp->formattedPrice() }}</div>

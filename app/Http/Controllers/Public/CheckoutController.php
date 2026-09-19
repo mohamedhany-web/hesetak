@@ -125,14 +125,14 @@ class CheckoutController extends Controller
         $request->validate([
             'coupon_code' => 'nullable|string|max:64',
             'wallet_credit' => 'nullable|numeric|min:0',
-            'currency' => 'nullable|in:EGP,USD,egp,usd',
+            'currency' => 'nullable|in:SAR,USD,EGP,sar,usd,egp',
         ]);
 
         $course = AdvancedCourse::where('id', $courseId)
             ->where('is_active', true)
             ->firstOrFail();
 
-        $currency = 'USD';
+        $currency = platform_currency();
 
         $pricing = CourseCheckoutPricingService::resolve(
             Auth::user(),
@@ -181,7 +181,7 @@ class CheckoutController extends Controller
         $request->validate([
             'coupon_code' => 'nullable|string|max:64',
             'wallet_credit' => 'nullable|numeric|min:0',
-            'currency' => 'nullable|in:EGP,USD,egp,usd',
+            'currency' => 'nullable|in:SAR,USD,EGP,sar,usd,egp',
         ]);
 
         $pricing = CourseCheckoutPricingService::resolve(
@@ -190,7 +190,7 @@ class CheckoutController extends Controller
             $request->input('coupon_code'),
             (float) $request->input('wallet_credit', 0),
             null,
-            'USD'
+            platform_currency()
         );
 
         if (! $pricing['ok']) {
@@ -207,7 +207,7 @@ class CheckoutController extends Controller
             'discount_amount' => $pricing['discount_amount'],
             'wallet_credit_amount' => $pricing['wallet_credit_amount'],
             'amount' => $pricing['final_amount'],
-            'currency' => 'USD',
+            'currency' => platform_currency(),
             'billing_mode' => $course->billing_mode ?? CourseSubscriptionService::BILLING_ONE_TIME,
             'payment_method' => 'online',
             'payment_proof' => null,
@@ -400,10 +400,10 @@ class CheckoutController extends Controller
         $request->validate([
             'coupon_code' => 'nullable|string|max:64',
             'wallet_credit' => 'nullable|numeric|min:0',
-            'currency' => 'nullable|in:EGP,USD,egp,usd',
+            'currency' => 'nullable|in:SAR,USD,EGP,sar,usd,egp',
         ]);
 
-        $currency = 'USD';
+        $currency = platform_currency();
 
         $pricing = CourseCheckoutPricingService::resolve(
             Auth::user(),
@@ -546,7 +546,7 @@ class CheckoutController extends Controller
             $phone = '0000000000';
         }
 
-        $currency = $order->currencyCode() ?: (string) config('currency.code', 'USD');
+        $currency = $order->currencyCode() ?: (string) config('currency.code', 'SAR');
         $cartTotal = number_format($amount, 2, '.', '');
         $itemPrice = $cartTotal;
 
@@ -685,7 +685,7 @@ class CheckoutController extends Controller
         }
 
         $amount = (float) $order->amount;
-        $currency = $order->currencyCode() ?: (string) config('currency.code', 'USD');
+        $currency = $order->currencyCode() ?: (string) config('currency.code', 'SAR');
         $cartTotal = number_format($amount, 2, '.', '');
         $itemPrice = $cartTotal;
 
@@ -977,7 +977,7 @@ class CheckoutController extends Controller
             $transactionDescription = 'دفع كورس: '.$orderTitle.' - طلب #'.$order->id;
         }
 
-        $currency = $order->currencyCode() ?: (string) config('currency.code', 'USD');
+        $currency = $order->currencyCode() ?: (string) config('currency.code', 'SAR');
 
         $orig = (float) ($order->original_amount ?? $order->amount);
         $couponDisc = (float) ($order->discount_amount ?? 0);
@@ -1214,10 +1214,10 @@ class CheckoutController extends Controller
         $request->validate([
             'coupon_code' => 'nullable|string|max:64',
             'wallet_credit' => 'nullable|numeric|min:0',
-            'currency' => 'nullable|in:EGP,USD,egp,usd',
+            'currency' => 'nullable|in:SAR,USD,EGP,sar,usd,egp',
         ]);
 
-        $currency = 'USD';
+        $currency = platform_currency();
 
         $pricing = CourseCheckoutPricingService::resolve(
             Auth::user(),
@@ -1266,10 +1266,10 @@ class CheckoutController extends Controller
 
             $extraNotes = [];
             if ($pricing['discount_amount'] > 0) {
-                $extraNotes[] = 'خصم كوبون: '.number_format($pricing['discount_amount'], 2).' $';
+                $extraNotes[] = 'خصم كوبون: '.number_format($pricing['discount_amount'], 2) . ' ' . currency_symbol();
             }
             if ($pricing['wallet_credit_amount'] > 0) {
-                $extraNotes[] = 'خصم من رصيد المحفظة: '.number_format($pricing['wallet_credit_amount'], 2).' $';
+                $extraNotes[] = 'خصم من رصيد المحفظة: '.number_format($pricing['wallet_credit_amount'], 2) . ' ' . currency_symbol();
             }
             $notes = trim((string) ($request->notes ?? ''));
             if ($extraNotes !== []) {

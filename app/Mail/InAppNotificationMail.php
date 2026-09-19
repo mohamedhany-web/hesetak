@@ -20,7 +20,7 @@ class InAppNotificationMail extends Mailable
 
     public function envelope(): Envelope
     {
-        $app = config('app.name', 'Glottical');
+        $app = config('app.name', 'حصتك');
 
         return new Envelope(
             subject: '['.$app.'] '.$this->notification->title,

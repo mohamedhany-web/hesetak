@@ -14,9 +14,12 @@ class CourseCheckoutPricingService
      *
      * @return array{ok: bool, message?: string, original_amount: float, coupon_id: ?int, discount_amount: float, wallet_credit_amount: float, final_amount: float, coupon: ?Coupon}
      */
-    public static function resolve(User $user, AdvancedCourse $course, ?string $couponCode, float $walletCreditRequested, ?string $billingMode = null, string $currency = 'USD'): array
+    public static function resolve(User $user, AdvancedCourse $course, ?string $couponCode, float $walletCreditRequested, ?string $billingMode = null, ?string $currency = null): array
     {
-        $currency = strtoupper($currency) === 'EGP' ? 'EGP' : 'USD';
+        $currency = strtoupper((string) ($currency ?: platform_currency()));
+        if (! in_array($currency, ['SAR', 'USD', 'EGP'], true)) {
+            $currency = platform_currency();
+        }
         $billingMode = $billingMode ?? ($course->isMonthlyBilling()
             ? \App\Services\CourseSubscriptionService::BILLING_MONTHLY
             : \App\Services\CourseSubscriptionService::BILLING_ONE_TIME);
@@ -69,7 +72,7 @@ class CourseCheckoutPricingService
             if ($coupon->minimum_amount && $original < (float) $coupon->minimum_amount) {
                 return [
                     'ok' => false,
-                    'message' => 'الحد الأدنى لاستخدام هذا الكوبون هو '.number_format((float) $coupon->minimum_amount, 2).' $',
+                    'message' => 'الحد الأدنى لاستخدام هذا الكوبون هو '.number_format((float) $coupon->minimum_amount, 2). ' ' . currency_symbol(),
                     'original_amount' => $original,
                     'coupon_id' => null,
                     'discount_amount' => 0,

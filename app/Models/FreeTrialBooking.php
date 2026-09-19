@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class FreeTrialBooking extends Model
 {
+    public const STATUS_PENDING = 'pending';
+
     public const STATUS_CONFIRMED = 'confirmed';
 
     public const STATUS_CANCELLED = 'cancelled';
@@ -19,11 +21,14 @@ class FreeTrialBooking extends Model
 
     public const GOAL_PLACEMENT = 'placement';
 
+    public const GOAL_FREE_SESSION = 'free_session';
+
     protected $fillable = [
-        'name', 'email', 'phone', 'country_code', 'goal', 'user_id',
+        'name', 'email', 'phone', 'country_code', 'goal', 'user_id', 'instructor_id',
         'starts_at', 'ends_at', 'duration_minutes', 'status', 'notes',
         'timezone', 'us_state',
         'recommended_academic_year_id', 'admin_notes',
+        'one_to_one_session_id',
     ];
 
     protected $casts = [
@@ -37,13 +42,17 @@ class FreeTrialBooking extends Model
     public static function goalOptions(): array
     {
         return [
-            self::GOAL_CONSULTATION => [
-                'ar' => 'استشارة',
-                'en' => 'Consultation',
+            self::GOAL_FREE_SESSION => [
+                'ar' => 'حصة مجانية',
+                'en' => 'Free session',
             ],
             self::GOAL_TRIAL => [
                 'ar' => 'حصة تجريبية',
                 'en' => 'Trial lesson',
+            ],
+            self::GOAL_CONSULTATION => [
+                'ar' => 'استشارة',
+                'en' => 'Consultation',
             ],
             self::GOAL_PLACEMENT => [
                 'ar' => 'تحديد مستوى',
@@ -78,6 +87,16 @@ class FreeTrialBooking extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function instructor(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'instructor_id');
+    }
+
+    public function oneToOneSession(): BelongsTo
+    {
+        return $this->belongsTo(OneToOneSession::class, 'one_to_one_session_id');
     }
 
     public function recommendedAcademicYear(): BelongsTo

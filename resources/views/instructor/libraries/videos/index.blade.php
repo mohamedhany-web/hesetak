@@ -4,76 +4,119 @@
 @section('page_title', __('instructor.lib_videos_title'))
 
 @section('content')
-<div class="su-page">
-    <div class="su-page-head">
-        <div class="min-w-0">
-            <h1 class="su-page-head__title">
-                <i class="fas fa-video su-page-head__ico" aria-hidden="true"></i>
-                {{ __('instructor.lib_videos_title') }}
-            </h1>
-            <p class="su-page-head__sub">{{ __('instructor.lib_videos_subtitle') }}</p>
+@php
+    $locale = app()->getLocale();
+    $themeLocale = $locale === 'ar' ? 'ar' : 'en';
+    $ownTotal = method_exists($videos, 'total') ? $videos->total() : $videos->count();
+    $academyTotal = ($academyVideos ?? collect())->count();
+    $foldersTotal = ($folders ?? collect())->count();
+    $materialsHref = Route::has('instructor.libraries.materials.index')
+        ? route('instructor.libraries.materials.index')
+        : null;
+@endphp
+
+<div class="id-page">
+    <section class="id-hero" aria-label="{{ __('instructor.lib_videos_title') }}">
+        <div class="id-hero__copy">
+            <p class="id-hero__kicker">{{ __('instructor.videos_for_students') }}</p>
+            <h2 class="id-hero__title">{{ __('instructor.lib_videos_title') }}</h2>
+            <p class="id-hero__meta">{{ __('instructor.lib_videos_subtitle') }}</p>
         </div>
-        <div class="su-page-head__actions">
-            <a href="{{ route('instructor.libraries.videos.create') }}" class="su-btn su-btn--primary">
+        <div class="id-hero__actions">
+            <a href="{{ route('instructor.libraries.videos.create') }}" class="id-btn id-btn--gold">
                 <i class="fas fa-plus" aria-hidden="true"></i>
                 {{ __('instructor.lib_videos_add') }}
             </a>
+            @if($materialsHref)
+                <a href="{{ $materialsHref }}" class="id-btn id-btn--ghost">
+                    <i class="fas fa-folder-open" aria-hidden="true"></i>
+                    {{ __('instructor.materials_library') }}
+                </a>
+            @endif
         </div>
-    </div>
+    </section>
 
-    @if(session('success'))
-        <div class="su-card" style="margin-bottom:16px;padding:12px 16px;border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.08);color:#15803d;font-size:13px">
-            {{ session('success') }}
-        </div>
-    @endif
+    <section class="id-kpis" style="grid-template-columns:repeat(3,minmax(0,1fr))" aria-label="{{ __('instructor.lib_videos_title') }}">
+        <article class="id-kpi" style="cursor:default">
+            <span class="id-kpi__icon" aria-hidden="true"><i class="fas fa-video"></i></span>
+            <span class="id-kpi__body">
+                <span class="id-kpi__label">{{ __('instructor.lib_videos_yours') }}</span>
+                <span class="id-kpi__value">{{ number_format($ownTotal) }}</span>
+            </span>
+        </article>
+        <article class="id-kpi" style="cursor:default">
+            <span class="id-kpi__icon id-kpi__icon--gold" aria-hidden="true"><i class="fas fa-university"></i></span>
+            <span class="id-kpi__body">
+                <span class="id-kpi__label">{{ __('instructor.lib_videos_academy') }}</span>
+                <span class="id-kpi__value">{{ number_format($academyTotal) }}</span>
+            </span>
+        </article>
+        <article class="id-kpi" style="cursor:default">
+            <span class="id-kpi__icon id-kpi__icon--teal" aria-hidden="true"><i class="fas fa-folder"></i></span>
+            <span class="id-kpi__body">
+                <span class="id-kpi__label">{{ __('instructor.lib_videos_col_folder') }}</span>
+                <span class="id-kpi__value">{{ number_format($foldersTotal) }}</span>
+            </span>
+        </article>
+    </section>
+
     @if(session('error'))
-        <div class="su-card" style="margin-bottom:16px;padding:12px 16px;border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.08);color:#b91c1c;font-size:13px">
-            {{ session('error') }}
+        <div class="id-alert id-alert--err" role="alert">
+            <i class="fas fa-exclamation-circle" aria-hidden="true"></i>
+            <span>{{ session('error') }}</span>
         </div>
     @endif
 
-    <section class="su-card" style="margin-bottom:20px">
-        <h3 class="su-card__title" style="margin-bottom:14px">{{ __('instructor.lib_videos_new_folder') }}</h3>
-        <form method="POST" action="{{ route('instructor.libraries.videos.folders.store') }}" class="su-form-grid">
+    <section class="id-panel" aria-label="{{ __('instructor.lib_videos_new_folder') }}">
+        <header class="id-panel__head">
+            <h2>{{ __('instructor.lib_videos_new_folder') }}</h2>
+        </header>
+
+        <form method="POST" action="{{ route('instructor.libraries.videos.folders.store') }}" class="id-form">
             @csrf
-            <div class="su-field">
-                <label for="name_ar">{{ __('instructor.lib_materials_name_ar') }}</label>
-                <input type="text" name="name_ar" id="name_ar" required class="su-input" placeholder="{{ __('instructor.lib_materials_name_ar') }}">
+            <div class="id-form-grid">
+                <div class="id-field">
+                    <label for="name_ar">{{ __('instructor.lib_materials_name_ar') }}</label>
+                    <input type="text" name="name_ar" id="name_ar" required class="id-input"
+                           placeholder="{{ __('instructor.lib_materials_name_ar') }}" value="{{ old('name_ar') }}">
+                </div>
+                <div class="id-field">
+                    <label for="name_en">{{ __('instructor.lib_materials_name_en') }}</label>
+                    <input type="text" name="name_en" id="name_en" class="id-input"
+                           placeholder="{{ __('instructor.lib_materials_name_en') }}" value="{{ old('name_en') }}">
+                </div>
+                <div class="id-field">
+                    <label for="academic_year_id">{{ __('instructor.year') }}</label>
+                    <select name="academic_year_id" id="academic_year_id" class="id-select">
+                        <option value="">{{ __('instructor.lib_videos_no_year') }}</option>
+                        @foreach($years as $y)
+                            <option value="{{ $y->id }}" @selected((string) old('academic_year_id') === (string) $y->id)>{{ $y->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="id-field">
+                    <label for="content_theme">{{ __('instructor.lib_videos_theme') }}</label>
+                    <select name="content_theme" id="content_theme" class="id-select">
+                        @foreach(\App\Support\FamilyLibraryThemes::labels($themeLocale) as $key => $themeLabel)
+                            <option value="{{ $key }}" @selected(old('content_theme', 'kids') === $key)>{{ $themeLabel }}</option>
+                        @endforeach
+                    </select>
+                </div>
             </div>
-            <div class="su-field">
-                <label for="name_en">{{ __('instructor.lib_materials_name_en') }}</label>
-                <input type="text" name="name_en" id="name_en" class="su-input" placeholder="{{ __('instructor.lib_materials_name_en') }}">
-            </div>
-            <div class="su-field">
-                <label for="academic_year_id">{{ __('instructor.year') }}</label>
-                <select name="academic_year_id" id="academic_year_id" class="su-select">
-                    <option value="">{{ __('instructor.lib_videos_no_year') }}</option>
-                    @foreach($years as $y)
-                        <option value="{{ $y->id }}">{{ $y->name }}</option>
-                    @endforeach
-                </select>
-            </div>
-            <div class="su-field">
-                <label for="content_theme">{{ __('instructor.lib_videos_theme') }}</label>
-                <select name="content_theme" id="content_theme" class="su-select">
-                    @foreach(\App\Support\FamilyLibraryThemes::labels(app()->getLocale() === 'ar' ? 'ar' : 'en') as $key => $themeLabel)
-                        <option value="{{ $key }}" @selected($key === 'kids')>{{ $themeLabel }}</option>
-                    @endforeach
-                </select>
-            </div>
-            <div class="su-form-actions">
-                <button type="submit" class="su-btn" style="height:40px;justify-content:center;flex:1">
+            <div>
+                <button type="submit" class="id-btn id-btn--navy">
                     <i class="fas fa-folder-plus" aria-hidden="true"></i>
                     {{ __('instructor.lib_videos_create_folder') }}
                 </button>
             </div>
         </form>
-        @if($folders->isNotEmpty())
+
+        @if(($folders ?? collect())->isNotEmpty())
             <div style="margin-top:14px;display:flex;flex-wrap:wrap;gap:8px">
                 @foreach($folders as $folder)
-                    <span class="su-chip">
+                    <span class="id-chip id-chip--muted">
                         {{ $folder->displayName() }}
-                        <em style="font-style:normal;opacity:.6;margin-inline-start:4px">{{ (int) $folder->library_videos_count }}</em>
+                        <em style="font-style:normal;opacity:.7;margin-inline-start:4px">{{ (int) $folder->library_videos_count }}</em>
                     </span>
                 @endforeach
             </div>
@@ -81,13 +124,15 @@
     </section>
 
     @if(($academyVideos ?? collect())->isNotEmpty())
-        <section class="su-card su-card--flush" style="margin-bottom:20px">
-            <div style="padding:14px 16px;border-bottom:0.5px solid var(--su-line)">
-                <h3 class="su-card__title" style="margin:0">{{ __('instructor.lib_videos_academy') }}</h3>
-                <p style="margin:4px 0 0;font-size:12px;color:var(--su-ink-40)">{{ __('instructor.lib_videos_academy_sub') }}</p>
-            </div>
-            <div class="su-table-wrap" style="border:0;border-radius:0;background:transparent">
-                <table class="su-table">
+        <section class="id-panel id-panel--wide" aria-label="{{ __('instructor.lib_videos_academy') }}">
+            <header class="id-panel__head">
+                <h2>{{ __('instructor.lib_videos_academy') }}</h2>
+                <span class="id-panel__badge">{{ number_format($academyTotal) }}</span>
+            </header>
+            <p class="id-field__hint" style="margin:-4px 0 14px">{{ __('instructor.lib_videos_academy_sub') }}</p>
+
+            <div class="id-table-wrap">
+                <table class="id-table">
                     <thead>
                         <tr>
                             <th>{{ __('instructor.lib_videos_col_title') }}</th>
@@ -99,11 +144,13 @@
                     <tbody>
                         @foreach($academyVideos as $video)
                             <tr>
-                                <td><strong style="font-weight:600">{{ $video->title }}</strong></td>
-                                <td style="color:var(--su-ink-40)">{{ $video->folder?->displayName() ?: '—' }}</td>
+                                <td><strong>{{ $video->title }}</strong></td>
+                                <td><span class="muted">{{ $video->folder?->displayName() ?: '—' }}</span></td>
                                 <td>{{ $video->sourceLabel() }}</td>
-                                <td style="text-align:end">
-                                    <a href="{{ route('instructor.libraries.videos.watch', $video) }}" class="su-btn" style="height:32px">{{ __('instructor.lib_videos_watch') }}</a>
+                                <td class="id-table__end">
+                                    <a href="{{ route('instructor.libraries.videos.watch', $video) }}" class="id-btn id-btn--outline" style="min-height:34px;padding:0 12px;font-size:12px">
+                                        {{ __('instructor.lib_videos_watch') }}
+                                    </a>
                                 </td>
                             </tr>
                         @endforeach
@@ -113,12 +160,16 @@
         </section>
     @endif
 
-    <section class="su-card su-card--flush">
-        <div style="padding:14px 16px;border-bottom:0.5px solid var(--su-line)">
-            <h3 class="su-card__title" style="margin:0">{{ __('instructor.lib_videos_yours') }}</h3>
-        </div>
-        <div class="su-table-wrap" style="border:0;border-radius:0;background:transparent">
-            <table class="su-table">
+    <section class="id-panel id-panel--wide" aria-label="{{ __('instructor.lib_videos_yours') }}">
+        <header class="id-panel__head">
+            <h2>{{ __('instructor.lib_videos_yours') }}</h2>
+            @if($ownTotal > 0)
+                <span class="id-panel__badge">{{ number_format($ownTotal) }}</span>
+            @endif
+        </header>
+
+        <div class="id-table-wrap">
+            <table class="id-table">
                 <thead>
                     <tr>
                         <th>{{ __('instructor.lib_videos_col_title') }}</th>
@@ -131,25 +182,25 @@
                 <tbody>
                     @forelse($videos as $video)
                         <tr>
-                            <td><strong style="font-weight:600">{{ $video->title }}</strong></td>
-                            <td style="color:var(--su-ink-40)">{{ $video->folder?->displayName() ?: '—' }}</td>
+                            <td><strong>{{ $video->title }}</strong></td>
+                            <td><span class="muted">{{ $video->folder?->displayName() ?: '—' }}</span></td>
                             <td>{{ $video->sourceLabel() }}</td>
                             <td>
-                                <form method="POST" action="{{ route('instructor.libraries.videos.toggle', $video) }}">
+                                <form method="POST" action="{{ route('instructor.libraries.videos.toggle', $video) }}" style="margin:0">
                                     @csrf
-                                    <button type="submit" class="su-chip {{ $video->is_published ? 'su-chip--ok' : 'su-chip--off' }}" style="cursor:pointer;border:0">
+                                    <button type="submit" class="id-chip {{ $video->is_published ? 'id-chip--ok' : 'id-chip--muted' }}" style="cursor:pointer;border:0">
                                         {{ $video->is_published ? __('instructor.lib_videos_published') : __('instructor.lib_videos_draft') }}
                                     </button>
                                 </form>
                             </td>
                             <td>
                                 <div style="display:flex;flex-wrap:wrap;gap:8px">
-                                    <a href="{{ route('instructor.libraries.videos.watch', $video) }}" class="su-btn" style="height:32px">{{ __('instructor.lib_videos_watch') }}</a>
-                                    <a href="{{ route('instructor.libraries.videos.edit', $video) }}" class="su-btn" style="height:32px">{{ __('common.edit') }}</a>
-                                    <form method="POST" action="{{ route('instructor.libraries.videos.destroy', $video) }}" onsubmit="return confirm(@json(__('instructor.lib_videos_confirm_delete')))">
+                                    <a href="{{ route('instructor.libraries.videos.watch', $video) }}" class="id-btn id-btn--outline" style="min-height:34px;padding:0 12px;font-size:12px">{{ __('instructor.lib_videos_watch') }}</a>
+                                    <a href="{{ route('instructor.libraries.videos.edit', $video) }}" class="id-btn id-btn--outline" style="min-height:34px;padding:0 12px;font-size:12px">{{ __('common.edit') }}</a>
+                                    <form method="POST" action="{{ route('instructor.libraries.videos.destroy', $video) }}" onsubmit="return confirm(@json(__('instructor.lib_videos_confirm_delete')))" style="margin:0">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit" class="su-btn su-btn--danger" style="height:32px">{{ __('common.delete') }}</button>
+                                        <button type="submit" class="id-btn id-btn--danger" style="min-height:34px;padding:0 12px;font-size:12px">{{ __('common.delete') }}</button>
                                     </form>
                                 </div>
                             </td>
@@ -157,9 +208,15 @@
                     @empty
                         <tr>
                             <td colspan="5">
-                                <div class="su-empty">
-                                    <i class="fas fa-video" aria-hidden="true"></i>
+                                <div class="id-empty" style="border:0;background:transparent;padding:28px 8px">
+                                    <span class="id-empty__mark" aria-hidden="true"><i class="fas fa-video"></i></span>
                                     <p>{{ __('instructor.lib_videos_empty') }}</p>
+                                    <div class="id-empty__actions">
+                                        <a href="{{ route('instructor.libraries.videos.create') }}" class="id-btn id-btn--navy">
+                                            <i class="fas fa-plus" aria-hidden="true"></i>
+                                            {{ __('instructor.lib_videos_add') }}
+                                        </a>
+                                    </div>
                                 </div>
                             </td>
                         </tr>
@@ -167,8 +224,9 @@
                 </tbody>
             </table>
         </div>
+
         @if(method_exists($videos, 'hasPages') && $videos->hasPages())
-            <div class="su-pager" style="padding:12px">{{ $videos->links() }}</div>
+            <div class="id-pager">{{ $videos->links() }}</div>
         @endif
     </section>
 </div>

@@ -47,7 +47,7 @@ Route::post('/webhooks/paypal', [\App\Http\Controllers\Webhooks\PayPalWebhookCon
 
 /*
 |--------------------------------------------------------------------------
-| Glottical Whiteboard (أصول اللوحة) — تمرير عبر Laravel
+| حصتك Whiteboard (أصول اللوحة) — تمرير عبر Laravel
 | يعمل عندما لا يُخدم public/vendor مباشرة (جذر الموقع ليس public أو قواعد .htaccess)
 |--------------------------------------------------------------------------
 */
@@ -100,7 +100,7 @@ Route::get('/mx-vendor/excalidraw/{path}', function (string $path) {
     ]);
 })->where('path', '.*')->name('mx.vendor.excalidraw')->middleware('web');
 
-// Sitemap Route — Glottical SEO
+// Sitemap Route — حصتك SEO
 Route::get('/sitemap.xml', function () {
     $xmlEscape = static fn (?string $value): string => htmlspecialchars((string) $value, ENT_XML1 | ENT_QUOTES, 'UTF-8');
     $urls = [];
@@ -428,7 +428,22 @@ Route::post('/free-trial/book', [\App\Http\Controllers\Public\FreeTrialBookingCo
     ->name('public.free-trial.book');
 
 // الصفحات العامة
-Route::get('/about', [\App\Http\Controllers\Public\PageController::class, 'about'])->name('public.about');
+Route::get('/path', [\App\Http\Controllers\Public\PageController::class, 'path'])->name('public.path');
+Route::get('/for-students', [\App\Http\Controllers\Public\PageController::class, 'forStudents'])->name('public.for-students');
+Route::get('/for-teachers', [\App\Http\Controllers\Public\PageController::class, 'forTeachers'])->name('public.for-teachers');
+Route::get('/how-it-works', [\App\Http\Controllers\Public\PageController::class, 'how'])->name('public.how');
+Route::get('/curricula', [\App\Http\Controllers\Public\CurriculaController::class, 'index'])->name('public.curricula');
+Route::get('/curricula/{year}', [\App\Http\Controllers\Public\CurriculaController::class, 'show'])->name('public.curricula.show');
+
+// حصتك expandable public IA (config/tadris_nav.php)
+foreach (\App\Support\TadrisPublicNav::routable() as $key => $node) {
+    Route::get($node['uri'], [\App\Http\Controllers\Public\SitePageController::class, 'show'])
+        ->defaults('page', $key)
+        ->name($node['route']);
+}
+Route::get('/about', [\App\Http\Controllers\Public\SitePageController::class, 'show'])
+    ->defaults('page', 'about')
+    ->name('public.about');
 Route::get('/faq', [\App\Http\Controllers\Public\PageController::class, 'faq'])->name('public.faq');
 Route::get('/terms', [\App\Http\Controllers\Public\PageController::class, 'terms'])->name('public.terms');
 Route::get('/privacy', [\App\Http\Controllers\Public\PageController::class, 'privacy'])->name('public.privacy');
@@ -449,7 +464,7 @@ Route::get('/services/{siteService}', [\App\Http\Controllers\Public\SiteServiceC
 
 // تم إيقاف مجتمع البيانات والذكاء الاصطناعي (مسابقات، داتاسيت، مجتمع) بالكامل، لذا أزيلت جميع مساراته.
 
-// Glottical Classroom — دخول الضيوف برابط/كود (مقفول للحصص الخاصة)
+// فصول حصتك — دخول الضيوف برابط/كود (مقفول للحصص الخاصة)
 Route::get('/classroom/join/{code}', [\App\Http\Controllers\ClassroomJoinController::class, 'show'])->name('classroom.join')->where('code', '[A-Za-z0-9]+');
 Route::post('/classroom/join/{code}/enter', [\App\Http\Controllers\ClassroomJoinController::class, 'enter'])->name('classroom.join.enter')->where('code', '[A-Za-z0-9]+');
 Route::post('/classroom/join/{code}/heartbeat', [\App\Http\Controllers\ClassroomJoinController::class, 'heartbeat'])->name('classroom.join.heartbeat')->where('code', '[A-Za-z0-9]+');
@@ -478,8 +493,10 @@ Route::middleware(['auth'])->get('/classroom/enter/{meeting}', [\App\Http\Contro
     ->name('classroom.secure-enter');
 
 // التواصل
-Route::get('/contact', [\App\Http\Controllers\Public\ContactController::class, 'index'])->name('public.contact');
-Route::post('/contact', [\App\Http\Controllers\Public\ContactController::class, 'store'])->name('public.contact.store');
+Route::get('/contact', [\App\Http\Controllers\Public\SitePageController::class, 'contact'])->name('public.contact');
+Route::post('/contact', [\App\Http\Controllers\Public\SitePageController::class, 'contactStore'])
+    ->middleware('throttle:10,1')
+    ->name('public.contact.store');
 
 // متابعة ولي الأمر — تقارير الطالب برقم الدخول
 Route::get('/parent-progress', [\App\Http\Controllers\Public\ParentProgressController::class, 'show'])
@@ -760,14 +777,14 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         return app(\App\Http\Controllers\Student\CourseController::class)->show($advancedCourse);
     })->name('courses.show');
 
-    // كورساتي — القائمة مخفية؛ الروابط المباشرة تُعاد للرئيسية ما دام show_courses = false
+    // كورساتي — قائمة الكورسات المستقلة المفعّلة للطالب
     Route::middleware(['role:student'])->group(function () {
         Route::get('/my-courses', function () {
             if (! student_ui('show_courses', false)) {
-                return redirect()->route('dashboard');
+                return redirect()->route('dashboard')->with('info', 'نظام الكورسات غير متاح حالياً من لوحة الطالب.');
             }
 
-            return redirect()->route('student.learn.index');
+            return app(\App\Http\Controllers\Student\MyCourseController::class)->index();
         })->name('my-courses.index');
         Route::get('/my-courses/{course}', function ($course) {
             if (! student_ui('show_courses', false)) {
@@ -1027,7 +1044,7 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::get('/tutoring-subscriptions/{subscription}', [\App\Http\Controllers\Student\TutoringSubscriptionController::class, 'show'])->name('student.tutoring-subscriptions.show');
         Route::get('/service-entitlements', [\App\Http\Controllers\Student\ServiceEntitlementController::class, 'index'])->name('student.service-entitlements.index');
 
-        // Glottical Classroom — الطالب: دخول الغرفة فقط (بدون إنشاء/إدارة اجتماعات)
+        // فصول حصتك — الطالب: دخول الغرفة فقط (بدون إنشاء/إدارة اجتماعات)
         $studentMeetingDenied = 'لا يمكن للطلاب إنشاء أو إدارة اجتماعات مباشرة. انضم من جدولك أو من حصصك/فصولك.';
 
         Route::get('/classroom/room/{meeting}', [\App\Http\Controllers\Student\ClassroomController::class, 'room'])->name('student.classroom.room');
@@ -1454,7 +1471,7 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::get('/statistics/users', [\App\Http\Controllers\Admin\StatisticsController::class, 'users'])->name('statistics.users');
         Route::get('/statistics/courses', [\App\Http\Controllers\Admin\StatisticsController::class, 'courses'])->name('statistics.courses');
 
-        // Glottical CRM
+        // CRM حصتك
         Route::prefix('crm')->name('crm.')->group(function () {
             Route::get('/', [\App\Http\Controllers\Admin\CrmDashboardController::class, 'index'])->name('dashboard');
             Route::get('/pipeline', [\App\Http\Controllers\Admin\CrmPipelineController::class, 'index'])->name('pipeline');
@@ -1680,10 +1697,8 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
             ->name('hiring-form.fields.move');
         Route::post('/hiring-form/reorder', [\App\Http\Controllers\Admin\HiringFormController::class, 'reorder'])->name('hiring-form.reorder');
 
-        Route::get('free-trial-bookings/availability', [\App\Http\Controllers\Admin\FreeTrialBookingController::class, 'availability'])->name('free-trial-bookings.availability');
-        Route::post('free-trial-bookings/availability', [\App\Http\Controllers\Admin\FreeTrialBookingController::class, 'storeAvailability'])->name('free-trial-bookings.availability.store');
-        Route::put('free-trial-bookings/availability/{window}', [\App\Http\Controllers\Admin\FreeTrialBookingController::class, 'updateAvailability'])->name('free-trial-bookings.availability.update');
-        Route::delete('free-trial-bookings/availability/{window}', [\App\Http\Controllers\Admin\FreeTrialBookingController::class, 'destroyAvailability'])->name('free-trial-bookings.availability.destroy');
+        Route::get('free-trial-bookings/create', [\App\Http\Controllers\Admin\FreeTrialBookingController::class, 'create'])->name('free-trial-bookings.create');
+        Route::post('free-trial-bookings', [\App\Http\Controllers\Admin\FreeTrialBookingController::class, 'store'])->name('free-trial-bookings.store');
         Route::patch('free-trial-bookings/{freeTrialBooking}/status', [\App\Http\Controllers\Admin\FreeTrialBookingController::class, 'updateStatus'])->name('free-trial-bookings.update-status');
         Route::get('free-trial-bookings', [\App\Http\Controllers\Admin\FreeTrialBookingController::class, 'index'])->name('free-trial-bookings.index');
         Route::get('free-trial-bookings/{freeTrialBooking}', [\App\Http\Controllers\Admin\FreeTrialBookingController::class, 'show'])->name('free-trial-bookings.show');
@@ -2280,6 +2295,8 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::get('/tutoring-bookings', [\App\Http\Controllers\Instructor\TutoringBookingController::class, 'index'])->name('tutoring-bookings.index');
         Route::get('/tutoring-bookings/{booking}', [\App\Http\Controllers\Instructor\TutoringBookingController::class, 'show'])->name('tutoring-bookings.show');
         Route::post('/tutoring-bookings/{booking}/complete', [\App\Http\Controllers\Instructor\TutoringBookingController::class, 'complete'])->name('tutoring-bookings.complete');
+        Route::get('/free-trial-bookings', [\App\Http\Controllers\Instructor\FreeTrialBookingController::class, 'index'])->name('free-trial-bookings.index');
+        Route::get('/free-trial-bookings/{freeTrialBooking}', [\App\Http\Controllers\Instructor\FreeTrialBookingController::class, 'show'])->name('free-trial-bookings.show');
         Route::get('/tutoring-cohorts', [\App\Http\Controllers\Instructor\TutoringCohortController::class, 'index'])->name('tutoring-cohorts.index');
         Route::get('/tutoring-cohorts/{cohort}', [\App\Http\Controllers\Instructor\TutoringCohortController::class, 'show'])->name('tutoring-cohorts.show');
         Route::get('/tutoring-cohorts/{cohort}/community', [\App\Http\Controllers\Student\ClassFeedController::class, 'index'])->name('tutoring-cohorts.community');

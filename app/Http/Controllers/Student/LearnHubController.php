@@ -11,11 +11,21 @@ use Illuminate\View\View;
 
 class LearnHubController extends Controller
 {
-    public function index(Request $request, StudentLearnHubService $learn): View
+    public function index(Request $request, StudentLearnHubService $learn): View|RedirectResponse
     {
+        $tab = (string) $request->query('tab', 'private');
+        if ($tab === 'groups' || $tab === 'school') {
+            return redirect()->route('student.learn.index', array_filter([
+                'tab' => 'private',
+                'q' => $request->query('q'),
+                'subject_id' => $request->query('subject_id'),
+                'lang' => $request->query('lang'),
+            ]));
+        }
+
         $payload = $learn->hub(
             $request->user(),
-            (string) $request->query('tab', 'private'),
+            $tab,
             [
                 'q' => $request->query('q'),
                 'subject_id' => $request->query('subject_id'),

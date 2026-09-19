@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'تسكين طالب يدوياً - Glottical')
+@section('title', 'تسكين طالب يدوياً - حصتك')
 @section('page_title', 'تسكين طالب في حصة')
 
 @section('content')

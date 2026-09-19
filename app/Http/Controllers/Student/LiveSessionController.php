@@ -15,6 +15,10 @@ class LiveSessionController extends Controller
 {
     public function index(Request $request)
     {
+        if (! student_ui('show_live_broadcast')) {
+            return redirect()->route('dashboard');
+        }
+
         $user = auth()->user();
 
         $enrolledCourseIds = collect();
@@ -66,6 +70,10 @@ class LiveSessionController extends Controller
 
     public function show(LiveSession $liveSession)
     {
+        if (! student_ui('show_live_broadcast')) {
+            return redirect()->route('dashboard');
+        }
+
         if (! $liveSession->canUserJoin(auth()->user())) {
             abort(403, 'ليس لديك صلاحية دخول هذه الجلسة');
         }

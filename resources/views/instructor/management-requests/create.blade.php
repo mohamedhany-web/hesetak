@@ -5,50 +5,48 @@
 
 @section('content')
 @php
-    $isRtl = app()->getLocale() === 'ar';
+    $locale = app()->getLocale();
 @endphp
-<div class="su-page" style="max-width:40rem">
-    <div class="su-page-head">
-        <div class="min-w-0">
-            <nav class="su-crumb-inline" aria-label="breadcrumb">
-                <a href="{{ route('instructor.management-requests.index') }}">{{ __('instructor.my_requests_to_management') }}</a>
-                <span>/</span>
-                <strong style="color:var(--su-ink)">{{ __('instructor.new_request') }}</strong>
-            </nav>
-            <h1 class="su-page-head__title">
-                <i class="fas fa-paper-plane su-page-head__ico" aria-hidden="true"></i>
-                {{ __('instructor.submit_new_request_title') }}
-            </h1>
-            <p class="su-page-head__sub">{{ __('instructor.submit_request_desc') }}</p>
+
+<div class="id-page">
+    <section class="id-hero" aria-label="{{ __('instructor.submit_new_request_title') }}">
+        <div class="id-hero__copy">
+            <p class="id-hero__kicker">{{ __('instructor.my_requests_to_management') }}</p>
+            <h2 class="id-hero__title">{{ __('instructor.submit_new_request_title') }}</h2>
+            <p class="id-hero__meta">{{ __('instructor.submit_request_desc') }}</p>
         </div>
-        <div class="su-page-head__actions">
-            <a href="{{ route('instructor.management-requests.index') }}" class="su-btn">
-                <i class="fas fa-arrow-{{ $isRtl ? 'right' : 'left' }}" aria-hidden="true"></i>
+        <div class="id-hero__actions">
+            <a href="{{ route('instructor.management-requests.index') }}" class="id-btn id-btn--ghost">
+                <i class="fas fa-arrow-{{ $locale === 'ar' ? 'right' : 'left' }}" aria-hidden="true"></i>
                 {{ __('instructor.back') }}
             </a>
         </div>
-    </div>
+    </section>
 
-    <section class="su-card">
-        <form action="{{ route('instructor.management-requests.store') }}" method="POST">
+    <section class="id-panel">
+        <header class="id-panel__head">
+            <h2>{{ __('instructor.new_request') }}</h2>
+        </header>
+
+        <form action="{{ route('instructor.management-requests.store') }}" method="POST" class="id-form">
             @csrf
-            <div class="su-form-grid" style="grid-template-columns:1fr">
-                <div class="su-field">
-                    <label>{{ __('instructor.request_subject_required') }}</label>
-                    <input type="text" name="subject" value="{{ old('subject') }}" required class="su-input"
-                           placeholder="{{ __('instructor.subject_placeholder') }}">
-                    @error('subject')<p class="su-field-error">{{ $message }}</p>@enderror
-                </div>
-                <div class="su-field">
-                    <label>{{ __('instructor.request_details_required') }}</label>
-                    <textarea name="message" rows="6" required class="su-input" style="min-height:140px;resize:vertical"
-                              placeholder="{{ __('instructor.message_placeholder') }}">{{ old('message') }}</textarea>
-                    @error('message')<p class="su-field-error">{{ $message }}</p>@enderror
-                </div>
+            <div class="id-field">
+                <label for="subject">{{ __('instructor.request_subject_required') }}</label>
+                <input type="text" name="subject" id="subject" value="{{ old('subject') }}" required class="id-input"
+                       placeholder="{{ __('instructor.subject_placeholder') }}">
+                @error('subject')<p class="id-field__err">{{ $message }}</p>@enderror
             </div>
-            <div class="su-form-actions" style="margin-top:16px;justify-content:flex-end;gap:8px">
-                <a href="{{ route('instructor.management-requests.index') }}" class="su-btn">{{ __('common.cancel') }}</a>
-                <button type="submit" class="su-btn su-btn--primary">
+            <div class="id-field">
+                <label for="message">{{ __('instructor.request_details_required') }}</label>
+                <textarea name="message" id="message" rows="6" required class="id-input"
+                          style="min-height:140px;padding-top:10px;padding-bottom:10px;resize:vertical"
+                          placeholder="{{ __('instructor.message_placeholder') }}">{{ old('message') }}</textarea>
+                @error('message')<p class="id-field__err">{{ $message }}</p>@enderror
+            </div>
+
+            <div class="id-foot-actions">
+                <a href="{{ route('instructor.management-requests.index') }}" class="id-btn id-btn--outline">{{ __('common.cancel') }}</a>
+                <button type="submit" class="id-btn id-btn--navy">
                     <i class="fas fa-paper-plane" aria-hidden="true"></i>
                     {{ __('instructor.send_request') }}
                 </button>

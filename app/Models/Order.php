@@ -131,16 +131,16 @@ class Order extends Model
         if ($this->order_type === self::TYPE_CUSTOM_SERVICE_PACKAGE) {
             $fromQuote = strtoupper((string) ($this->custom_package_data['currency'] ?? ''));
 
-            return in_array($fromQuote, ['EGP', 'USD'], true)
+            return in_array($fromQuote, ['SAR', 'EGP', 'USD'], true)
                 ? $fromQuote
-                : strtoupper((string) config('currency.code', 'USD'));
+                : platform_currency();
         }
 
         if ($this->servicePackage) {
             return $this->servicePackage->currencyCode();
         }
 
-        return 'USD';
+        return platform_currency();
     }
 
     public function learningPath()

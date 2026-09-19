@@ -123,7 +123,7 @@
     <div class="rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-3 text-sm text-emerald-900">
         <strong>تنبيه:</strong> الموافقة النهائية على الطلبات والصرف تتم من لوحة الإدارة. دورك متابعة العميل، تسجيل الملاحظات، واستلام الطلب في خط الأنابيب.
         @if(!empty($useCrm))
-            لمتابعة العملاء المحتملين وحالات البيع استخدم <a href="{{ route('employee.crm.dashboard') }}" class="font-bold underline">Glottical CRM</a>.
+            لمتابعة العملاء المحتملين وحالات البيع استخدم <a href="{{ route('employee.crm.dashboard') }}" class="font-bold underline">CRM حصتك</a>.
         @endif
     </div>
 </div>

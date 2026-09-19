@@ -63,7 +63,7 @@ class PayPalService
                 ],
             ]],
             'application_context' => [
-                'brand_name' => mb_substr((string) config('app.name', 'Glottical'), 0, 120),
+                'brand_name' => mb_substr((string) config('app.name', 'حصتك'), 0, 120),
                 'locale' => app()->getLocale() === 'ar' ? 'ar-EG' : 'en-US',
                 'landing_page' => 'LOGIN',
                 'user_action' => 'PAY_NOW',
@@ -291,7 +291,7 @@ class PayPalService
             ->asJson()
             ->withToken($this->accessToken())
             ->withHeaders(array_merge([
-                'PayPal-Partner-Attribution-Id' => 'Glottical_Checkout',
+                'PayPal-Partner-Attribution-Id' => 'حصتك_Checkout',
             ], $headers));
 
         $url = PayPalSettings::apiBaseUrl().$path;

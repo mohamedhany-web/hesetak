@@ -5,31 +5,25 @@
 
 @section('content')
 @php
-    $isRtl = app()->getLocale() === 'ar';
+    $locale = app()->getLocale();
 @endphp
-<div class="su-page" style="max-width:56rem">
-    <div class="su-page-head">
-        <div class="min-w-0">
-            <nav class="su-crumb-inline" aria-label="breadcrumb">
-                <a href="{{ route('instructor.assignments.index') }}">{{ __('instructor.assignments') }}</a>
-                <span>/</span>
-                <strong style="color:var(--su-ink)">{{ __('instructor.create_assignment') }}</strong>
-            </nav>
-            <h1 class="su-page-head__title">
-                <i class="fas fa-tasks su-page-head__ico" aria-hidden="true"></i>
-                {{ __('instructor.create_assignment') }}
-            </h1>
-            <p class="su-page-head__sub">{{ __('instructor.add_assignment_for_course') }}</p>
+
+<div class="id-page">
+    <section class="id-hero" aria-label="{{ __('instructor.create_assignment') }}">
+        <div class="id-hero__copy">
+            <p class="id-hero__kicker">{{ __('instructor.assignments') }}</p>
+            <h2 class="id-hero__title">{{ __('instructor.create_assignment') }}</h2>
+            <p class="id-hero__meta">{{ __('instructor.add_assignment_for_course') }}</p>
         </div>
-        <div class="su-page-head__actions">
-            <a href="{{ route('instructor.assignments.index') }}" class="su-btn">
-                <i class="fas fa-arrow-{{ $isRtl ? 'right' : 'left' }}" aria-hidden="true"></i>
+        <div class="id-hero__actions">
+            <a href="{{ route('instructor.assignments.index') }}" class="id-btn id-btn--ghost">
+                <i class="fas fa-arrow-{{ $locale === 'ar' ? 'right' : 'left' }}" aria-hidden="true"></i>
                 {{ __('instructor.back') }}
             </a>
         </div>
-    </div>
+    </section>
 
-    <section class="su-card">
+    <section class="id-panel">
         @include('instructor.assignments.create-form', ['courses' => $courses])
     </section>
 </div>

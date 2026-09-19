@@ -108,7 +108,7 @@
                                     <p class="truncate text-sm font-medium text-ink">{{ $course->title }}</p>
                                     <p class="mt-0.5 text-xs tabular-nums text-muted">
                                         @if((float) $course->price > 0)
-                                            {{ number_format((float) $course->price, 2) }} USD
+                                            {{ number_format((float) $course->price, 2) }} {{ currency_symbol() }}
                                         @else
                                             مجاني
                                         @endif

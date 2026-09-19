@@ -2,122 +2,125 @@
     $courses = $courses ?? [];
 @endphp
 
-<form action="{{ route('instructor.assignments.store') }}" method="POST" enctype="multipart/form-data" id="assignmentForm">
+<form action="{{ route('instructor.assignments.store') }}" method="POST" enctype="multipart/form-data" id="assignmentForm" class="id-form">
     @csrf
 
-    <div class="su-form-grid" style="grid-template-columns:1fr 1fr">
-        <div class="su-field" style="grid-column:1 / -1">
-            <label for="advanced_course_id">{{ __('instructor.course_label') }} <span style="color:#b91c1c">*</span></label>
-            <select name="advanced_course_id" id="advanced_course_id" required class="su-select">
+    <div class="id-form-grid">
+        <div class="id-field id-field--span2">
+            <label for="advanced_course_id">{{ __('instructor.course_label') }} <span style="color:#B91C1C">*</span></label>
+            <select name="advanced_course_id" id="advanced_course_id" required class="id-select">
                 <option value="">{{ __('instructor.choose_course_option') }}</option>
                 @foreach($courses as $course)
-                    <option value="{{ $course->id }}" {{ old('advanced_course_id', request('advanced_course_id')) == $course->id ? 'selected' : '' }}>{{ $course->title }}</option>
+                    <option value="{{ $course->id }}" @selected(old('advanced_course_id', request('advanced_course_id')) == $course->id)>{{ $course->title }}</option>
                 @endforeach
             </select>
             @error('advanced_course_id')
-                <p class="su-field-error">{{ $message }}</p>
+                <p class="id-field__err">{{ $message }}</p>
             @enderror
         </div>
 
-        <div class="su-field" style="grid-column:1 / -1">
+        <div class="id-field id-field--span2">
             <label for="lesson_id">{{ __('instructor.lesson_optional') }}</label>
-            <select name="lesson_id" id="lesson_id" class="su-select">
+            <select name="lesson_id" id="lesson_id" class="id-select">
                 <option value="">{{ __('instructor.no_lesson_option') }}</option>
             </select>
-            <p style="margin:6px 0 0;font-size:12px;color:var(--su-ink-40)">{{ __('instructor.lesson_filled_by_course') }}</p>
+            <p class="id-field__hint">{{ __('instructor.lesson_filled_by_course') }}</p>
             @error('lesson_id')
-                <p class="su-field-error">{{ $message }}</p>
+                <p class="id-field__err">{{ $message }}</p>
             @enderror
         </div>
 
-        <div class="su-field" style="grid-column:1 / -1">
-            <label for="title">{{ __('instructor.assignment_title_required') }} <span style="color:#b91c1c">*</span></label>
-            <input type="text" name="title" id="title" value="{{ old('title') }}" required class="su-input"
+        <div class="id-field id-field--span2">
+            <label for="title">{{ __('instructor.assignment_title_required') }} <span style="color:#B91C1C">*</span></label>
+            <input type="text" name="title" id="title" value="{{ old('title') }}" required class="id-input"
                    placeholder="{{ __('instructor.assignment_title_required') }}">
             @error('title')
-                <p class="su-field-error">{{ $message }}</p>
+                <p class="id-field__err">{{ $message }}</p>
             @enderror
         </div>
 
-        <div class="su-field" style="grid-column:1 / -1">
+        <div class="id-field id-field--span2">
             <label for="description">{{ __('instructor.description') }}</label>
-            <textarea name="description" id="description" rows="3" class="su-input" style="min-height:88px;resize:vertical"
+            <textarea name="description" id="description" rows="3" class="id-input"
+                      style="min-height:88px;padding-top:10px;padding-bottom:10px;resize:vertical"
                       placeholder="{{ __('instructor.description') }}...">{{ old('description') }}</textarea>
             @error('description')
-                <p class="su-field-error">{{ $message }}</p>
+                <p class="id-field__err">{{ $message }}</p>
             @enderror
         </div>
 
-        <div class="su-field" style="grid-column:1 / -1">
+        <div class="id-field id-field--span2">
             <label for="instructions">{{ __('instructor.instructions_label') }}</label>
-            <textarea name="instructions" id="instructions" rows="4" class="su-input" style="min-height:110px;resize:vertical"
+            <textarea name="instructions" id="instructions" rows="4" class="id-input"
+                      style="min-height:110px;padding-top:10px;padding-bottom:10px;resize:vertical"
                       placeholder="{{ __('instructor.instructions_label') }}...">{{ old('instructions') }}</textarea>
             @error('instructions')
-                <p class="su-field-error">{{ $message }}</p>
+                <p class="id-field__err">{{ $message }}</p>
             @enderror
         </div>
 
-        <div class="su-field" style="grid-column:1 / -1">
+        <div class="id-field id-field--span2">
             <label>{{ __('instructor.assignment_attachments_optional') }}</label>
-            <p style="margin:0 0 8px;font-size:12px;color:var(--su-ink-40)">{{ __('instructor.assignment_attachments_hint') }}</p>
-            <input type="file" name="resource_files[]" multiple accept=".pdf,.doc,.docx,.zip,.rar,.jpg,.jpeg,.png,.gif,.webp,.ppt,.pptx,.txt" class="su-input">
+            <p class="id-field__hint" style="margin-bottom:8px">{{ __('instructor.assignment_attachments_hint') }}</p>
+            <input type="file" name="resource_files[]" multiple accept=".pdf,.doc,.docx,.zip,.rar,.jpg,.jpeg,.png,.gif,.webp,.ppt,.pptx,.txt"
+                   class="id-input" style="padding-top:10px;padding-bottom:10px">
             @error('resource_files')
-                <p class="su-field-error">{{ $message }}</p>
+                <p class="id-field__err">{{ $message }}</p>
             @enderror
             @error('resource_files.*')
-                <p class="su-field-error">{{ $message }}</p>
+                <p class="id-field__err">{{ $message }}</p>
             @enderror
         </div>
 
-        <div class="su-field">
+        <div class="id-field">
             <label for="due_date">{{ __('instructor.due_date') }}</label>
-            <input type="datetime-local" name="due_date" id="due_date" value="{{ old('due_date') }}" class="su-input">
+            <input type="datetime-local" name="due_date" id="due_date" value="{{ old('due_date') }}" class="id-input">
             @error('due_date')
-                <p class="su-field-error">{{ $message }}</p>
+                <p class="id-field__err">{{ $message }}</p>
             @enderror
         </div>
 
-        <div class="su-field">
-            <label for="max_score">{{ __('instructor.total_score_label') }} <span style="color:#b91c1c">*</span></label>
-            <input type="number" name="max_score" id="max_score" value="{{ old('max_score', 100) }}" min="1" max="1000" required class="su-input">
+        <div class="id-field">
+            <label for="max_score">{{ __('instructor.total_score_label') }} <span style="color:#B91C1C">*</span></label>
+            <input type="number" name="max_score" id="max_score" value="{{ old('max_score', 100) }}" min="1" max="1000" required class="id-input">
             @error('max_score')
-                <p class="su-field-error">{{ $message }}</p>
+                <p class="id-field__err">{{ $message }}</p>
             @enderror
         </div>
 
-        <div class="su-field" style="grid-column:1 / -1">
-            <label class="su-chip" style="cursor:pointer;justify-content:flex-start;height:auto;padding:12px 14px;width:100%">
-                <input type="checkbox" name="allow_late_submission" id="allow_late_submission" value="1" {{ old('allow_late_submission') ? 'checked' : '' }} style="margin-inline-end:10px">
+        <div class="id-field id-field--span2">
+            <label class="id-check" style="width:100%">
+                <input type="checkbox" name="allow_late_submission" id="allow_late_submission" value="1" @checked(old('allow_late_submission'))>
                 {{ __('instructor.allow_late_submission_label') }}
             </label>
         </div>
 
-        <div class="su-field" style="grid-column:1 / -1">
-            <label for="status">{{ __('common.status') }} <span style="color:#b91c1c">*</span></label>
-            <select name="status" id="status" required class="su-select">
-                <option value="draft" {{ old('status', 'draft') == 'draft' ? 'selected' : '' }}>{{ __('instructor.draft') }}</option>
-                <option value="published" {{ old('status') == 'published' ? 'selected' : '' }}>{{ __('instructor.published') }}</option>
-                <option value="archived" {{ old('status') == 'archived' ? 'selected' : '' }}>{{ __('instructor.archived') }}</option>
+        <div class="id-field id-field--span2">
+            <label for="status">{{ __('common.status') }} <span style="color:#B91C1C">*</span></label>
+            <select name="status" id="status" required class="id-select">
+                <option value="draft" @selected(old('status', 'draft') === 'draft')>{{ __('instructor.draft') }}</option>
+                <option value="published" @selected(old('status') === 'published')>{{ __('instructor.published') }}</option>
+                <option value="archived" @selected(old('status') === 'archived')>{{ __('instructor.archived') }}</option>
             </select>
             @error('status')
-                <p class="su-field-error">{{ $message }}</p>
+                <p class="id-field__err">{{ $message }}</p>
             @enderror
         </div>
     </div>
 
-    <div class="su-page-head__actions" style="margin-top:20px;justify-content:flex-end;border-top:1px solid var(--su-line);padding-top:16px">
+    <div class="id-foot-actions" style="margin-top:20px">
         @if(isset($isModal) && $isModal)
-            <button type="button" onclick="closeCreateModal()" class="su-btn">
+            <button type="button" onclick="closeCreateModal()" class="id-btn id-btn--outline">
                 <i class="fas fa-times" aria-hidden="true"></i>
                 {{ __('common.cancel') }}
             </button>
         @else
-            <a href="{{ route('instructor.assignments.index') }}" class="su-btn">
+            <a href="{{ route('instructor.assignments.index') }}" class="id-btn id-btn--outline">
                 <i class="fas fa-times" aria-hidden="true"></i>
                 {{ __('common.cancel') }}
             </a>
         @endif
-        <button type="submit" class="su-btn su-btn--primary">
+        <button type="submit" class="id-btn id-btn--navy">
             <i class="fas fa-save" aria-hidden="true"></i>
             {{ __('instructor.create_assignment') }}
         </button>

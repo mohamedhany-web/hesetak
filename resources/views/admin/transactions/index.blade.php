@@ -11,7 +11,7 @@
         ['label' => 'إجمالي المعاملات', 'value' => $stats['total'] ?? 0, 'icon' => 'fa-exchange-alt', 'tone' => 'accent', 'note' => 'كل المعاملات المسجلة'],
         ['label' => 'مكتملة', 'value' => $stats['completed'] ?? 0, 'icon' => 'fa-check-circle', 'tone' => 'accent', 'note' => 'تمت بنجاح'],
         ['label' => 'معلقة', 'value' => $stats['pending'] ?? 0, 'icon' => 'fa-hourglass-half', 'tone' => 'metal', 'note' => 'في انتظار المعالجة'],
-        ['label' => 'إجمالي المبلغ', 'value' => number_format($stats['total_amount'] ?? 0, 2) . ' $', 'icon' => 'fa-coins', 'tone' => 'muted', 'note' => 'قيمة المكتملة', 'raw' => true],
+        ['label' => 'إجمالي المبلغ', 'value' => number_format($stats['total_amount'] ?? 0, 2) . ' ' . currency_symbol(), 'icon' => 'fa-coins', 'tone' => 'muted', 'note' => 'قيمة المكتملة', 'raw' => true],
     ];
     $toneClass = [
         'accent' => 'bg-accent-soft text-accent',

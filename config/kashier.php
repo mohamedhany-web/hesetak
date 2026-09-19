@@ -28,7 +28,7 @@ return [
         'base_url' => env('KASHIER_LIVE_BASE_URL', 'https://checkout.kashier.io'),
     ],
 
-    'currency' => env('KASHIER_CURRENCY', 'USD'),
+    'currency' => env('KASHIER_CURRENCY', 'SAR'),
 
     'allowed_methods' => env('KASHIER_ALLOWED_METHODS', 'card,wallet,bank_installments'),
 

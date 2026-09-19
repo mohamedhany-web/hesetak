@@ -23,7 +23,7 @@ class SampleUsersSeeder extends Seeder
             ['phone' => '0500000000'],
             [
                 'name' => 'المدير العام',
-                'email' => 'admin@Glottical.com',
+                'email' => 'admin@hesetak.com',
                 'password' => Hash::make('password123'),
                 'role' => 'admin',
                 'is_active' => true,
@@ -34,7 +34,7 @@ class SampleUsersSeeder extends Seeder
             ['phone' => '0500000001'],
             [
                 'name' => 'أحمد المدرب',
-                'email' => 'instructor@Glottical.com',
+                'email' => 'instructor@hesetak.com',
                 'password' => Hash::make('password123'),
                 'role' => 'teacher',
                 'is_active' => true,
@@ -46,7 +46,7 @@ class SampleUsersSeeder extends Seeder
             ['phone' => '0500000002'],
             [
                 'name' => 'فاطمة الطالبة',
-                'email' => 'student@Glottical.com',
+                'email' => 'student@hesetak.com',
                 'password' => Hash::make('password123'),
                 'role' => 'student',
                 'is_active' => true,
@@ -54,6 +54,6 @@ class SampleUsersSeeder extends Seeder
         );
 
         $this->command->info('✅ تم إنشاء المستخدمين التجريبيين.');
-        $this->command->info('   admin@Glottical.com / instructor@Glottical.com / student@Glottical.com — كلمة المرور: password123');
+        $this->command->info('   admin@hesetak.com / instructor@hesetak.com / student@hesetak.com — كلمة المرور: password123');
     }
 }

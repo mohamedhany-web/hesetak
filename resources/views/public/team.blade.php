@@ -1,8 +1,8 @@
-﻿@extends('layouts.public')
+@extends('layouts.public')
 
 @section('title', __('public.team_page_title') . ' - ' . __('public.site_suffix'))
 @section('meta_description', 'تعرف على فريق ' . config('app.name') . ' — خبراء اللغة والتوجيه المهني لربط التعليم بفرص العمل.')
-@section('meta_keywords', 'فريق العمل, Glottical, فريق المنصة, من نحن')
+@section('meta_keywords', 'فريق العمل, حصتك, فريق المنصة, من نحن')
 @section('canonical_url', url('/team'))
 
 @section('content')

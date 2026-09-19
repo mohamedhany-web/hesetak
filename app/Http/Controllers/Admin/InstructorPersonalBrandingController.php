@@ -3,9 +3,11 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\AcademicYear;
 use App\Models\InstructorProfile;
 use App\Services\PublicMediaStorage;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Schema;
 
 class InstructorPersonalBrandingController extends Controller
 {
@@ -57,6 +59,10 @@ class InstructorPersonalBrandingController extends Controller
             'bio' => 'nullable|string|max:5000',
             'experience' => 'nullable|string|max:50000',
             'skills' => 'nullable|string|max:5000',
+            'curriculum_types' => 'nullable|array',
+            'curriculum_types.*' => 'string|in:'.implode(',', \App\Support\HesetakMatchCatalog::allowedCurriculumTypeKeys()),
+            'teaching_year_ids' => 'nullable|array',
+            'teaching_year_ids.*' => 'integer|exists:academic_years,id',
             'consultation_price_egp' => 'nullable|numeric|min:0|max:999999.99',
             'consultation_duration_minutes' => 'nullable|integer|min:15|max:480',
             'photo' => 'nullable|image|max:'.config('upload_limits.max_upload_kb'),
@@ -77,6 +83,9 @@ class InstructorPersonalBrandingController extends Controller
 
         unset($data['photo']);
         $data['social_links'] = $personal_branding->social_links ?? [];
+        $data['curriculum_types'] = array_values(array_unique($data['curriculum_types'] ?? []));
+        $teachingYearIds = array_values(array_unique(array_map('intval', $data['teaching_year_ids'] ?? [])));
+        unset($data['teaching_year_ids']);
 
         foreach (['consultation_price_egp', 'consultation_duration_minutes'] as $k) {
             if (! array_key_exists($k, $data)) {
@@ -88,6 +97,15 @@ class InstructorPersonalBrandingController extends Controller
         }
 
         $personal_branding->update($data);
+
+        if ($personal_branding->user && Schema::hasTable('academic_year_instructors')) {
+            $publicIds = AcademicYear::query()
+                ->publicCatalog()
+                ->whereIn('id', $teachingYearIds)
+                ->pluck('id')
+                ->all();
+            $personal_branding->user->teachingLearningPaths()->sync($publicIds);
+        }
 
         return redirect()
             ->route('admin.personal-branding.show', $personal_branding)
@@ -162,7 +180,7 @@ class InstructorPersonalBrandingController extends Controller
     }
 
     /**
-     * سعر ومدة الاستشارة بالجنيه المصري (للمدرب؛ إن تُرك السعر فارغاً يُستخدم الافتراضي من إعدادات الاستشارات).
+     * سعر ومدة الاستشارة بالريال السعودي (للمدرب؛ إن تُرك السعر فارغاً يُستخدم الافتراضي من إعدادات الاستشارات).
      */
     public function updateConsultationPricing(Request $request, InstructorProfile $personal_branding)
     {
@@ -179,6 +197,6 @@ class InstructorPersonalBrandingController extends Controller
             'consultation_duration_minutes' => $duration === null || $duration === '' ? null : (int) $duration,
         ]);
 
-        return back()->with('success', 'تم حفظ سعر ومدة الاستشارة لهذا المدرب (بالجنيه المصري).');
+        return back()->with('success', 'تم حفظ سعر ومدة الاستشارة لهذا المدرب (بالريال السعودي).');
     }
 }

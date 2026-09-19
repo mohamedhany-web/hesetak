@@ -26,9 +26,9 @@ class StudentEntitlementService
             $paymentMethod = 'bank_transfer';
         }
 
-        $currency = strtoupper((string) ($package->currencyCode() ?: config('currency.code', 'USD')));
-        if (! in_array($currency, ['EGP', 'USD'], true)) {
-            $currency = 'USD';
+        $currency = strtoupper((string) ($package->currencyCode() ?: config('currency.code', 'SAR')));
+        if (! in_array($currency, ['SAR', 'EGP', 'USD'], true)) {
+            $currency = strtoupper((string) config('currency.code', 'SAR')) ?: 'SAR';
         }
 
         return Order::create([
@@ -76,9 +76,9 @@ class StudentEntitlementService
             ? ' · '.$quote['term_months'].' شهر · '.((int) ($quote['weekly_sessions'] ?? 0)).' حصص/أسبوع'
             : '';
 
-        $currency = strtoupper((string) ($quote['currency'] ?? config('currency.code', 'USD')));
-        if (! in_array($currency, ['EGP', 'USD'], true)) {
-            $currency = 'USD';
+        $currency = strtoupper((string) ($quote['currency'] ?? config('currency.code', 'SAR')));
+        if (! in_array($currency, ['SAR', 'EGP', 'USD'], true)) {
+            $currency = strtoupper((string) config('currency.code', 'SAR')) ?: 'SAR';
         }
 
         return Order::create([
@@ -588,6 +588,25 @@ class StudentEntitlementService
             ->update(['status' => StudentServiceEntitlement::STATUS_EXPIRED]);
     }
 
+    /**
+     * هل لدى الطالب باقة (حصص خاصة أو عامة) ضمن فترة الصلاحية —
+     * حتى لو استُهلك الرصيد. يُستخدم لصلاحية حجز الحصة المجانية غير المخصومة.
+     */
+    public static function hasActivePrivatePackage(int $userId): bool
+    {
+        self::expireStaleForUser($userId);
+
+        return StudentServiceEntitlement::query()
+            ->forUser($userId)
+            ->whereIn('scope', [ServicePackage::SCOPE_PRIVATE_LESSONS, ServicePackage::SCOPE_GLOBAL])
+            ->where('status', '!=', StudentServiceEntitlement::STATUS_CANCELLED)
+            ->where('units_total', '>', 0)
+            ->where(function ($q) {
+                $q->whereNull('expires_at')->orWhere('expires_at', '>', now());
+            })
+            ->exists();
+    }
+
     public static function scopeForTutoringGroup(TutoringGroup $group): string
     {
         return $group->isCollective()
@@ -648,7 +667,7 @@ class StudentEntitlementService
             'duration_days' => max(1, (int) $tutoringPackage->duration_months) * 30,
             'price' => $tutoringPackage->price,
             'original_price' => $tutoringPackage->original_price,
-            'currency' => $tutoringPackage->currency ?: 'USD',
+            'currency' => $tutoringPackage->currency ?: platform_currency(),
             'is_active' => (bool) $tutoringPackage->is_active,
             'is_featured' => (bool) $tutoringPackage->is_featured,
             'sort_order' => (int) ($tutoringPackage->sort_order ?? 0),

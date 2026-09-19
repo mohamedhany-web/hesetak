@@ -70,7 +70,7 @@
                 </div>
                 <div class="flex justify-between gap-4">
                     <dt class="text-muted">القيمة</dt>
-                    <dd class="font-semibold tabular-nums text-ink">{{ $coupon->discount_type === 'percentage' ? $coupon->discount_value.'%' : number_format($coupon->discount_value, 2).' $' }}</dd>
+                    <dd class="font-semibold tabular-nums text-ink">{{ $coupon->discount_type === 'percentage' ? $coupon->discount_value.'%' : number_format($coupon->discount_value, 2) . ' ' . currency_symbol() }}</dd>
                 </div>
                 @if($coupon->minimum_amount)
                     <div class="flex justify-between gap-4">

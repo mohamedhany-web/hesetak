@@ -93,7 +93,7 @@ class ClassroomPrivateLessonSmokeTest extends TestCase
     protected function seedMeeting(): array
     {
         LiveServer::query()->create([
-            'name' => 'Glottical LiveKit',
+            'name' => 'حصتك LiveKit',
             'domain' => 'live.glottical.com',
             'provider' => 'livekit',
             'status' => 'active',
@@ -121,7 +121,7 @@ class ClassroomPrivateLessonSmokeTest extends TestCase
             'user_id' => $instructor->id,
             'one_to_one_session_id' => $session->id,
             'code' => 'SMK'.strtoupper(substr(uniqid(), -4)),
-            'room_name' => 'Glottical-Smoke',
+            'room_name' => 'حصتك-Smoke',
             'title' => 'حصة اختبار دخان',
             'started_at' => now()->subMinutes(2),
             'settings' => [

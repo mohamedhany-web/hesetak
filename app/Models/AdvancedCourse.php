@@ -310,13 +310,13 @@ class AdvancedCourse extends Model
      */
     public function listPriceAmount(?string $currency = null): float
     {
-        $currency = strtoupper((string) ($currency ?: 'USD'));
-        if ($currency === 'USD') {
+        $currency = strtoupper((string) ($currency ?: platform_currency()));
+        if (in_array($currency, ['SAR', 'USD'], true)) {
             $v = $this->price_usd;
             if ($v !== null && $v !== '') {
                 return round(max(0, (float) $v), 2);
             }
-            // توافق: إن لم يُملأ USD استخدم السعر الأساسي أو الحقل القديم
+            // توافق: إن لم يُملأ حقل السعر استخدم السعر الأساسي أو الحقل القديم
             $fallback = $this->price ?? $this->price_egp;
             if ($fallback !== null && $fallback !== '') {
                 return round(max(0, (float) $fallback), 2);
@@ -337,18 +337,18 @@ class AdvancedCourse extends Model
      */
     public function effectivePurchasePrice(?string $currency = null): float
     {
-        $currency = strtoupper((string) ($currency ?: 'USD'));
+        $currency = strtoupper((string) ($currency ?: platform_currency()));
         $list = $this->listPriceAmount($currency);
         if ($list <= 0) {
             return 0.0;
         }
 
         $sale = match ($currency) {
-            'USD' => $this->price_usd_after_discount,
+            'SAR', 'USD' => $this->price_usd_after_discount,
             default => $this->price_egp_after_discount,
         };
         // توافق مع الحقل القديم إن لم تُملأ الأسعار المزدوجة
-        if (($sale === null || $sale === '') && $currency === 'USD') {
+        if (($sale === null || $sale === '') && in_array($currency, ['SAR', 'USD'], true)) {
             $sale = $this->price_after_discount ?? $this->price_egp_after_discount;
         }
         if (($sale === null || $sale === '') && $currency === 'EGP' && ($this->price_egp === null || $this->price_egp === '')) {
@@ -371,17 +371,20 @@ class AdvancedCourse extends Model
      */
     public function hasPromotionalPrice(?string $currency = null): bool
     {
-        $currency = strtoupper((string) ($currency ?: 'USD'));
+        $currency = strtoupper((string) ($currency ?: platform_currency()));
         $list = $this->listPriceAmount($currency);
         if ($list <= 0) {
             return false;
         }
         $sale = match ($currency) {
-            'USD' => $this->price_usd_after_discount,
+            'SAR', 'USD' => $this->price_usd_after_discount,
             default => ($this->price_egp_after_discount !== null && $this->price_egp_after_discount !== '')
                 ? $this->price_egp_after_discount
                 : $this->price_after_discount,
         };
+        if (($sale === null || $sale === '') && in_array($currency, ['SAR', 'USD'], true)) {
+            $sale = $this->price_after_discount ?? $this->price_egp_after_discount;
+        }
         if ($sale === null || $sale === '') {
             return false;
         }

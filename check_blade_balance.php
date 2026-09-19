@@ -97,8 +97,6 @@ function checkBladeBalance($file) {
 
 $files = [
     'resources/views/welcome.blade.php',
-    'resources/views/components/unified-navbar.blade.php',
-    'resources/views/components/unified-footer.blade.php',
     'resources/views/layouts/app.blade.php',
     'resources/views/course-show.blade.php',
 ];

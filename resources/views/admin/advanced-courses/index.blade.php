@@ -140,7 +140,7 @@
                                         @if($course->hasPromotionalPrice())
                                             <span class="ml-1 text-muted line-through">{{ number_format($course->listPriceAmount()) }}</span>
                                         @endif
-                                        {{ number_format($course->effectivePurchasePrice()) }} USD
+                                        {{ number_format($course->effectivePurchasePrice()) }} {{ currency_symbol() }}
                                     </span>
                                 @else
                                     <i class="fas fa-gift w-4 text-emerald-600"></i>

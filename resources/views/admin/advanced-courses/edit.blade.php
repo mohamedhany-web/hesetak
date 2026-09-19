@@ -1,4 +1,4 @@
-﻿@extends('layouts.admin')
+@extends('layouts.admin')
 
 @section('title', 'تعديل البرنامج - ' . config('app.name'))
 @section('page_title', 'تعديل برنامج')
@@ -90,17 +90,17 @@
                                 </div>
 
                                 <div class="space-y-2">
-                                    <label class="block text-sm font-semibold text-ink">السعر بالدولار (USD)</label>
+                                    <label class="block text-sm font-semibold text-ink">السعر بالريال السعودي (ر.س)</label>
                                     <input type="number" name="price_usd" value="{{ old('price_usd', $advancedCourse->price_usd ?? $advancedCourse->price_egp ?? $advancedCourse->price) }}" min="0" step="0.01"
                                            class="w-full rounded-xl border border-line bg-surface px-4 py-3 text-ink focus:border-accent focus:ring-2 focus:ring-accent/20 transition">
                                     @error('price_usd') <p class="text-xs text-rose-500 mt-1">{{ $message }}</p> @enderror
                                 </div>
                                 <div class="space-y-2">
-                                    <label class="block text-sm font-semibold text-ink">بعد الخصم (USD)</label>
+                                    <label class="block text-sm font-semibold text-ink">بعد الخصم (ر.س)</label>
                                     <input type="number" name="price_usd_after_discount" value="{{ old('price_usd_after_discount', $advancedCourse->price_usd_after_discount ?? $advancedCourse->price_egp_after_discount ?? $advancedCourse->price_after_discount) }}" min="0" step="0.01"
                                            class="w-full rounded-xl border border-line bg-surface px-4 py-3 text-ink focus:border-accent focus:ring-2 focus:ring-accent/20 transition"
                                            placeholder="فارغ = بدون عرض ترويجي على البطاقة">
-                                    <p class="text-xs text-muted">عملة المنصة دولار أمريكي فقط.</p>
+                                    <p class="text-xs text-muted">عملة المنصة: الريال السعودي.</p>
                                     @error('price_usd_after_discount') <p class="text-xs text-rose-500 mt-1">{{ $message }}</p> @enderror
                                 </div>
 
@@ -121,7 +121,7 @@
                                     </select>
                                 </div>
                                 <div class="space-y-2">
-                                    <label class="block text-sm font-semibold text-ink">سعر الاشتراك الشهري (USD)</label>
+                                    <label class="block text-sm font-semibold text-ink">سعر الاشتراك الشهري (ر.س)</label>
                                     <input type="number" name="monthly_price" value="{{ old('monthly_price', $advancedCourse->monthly_price) }}" min="0" step="0.01"
                                            class="w-full rounded-xl border border-line bg-surface px-4 py-3 text-ink">
                                 </div>

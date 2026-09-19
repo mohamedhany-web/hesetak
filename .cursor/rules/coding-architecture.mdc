@@ -1,0 +1,44 @@
+---
+description: Core coding & architecture standards (Clean Code, SOLID, SoC, DoD)
+alwaysApply: true
+---
+
+# Coding & Architecture (always)
+
+## Principles
+- Production-ready: Clean Code, SOLID, DRY, KISS, Separation of Concerns.
+- One responsibility per class/file/function. Prefer composition over inheritance.
+- No unnecessary abstractions. No duplicated business logic.
+- Smallest safe change; no unrelated edits.
+
+## Before creating anything
+1. Inspect existing structure, similar features, services, helpers, Blade partials, CSS tokens.
+2. Reuse or extend what exists; only add a new file if it has a clear single purpose.
+3. Follow existing naming (Laravel/PHP + this repo’s folders). Do not invent `helpers/`, `misc/`, `stuff/`.
+
+## Before modifying
+- Who imports this? Shared? Tests? Public API?
+- Preserve behavior unless the task requires a change.
+
+## Placement (this repo)
+- HTTP: `app/Http/Controllers/...` — thin; no heavy business rules.
+- Domain/ops: `app/Services/`, `app/Support/`, Actions when the repo already uses them.
+- Views: `resources/views/...` — presentation; call services/controllers for logic.
+- Public CX: follow `hesetak-platform` + `hesetak-public-pages` skills and `docs/hesetak/`.
+- Styles: reuse `mc-*` / existing CSS; no new CSS framework without approval.
+
+## Functions & naming
+- Descriptive names (`calculateInvoiceTotal`, not `doThing` / `data` / `temp`).
+- Early returns; avoid deep nesting.
+- One job per function; extract when hard to read.
+
+## Errors & security
+- Never swallow errors. Separate user-facing vs log/debug messages.
+- No secrets in code; use `.env`. Validate input server-side.
+
+## Definition of Done
+- [ ] Fits architecture; reused existing code where possible
+- [ ] No duplicate business logic; clear naming
+- [ ] No secrets; intentional error handling
+- [ ] No unrelated files/changes
+- [ ] Smoke or tests only if actually run — never claim pass without running

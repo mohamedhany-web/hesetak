@@ -152,7 +152,7 @@
                             <i class="fas fa-comments text-sm"></i>
                         </span>
                         <div>
-                            <h3 class="text-base font-semibold text-ink">استشارة مدفوعة (دولار أمريكي)</h3>
+                            <h3 class="text-base font-semibold text-ink">استشارة مدفوعة (ريال سعودي)</h3>
                             <p class="mt-0.5 text-xs text-muted">حدّد سعراً ومدة خاصة بهذا المدرب</p>
                         </div>
                     </div>

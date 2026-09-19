@@ -4,104 +4,120 @@
 @section('page_title', __('instructor.assignments'))
 
 @section('content')
-<div class="su-page">
-    <div class="su-page-head">
-        <div class="min-w-0">
-            <h1 class="su-page-head__title">
-                <i class="fas fa-tasks su-page-head__ico" aria-hidden="true"></i>
-                {{ __('instructor.assignments') }}
-            </h1>
-            <p class="su-page-head__sub">{{ __('instructor.manage_assignments_submissions') }}</p>
+@php
+    $locale = app()->getLocale();
+    $hasFilters = request()->anyFilled(['course_id', 'status', 'search']);
+@endphp
+
+<div class="id-page">
+    <section class="id-hero" aria-label="{{ __('instructor.assignments') }}">
+        <div class="id-hero__copy">
+            <p class="id-hero__kicker">{{ __('instructor.courses') }}</p>
+            <h2 class="id-hero__title">{{ __('instructor.assignments') }}</h2>
+            <p class="id-hero__meta">{{ __('instructor.manage_assignments_submissions') }}</p>
         </div>
-        <div class="su-page-head__actions">
-            <a href="{{ route('instructor.courses.index') }}" class="su-btn">
-                <i class="fas fa-book" aria-hidden="true"></i>
-                {{ __('instructor.courses') }}
-            </a>
-            <button type="button" onclick="openCreateModal()" class="su-btn su-btn--primary">
+        <div class="id-hero__actions">
+            @if(Route::has('instructor.courses.index'))
+                <a href="{{ route('instructor.courses.index') }}" class="id-btn id-btn--ghost">
+                    <i class="fas fa-book" aria-hidden="true"></i>
+                    {{ __('instructor.courses') }}
+                </a>
+            @endif
+            <button type="button" onclick="openCreateModal()" class="id-btn id-btn--gold">
                 <i class="fas fa-plus" aria-hidden="true"></i>
                 {{ __('instructor.create_assignment') }}
             </button>
         </div>
-    </div>
+    </section>
 
-    <section class="su-kpi-row" style="margin-bottom:20px">
-        <div class="su-kpi su-kpi--1">
-            <div class="su-kpi__l">{{ __('instructor.total') }}</div>
-            <div class="su-kpi__row">
-                <div class="su-kpi__v">{{ number_format($stats['total'] ?? 0) }}</div>
-                <div class="su-kpi__d"><i class="fas fa-tasks" aria-hidden="true"></i></div>
-            </div>
+    <section class="id-kpis" aria-label="{{ __('instructor.assignments') }}">
+        <div class="id-kpi">
+            <span class="id-kpi__icon" aria-hidden="true"><i class="fas fa-tasks"></i></span>
+            <span class="id-kpi__body">
+                <span class="id-kpi__label">{{ __('instructor.total') }}</span>
+                <span class="id-kpi__value">{{ number_format($stats['total'] ?? 0) }}</span>
+            </span>
         </div>
-        <div class="su-kpi su-kpi--2">
-            <div class="su-kpi__l">{{ __('instructor.published') }}</div>
-            <div class="su-kpi__row">
-                <div class="su-kpi__v">{{ number_format($stats['published'] ?? 0) }}</div>
-                <div class="su-kpi__d"><i class="fas fa-check-circle" aria-hidden="true"></i></div>
-            </div>
+        <div class="id-kpi">
+            <span class="id-kpi__icon id-kpi__icon--teal" aria-hidden="true"><i class="fas fa-check-circle"></i></span>
+            <span class="id-kpi__body">
+                <span class="id-kpi__label">{{ __('instructor.published') }}</span>
+                <span class="id-kpi__value">{{ number_format($stats['published'] ?? 0) }}</span>
+            </span>
         </div>
-        <div class="su-kpi su-kpi--3">
-            <div class="su-kpi__l">{{ __('instructor.draft') }}</div>
-            <div class="su-kpi__row">
-                <div class="su-kpi__v">{{ number_format($stats['draft'] ?? 0) }}</div>
-                <div class="su-kpi__d"><i class="fas fa-file-alt" aria-hidden="true"></i></div>
-            </div>
+        <div class="id-kpi">
+            <span class="id-kpi__icon id-kpi__icon--gold" aria-hidden="true"><i class="fas fa-file-alt"></i></span>
+            <span class="id-kpi__body">
+                <span class="id-kpi__label">{{ __('instructor.draft') }}</span>
+                <span class="id-kpi__value">{{ number_format($stats['draft'] ?? 0) }}</span>
+            </span>
         </div>
-        <div class="su-kpi su-kpi--4">
-            <div class="su-kpi__l">{{ __('instructor.submissions') }}</div>
-            <div class="su-kpi__row">
-                <div class="su-kpi__v">{{ number_format($stats['total_submissions'] ?? 0) }}</div>
-                <div class="su-kpi__d"><i class="fas fa-file-upload" aria-hidden="true"></i></div>
-            </div>
+        <div class="id-kpi">
+            <span class="id-kpi__icon id-kpi__icon--rose" aria-hidden="true"><i class="fas fa-file-upload"></i></span>
+            <span class="id-kpi__body">
+                <span class="id-kpi__label">{{ __('instructor.submissions') }}</span>
+                <span class="id-kpi__value">{{ number_format($stats['total_submissions'] ?? 0) }}</span>
+            </span>
         </div>
     </section>
 
-    <section class="su-card" style="margin-bottom:20px">
-        <form method="GET" class="su-form-grid">
-            <div class="su-field">
-                <label for="course_id">{{ __('instructor.courses') }}</label>
-                <select name="course_id" id="course_id" class="su-select">
-                    <option value="">{{ __('instructor.all_courses') }}</option>
-                    @foreach($courses as $course)
-                        <option value="{{ $course->id }}" {{ request('course_id') == $course->id ? 'selected' : '' }}>{{ $course->title }}</option>
-                    @endforeach
-                </select>
+    <section class="id-panel" aria-label="{{ __('common.search') }}">
+        <form method="GET" class="id-form" style="gap:12px">
+            <div class="id-form-grid" style="align-items:end">
+                <div class="id-field">
+                    <label for="course_id">{{ __('instructor.courses') }}</label>
+                    <select name="course_id" id="course_id" class="id-select">
+                        <option value="">{{ __('instructor.all_courses') }}</option>
+                        @foreach($courses as $course)
+                            <option value="{{ $course->id }}" @selected(request('course_id') == $course->id)>{{ $course->title }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="id-field">
+                    <label for="status">{{ __('common.status') }}</label>
+                    <select name="status" id="status" class="id-select">
+                        <option value="">{{ __('instructor.all') }}</option>
+                        <option value="published" @selected(request('status') === 'published')>{{ __('instructor.published') }}</option>
+                        <option value="draft" @selected(request('status') === 'draft')>{{ __('instructor.draft') }}</option>
+                        <option value="archived" @selected(request('status') === 'archived')>{{ __('instructor.archived') }}</option>
+                    </select>
+                </div>
+                <div class="id-field id-field--span2">
+                    <label for="search">{{ __('common.search') }}</label>
+                    <input type="text" name="search" id="search" value="{{ request('search') }}"
+                           placeholder="{{ __('instructor.search_placeholder') }}" class="id-input">
+                </div>
             </div>
-            <div class="su-field">
-                <label for="status">{{ __('common.status') }}</label>
-                <select name="status" id="status" class="su-select">
-                    <option value="">{{ __('instructor.all') }}</option>
-                    <option value="published" {{ request('status') == 'published' ? 'selected' : '' }}>{{ __('instructor.published') }}</option>
-                    <option value="draft" {{ request('status') == 'draft' ? 'selected' : '' }}>{{ __('instructor.draft') }}</option>
-                    <option value="archived" {{ request('status') == 'archived' ? 'selected' : '' }}>{{ __('instructor.archived') }}</option>
-                </select>
-            </div>
-            <div class="su-field">
-                <label for="search">{{ __('common.search') }}</label>
-                <input type="text" name="search" id="search" value="{{ request('search') }}" placeholder="{{ __('instructor.search_placeholder') }}" class="su-input">
-            </div>
-            <div class="su-form-actions">
-                <button type="submit" class="su-btn su-btn--primary" style="flex:1;justify-content:center;height:40px">
+            <div style="display:flex;flex-wrap:wrap;gap:8px">
+                <button type="submit" class="id-btn id-btn--navy">
                     <i class="fas fa-search" aria-hidden="true"></i>
                     {{ __('common.search') }}
                 </button>
-                @if(request()->anyFilled(['course_id', 'status', 'search']))
-                    <a href="{{ route('instructor.assignments.index') }}" class="su-btn" style="height:40px;width:40px;padding:0;justify-content:center" title="{{ __('common.reset') ?? 'Reset' }}">
+                @if($hasFilters)
+                    <a href="{{ route('instructor.assignments.index') }}" class="id-btn id-btn--outline">
                         <i class="fas fa-times" aria-hidden="true"></i>
+                        {{ __('common.cancel') }}
                     </a>
                 @endif
             </div>
         </form>
     </section>
 
-    @if($assignments->count() > 0)
-        <div class="su-list">
-            @foreach($assignments as $assignment)
+    <section class="id-panel id-panel--wide" aria-label="{{ __('instructor.assignments') }}">
+        <header class="id-panel__head">
+            <h2>{{ __('instructor.assignments') }}</h2>
+            @if(($stats['total'] ?? 0) > 0)
+                <span class="id-panel__badge">{{ number_format($stats['total']) }}</span>
+            @endif
+        </header>
+
+        <div class="id-list">
+            @forelse($assignments as $assignment)
                 @php
                     $chip = match ($assignment->status) {
-                        'published' => 'su-chip--ok',
-                        'draft' => 'su-chip--warn',
-                        default => 'su-chip--off',
+                        'published' => 'id-chip--ok',
+                        'draft' => 'id-chip--warn',
+                        default => 'id-chip--muted',
                     };
                     $statusLabel = match ($assignment->status) {
                         'published' => __('instructor.published'),
@@ -109,76 +125,76 @@
                         default => __('instructor.archived'),
                     };
                 @endphp
-                <article class="su-list-item">
-                    <span class="su-list-item__ico su-soft-1">
-                        <i class="fas fa-tasks" aria-hidden="true"></i>
+                <article class="id-list__row">
+                    <span class="id-list__ico id-list__ico--gold" aria-hidden="true">
+                        <i class="fas fa-tasks"></i>
                     </span>
-                    <div class="su-list-item__body">
-                        <div class="su-chip-row" style="margin:0 0 6px">
-                            <span class="su-chip {{ $chip }}">{{ $statusLabel }}</span>
+                    <div class="id-list__body">
+                        <div class="id-list__title" style="display:flex;flex-wrap:wrap;gap:6px;align-items:center">
+                            {{ $assignment->title }}
+                            <span class="id-chip {{ $chip }}">{{ $statusLabel }}</span>
                             @if($assignment->course)
-                                <span class="su-chip">{{ Str::limit($assignment->course->title, 40) }}</span>
+                                <span class="id-chip id-chip--muted">{{ Str::limit($assignment->course->title, 40) }}</span>
                             @endif
                         </div>
-                        <div class="su-list-item__title">{{ $assignment->title }}</div>
                         @if($assignment->description)
-                            <p style="margin:4px 0 0;font-size:13px;color:var(--su-ink-40)">{{ Str::limit($assignment->description, 120) }}</p>
+                            <div class="id-list__meta">{{ Str::limit($assignment->description, 120) }}</div>
                         @endif
-                        <div class="su-list-item__meta">
+                        <div class="id-list__meta" style="margin-top:4px;display:flex;flex-wrap:wrap;gap:10px">
                             @if($assignment->due_date)
-                                {{ $assignment->due_date->format('Y/m/d') }} ·
+                                <span><i class="fas fa-calendar" aria-hidden="true"></i> {{ $assignment->due_date->format('Y/m/d') }}</span>
                             @endif
-                            {{ $assignment->submissions_count }} {{ __('instructor.submission_single') }} ·
-                            {{ $assignment->max_score }} {{ __('instructor.score_marks') }}
+                            <span><i class="fas fa-inbox" aria-hidden="true"></i> {{ $assignment->submissions_count }} {{ __('instructor.submission_single') }}</span>
+                            <span><i class="fas fa-star" aria-hidden="true"></i> {{ $assignment->max_score }} {{ __('instructor.score_marks') }}</span>
                         </div>
                     </div>
-                    <div class="su-list-item__actions">
-                        <a href="{{ route('instructor.assignments.submissions', $assignment) }}" class="su-btn" style="height:32px">
+                    <div class="id-list__actions">
+                        <a href="{{ route('instructor.assignments.submissions', $assignment) }}" class="id-btn id-btn--outline id-btn--sm">
                             <i class="fas fa-list" aria-hidden="true"></i>
                             {{ __('instructor.submissions') }}
                         </a>
-                        <a href="{{ route('instructor.assignments.show', $assignment) }}" class="su-btn su-btn--primary" style="height:32px">
+                        <a href="{{ route('instructor.assignments.show', $assignment) }}" class="id-btn id-btn--navy id-btn--sm">
                             <i class="fas fa-eye" aria-hidden="true"></i>
                             {{ __('common.view') }}
                         </a>
                     </div>
                 </article>
-            @endforeach
+            @empty
+                <div class="id-empty" style="border:0;background:transparent;padding:28px 8px">
+                    <span class="id-empty__mark" aria-hidden="true"><i class="fas fa-tasks"></i></span>
+                    <p>{{ __('instructor.no_assignments') }}</p>
+                    <p class="id-field__hint" style="margin-top:6px">{{ __('instructor.no_assignments_description') }}</p>
+                    <div class="id-empty__actions">
+                        <button type="button" onclick="openCreateModal()" class="id-btn id-btn--navy">
+                            <i class="fas fa-plus" aria-hidden="true"></i>
+                            {{ __('instructor.create_assignment') }}
+                        </button>
+                    </div>
+                </div>
+            @endforelse
         </div>
-        @if(method_exists($assignments, 'links') && $assignments->hasPages())
-            <div class="su-pager" style="margin-top:16px">{{ $assignments->links() }}</div>
+
+        @if(method_exists($assignments, 'hasPages') && $assignments->hasPages())
+            <div class="id-pager">{{ $assignments->appends(request()->query())->links() }}</div>
         @endif
-    @else
-        <div class="su-empty">
-            <i class="fas fa-tasks" aria-hidden="true"></i>
-            <p><strong>{{ __('instructor.no_assignments') }}</strong></p>
-            <p>{{ __('instructor.no_assignments_description') }}</p>
-            <button type="button" onclick="openCreateModal()" class="su-btn su-btn--primary" style="margin-top:12px">
-                <i class="fas fa-plus" aria-hidden="true"></i>
-                {{ __('instructor.create_assignment') }}
-            </button>
-        </div>
-    @endif
+    </section>
 </div>
 
 {{-- Create assignment modal --}}
-<div id="createAssignmentModal" class="su-modal hidden" role="dialog" aria-modal="true" aria-labelledby="modal-title" style="position:fixed;inset:0;z-index:50;overflow-y:auto">
-    <div style="display:flex;align-items:center;justify-content:center;min-height:100vh;padding:24px">
-        <div style="position:fixed;inset:0;background:rgba(15,23,42,.45)" onclick="closeCreateModal()" id="modalOverlay"></div>
-        <div class="su-card" style="position:relative;width:100%;max-width:56rem;max-height:90vh;overflow:hidden;display:flex;flex-direction:column;margin:0;padding:0" id="modalPanel" onclick="event.stopPropagation()">
-            <div class="su-section-head" style="padding:16px 20px;border-bottom:1px solid var(--su-line);margin:0">
-                <h3 id="modal-title" style="display:flex;align-items:center;gap:10px;margin:0">
-                    <span class="su-meta-ico su-soft-1"><i class="fas fa-tasks" aria-hidden="true"></i></span>
-                    {{ __('instructor.create_assignment_modal_title') }}
-                </h3>
-                <button type="button" onclick="closeCreateModal()" class="su-icon-link su-icon-link--ghost" aria-label="{{ __('common.cancel') }}">
-                    <i class="fas fa-times" aria-hidden="true"></i>
-                </button>
-            </div>
-            <p style="padding:0 20px;margin:8px 0 0;font-size:13px;color:var(--su-ink-40)">{{ __('instructor.create_assignment_modal_subtitle') }}</p>
-            <div style="overflow-y:auto;flex:1;padding:20px">
-                @include('instructor.assignments.create-form', ['courses' => $courses, 'isModal' => true])
-            </div>
+<div id="createAssignmentModal" class="id-modal hidden" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div class="id-modal__panel id-modal__panel--lg" id="modalPanel" onclick="event.stopPropagation()">
+        <div class="id-modal__head">
+            <h3 id="modal-title">
+                <i class="fas fa-tasks" aria-hidden="true" style="color:#C9952A;margin-inline-end:6px"></i>
+                {{ __('instructor.create_assignment_modal_title') }}
+            </h3>
+            <button type="button" onclick="closeCreateModal()" class="id-icon-btn" style="background:#F1F4F8;color:#6B7A93" aria-label="{{ __('common.cancel') }}">
+                <i class="fas fa-times" aria-hidden="true"></i>
+            </button>
+        </div>
+        <p class="id-modal__sub" style="padding:0 20px;margin:8px 0 0">{{ __('instructor.create_assignment_modal_subtitle') }}</p>
+        <div class="id-modal__body">
+            @include('instructor.assignments.create-form', ['courses' => $courses, 'isModal' => true])
         </div>
     </div>
 </div>
@@ -209,6 +225,9 @@ function closeCreateModal() {
         }
     }
 }
+document.getElementById('createAssignmentModal')?.addEventListener('click', function(e) {
+    if (e.target === this) closeCreateModal();
+});
 document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeCreateModal(); });
 </script>
 @endsection

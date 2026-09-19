@@ -11,6 +11,7 @@ use App\Models\User;
 use App\Services\StudentEntitlementService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\View\View;
 
@@ -57,7 +58,7 @@ class ServicePackageController extends Controller
             'units_count' => 8,
             'session_minutes' => 60,
             'duration_days' => 60,
-            'currency' => (string) config('currency.code', 'USD'),
+            'currency' => (string) config('currency.code', 'SAR'),
             'is_active' => true,
             'sort_order' => (int) ServicePackage::query()->max('sort_order') + 1,
         ]), 'create'));
@@ -74,6 +75,7 @@ class ServicePackageController extends Controller
         $data['is_featured'] = $request->boolean('is_featured');
 
         ServicePackage::create($data);
+        $this->bustStorefrontCache();
 
         return redirect()->route('admin.service-packages.index')->with('success', 'تم إنشاء باقة الخدمات.');
     }
@@ -96,6 +98,7 @@ class ServicePackageController extends Controller
         $data['is_featured'] = $request->boolean('is_featured');
 
         $servicePackage->update($data);
+        $this->bustStorefrontCache();
 
         return redirect()->route('admin.service-packages.index')->with('success', 'تم تحديث الباقة.');
     }
@@ -106,6 +109,7 @@ class ServicePackageController extends Controller
             return back()->with('error', 'لا يمكن حذف باقة لها أرصدة طلاب. أوقفها بدل الحذف.');
         }
         $servicePackage->delete();
+        $this->bustStorefrontCache();
 
         return redirect()->route('admin.service-packages.index')->with('success', 'تم حذف الباقة.');
     }
@@ -113,6 +117,7 @@ class ServicePackageController extends Controller
     public function toggleStatus(ServicePackage $servicePackage): RedirectResponse
     {
         $servicePackage->update(['is_active' => ! $servicePackage->is_active]);
+        $this->bustStorefrontCache();
 
         return back()->with('success', $servicePackage->is_active ? 'تم تفعيل الباقة.' : 'تم إيقاف الباقة.');
     }
@@ -311,13 +316,24 @@ class ServicePackageController extends Controller
             'duration_days' => ['nullable', 'integer', 'min:1', 'max:730'],
             'price' => ['required', 'numeric', 'min:0'],
             'original_price' => ['nullable', 'numeric', 'min:0'],
-            'currency' => ['nullable', 'in:USD,usd'],
+            'currency' => ['nullable', 'in:SAR,USD,EGP,sar,usd,egp'],
             'sort_order' => ['nullable', 'integer', 'min:0', 'max:9999'],
         ]);
     }
 
     protected function normalizeCurrency(?string $currency): string
     {
-        return 'USD';
+        $code = strtoupper(trim((string) ($currency ?: platform_currency())));
+
+        return in_array($code, ['SAR', 'USD', 'EGP'], true) ? $code : platform_currency();
+    }
+
+    private function bustStorefrontCache(): void
+    {
+        foreach (['ar', 'en'] as $locale) {
+            Cache::forget('landing.home.v17.'.$locale);
+            Cache::forget('landing.home.v16.'.$locale);
+            Cache::forget('landing.home.v13.'.$locale);
+        }
     }
 }

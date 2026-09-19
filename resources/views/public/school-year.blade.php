@@ -2,7 +2,7 @@
     $locale = app()->getLocale();
     $isRtl = $locale === 'ar';
     $g = 'landing.groups_page';
-    $brand = config('app.name', 'Glottical');
+    $brand = config('app.name', 'حصتك');
     $trialUrl = route('home').'?open_trial=1';
 @endphp
 <!DOCTYPE html>

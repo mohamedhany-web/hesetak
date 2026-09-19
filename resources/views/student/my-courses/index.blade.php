@@ -1,212 +1,153 @@
 @extends('layouts.student-timeline')
 
-@section('title', __('student.my_courses_active_title'))
-@section('header', __('student.my_courses_active_title'))
-
-@push('styles')
-<style>
-    .course-card {
-        transition: all 0.25s ease;
-        background: #fff;
-        border: 1px solid #e5e7eb;
-        position: relative;
-        overflow: hidden;
-        border-radius: 12px;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.06);
-    }
-
-    .course-card:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 8px 20px rgba(14, 165, 233, 0.12);
-        border-color: #bae6fd;
-    }
-
-    .course-thumbnail {
-        position: relative;
-        overflow: hidden;
-    }
-
-    .stats-card {
-        background: #fff;
-        border: 1px solid #e5e7eb;
-        border-radius: 12px;
-        transition: all 0.2s ease;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.06);
-    }
-
-    .stats-card:hover {
-        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-    }
-
-    .empty-state {
-        background: #f8fafc;
-        border: 1px dashed #cbd5e1;
-    }
-
-    .dark .course-card {
-        background: #1e293b !important;
-        border-color: #334155 !important;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-    }
-    .dark .course-card:hover {
-        border-color: rgba(6, 182, 212, 0.35) !important;
-        box-shadow: 0 8px 20px rgba(0,0,0,0.25);
-    }
-    .dark .stats-card {
-        background: #1e293b !important;
-        border-color: #334155 !important;
-    }
-    .dark .empty-state {
-        background: rgba(15, 23, 42, 0.6) !important;
-        border-color: #475569 !important;
-    }
-</style>
-@endpush
+@section('title', __('student.my_courses'))
 
 @section('content')
-<div class="space-y-6">
-    <!-- الهيدر -->
-    <div class="bg-white dark:bg-slate-800/95 rounded-xl p-5 border border-gray-200 dark:border-slate-700 shadow-sm">
-        <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
-            <div class="min-w-0">
-                <h1 class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-slate-100 mb-1">{{ __('student.my_courses_active_title') }}</h1>
-                <p class="text-sm text-gray-500 dark:text-slate-400">{{ __('student.my_courses_subtitle') }}</p>
-            </div>
-            {{-- يظهر لكل طالب يصل لهذه الصفحة (لا يعتمد على صلاحية student.view.courses) --}}
-            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0 w-full sm:w-auto">
-            <a href="{{ route('public.courses') }}" class="inline-flex items-center justify-center gap-2 bg-sky-500 hover:bg-sky-600 text-white px-5 py-3 rounded-xl text-sm font-bold transition-colors shadow-md w-full sm:w-auto">
-                <i class="fas fa-th-large"></i>
-                {{ __('student.browse_courses') }}
-            </a>
-            @if(Route::has('student.my-course-subscriptions'))
-            <a href="{{ route('student.my-course-subscriptions') }}" class="inline-flex items-center justify-center gap-2 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/30 hover:bg-emerald-100 px-5 py-3 rounded-xl text-sm font-bold transition-colors w-full sm:w-auto">
-                <i class="fas fa-calendar-check"></i>
-                {{ __('student.course_subscriptions_nav') }}
-            </a>
+@php
+    $locale = app()->getLocale();
+    $tones = ['blue', 'orange', 'purple', 'pink'];
+    $masks = [
+        asset('img/student-timeline/event-mask-1.svg'),
+        asset('img/student-timeline/event-mask-2.svg'),
+        asset('img/student-timeline/event-mask-3.svg'),
+    ];
+    $browseUrl = Route::has('public.courses') ? route('public.courses') : route('dashboard');
+    $subsUrl = Route::has('student.my-course-subscriptions') ? route('student.my-course-subscriptions') : null;
+@endphp
+
+@include('partials.student-timeline-top', [
+    'locale' => $locale,
+    'pageTitle' => __('student.my_courses'),
+    'crumbs' => [
+        ['label' => __('student_timeline.school_gate'), 'url' => route('dashboard')],
+        ['label' => __('student.my_courses'), 'url' => null],
+    ],
+])
+
+@if(session('success'))
+    <div class="st-flash st-flash--ok">{{ session('success') }}</div>
+@endif
+@if(session('info'))
+    <div class="st-flash st-flash--ok">{{ session('info') }}</div>
+@endif
+@if(session('error'))
+    <div class="st-flash st-flash--err">{{ session('error') }}</div>
+@endif
+
+@if($activeCourses->count() > 0)
+    <section class="st-join-hero" aria-label="{{ __('student.my_courses') }}">
+        <div class="st-join-hero__copy">
+            <p class="st-join-hero__kicker">{{ __('student_timeline.courses_kicker') }}</p>
+            <h2 class="st-join-hero__title">{{ __('student_timeline.courses_ready_title', ['count' => $stats['total_active']]) }}</h2>
+            <p class="st-join-hero__meta">{{ __('student.my_courses_subtitle') }}</p>
+        </div>
+        <div class="st-join-hero__actions">
+            <a href="{{ $browseUrl }}" class="st-pill st-pill--solid st-pill--lg">{{ __('student.browse_courses') }}</a>
+            @if($subsUrl)
+                <a href="{{ $subsUrl }}" class="st-pill st-pill--outline">{{ __('student.course_subscriptions_nav') }}</a>
             @endif
-            </div>
         </div>
-    </div>
+    </section>
+@else
+    <section class="st-join-hero st-join-hero--muted" aria-label="{{ __('student.my_courses') }}">
+        <div class="st-join-hero__copy">
+            <p class="st-join-hero__kicker">{{ __('student_timeline.courses_kicker') }}</p>
+            <h2 class="st-join-hero__title">{{ __('student.no_active_courses_my') }}</h2>
+            <p class="st-join-hero__meta">{{ __('student.no_active_courses_desc') }}</p>
+        </div>
+        <div class="st-join-hero__actions">
+            <a href="{{ $browseUrl }}" class="st-pill st-pill--solid st-pill--lg">{{ __('student.browse_courses_btn') }}</a>
+            <a href="{{ route('dashboard') }}" class="st-pill st-pill--outline">{{ __('student_timeline.school_gate') }}</a>
+        </div>
+    </section>
+@endif
 
-    <!-- الإحصائيات -->
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        <div class="stats-card p-4">
-            <div class="flex items-center justify-between gap-3">
-                <div class="min-w-0">
-                    <p class="text-xs font-medium text-gray-500 uppercase tracking-wide">{{ __('student.active_label') }}</p>
-                    <p class="text-2xl font-bold text-sky-600 leading-none">{{ $stats['total_active'] }}</p>
-                </div>
-                <div class="w-10 h-10 rounded-lg bg-sky-100 flex items-center justify-center text-sky-600 flex-shrink-0">
-                    <i class="fas fa-book-open"></i>
-                </div>
-            </div>
-        </div>
-        <div class="stats-card p-4">
-            <div class="flex items-center justify-between gap-3">
-                <div class="min-w-0">
-                    <p class="text-xs font-medium text-gray-500 uppercase tracking-wide">{{ __('student.completed') }}</p>
-                    <p class="text-2xl font-bold text-emerald-600 leading-none">{{ $stats['total_completed'] }}</p>
-                </div>
-                <div class="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center text-emerald-600 flex-shrink-0">
-                    <i class="fas fa-check-circle"></i>
-                </div>
-            </div>
-        </div>
-        <div class="stats-card p-4">
-            <div class="flex items-center justify-between gap-3">
-                <div class="min-w-0">
-                    <p class="text-xs font-medium text-gray-500 uppercase tracking-wide">{{ __('student.hours_label') }}</p>
-                    <p class="text-2xl font-bold text-gray-700 leading-none">{{ $stats['total_hours'] }}</p>
-                </div>
-                <div class="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center text-gray-600 flex-shrink-0">
-                    <i class="fas fa-clock"></i>
-                </div>
-            </div>
-        </div>
-        <div class="stats-card p-4">
-            <div class="flex items-center justify-between gap-3">
-                <div class="min-w-0">
-                    <p class="text-xs font-medium text-gray-500 uppercase tracking-wide">{{ __('student.avg_progress_label') }}</p>
-                    <p class="text-2xl font-bold text-amber-600 leading-none">{{ $stats['avg_progress'] }}%</p>
-                </div>
-                <div class="w-10 h-10 rounded-lg bg-amber-100 flex items-center justify-center text-amber-600 flex-shrink-0">
-                    <i class="fas fa-chart-line"></i>
-                </div>
-            </div>
-        </div>
-    </div>
+<section class="st-stats st-stats--classes" aria-label="{{ __('student_timeline.courses_stats') }}">
+    <article class="st-stat-card">
+        <p class="st-stat-card__label">{{ __('student.active_label') }}</p>
+        <p class="st-stat-card__value">{{ (int) $stats['total_active'] }}</p>
+    </article>
+    <article class="st-stat-card">
+        <p class="st-stat-card__label">{{ __('student.completed') }}</p>
+        <p class="st-stat-card__value">{{ (int) $stats['total_completed'] }}</p>
+    </article>
+    <article class="st-stat-card">
+        <p class="st-stat-card__label">{{ __('student.hours_label') }}</p>
+        <p class="st-stat-card__value">{{ (int) $stats['total_hours'] }}</p>
+    </article>
+    <article class="st-stat-card">
+        <p class="st-stat-card__label">{{ __('student.avg_progress_label') }}</p>
+        <p class="st-stat-card__value">{{ (int) $stats['avg_progress'] }}%</p>
+    </article>
+</section>
 
-    <!-- الكورسات -->
-    @if($activeCourses->count() > 0)
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            @foreach($activeCourses as $course)
+<section class="st-msg-intro" aria-label="{{ __('student.my_courses') }}">
+    <h2>{{ __('student_timeline.courses_list_title') }}</h2>
+    <p>{{ __('student_timeline.courses_list_hint') }}</p>
+</section>
+
+@if($activeCourses->count() > 0)
+    <section class="st-course-grid" aria-label="{{ __('student.my_courses') }}">
+        @foreach($activeCourses as $i => $course)
             @php
-                $progress = $course->pivot->progress ?? 0;
+                $progress = (int) ($course->pivot->progress ?? 0);
                 $isCompleted = $progress >= 100;
+                $tone = $tones[$i % count($tones)];
+                $mask = $masks[$i % count($masks)];
+                $lessonsCount = $course->lessons->count();
+                $points = (float) ($course->student_points ?? 0);
             @endphp
-            <a href="{{ route('my-courses.show', $course) }}" class="course-card block">
-                <div class="course-thumbnail h-36 bg-sky-100 flex items-center justify-center relative">
+            <article class="st-course-card st-course-card--{{ $tone }}">
+                <a href="{{ route('my-courses.show', $course) }}" class="st-course-card__media" title="{{ $course->title }}">
                     @if($course->thumbnail)
-                        <img src="{{ storage_asset($course->thumbnail) }}" alt="{{ $course->title }}" class="w-full h-full object-cover">
+                        <img src="{{ storage_asset($course->thumbnail) }}" alt="" loading="lazy">
                     @else
-                        <div class="text-sky-600">
-                            <i class="fas fa-graduation-cap text-3xl"></i>
-                            <p class="text-xs font-medium mt-1 text-sky-700">{{ $course->academicSubject->name ?? __('student.course_fallback') }}</p>
-                        </div>
-                    @endif
-                    @if($isCompleted)
-                        <span class="absolute top-2 left-2 inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-semibold bg-emerald-500 text-white">
-                            <i class="fas fa-check-circle"></i> {{ __('student.completed_badge') }}
-                        </span>
-                    @else
-                        <span class="absolute top-2 left-2 inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-semibold bg-sky-500 text-white">
-                            <i class="fas fa-play-circle"></i> {{ __('student.active_badge') }}
+                        <img class="st-course-card__blob" src="{{ $mask }}" alt="" width="120" height="120">
+                        <span class="st-course-card__placeholder" aria-hidden="true">
+                            <i class="fas fa-graduation-cap"></i>
                         </span>
                     @endif
-                </div>
-
-                <div class="p-4">
-                    <h3 class="text-base font-bold text-gray-900 line-clamp-2 mb-2 leading-snug">{{ $course->title }}</h3>
-                    <p class="text-xs text-gray-500 mb-3">
-                        {{ $course->academicSubject->name ?? '—' }} · {{ $course->teacher->name ?? '—' }} · {{ $course->lessons->count() }} {{ __('student.lesson_singular') }}
-                    </p>
-
-                    <div class="flex items-center justify-between gap-2 mb-2">
-                        <span class="text-xs font-medium text-gray-600">{{ __('student.progress') }}</span>
-                        <span class="text-sm font-bold text-sky-600">{{ $progress }}%</span>
-                    </div>
-                    <div class="flex items-center justify-between gap-2 mb-3">
-                        <span class="text-xs font-medium text-gray-600">النقاط</span>
-                        <span class="text-sm font-bold text-amber-600"><i class="fas fa-star text-amber-500 ml-1"></i>{{ number_format((float)($course->student_points ?? 0), 0) }}</span>
-                    </div>
-                    <div class="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
-                        <div class="h-full bg-sky-500 rounded-full transition-all duration-500" style="width: {{ min($progress, 100) }}%;"></div>
-                    </div>
-
-                    <span class="mt-3 inline-flex items-center justify-center gap-2 w-full py-2.5 rounded-lg bg-sky-500 hover:bg-sky-600 text-white text-sm font-semibold transition-colors">
-                        <i class="fas fa-play text-xs"></i>
-                        {{ __('student.continue_learning') }}
+                    <span class="st-course-card__badge {{ $isCompleted ? 'is-ok' : '' }}">
+                        {{ $isCompleted ? __('student.completed_badge') : __('student.active_badge') }}
                     </span>
+                </a>
+                <a href="{{ route('my-courses.show', $course) }}" class="st-course-card__main">
+                    <h3 class="st-course-card__name">{{ $course->title }}</h3>
+                    <p class="st-course-card__sub">
+                        {{ $course->academicSubject->name ?? __('student.course_fallback') }}
+                        · {{ $course->teacher->name ?? '—' }}
+                        · {{ $lessonsCount }} {{ __('student.lesson_singular') }}
+                    </p>
+                    <div class="st-course-card__progress" aria-hidden="true">
+                        <span style="width: {{ max(4, min(100, $progress)) }}%"></span>
+                    </div>
+                    <p class="st-course-card__meta">
+                        {{ $progress }}%
+                        · <i class="fas fa-star" aria-hidden="true"></i> {{ number_format($points, 0) }}
+                    </p>
+                </a>
+                <div class="st-course-card__foot">
+                    <a href="{{ route('my-courses.learn', $course) }}" class="st-pill st-pill--solid">
+                        <i class="fas fa-play" aria-hidden="true"></i>
+                        {{ __('student.continue_learning') }}
+                    </a>
+                    <a href="{{ route('my-courses.show', $course) }}" class="st-pill st-pill--outline">{{ __('student_timeline.courses_open') }}</a>
                 </div>
-            </a>
-            @endforeach
-        </div>
+            </article>
+        @endforeach
+    </section>
 
-        <div class="mt-6 flex justify-center">
-            {{ $activeCourses->links() }}
-        </div>
-    @else
-        <div class="empty-state rounded-xl p-10 sm:p-12 text-center">
-            <div class="w-16 h-16 bg-sky-100 rounded-2xl flex items-center justify-center mx-auto mb-4 text-sky-600">
-                <i class="fas fa-graduation-cap text-2xl"></i>
-            </div>
-            <h3 class="text-lg font-bold text-gray-900 mb-2">{{ __('student.no_active_courses_my') }}</h3>
-            <p class="text-sm text-gray-500 mb-6 max-w-sm mx-auto">{{ __('student.no_active_courses_desc') }}</p>
-            <a href="{{ route('public.courses') }}" class="inline-flex items-center gap-2 px-5 py-2.5 bg-sky-500 hover:bg-sky-600 text-white text-sm font-semibold rounded-lg transition-colors">
-                <i class="fas fa-search"></i>
-                {{ __('student.browse_courses_btn') }}
-            </a>
-        </div>
+    @if($activeCourses->hasPages())
+        <div class="st-pager">{{ $activeCourses->links() }}</div>
     @endif
-</div>
+@else
+    <div class="st-empty-panel">
+        <h3>{{ __('student.no_active_courses_my') }}</h3>
+        <p>{{ __('student.no_active_courses_desc') }}</p>
+        <div class="st-biz-banner__actions">
+            <a href="{{ $browseUrl }}" class="st-pill st-pill--solid">{{ __('student.browse_courses_btn') }}</a>
+            <a href="{{ route('dashboard') }}" class="st-pill st-pill--outline">{{ __('student_timeline.school_gate') }}</a>
+        </div>
+    </div>
+@endif
 @endsection

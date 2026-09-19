@@ -2,7 +2,7 @@
     $locale = app()->getLocale();
     $isRtl = $locale === 'ar';
     $g = 'landing.groups_page';
-    $brand = config('app.name', 'Glottical');
+    $brand = config('app.name', 'حصتك');
     $footer = \App\Services\PublicFooterSettings::payload();
     $waUrl = $footer['whatsapp_url'] ?? '#';
     $currency = __('landing.currency');

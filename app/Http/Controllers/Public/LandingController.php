@@ -3,16 +3,17 @@
 namespace App\Http\Controllers\Public;
 
 use App\Http\Controllers\Controller;
-use App\Models\AdvancedCourse;
-use App\Models\Certificate;
-use App\Models\PopupAd;
-use App\Models\SiteTestimonial;
-use App\Models\SiteService;
 use App\Models\AcademicSubject;
 use App\Models\AcademicYear;
+use App\Models\AdvancedCourse;
+use App\Models\CourseCategory;
+use App\Models\InstructorProfile;
+use App\Models\ServicePackage;
+use App\Models\SiteService;
+use App\Models\SiteTestimonial;
 use App\Models\User;
 use App\Services\CourseSubscriptionService;
-use App\Services\SeoAssets;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\View\View;
@@ -25,17 +26,6 @@ class LandingController extends Controller
 {
     public function index(): View
     {
-        $popupAd = null;
-        $ad = PopupAd::activeNow()->first();
-        if ($ad) {
-            $key = 'popup_ad_' . $ad->id . '_views';
-            $views = (int) session($key, 0);
-            if ($views < $ad->max_views_per_visitor) {
-                session([$key => $views + 1]);
-                $popupAd = $ad;
-            }
-        }
-
         $locale = app()->getLocale();
         $buildHomePayload = function () {
             $featuredCourses = AdvancedCourse::query()
@@ -57,38 +47,15 @@ class LandingController extends Controller
                 ->limit(8)
                 ->get();
 
+            $homeInstructors = $this->buildHomeInstructors();
+            $trialInstructors = $this->buildTrialInstructors();
+            $homePackages = $this->buildHomePackages();
             $homeCategories = $this->buildHomeCategories();
+            $homeTrustStats = $this->buildHomeTrustStats($homeInstructors->count());
 
-            $homeTestimonials = SiteTestimonial::query()
-                ->active()
-                ->ordered()
-                ->limit(12)
-                ->get();
-
-            $realLearners = User::query()->where('role', 'student')->where('is_active', true)->count();
-            $learnersMin = (int) config('platform.homepage_stats.learners_min', 5000);
-
-            $homeStats = [
-                'learners' => max($learnersMin, $realLearners),
-                'learners_real' => $realLearners,
-                'learners_show_plus' => (bool) config('platform.homepage_stats.learners_show_plus', true)
-                    && max($learnersMin, $realLearners) >= $learnersMin,
-                'courses' => AdvancedCourse::query()->where('is_active', true)->count(),
-                'certificates' => Certificate::query()
-                    ->where(function ($q) {
-                        $q->where('status', 'issued')->orWhere('is_verified', true);
-                    })
-                    ->count(),
-                'services' => SiteService::active()->count(),
-            ];
-
-            // سليدر خلفيات فقط (هوية ثابتة + زرّان فوقه)
-            $heroSlides = [
-                SeoAssets::optimizedRemoteImage('https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=1600&q=72', 1600, 72),
-                SeoAssets::optimizedRemoteImage('https://images.unsplash.com/photo-1546410531-bb4caa6b424d?auto=format&fit=crop&w=1600&q=72', 1600, 72),
-                SeoAssets::optimizedRemoteImage('https://images.unsplash.com/photo-1571260899304-425eee4c7efc?auto=format&fit=crop&w=1600&q=72', 1600, 72),
-                SeoAssets::optimizedRemoteImage('https://images.unsplash.com/photo-1524178232363-1fb2b075b655?auto=format&fit=crop&w=1600&q=72', 1600, 72),
-            ];
+            $homeTestimonials = Schema::hasTable('site_testimonials')
+                ? SiteTestimonial::query()->active()->ordered()->limit(12)->get()
+                : collect();
 
             $schoolYears = Schema::hasTable('academic_years')
                 ? AcademicYear::query()->active()->ordered()->get(['id', 'name', 'slug', 'level_number', 'tagline', 'icon', 'color'])
@@ -109,43 +76,186 @@ class LandingController extends Controller
             return compact(
                 'featuredCourses',
                 'oneToOneCourses',
+                'homeInstructors',
+                'trialInstructors',
+                'homePackages',
                 'homeCategories',
+                'homeTrustStats',
                 'homeTestimonials',
-                'homeStats',
-                'heroSlides',
                 'schoolYears',
                 'schoolSubjects'
             );
         };
 
-        // في وضع التطوير: بدون كاش حتى تظهر تحديثات التصميم فوراً
         $payload = config('app.debug')
             ? $buildHomePayload()
-            : Cache::remember('landing.home.v14.'.$locale, 180, $buildHomePayload);
+            : Cache::remember('landing.home.v17.'.$locale, 180, $buildHomePayload);
 
-        return view('welcome', array_merge($payload, compact('popupAd')));
+        return view('welcome', $payload);
     }
 
     /**
-     * @return \Illuminate\Support\Collection<int, array{name: string, description: string, icon: string, url: string}>
+     * @return Collection<int, InstructorProfile>
      */
-    private function buildHomeCategories(): \Illuminate\Support\Collection
+    private function buildHomeInstructors(): Collection
     {
-        $servicesUrl = route('public.services.index');
+        if (! Schema::hasTable('instructor_profiles')) {
+            return collect();
+        }
 
-        return collect(range(1, 6))->map(function (int $i) use ($servicesUrl) {
-            $iconKey = 'public.home_category_fallback_'.$i.'_icon';
-            $iconRaw = __($iconKey);
-            $icon = is_string($iconRaw) && preg_match('/\bfa-[a-z0-9-]+\b/i', $iconRaw, $m)
-                ? strtolower($m[0])
-                : 'fa-circle';
+        return InstructorProfile::query()
+            ->approved()
+            ->whereHas('user', function ($q) {
+                $q->whereIn('role', ['instructor', 'teacher'])
+                    ->where('is_active', true);
+            })
+            ->with(['user:id,name,role,is_active,bio,profile_image'])
+            ->orderByDesc('reviewed_at')
+            ->orderByDesc('id')
+            ->limit(4)
+            ->get();
+    }
 
-            return [
-                'name' => __('public.home_category_fallback_'.$i.'_name'),
-                'description' => __('public.home_category_fallback_'.$i.'_desc'),
-                'icon' => $icon,
-                'url' => $servicesUrl,
-            ];
-        });
+    /**
+     * معلمون لاختيار الحصة التجريبية في الشيت.
+     *
+     * @return Collection<int, InstructorProfile>
+     */
+    private function buildTrialInstructors(): Collection
+    {
+        if (! Schema::hasTable('instructor_profiles')) {
+            return collect();
+        }
+
+        return InstructorProfile::query()
+            ->approved()
+            ->whereHas('user', function ($q) {
+                $q->whereIn('role', ['instructor', 'teacher'])
+                    ->where('is_active', true);
+            })
+            ->with(['user:id,name,role,is_active,bio,profile_image'])
+            ->orderByDesc('reviewed_at')
+            ->orderByDesc('id')
+            ->limit(16)
+            ->get();
+    }
+
+    /**
+     * @return Collection<int, ServicePackage>
+     */
+    private function buildHomePackages(): Collection
+    {
+        if (! Schema::hasTable('service_packages')) {
+            return collect();
+        }
+
+        // نفس كتالوج الإدارة النشط المعروض للطالب وصفحة التسعير
+        return ServicePackage::storefrontCatalog(12);
+    }
+
+    /**
+     * @return Collection<int, array{name: string, url: string}>
+     */
+    private function buildHomeCategories(): Collection
+    {
+        if (Schema::hasTable('academic_subjects')) {
+            $subjects = AcademicSubject::query()
+                ->active()
+                ->where(function ($q) {
+                    $q->where('code', 'like', 'HSK-%')
+                        ->orWhere('code', 'like', 'SCH-%');
+                })
+                ->ordered()
+                ->limit(10)
+                ->get(['id', 'name', 'slug']);
+
+            if ($subjects->isEmpty()) {
+                $subjects = AcademicSubject::query()
+                    ->active()
+                    ->ordered()
+                    ->limit(10)
+                    ->get(['id', 'name', 'slug']);
+            }
+
+            if ($subjects->isNotEmpty()) {
+                return $subjects->map(fn (AcademicSubject $subject) => [
+                    'name' => $subject->name,
+                    'url' => route('public.instructors.index', ['q' => $subject->name]),
+                ]);
+            }
+        }
+
+        if (Schema::hasTable('course_categories')) {
+            $categories = CourseCategory::query()
+                ->where('is_active', true)
+                ->orderBy('sort_order')
+                ->orderBy('id')
+                ->limit(10)
+                ->get(['id', 'name']);
+
+            if ($categories->isNotEmpty()) {
+                return $categories->map(fn (CourseCategory $category) => [
+                    'name' => $category->name,
+                    'url' => route('public.courses', ['category' => $category->id]),
+                ]);
+            }
+        }
+
+        return collect();
+    }
+
+    /**
+     * أرقام ثقة من قاعدة البيانات فقط (بدون حد أدنى تسويقي ثابت).
+     *
+     * @return list<array{num: string, label: string, suffix?: string}>
+     */
+    private function buildHomeTrustStats(int $homeInstructorsLoaded): array
+    {
+        $instructors = Schema::hasTable('instructor_profiles')
+            ? InstructorProfile::query()
+                ->approved()
+                ->whereHas('user', fn ($q) => $q->whereIn('role', ['instructor', 'teacher'])->where('is_active', true))
+                ->count()
+            : $homeInstructorsLoaded;
+
+        $subjects = Schema::hasTable('academic_subjects')
+            ? AcademicSubject::query()->active()->count()
+            : 0;
+
+        if ($subjects < 1 && Schema::hasTable('course_categories')) {
+            $subjects = CourseCategory::query()->count();
+        }
+
+        $students = User::query()->where('role', 'student')->where('is_active', true)->count();
+        $courses = Schema::hasTable('advanced_courses')
+            ? AdvancedCourse::query()->where('is_active', true)->count()
+            : 0;
+        $services = Schema::hasTable('site_services')
+            ? SiteService::active()->count()
+            : 0;
+
+        $locale = app()->getLocale();
+        $ar = $locale === 'ar';
+
+        $stats = [
+            [
+                'num' => (string) max(0, $instructors),
+                'label' => $ar ? 'معلمون معتمدون' : 'Certified teachers',
+            ],
+            [
+                'num' => (string) max(0, $subjects),
+                'label' => $ar ? 'مواد ومناهج' : 'Subjects & curricula',
+            ],
+            [
+                'num' => (string) max(0, $courses > 0 ? $courses : $services),
+                'label' => $ar ? 'كورسات نشطة' : 'Active courses',
+            ],
+            [
+                'num' => (string) max(0, $students),
+                'label' => $ar ? 'طلاب مسجّلون' : 'Registered students',
+            ],
+        ];
+
+        return $stats;
     }
 }

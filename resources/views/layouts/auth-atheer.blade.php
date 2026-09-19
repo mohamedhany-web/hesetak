@@ -43,7 +43,7 @@
       background-size:cover;
       background-position:center;
     }
-    /* Glottical brand tokens — auth shell only */
+    /* حصتك brand tokens — auth shell only */
     body.auth-glottical{
       --atheer-accent:#0B3D91;
       --atheer-metal:#F5B800;

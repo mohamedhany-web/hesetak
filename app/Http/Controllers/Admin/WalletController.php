@@ -334,7 +334,7 @@ class WalletController extends Controller
             'account_holder' => $validated['account_holder'] ?? null,
             'balance' => (float) ($validated['balance'] ?? 0),
             'pending_balance' => 0,
-            'currency' => 'USD',
+            'currency' => platform_currency(),
             'notes' => $validated['notes'] ?? null,
             'is_active' => $request->boolean('is_active', true),
         ]);

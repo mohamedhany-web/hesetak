@@ -74,7 +74,7 @@ class TutoringGroupPackage extends Model
 
     public function formattedPrice(): string
     {
-        return number_format((float) $this->price, 0).' '.($this->currency ?: 'USD');
+        return number_format((float) $this->price, 0).' '.($this->currency ?: platform_currency());
     }
 
     public function formattedOriginalPrice(): ?string
@@ -83,7 +83,7 @@ class TutoringGroupPackage extends Model
             return null;
         }
 
-        return number_format((float) $this->original_price, 0).' '.($this->currency ?: 'USD');
+        return number_format((float) $this->original_price, 0).' '.($this->currency ?: platform_currency());
     }
 
     public function scopeActive(Builder $query): Builder

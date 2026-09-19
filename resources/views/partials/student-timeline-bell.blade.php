@@ -3,9 +3,12 @@
     $bellItems = [];
     if (auth()->check()) {
         try {
+            $bellAudience = (auth()->user()->isInstructor() || auth()->user()->isTeacher())
+                ? 'instructor'
+                : 'student';
             $bellBase = auth()->user()->customNotifications()
-                ->where(function ($q) {
-                    $q->whereNull('audience')->orWhere('audience', 'student');
+                ->where(function ($q) use ($bellAudience) {
+                    $q->whereNull('audience')->orWhere('audience', $bellAudience);
                 })
                 ->where(function ($q) {
                     $q->whereNull('expires_at')->orWhere('expires_at', '>', now());

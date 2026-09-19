@@ -159,35 +159,29 @@ class DashboardController extends Controller
                 ->take(5)
                 ->get();
 
-            $upcomingTutoringBooking = null;
-            $upcomingTutoringCount = 0;
-            $upcoming_tutoring_bookings = collect();
-            if (\Illuminate\Support\Facades\Schema::hasTable('tutoring_group_bookings')) {
-                $upcomingTutoringQ = \App\Models\TutoringGroupBooking::query()
+            $upcomingPrivateSession = null;
+            $upcomingPrivateCount = 0;
+            $upcoming_private_sessions = collect();
+            if (\Illuminate\Support\Facades\Schema::hasTable('one_to_one_sessions')) {
+                $upcomingPrivateQ = \App\Models\OneToOneSession::query()
                     ->where('instructor_id', $user->id)
-                    ->where('status', \App\Models\TutoringGroupBooking::STATUS_CONFIRMED)
-                    ->where('starts_at', '>=', now())
-                    ->with(['tutoringGroup', 'classroomMeeting', 'user'])
-                    ->orderBy('starts_at');
+                    ->where('status', \App\Models\OneToOneSession::STATUS_SCHEDULED)
+                    ->whereNotNull('scheduled_at')
+                    ->where('scheduled_at', '>=', now())
+                    ->with(['student:id,name', 'course:id,title'])
+                    ->orderBy('scheduled_at');
 
-                $upcomingTutoringBooking = (clone $upcomingTutoringQ)->first();
-                $upcoming_tutoring_bookings = (clone $upcomingTutoringQ)->take(5)->get();
-                $upcomingTutoringCount = (clone $upcomingTutoringQ)->count();
+                $upcomingPrivateSession = (clone $upcomingPrivateQ)->first();
+                $upcoming_private_sessions = (clone $upcomingPrivateQ)->take(5)->get();
+                $upcomingPrivateCount = (clone $upcomingPrivateQ)->count();
             }
-            $stats['upcoming_tutoring'] = $upcomingTutoringCount;
-
+            $stats['upcoming_private'] = $upcomingPrivateCount;
+            $stats['upcoming_tutoring'] = 0;
             $stats['cohorts_count'] = 0;
-            if (\Illuminate\Support\Facades\Schema::hasTable('tutoring_group_cohorts')
-                && \Illuminate\Support\Facades\Schema::hasTable('tutoring_groups')) {
-                $groupIds = \App\Models\TutoringGroup::query()
-                    ->where('instructor_id', $user->id)
-                    ->pluck('id');
-                $stats['cohorts_count'] = $groupIds->isEmpty()
-                    ? 0
-                    : \App\Models\TutoringGroupCohort::query()
-                        ->whereIn('tutoring_group_id', $groupIds)
-                        ->count();
-            }
+
+            // Keep legacy keys empty — group bookings are out of product scope
+            $upcomingTutoringBooking = null;
+            $upcoming_tutoring_bookings = collect();
 
             $stats['live_now'] = 0;
             try {
@@ -200,6 +194,126 @@ class DashboardController extends Controller
             } catch (\Throwable $e) {
             }
 
+            // Activity series (last 7 days) — 1:1 sessions + live
+            $activitySeries = [];
+            $activityLabels = [];
+            $activityPeak = 0;
+            $activityPeakLabel = '';
+            for ($i = 6; $i >= 0; $i--) {
+                $day = now()->subDays($i)->startOfDay();
+                $dayEnd = (clone $day)->endOfDay();
+                $count = 0;
+                if (\Illuminate\Support\Facades\Schema::hasTable('one_to_one_sessions')) {
+                    $count += \App\Models\OneToOneSession::query()
+                        ->where('instructor_id', $user->id)
+                        ->whereBetween('scheduled_at', [$day, $dayEnd])
+                        ->count();
+                }
+                try {
+                    if (\Illuminate\Support\Facades\Schema::hasTable('live_sessions')) {
+                        $count += \App\Models\LiveSession::query()
+                            ->where('instructor_id', $user->id)
+                            ->whereBetween('scheduled_at', [$day, $dayEnd])
+                            ->count();
+                    }
+                } catch (\Throwable $e) {
+                }
+                $label = $day->translatedFormat('D');
+                $activitySeries[] = $count;
+                $activityLabels[] = $label;
+                if ($count >= $activityPeak) {
+                    $activityPeak = $count;
+                    $activityPeakLabel = $day->translatedFormat('j M');
+                }
+            }
+            $activityTotal = array_sum($activitySeries);
+            $activityMax = max(1, ...$activitySeries);
+
+            $donutSlices = [
+                ['key' => 'private', 'label' => __('instructor.private_lessons'), 'value' => (int) ($stats['upcoming_private'] ?? 0), 'tone' => 'full'],
+                ['key' => 'live', 'label' => __('instructor.live_broadcast'), 'value' => (int) ($stats['live_now'] ?? 0), 'tone' => 'mid'],
+                ['key' => 'pending', 'label' => __('instructor.cd_past'), 'value' => 0, 'tone' => 'soft'],
+            ];
+
+            $activeOnline = (int) ($stats['upcoming_private'] ?? 0);
+            $activeOffline = 0;
+            if (\Illuminate\Support\Facades\Schema::hasTable('one_to_one_sessions')) {
+                $activeOffline = \App\Models\OneToOneSession::query()
+                    ->where('instructor_id', $user->id)
+                    ->whereIn('status', [
+                        \App\Models\OneToOneSession::STATUS_COMPLETED,
+                        \App\Models\OneToOneSession::STATUS_CANCELLED,
+                    ])
+                    ->where('scheduled_at', '>=', now()->subDays(30))
+                    ->count();
+
+                $donutSlices[2]['value'] = \App\Models\OneToOneSession::query()
+                    ->where('instructor_id', $user->id)
+                    ->where('status', \App\Models\OneToOneSession::STATUS_PENDING)
+                    ->count();
+            }
+            $donutTotal = max(0, collect($donutSlices)->sum('value'));
+            $activeTotal = $activeOnline + $activeOffline;
+            $activePct = $activeTotal > 0 ? (int) round(($activeOnline / $activeTotal) * 100) : 0;
+
+            // Income / withdrawals summary
+            $incomeChange = 0;
+            $incomeAmount = 0;
+            try {
+                if (\Illuminate\Support\Facades\Schema::hasTable('instructor_withdrawals')) {
+                    $incomeAmount = (float) \DB::table('instructor_withdrawals')
+                        ->where('user_id', $user->id)
+                        ->where('status', 'paid')
+                        ->sum('amount');
+                }
+            } catch (\Throwable $e) {
+            }
+
+            // Activities feed — upcoming 1:1
+            $activities = collect();
+            foreach ($upcoming_private_sessions->take(4) as $session) {
+                $activities->push([
+                    'title' => $session->student?->name
+                        ?? $session->course?->title
+                        ?? __('instructor.private_lessons'),
+                    'meta' => optional($session->scheduled_at)->diffForHumans() ?? '',
+                    'url' => Route::has('instructor.one-to-one-sessions.index')
+                        ? route('instructor.one-to-one-sessions.index')
+                        : route('dashboard'),
+                    'icon' => 'bookings',
+                ]);
+            }
+            foreach (($pending_assignments ?? collect())->take(2) as $sub) {
+                $activities->push([
+                    'title' => $sub->assignment->title ?? __('instructor.assignment_default'),
+                    'meta' => ($sub->student->name ?? '').' · '.optional($sub->created_at)->diffForHumans(),
+                    'url' => Route::has('instructor.assignments.submissions')
+                        ? route('instructor.assignments.submissions', $sub->assignment)
+                        : route('dashboard'),
+                    'icon' => 'task',
+                ]);
+            }
+            $activities = $activities->take(4)->values();
+
+            $overview = [
+                'activity_series' => $activitySeries,
+                'activity_labels' => $activityLabels,
+                'activity_total' => $activityTotal,
+                'activity_peak' => $activityPeak,
+                'activity_peak_label' => $activityPeakLabel,
+                'activity_max' => $activityMax,
+                'donut_slices' => $donutSlices,
+                'donut_total' => $donutTotal,
+                'active_online' => $activeOnline,
+                'active_offline' => $activeOffline,
+                'active_total' => $activeTotal,
+                'active_pct' => $activePct,
+                'income_amount' => $incomeAmount,
+                'income_change' => $incomeChange,
+                'activities' => $activities,
+                'month_label' => now()->translatedFormat('F Y'),
+            ];
+
             return view('dashboard.instructor', compact(
                 'stats',
                 'my_courses',
@@ -207,7 +321,10 @@ class DashboardController extends Controller
                 'upcoming_lectures',
                 'pending_assignments',
                 'upcomingTutoringBooking',
-                'upcoming_tutoring_bookings'
+                'upcoming_tutoring_bookings',
+                'upcomingPrivateSession',
+                'upcoming_private_sessions',
+                'overview'
             ));
         } catch (\Exception $e) {
             // في حالة وجود خطأ، نعيد لوحة تحكم بسيطة
@@ -222,6 +339,7 @@ class DashboardController extends Controller
                 'pending_submissions' => 0,
                 'total_exams' => 0,
                 'upcoming_tutoring' => 0,
+                'upcoming_private' => 0,
                 'cohorts_count' => 0,
                 'live_now' => 0,
             ];
@@ -231,6 +349,26 @@ class DashboardController extends Controller
             $pending_assignments = collect();
             $upcomingTutoringBooking = null;
             $upcoming_tutoring_bookings = collect();
+            $upcomingPrivateSession = null;
+            $upcoming_private_sessions = collect();
+            $overview = [
+                'activity_series' => [0, 0, 0, 0, 0, 0, 0],
+                'activity_labels' => [],
+                'activity_total' => 0,
+                'activity_peak' => 0,
+                'activity_peak_label' => '',
+                'activity_max' => 1,
+                'donut_slices' => [],
+                'donut_total' => 0,
+                'active_online' => 0,
+                'active_offline' => 0,
+                'active_total' => 0,
+                'active_pct' => 0,
+                'income_amount' => 0,
+                'income_change' => 0,
+                'activities' => collect(),
+                'month_label' => now()->translatedFormat('F Y'),
+            ];
 
             return view('dashboard.instructor', compact(
                 'stats',
@@ -239,7 +377,10 @@ class DashboardController extends Controller
                 'upcoming_lectures',
                 'pending_assignments',
                 'upcomingTutoringBooking',
-                'upcoming_tutoring_bookings'
+                'upcoming_tutoring_bookings',
+                'upcomingPrivateSession',
+                'upcoming_private_sessions',
+                'overview'
             ));
         }
     }
@@ -248,7 +389,7 @@ class DashboardController extends Controller
     {
         $user = Auth::user();
 
-        // School Home هي تجربة الطالب الأساسية (فصول / جدول / حضور / رصيد)
+        // نفس لوحة الجدول الزمني — البيانات تُضبط داخل StudentSchoolHomeService (حصص فردية + رصيد)
         $payload = app(\App\Services\StudentSchoolHomeService::class)->build($user, [
             'week' => request()->query('week'),
             'view' => request()->query('view'),

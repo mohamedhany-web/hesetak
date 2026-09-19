@@ -123,7 +123,7 @@ class ExpenseController extends Controller
                 'description' => $validated['description'] ?? null,
                 'category' => $validated['category'],
                 'amount' => $validated['amount'],
-                'currency' => 'USD',
+                'currency' => platform_currency(),
                 'expense_date' => $validated['expense_date'],
                 'payment_method' => $validated['payment_method'],
                 'wallet_id' => $validated['wallet_id'] ?? null,

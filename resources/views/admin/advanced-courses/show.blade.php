@@ -79,7 +79,7 @@
                                 <span class="text-muted line-through">{{ number_format($advancedCourse->listPriceAmount(), 0) }}</span>
                                 <span class="mx-1 text-muted">←</span>
                             @endif
-                            {{ number_format($advancedCourse->effectivePurchasePrice(), 0) }} USD · {{ $advancedCourse->duration_hours ?? 0 }} س
+                            {{ number_format($advancedCourse->effectivePurchasePrice(), 0) }} {{ currency_symbol() }} · {{ $advancedCourse->duration_hours ?? 0 }} س
                         </p>
                     </div>
                 </div>

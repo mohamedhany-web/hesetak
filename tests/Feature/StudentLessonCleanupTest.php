@@ -144,7 +144,7 @@ class StudentLessonCleanupTest extends TestCase
         $meeting = ClassroomMeeting::create([
             'user_id' => $instructor->id,
             'code' => 'CLEAN01',
-            'room_name' => 'Glottical-CLEAN01',
+            'room_name' => 'حصتك-CLEAN01',
             'title' => 'حصة تجريبية',
             'started_at' => now(),
         ]);

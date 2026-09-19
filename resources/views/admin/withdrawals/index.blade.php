@@ -28,7 +28,7 @@
         ],
         [
             'label' => 'إجمالي المكتملة',
-            'value' => number_format($stats['completed'], 2) . ' $',
+            'value' => number_format($stats['completed'], 2) . ' ' . currency_symbol(),
             'icon' => 'fas fa-check-double',
             'description' => 'مجموع المبالغ المكتملة',
         ],

@@ -15,17 +15,15 @@
             'slot_duration_minutes' => (string) ($r->slot_duration_minutes ?: 50),
         ];
     })->values();
+    $sessionsHref = Route::has('instructor.one-to-one-sessions.index')
+        ? route('instructor.one-to-one-sessions.index')
+        : route('dashboard');
 @endphp
 
-<div class="su-page" x-data="availabilityForm()">
-    @if(session('success'))
-        <div class="su-card" style="margin-bottom:16px;padding:12px 16px;border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.08);color:#15803d;font-size:13px">
-            <i class="fas fa-check-circle" aria-hidden="true"></i> {{ session('success') }}
-        </div>
-    @endif
-
+<div class="id-page" x-data="availabilityForm()">
     @if($errors->any())
-        <div class="su-card" style="margin-bottom:16px;padding:12px 16px;border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.08);color:#b91c1c;font-size:13px">
+        <div class="id-alert id-alert--err">
+            <i class="fas fa-exclamation-circle" aria-hidden="true"></i>
             <ul style="margin:0;padding-inline-start:18px">
                 @foreach($errors->all() as $error)
                     <li>{{ $error }}</li>
@@ -34,122 +32,104 @@
         </div>
     @endif
 
-    <div class="su-page-head">
-        <div class="min-w-0">
-            <div class="su-chip-row" style="margin-bottom:8px">
-                <span class="su-chip su-soft-1">
-                    <i class="fas fa-user-graduate" aria-hidden="true"></i>
-                    {{ __('instructor.o1a_chip') }}
-                </span>
-            </div>
-            <h1 class="su-page-head__title">
-                <i class="fas fa-calendar-check su-page-head__ico" aria-hidden="true"></i>
-                {{ __('instructor.o1a_title') }}
-            </h1>
-            <p class="su-page-head__sub">{{ __('instructor.o1a_subtitle') }}</p>
+    <section class="id-hero" aria-label="{{ __('instructor.o1a_title') }}">
+        <div class="id-hero__copy">
+            <p class="id-hero__kicker">{{ __('instructor.o1a_chip') }}</p>
+            <h2 class="id-hero__title">{{ __('instructor.o1a_title') }}</h2>
+            <p class="id-hero__meta">{{ __('instructor.o1a_subtitle') }}</p>
         </div>
-        <div class="su-page-head__actions">
-            @if(Route::has('instructor.tutor-work-schedule.index'))
-                <a href="{{ route('instructor.tutor-work-schedule.index') }}" class="su-btn">
-                    <i class="fas fa-users" aria-hidden="true"></i>
-                    {{ __('instructor.o1a_group_schedule') }}
-                </a>
-            @endif
-            @if(Route::has('instructor.one-to-one-sessions.index'))
-                <a href="{{ route('instructor.one-to-one-sessions.index') }}" class="su-btn su-btn--primary">
-                    <i class="fas fa-chalkboard-teacher" aria-hidden="true"></i>
-                    {{ __('instructor.o1o_title') }}
-                </a>
-            @endif
-        </div>
-    </div>
-
-    <section class="su-kpi-row" style="margin-bottom:20px">
-        <div class="su-kpi su-kpi--1">
-            <div class="su-kpi__l">{{ __('instructor.o1a_windows') }}</div>
-            <div class="su-kpi__row">
-                <div class="su-kpi__v" x-text="slots.length">{{ $windowsCount }}</div>
-                <div class="su-kpi__d"><i class="fas fa-window-maximize" aria-hidden="true"></i></div>
-            </div>
-        </div>
-        <div class="su-kpi su-kpi--2">
-            <div class="su-kpi__l">{{ __('instructor.o1a_active_days') }}</div>
-            <div class="su-kpi__row">
-                <div class="su-kpi__v">{{ number_format($daysWithSlots) }}</div>
-                <div class="su-kpi__d"><i class="fas fa-calendar-day" aria-hidden="true"></i></div>
-            </div>
-        </div>
-        <div class="su-kpi su-kpi--4">
-            <div class="su-kpi__l">{{ __('instructor.o1a_saved') }}</div>
-            <div class="su-kpi__row">
-                <div class="su-kpi__v">{{ number_format($windowsCount) }}</div>
-                <div class="su-kpi__d"><i class="fas fa-save" aria-hidden="true"></i></div>
-            </div>
-        </div>
-        <div class="su-kpi su-kpi--3">
-            <div class="su-kpi__l">{{ __('instructor.tws_hint_label') }}</div>
-            <div class="su-kpi__row">
-                <div style="font-size:12px;line-height:1.4;color:var(--su-ink-40);padding-top:4px">{{ __('instructor.o1a_hint') }}</div>
-            </div>
+        <div class="id-hero__actions">
+            <a href="{{ $sessionsHref }}" class="id-btn id-btn--gold">{{ __('instructor.o1o_title') }}</a>
         </div>
     </section>
 
-    <div class="su-page-grid">
-        <form method="POST" action="{{ route('instructor.one-to-one-availability.update') }}" class="su-card" style="display:flex;flex-direction:column;gap:16px">
-            @csrf
-            @include('partials.timezone-select', [
-                'value' => old('timezone', auth()->user()?->timezoneCode()),
-                'class' => 'su-select',
-                'labelClass' => 'block text-[12px] font-medium mb-1.5',
-                'label' => __('instructor.o1a_timezone'),
-            ])
+    <section class="id-kpis" aria-label="{{ __('instructor.o1a_windows') }}">
+        <article class="id-kpi" style="cursor:default">
+            <span class="id-kpi__icon" aria-hidden="true"><i class="fas fa-window-maximize"></i></span>
+            <span class="id-kpi__body">
+                <span class="id-kpi__label">{{ __('instructor.o1a_windows') }}</span>
+                <span class="id-kpi__value" x-text="slots.length">{{ $windowsCount }}</span>
+            </span>
+        </article>
+        <article class="id-kpi" style="cursor:default">
+            <span class="id-kpi__icon id-kpi__icon--gold" aria-hidden="true"><i class="fas fa-calendar-day"></i></span>
+            <span class="id-kpi__body">
+                <span class="id-kpi__label">{{ __('instructor.o1a_active_days') }}</span>
+                <span class="id-kpi__value">{{ number_format($daysWithSlots) }}</span>
+            </span>
+        </article>
+        <article class="id-kpi" style="cursor:default">
+            <span class="id-kpi__icon id-kpi__icon--teal" aria-hidden="true"><i class="fas fa-save"></i></span>
+            <span class="id-kpi__body">
+                <span class="id-kpi__label">{{ __('instructor.o1a_saved') }}</span>
+                <span class="id-kpi__value">{{ number_format($windowsCount) }}</span>
+            </span>
+        </article>
+        <article class="id-kpi" style="cursor:default;align-items:flex-start">
+            <span class="id-kpi__icon id-kpi__icon--rose" aria-hidden="true"><i class="fas fa-info"></i></span>
+            <span class="id-kpi__body">
+                <span class="id-kpi__label">{{ __('instructor.tws_hint_label') }}</span>
+                <span style="font-size:12px;font-weight:700;color:#6B7A93;line-height:1.4;margin-top:4px">{{ __('instructor.o1a_hint') }}</span>
+            </span>
+        </article>
+    </section>
 
-            <div style="display:flex;flex-wrap:wrap;align-items:flex-start;justify-content:space-between;gap:12px">
-                <div class="min-w-0">
-                    <h2 class="su-card__title" style="margin:0">{{ __('instructor.o1a_edit_windows') }}</h2>
-                    <p style="margin:4px 0 0;font-size:12px;color:var(--su-ink-40)">{{ __('instructor.o1a_edit_hint') }}</p>
+    <div class="id-grid">
+        <form method="POST" action="{{ route('instructor.one-to-one-availability.update') }}" class="id-panel id-form">
+            @csrf
+            <header class="id-panel__head">
+                <div>
+                    <h2>{{ __('instructor.o1a_edit_windows') }}</h2>
+                    <p class="id-panel__hint">{{ __('instructor.o1a_edit_hint') }}</p>
                 </div>
-                <button type="button" @click="addSlot()" class="su-btn su-btn--primary" style="height:36px">
+                <button type="button" @click="addSlot()" class="id-btn id-btn--navy" style="min-height:36px;padding:0 12px;font-size:12px">
                     <i class="fas fa-plus" aria-hidden="true"></i>
                     {{ __('instructor.o1a_add_slot') }}
                 </button>
-            </div>
+            </header>
+
+            @include('partials.timezone-select', [
+                'value' => old('timezone', auth()->user()?->timezoneCode()),
+                'class' => 'id-input',
+                'labelClass' => 'block text-[12px] font-extrabold text-[#3A4A63] mb-1.5',
+                'label' => __('instructor.o1a_timezone'),
+            ])
 
             <div style="display:flex;flex-direction:column;gap:12px">
                 <template x-for="(slot, index) in slots" :key="slot._uid">
-                    <div class="su-card su-soft-1" style="padding:14px">
-                        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px">
-                            <span class="su-chip su-soft-2">
+                    <div class="id-slot-card">
+                        <div class="id-slot-card__head">
+                            <span class="id-chip">
                                 {{ __('instructor.o1a_slot') }} <span x-text="index + 1"></span>
                             </span>
-                            <button type="button" @click="removeSlot(index)" x-show="slots.length > 1" class="su-btn" style="height:32px;color:#b91c1c">
+                            <button type="button" @click="removeSlot(index)" x-show="slots.length > 1" class="id-btn id-btn--outline" style="min-height:32px;padding:0 10px;font-size:12px;color:#B91C1C;border-color:#F5C2C2">
                                 <i class="fas fa-trash" aria-hidden="true"></i>
                                 {{ __('instructor.o1a_remove_slot') }}
                             </button>
                         </div>
-                        <div class="su-form-grid" style="grid-template-columns:repeat(2,minmax(0,1fr));align-items:start">
-                            <div class="su-field" style="grid-column:span 2">
+                        <div class="id-form-grid">
+                            <div class="id-field id-field--span2">
                                 <label>{{ __('instructor.o1a_day') }}</label>
-                                <select :name="'slots['+index+'][day_of_week]'" x-model="slot.day_of_week" class="su-select" required>
+                                <select :name="'slots['+index+'][day_of_week]'" x-model="slot.day_of_week" class="id-input" required>
                                     @foreach($dayLabels as $day => $label)
                                         <option value="{{ $day }}">{{ $label }}</option>
                                     @endforeach
                                 </select>
                             </div>
-                            <div class="su-field">
+                            <div class="id-field">
                                 <label>{{ __('instructor.o1a_from') }}</label>
-                                <input type="time" step="60" :name="'slots['+index+'][start_time]'" x-model="slot.start_time" class="su-input" required>
+                                <input type="time" step="60" :name="'slots['+index+'][start_time]'" x-model="slot.start_time" class="id-input" required>
                             </div>
-                            <div class="su-field">
+                            <div class="id-field">
                                 <label>{{ __('instructor.o1a_to') }}</label>
-                                <input type="time" step="60" :name="'slots['+index+'][end_time]'" x-model="slot.end_time" class="su-input" required>
+                                <input type="time" step="60" :name="'slots['+index+'][end_time]'" x-model="slot.end_time" class="id-input" required>
                             </div>
-                            <div class="su-field" style="grid-column:span 2;max-width:220px">
+                            <div class="id-field id-field--span2" style="max-width:220px">
                                 <label>{{ __('instructor.o1o_minutes') }}</label>
-                                <input type="number" :name="'slots['+index+'][slot_duration_minutes]'" x-model="slot.slot_duration_minutes" min="30" max="180" step="15" class="su-input">
+                                <input type="number" :name="'slots['+index+'][slot_duration_minutes]'" x-model="slot.slot_duration_minutes" min="30" max="180" step="15" class="id-input">
                             </div>
                         </div>
-                        <p style="margin:12px 0 0;font-size:11px;font-weight:600" :style="slotYield(slot) > 0 ? 'color:var(--su-ink)' : 'color:#b91c1c'">
+                        <p class="id-field__hint" style="margin-top:10px" :style="slotYield(slot) > 0 ? 'color:#152A4A' : 'color:#B91C1C'">
                             <span x-show="slotYield(slot) > 0" x-text="yieldLabel(slotYield(slot))"></span>
                             <span x-show="slotYield(slot) < 1">{{ __('instructor.o1a_yield_zero') }}</span>
                         </p>
@@ -157,50 +137,48 @@
                 </template>
             </div>
 
-            <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;padding-top:12px;border-top:0.5px solid var(--su-line)">
-                <p style="margin:0;font-size:11px;color:var(--su-ink-40)">
+            <div class="id-foot-actions">
+                <p class="id-field__hint" style="margin:0">
                     <i class="fas fa-info-circle" aria-hidden="true"></i>
                     {{ __('instructor.o1a_save_hint') }}
                 </p>
-                <button type="submit" class="su-btn su-btn--primary">
+                <button type="submit" class="id-btn id-btn--gold">
                     <i class="fas fa-save" aria-hidden="true"></i>
                     {{ __('instructor.o1a_save') }}
                 </button>
             </div>
         </form>
 
-        <aside>
-            <div class="su-card">
-                <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:16px">
-                    <h2 class="su-card__title" style="margin:0">{{ __('instructor.o1a_current_schedule') }}</h2>
-                    <span class="su-chip su-soft-1">{{ __('instructor.o1a_saved_chip') }}</span>
-                </div>
-                <div style="display:flex;flex-direction:column;gap:10px">
-                    @foreach($grouped as $dayGroup)
-                        @php $has = $dayGroup['rules']->isNotEmpty(); @endphp
-                        <div class="su-card" style="padding:0;overflow:hidden{{ $has ? ';border-color:rgba(11,61,145,.25)' : '' }}">
-                            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 12px;border-bottom:0.5px solid var(--su-line)">
-                                <span style="font-size:13px;font-weight:600;color:var(--su-ink)">{{ $dayGroup['label'] }}</span>
-                                @if($has)
-                                    <span class="su-chip su-soft-1 tabular-nums">{{ $dayGroup['rules']->count() }}</span>
-                                @else
-                                    <span style="font-size:10px;color:var(--su-ink-40)">{{ __('instructor.o1a_empty_day') }}</span>
-                                @endif
-                            </div>
-                            <div style="padding:10px;display:flex;flex-wrap:wrap;gap:6px;min-height:48px;align-content:flex-start">
-                                @forelse($dayGroup['rules'] as $rule)
-                                    <span class="su-chip su-soft-1">
-                                        <i class="far fa-clock" aria-hidden="true"></i>
-                                        {{ substr((string) $rule->start_time, 0, 5) }}–{{ substr((string) $rule->end_time, 0, 5) }}
-                                        · {{ (int) $rule->slot_duration_minutes }} {{ __('instructor.o1o_minutes') }}
-                                    </span>
-                                @empty
-                                    <span class="su-chip" style="width:100%;justify-content:center;padding:12px">{{ __('instructor.o1a_no_windows') }}</span>
-                                @endforelse
-                            </div>
+        <aside class="id-panel">
+            <header class="id-panel__head">
+                <h2>{{ __('instructor.o1a_current_schedule') }}</h2>
+                <span class="id-chip">{{ __('instructor.o1a_saved_chip') }}</span>
+            </header>
+            <div style="display:flex;flex-direction:column;gap:10px">
+                @foreach($grouped as $dayGroup)
+                    @php $has = $dayGroup['rules']->isNotEmpty(); @endphp
+                    <div class="id-day-card {{ $has ? 'is-on' : '' }}">
+                        <div class="id-day-card__head">
+                            <span>{{ $dayGroup['label'] }}</span>
+                            @if($has)
+                                <span class="id-chip tabular-nums">{{ $dayGroup['rules']->count() }}</span>
+                            @else
+                                <span class="id-field__hint" style="margin:0">{{ __('instructor.o1a_empty_day') }}</span>
+                            @endif
                         </div>
-                    @endforeach
-                </div>
+                        <div class="id-day-card__body">
+                            @forelse($dayGroup['rules'] as $rule)
+                                <span class="id-chip">
+                                    <i class="far fa-clock" aria-hidden="true"></i>
+                                    {{ substr((string) $rule->start_time, 0, 5) }}–{{ substr((string) $rule->end_time, 0, 5) }}
+                                    · {{ (int) $rule->slot_duration_minutes }} {{ __('instructor.o1o_minutes') }}
+                                </span>
+                            @empty
+                                <span class="id-chip id-chip--muted" style="width:100%;justify-content:center;padding:12px">{{ __('instructor.o1a_no_windows') }}</span>
+                            @endforelse
+                        </div>
+                    </div>
+                @endforeach
             </div>
         </aside>
     </div>

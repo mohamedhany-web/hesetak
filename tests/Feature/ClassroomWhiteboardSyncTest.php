@@ -76,7 +76,7 @@ class ClassroomWhiteboardSyncTest extends TestCase
             'user_id' => $instructor->id,
             'one_to_one_session_id' => $session->id,
             'code' => 'WB'.strtoupper(substr(uniqid(), -4)),
-            'room_name' => 'Glottical-WB',
+            'room_name' => 'حصتك-WB',
             'title' => 'حصة سبورة',
             'started_at' => now()->subMinutes(2),
             'settings' => [

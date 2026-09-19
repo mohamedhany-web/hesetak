@@ -16,6 +16,11 @@ return new class extends Migration
             return;
         }
 
+        // MySQL-only: SQLite has no information_schema / MODIFY COLUMN
+        if (DB::getDriverName() === 'sqlite') {
+            return;
+        }
+
         // حذف Foreign Keys الموجودة إذا كانت موجودة باستخدام SQL مباشر
         $foreignKeys = DB::select("
             SELECT CONSTRAINT_NAME 

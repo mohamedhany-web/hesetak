@@ -3,45 +3,30 @@
 namespace App\Http\Controllers\Instructor;
 
 use App\Http\Controllers\Controller;
-use App\Models\TutoringGroup;
 use App\Models\TutoringGroupBooking;
-use App\Models\TutoringGroupCohort;
 use App\Services\TutoringGroupOrchestrationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\View\View;
 
 class TutoringBookingController extends Controller
 {
-    public function index(Request $request): View
+    /**
+     * Group bookings are out of Hesetak scope (1:1 only) — redirect to private lessons.
+     */
+    public function index(Request $request): RedirectResponse
     {
-        $bookings = TutoringGroupBooking::query()
-            ->where('instructor_id', $request->user()->id)
-            ->with(['tutoringGroup:id,title,type,academic_year_id', 'tutoringGroup.schoolYear:id,name', 'user:id,name', 'classroomMeeting:id,code', 'cohort:id,title'])
-            ->orderByDesc('starts_at')
-            ->paginate(20);
-
-        $stats = [
-            'upcoming' => TutoringGroupBooking::query()
-                ->where('instructor_id', $request->user()->id)
-                ->where('status', TutoringGroupBooking::STATUS_CONFIRMED)
-                ->where('starts_at', '>=', now())
-                ->count(),
-            'pending' => TutoringGroupBooking::query()
-                ->where('instructor_id', $request->user()->id)
-                ->where('status', TutoringGroupBooking::STATUS_PENDING)
-                ->count(),
-        ];
-
-        return view('instructor.tutoring-bookings.index', compact('bookings', 'stats'));
+        return redirect()
+            ->route('instructor.one-to-one-sessions.index')
+            ->with('info', app()->getLocale() === 'ar'
+                ? 'حصتك تعتمد على الحصص الخاصة (1:1) — تم توجيهك لحصصك الخاصة.'
+                : 'Hesetak uses 1:1 private lessons — redirected to your private sessions.');
     }
 
-    public function show(Request $request, TutoringGroupBooking $booking): View
+    public function show(Request $request, TutoringGroupBooking $booking): RedirectResponse
     {
         abort_unless((int) $booking->instructor_id === (int) $request->user()->id, 403);
-        $booking->load(['tutoringGroup.schoolYear', 'tutoringGroup.schoolSubject', 'user', 'classroomMeeting', 'cohort', 'package']);
 
-        return view('instructor.tutoring-bookings.show', compact('booking'));
+        return redirect()->route('instructor.one-to-one-sessions.index');
     }
 
     public function complete(Request $request, TutoringGroupBooking $booking): RedirectResponse
@@ -58,6 +43,8 @@ class TutoringBookingController extends Controller
             return back()->with('error', $e->getMessage());
         }
 
-        return back()->with('success', 'تم إكمال الحصة وخصم وحدة واحدة من رصيد الطالب وإغلاق غرفة Live.');
+        return redirect()
+            ->route('instructor.one-to-one-sessions.index')
+            ->with('success', 'تم إكمال الحصة.');
     }
 }

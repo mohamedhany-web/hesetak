@@ -1,4 +1,4 @@
-﻿@php $isInstructor = ($whiteboardRole ?? 'student') === 'instructor'; @endphp
+@php $isInstructor = ($whiteboardRole ?? 'student') === 'instructor'; @endphp
 <style>
     /* ─── Floating Tools Dropdown ─────────────────────────── */
     #mx-tools-fab {

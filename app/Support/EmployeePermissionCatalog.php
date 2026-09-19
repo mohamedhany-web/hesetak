@@ -36,7 +36,7 @@ class EmployeePermissionCatalog
 
         $groups = [
             'المبيعات' => [],
-            'Glottical CRM' => [],
+            'CRM حصتك' => [],
             'صلاحيات CRM الدقيقة' => $crmPerms,
             'عام' => [],
         ];
@@ -47,7 +47,7 @@ class EmployeePermissionCatalog
             }
             $label = $sidebarItems[$key]['label'] ?? $key;
             if (str_starts_with($key, 'crm_')) {
-                $groups['Glottical CRM'][$key] = $label;
+                $groups['CRM حصتك'][$key] = $label;
             } elseif (in_array($key, ['sales_desk', 'sales_orders', 'public_catalog'], true)) {
                 $groups['المبيعات'][$key] = $label;
             } else {
@@ -56,7 +56,7 @@ class EmployeePermissionCatalog
         }
 
         // إزالة المفاتيح المكررة بين السايدبار و CRM الدقيقة
-        foreach (array_keys($groups['Glottical CRM']) as $sidebarKey) {
+        foreach (array_keys($groups['CRM حصتك']) as $sidebarKey) {
             unset($groups['صلاحيات CRM الدقيقة'][$sidebarKey]);
         }
 

@@ -48,7 +48,7 @@ class TutoringGroupPackagePricingService
     }
 
     /**
-     * Suggested discount tiers from Glottical spec (3 months ≈ 16.7% off).
+     * Suggested discount tiers from حصتك spec (3 months ≈ 16.7% off).
      */
     public static function suggestedPrice(float $hourlyRate, int $sessionsPerMonth, int $durationMonths): float
     {

@@ -13,8 +13,12 @@ use Illuminate\View\View;
 
 class ClassFeedController extends Controller
 {
-    public function index(Request $request, TutoringGroupCohort $cohort): View
+    public function index(Request $request, TutoringGroupCohort $cohort): View|RedirectResponse
     {
+        if (! $request->routeIs('instructor.*') && ! student_ui('show_classes')) {
+            return redirect()->route('dashboard');
+        }
+
         abort_unless(TutoringClassService::userCanAccessCohort($request->user(), $cohort), 403);
 
         $cohort->load(['tutoringGroup.instructor']);

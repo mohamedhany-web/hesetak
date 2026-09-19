@@ -8,7 +8,7 @@ use App\Models\LiveSession;
 use App\Models\User;
 
 /**
- * مزوّد غرف البث لمنصة Glottical — LiveKit فقط.
+ * مزوّد غرف البث لمنصة حصتك — LiveKit فقط.
  */
 class LiveMeetingProvider
 {

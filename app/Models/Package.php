@@ -59,7 +59,7 @@ class Package extends Model
 
     public function currencyCode(): string
     {
-        return strtoupper((string) ($this->currency ?: 'USD'));
+        return strtoupper((string) ($this->currency ?: platform_currency()));
     }
 
     public function trackLabel(): ?string
@@ -73,7 +73,7 @@ class Package extends Model
 
     public function formattedPrice(?int $decimals = 0): string
     {
-        return number_format((float) $this->price, $decimals).' '.$this->currencyCode();
+        return format_money((float) $this->price, $decimals);
     }
 
     public function formattedOriginalPrice(?int $decimals = 0): ?string
@@ -82,7 +82,7 @@ class Package extends Model
             return null;
         }
 
-        return number_format((float) $this->original_price, $decimals).' '.$this->currencyCode();
+        return format_money((float) $this->original_price, $decimals);
     }
 
     /**

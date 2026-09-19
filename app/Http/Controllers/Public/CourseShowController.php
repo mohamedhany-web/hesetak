@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Public;
 
 use App\Http\Controllers\Controller;
 use App\Models\AdvancedCourse;
-use App\Services\CourseSubscriptionService;
+use App\Models\InstructorProfile;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
@@ -15,43 +15,54 @@ class CourseShowController extends Controller
         $course = AdvancedCourse::query()
             ->where('id', $id)
             ->where('is_active', true)
-            ->with(['academicSubject', 'academicYear', 'instructor', 'courseCategory'])
+            ->with(['academicSubject', 'instructor', 'courseCategory'])
             ->withCount('lessons')
             ->firstOrFail();
 
         $isEnrolled = auth()->check() && auth()->user()->isEnrolledIn($course->id);
 
+        $instructorApproved = false;
+        if ($course->instructor_id) {
+            $instructorApproved = InstructorProfile::query()
+                ->where('user_id', $course->instructor_id)
+                ->where('status', 'approved')
+                ->exists();
+        }
+
         $relatedCourses = AdvancedCourse::query()
             ->where('is_active', true)
             ->where('id', '!=', $course->id)
-            ->where(function ($query) use ($course) {
-                $delivery = $course->delivery_type ?: CourseSubscriptionService::DELIVERY_GROUP;
-                if ($delivery === CourseSubscriptionService::DELIVERY_ONE_TO_ONE) {
-                    $query->where('delivery_type', CourseSubscriptionService::DELIVERY_ONE_TO_ONE);
-                } else {
-                    $query->where(function ($q) {
-                        $q->whereNull('delivery_type')
-                            ->orWhere('delivery_type', CourseSubscriptionService::DELIVERY_GROUP);
-                    });
-                }
-                if ($course->course_category_id) {
-                    $query->where(function ($q) use ($course) {
-                        $q->where('course_category_id', $course->course_category_id)
-                            ->orWhere('academic_subject_id', $course->academic_subject_id)
-                            ->orWhere('is_featured', true);
-                    });
-                }
-            })
-            ->with(['academicSubject', 'instructor'])
+            ->when(
+                $course->course_category_id,
+                fn ($query) => $query->where('course_category_id', $course->course_category_id),
+                fn ($query) => $query->where('is_featured', true)
+            )
+            ->with(['instructor:id,name', 'courseCategory:id,name'])
             ->withCount('lessons')
+            ->orderByDesc('is_featured')
+            ->orderByDesc('id')
             ->limit(3)
             ->get();
 
-        $from = $request->query('from');
-        if (! in_array($from, ['groups', 'one_to_one'], true)) {
-            $from = $course->isOneToOne() ? 'one_to_one' : 'groups';
+        if ($relatedCourses->count() < 3) {
+            $extra = AdvancedCourse::query()
+                ->where('is_active', true)
+                ->where('id', '!=', $course->id)
+                ->whereNotIn('id', $relatedCourses->pluck('id'))
+                ->with(['instructor:id,name', 'courseCategory:id,name'])
+                ->withCount('lessons')
+                ->orderByDesc('is_featured')
+                ->limit(3 - $relatedCourses->count())
+                ->get();
+            $relatedCourses = $relatedCourses->concat($extra)->values();
         }
 
-        return view('course-show', compact('course', 'relatedCourses', 'isEnrolled', 'from'));
+        return view('course-show', [
+            'course' => $course,
+            'relatedCourses' => $relatedCourses,
+            'isEnrolled' => $isEnrolled,
+            'instructorApproved' => $instructorApproved,
+            'mcActive' => 'courses',
+        ]);
     }
 }

@@ -26,9 +26,9 @@
     ];
     $statusBadge = $statusBadgeMap[$agreement->status] ?? 'bg-canvas-muted text-muted';
     $kpis = [
-        ['label' => 'إجمالي الاتفاقية', 'value' => number_format($agreement->total_amount ?? 0, 2) . ' $', 'icon' => 'fa-wallet', 'tone' => 'accent', 'note' => 'القيمة الكاملة التي سيتم سدادها عبر الخطة'],
-        ['label' => 'الدفعة المقدمة', 'value' => number_format($agreement->deposit_amount ?? 0, 2) . ' $', 'icon' => 'fa-hand-holding-usd', 'tone' => 'metal', 'note' => 'تم تحصيلها عند توقيع الاتفاقية'],
-        ['label' => 'الأقساط المتبقية', 'value' => $pendingPayments->count(), 'icon' => 'fa-stream', 'tone' => 'accent', 'note' => 'القيمة التالية: ' . (optional($nextPayment)->amount ? number_format($nextPayment->amount, 2) . ' $' : '—')],
+        ['label' => 'إجمالي الاتفاقية', 'value' => number_format($agreement->total_amount ?? 0, 2) . ' ' . currency_symbol(), 'icon' => 'fa-wallet', 'tone' => 'accent', 'note' => 'القيمة الكاملة التي سيتم سدادها عبر الخطة'],
+        ['label' => 'الدفعة المقدمة', 'value' => number_format($agreement->deposit_amount ?? 0, 2) . ' ' . currency_symbol(), 'icon' => 'fa-hand-holding-usd', 'tone' => 'metal', 'note' => 'تم تحصيلها عند توقيع الاتفاقية'],
+        ['label' => 'الأقساط المتبقية', 'value' => $pendingPayments->count(), 'icon' => 'fa-stream', 'tone' => 'accent', 'note' => 'القيمة التالية: ' . (optional($nextPayment)->amount ? number_format($nextPayment->amount, 2) . ' ' . currency_symbol() : '—')],
         ['label' => 'القسط القادم', 'value' => optional($nextPayment)->due_date?->format('Y-m-d') ?? '—', 'icon' => 'fa-calendar', 'tone' => 'muted', 'note' => 'عدد الأقساط الكلي: ' . $agreement->installments_count],
     ];
     $toneClass = [

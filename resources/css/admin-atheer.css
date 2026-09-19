@@ -7,33 +7,33 @@ body.admin-body {
   margin: 0;
   height: 100%;
   overflow: hidden;
-  --atheer-accent: #0B3D91;
+  --atheer-accent: #1E4E8C;
   --atheer-canvas: #F4F7FC;
-  --admin-accent: #0B3D91;
-  --admin-accent-dark: #072A66;
-  --admin-accent-soft: #E8EEF8;
-  --admin-gold: #F5B800;
-  --admin-gold-soft: #FFF6D6;
+  --admin-accent: #1E4E8C;
+  --admin-accent-dark: #152A4A;
+  --admin-accent-soft: #E8EEF6;
+  --admin-gold: #C9952A;
+  --admin-gold-soft: #F7F1E8;
 }
 
 /* تجاوز توكنات Atheer داخل لوحة الأدمن فقط */
-body.admin-body .bg-accent { background-color: #0B3D91 !important; }
-body.admin-body .bg-accent-soft { background-color: #E8EEF8 !important; }
-body.admin-body .text-accent { color: #0B3D91 !important; }
-body.admin-body .border-accent { border-color: #0B3D91 !important; }
-body.admin-body .hover\:text-accent:hover { color: #0B3D91 !important; }
-body.admin-body .hover\:bg-accent-soft:hover { background-color: #E8EEF8 !important; }
-body.admin-body .hover\:border-accent\/30:hover { border-color: rgba(11, 61, 145, 0.3) !important; }
-body.admin-body .hover\:bg-accent-soft\/40:hover { background-color: rgba(232, 238, 248, 0.4) !important; }
-body.admin-body .bg-accent\/30 { background-color: rgba(11, 61, 145, 0.3) !important; }
-body.admin-body .bg-accent\/80 { background-color: rgba(11, 61, 145, 0.8) !important; }
-body.admin-body .bg-\[\#f2f5f4\] { background-color: #E8EEF8 !important; }
+body.admin-body .bg-accent { background-color: #1E4E8C !important; }
+body.admin-body .bg-accent-soft { background-color: #E8EEF6 !important; }
+body.admin-body .text-accent { color: #1E4E8C !important; }
+body.admin-body .border-accent { border-color: #1E4E8C !important; }
+body.admin-body .hover\:text-accent:hover { color: #1E4E8C !important; }
+body.admin-body .hover\:bg-accent-soft:hover { background-color: #E8EEF6 !important; }
+body.admin-body .hover\:border-accent\/30:hover { border-color: rgba(30, 78, 140, 0.3) !important; }
+body.admin-body .hover\:bg-accent-soft\/40:hover { background-color: rgba(232, 238, 246, 0.4) !important; }
+body.admin-body .bg-accent\/30 { background-color: rgba(30, 78, 140, 0.3) !important; }
+body.admin-body .bg-accent\/80 { background-color: rgba(30, 78, 140, 0.8) !important; }
+body.admin-body .bg-\[\#f2f5f4\] { background-color: #E8EEF6 !important; }
 body.admin-body .bg-\[\#f7f8fa\] { background-color: #F4F7FC !important; }
 body.admin-body .ring-accent,
 body.admin-body .focus\:ring-accent:focus,
 body.admin-body .focus\:border-accent:focus {
-  --tw-ring-color: rgba(11, 61, 145, 0.35);
-  border-color: #0B3D91;
+  --tw-ring-color: rgba(30, 78, 140, 0.35);
+  border-color: #1E4E8C;
 }
 
 /* شِل بارتفاع الشاشة: سايدبار ثابت + محتوى يتمرّر منفصلاً */
@@ -62,12 +62,38 @@ body.admin-body .focus\:border-accent:focus {
 
 /* —— سايدبار ثابت 280px — تمرير الروابط داخل الـ nav فقط —— */
 .admin-sidebar {
-  background: #0b1220 !important;
+  background: #152A4A !important;
   color: #fff !important;
   border: none !important;
   box-shadow: none !important;
   transition: none !important;
   overflow: hidden !important;
+}
+
+/* علامة البراند في رأس السايدبار / الدرج — بدون خلفية بيضاء */
+.sidebar-brand-mark,
+.admin-sidebar .sidebar-brand-mark {
+  width: 44px !important;
+  height: 44px !important;
+  min-width: 44px !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  overflow: visible !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-shrink: 0 !important;
+}
+.sidebar-brand-mark img,
+.admin-sidebar .sidebar-brand-mark img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain !important;
+  padding: 0 !important;
+  display: block !important;
+  background: transparent !important;
 }
 .admin-sidebar-desktop {
   width: 280px !important;
@@ -140,7 +166,7 @@ body.admin-body .focus\:border-accent:focus {
 }
 .admin-sidebar .sidebar-link.active {
   background: #fff !important;
-  color: #0b1220 !important;
+  color: #1E4E8C !important;
   font-weight: 600 !important;
 }
 
@@ -158,7 +184,7 @@ body.admin-body .focus\:border-accent:focus {
   flex-shrink: 0 !important;
 }
 .admin-sidebar .sidebar-link.active i {
-  background: #0B3D91 !important;
+  background: #1E4E8C !important;
   color: #fff !important;
 }
 
@@ -245,7 +271,7 @@ body.admin-body .focus\:border-accent:focus {
   color: #fff !important;
 }
 .admin-sidebar .sidebar-sub-link.active {
-  background: rgba(11, 61, 145, 0.4) !important;
+  background: rgba(30, 78, 140, 0.4) !important;
   color: #fff !important;
   font-weight: 600 !important;
 }
@@ -268,8 +294,8 @@ body.admin-body .focus\:border-accent:focus {
   flex-shrink: 0;
 }
 .admin-sidebar .sidebar-link.active .sidebar-badge {
-  background: #E8EEF8 !important;
-  color: #0B3D91 !important;
+  background: #E8EEF6 !important;
+  color: #1E4E8C !important;
 }
 
 .admin-sidebar .border-slate-200,
@@ -333,8 +359,8 @@ body.admin-body .focus\:border-accent:focus {
 }
 .admin-topbar-search:focus {
   outline: none;
-  border-color: #0B3D91;
-  box-shadow: 0 0 0 4px rgba(11, 61, 145, 0.15);
+  border-color: #1E4E8C;
+  box-shadow: 0 0 0 4px rgba(30, 78, 140, 0.15);
   background: #fff;
 }
 

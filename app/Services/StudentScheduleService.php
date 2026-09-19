@@ -59,7 +59,7 @@ class StudentScheduleService
                 });
         }
 
-        if (Schema::hasTable('tutoring_class_sessions') && Schema::hasTable('tutoring_cohort_enrollments')) {
+        if (student_ui('show_classes') && Schema::hasTable('tutoring_class_sessions') && Schema::hasTable('tutoring_cohort_enrollments')) {
             $cohortIds = TutoringCohortEnrollment::query()
                 ->where('user_id', $user->id)
                 ->where('status', TutoringCohortEnrollment::STATUS_ACTIVE)
@@ -93,7 +93,7 @@ class StudentScheduleService
             }
         }
 
-        if (Schema::hasTable('tutoring_group_bookings')) {
+        if (student_ui('show_classes') && Schema::hasTable('tutoring_group_bookings')) {
             TutoringGroupBooking::query()
                 ->with(['tutoringGroup:id,title', 'classroomMeeting', 'cohort:id,title'])
                 ->where('user_id', $user->id)

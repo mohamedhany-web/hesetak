@@ -34,7 +34,7 @@
                 <i class="fas fa-coins text-sm"></i>
             </div>
             <p class="mt-3 text-xs text-muted">الرصيد الحالي</p>
-            <p class="mt-1 text-xl font-semibold tabular-nums tracking-tight text-ink">{{ number_format($wallet->balance, 2) }} <span class="text-sm font-normal text-muted">{{ $wallet->currency ?? '$' }}</span></p>
+            <p class="mt-1 text-xl font-semibold tabular-nums tracking-tight text-ink">{{ number_format($wallet->balance, 2) }} <span class="text-sm font-normal text-muted">{{ $wallet->currency ?? currency_symbol() }}</span></p>
         </article>
         <article class="rounded-2xl border border-line bg-surface p-4 shadow-soft">
             <div class="inline-flex size-9 items-center justify-center rounded-xl bg-metal/15 text-metal">

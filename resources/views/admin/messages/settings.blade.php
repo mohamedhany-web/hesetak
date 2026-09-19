@@ -1,6 +1,6 @@
-﻿@extends('layouts.admin')
+@extends('layouts.admin')
 
-@section('title', 'إعداد تكامل الرسائل الخارجية - Glottical')
+@section('title', 'إعداد تكامل الرسائل الخارجية - حصتك')
 @section('header', 'إعدادات تكامل الإرسال الخارجي')
 
 @section('content')
@@ -10,7 +10,7 @@
             <div>
                 <h1 class="text-2xl font-bold text-gray-900">{{ __('إعداد تكامل قنوات الرسائل') }}</h1>
                 <p class="text-gray-600">
-                    {{ __('من هنا يمكنك ربط Glottical بأي API خارجي لإرسال الرسائل (واتساب أو غيره) بطريقة آمنة ومرنة.') }}
+                    {{ __('من هنا يمكنك ربط حصتك بأي API خارجي لإرسال الرسائل (واتساب أو غيره) بطريقة آمنة ومرنة.') }}
                 </p>
             </div>
             <a href="{{ route('admin.messages.index') }}" 
@@ -149,7 +149,7 @@
                             {{ __('رسالة الاختبار') }}
                         </label>
                         <input type="text" id="test_message" 
-                               value="رسالة اختبار من منصة Glottical 🎓"
+                               value="رسالة اختبار من منصة حصتك 🎓"
                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
                     </div>
                 </div>

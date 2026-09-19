@@ -63,13 +63,13 @@
     }
     .curriculum-item:hover {
         background: rgb(248 250 252);
-        border-color: rgb(186 230 253);
+        border-color: rgb(191, 219, 240);
         transform: translateX(-2px);
     }
     .curriculum-item.active {
-        background: rgb(224 242 254);
-        border-color: rgb(14 165 233);
-        box-shadow: 0 0 0 2px rgba(14, 165, 233, 0.15);
+        background: rgb(232, 240, 250);
+        border-color: rgb(30, 78, 140);
+        box-shadow: 0 0 0 2px rgba(30, 78, 140, 0.15);
     }
     .curriculum-item.completed {
         border-color: rgb(167 243 208);
@@ -149,7 +149,7 @@
         align-items: center;
         gap: 0.5rem;
         padding: 0.5rem 1rem;
-        background: rgb(14 165 233);
+        background: rgb(30, 78, 140);
         color: white;
         font-weight: 600;
         font-size: 0.875rem;
@@ -167,7 +167,7 @@
         }
     }
     .btn-lesson-complete:hover {
-        background: rgb(2 132 199);
+        background: rgb(21, 58, 104);
     }
     .btn-lesson-complete:disabled,
     .btn-lesson-complete.completed {
@@ -185,7 +185,7 @@
         cursor: pointer;
     }
     .lesson-details-bar .btn-share:hover {
-        color: rgb(14 165 233);
+        color: rgb(30, 78, 140);
     }
     
     .curriculum-section-header {
@@ -209,7 +209,7 @@
     }
     .curriculum-section-header:hover {
         background: rgb(241 245 249);
-        border-color: rgb(186 230 253);
+        border-color: rgb(191, 219, 240);
     }
     .curriculum-section-header:first-of-type { margin-top: 0; }
     .curriculum-section-chevron {
@@ -335,8 +335,9 @@
     }
     
     /* وضع التركيز: إخفاء سايدبار ونافبار لوحة التحكم */
-    body.learn-focus-mode .student-sidebar,
-    body.learn-focus-mode .student-header { display: none !important; }
+    body.learn-focus-mode .st-rail,
+    body.learn-focus-mode .st-rail-backdrop,
+    body.learn-focus-mode .st-events { display: none !important; }
     body.learn-focus-mode main .w-full.max-w-full { padding: 0 !important; }
     body.learn-focus-mode main { height: 100vh; overflow: hidden; }
     body.learn-focus-mode .learn-page { min-height: 100vh; height: 100%; display: flex; flex-direction: column; }
@@ -609,7 +610,9 @@
 @section('content')
 <script type="application/json" id="learn-lectures-data">{!! $lecturesDataJson !!}</script>
 <script type="application/json" id="learn-next-item-map">{!! json_encode($nextItemByLectureId ?? []) !!}</script>
-<div class="learn-page bg-slate-50/80 min-h-screen pb-8"
+<script type="application/json" id="learn-lectures-data">{!! $lecturesDataJson !!}</script>
+<script type="application/json" id="learn-next-item-map">{!! json_encode($nextItemByLectureId ?? []) !!}</script>
+<div class="learn-page min-h-screen pb-8"
      data-course-id="{{ $course->id }}"
      data-course-progress="{{ min(100, (float)($progress ?? 0)) }}"
      data-total-items="{{ $totalLessons ?? 0 }}"
@@ -646,60 +649,57 @@
              else if (d.type === 'assignment' && d.id) _learnComp.loadAssignment(d.id);
          });
      ">
-    {{-- Breadcrumb (مخفي في وضع التركيز) --}}
-    <nav x-show="!focusMode" class="bg-white border-b border-slate-200 px-4 py-2 lg:px-6" aria-label="Breadcrumb">
-        <ol class="w-full flex flex-wrap items-center gap-2 text-sm text-slate-600">
-            <li><a href="{{ route('dashboard') }}" class="hover:text-sky-600 transition-colors">{{ __('auth.dashboard') }}</a></li>
-            <li class="flex items-center gap-2"><i class="fas fa-chevron-left text-slate-400 text-xs"></i></li>
-            <li><a href="{{ route('my-courses.index') }}" class="hover:text-sky-600 transition-colors">{{ __('student.my_courses') }}</a></li>
-            <li class="flex items-center gap-2"><i class="fas fa-chevron-left text-slate-400 text-xs"></i></li>
-            <li><a href="{{ route('my-courses.show', $course) }}" class="hover:text-sky-600 transition-colors truncate max-w-[180px]">{{ $course->title }}</a></li>
-            <li class="flex items-center gap-2"><i class="fas fa-chevron-left text-slate-400 text-xs"></i></li>
-            <li class="text-sky-600 font-medium">{{ __('student.learn') }}</li>
-        </ol>
-    </nav>
-
-    {{-- بطاقة الرأس (مخفية في وضع التركيز) --}}
-    <div x-show="!focusMode" class="w-full px-4 py-4 lg:px-6">
-        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-            <div class="p-4 lg:p-5 flex flex-wrap items-center justify-between gap-4">
-                <div class="flex items-center gap-3 flex-1 min-w-0">
-                    <a href="{{ route('my-courses.show', $course) }}" 
-                       class="flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-xl bg-slate-100 hover:bg-sky-50 text-slate-600 hover:text-sky-600 border border-slate-200 hover:border-sky-300 transition-all"
-                       title="{{ __('common.back') }}">
-                        <i class="fas fa-arrow-right"></i>
-                    </a>
-                    <div class="min-w-0 flex-1">
-                        <h1 class="text-lg lg:text-xl font-bold text-gray-900 truncate">{{ $course->title }}</h1>
-                        <div class="flex items-center gap-2 mt-1.5 flex-wrap">
-                            <div class="h-2 flex-1 max-w-[140px] bg-slate-200 rounded-full overflow-hidden">
-                                <div class="learn-progress-fill h-full bg-gradient-to-l from-sky-400 to-sky-500 rounded-full transition-all duration-500" style="width: {{ min(100, (float)($progress ?? 0)) }}%"></div>
-                            </div>
-                            <span class="learn-progress-count text-xs font-semibold text-slate-600 whitespace-nowrap">{{ $completedLessons ?? 0 }}/{{ $totalLessons ?? 0 }}</span>
-                            <span class="learn-progress-pct text-xs font-bold text-sky-600">{{ number_format((float)($progress ?? 0), 0) }}%</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="flex items-center gap-2 flex-shrink-0">
-                    <button @click="toggleFocusMode()" :class="focusMode ? 'bg-sky-100 border-sky-300 text-sky-700' : 'bg-slate-50 border-slate-200 text-slate-600 hover:border-sky-300'" class="inline-flex items-center gap-2 px-3 py-2 rounded-xl border text-sm font-medium transition-all" :title="focusMode ? 'خروج من وضع التركيز' : 'وضع التركيز'"><i class="fas" :class="focusMode ? 'fa-compress-arrows-alt' : 'fa-expand-arrows-alt'"></i><span class="hidden sm:inline" x-text="focusMode ? 'خروج من التركيز' : 'وضع التركيز'"></span></button>
-                    <button @click="toggleFullscreen()" class="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 hover:bg-sky-50 hover:border-sky-300 text-slate-600 hover:text-sky-600 text-sm font-medium transition-all" title="ملء الشاشة"><i class="fas" :class="isFullscreen ? 'fa-compress' : 'fa-expand'"></i><span class="hidden sm:inline">ملء الشاشة</span></button>
-                </div>
-            </div>
-        </div>
+    <div x-show="!focusMode">
+        @include('partials.student-timeline-top', [
+            'locale' => app()->getLocale(),
+            'pageTitle' => __('student_timeline.courses_learn'),
+            'crumbs' => [
+                ['label' => __('student_timeline.school_gate'), 'url' => route('dashboard')],
+                ['label' => __('student.my_courses'), 'url' => route('my-courses.index')],
+                ['label' => $course->title, 'url' => route('my-courses.show', $course)],
+                ['label' => __('student_timeline.courses_learn'), 'url' => null],
+            ],
+        ])
     </div>
 
-    {{-- شريط وضع التركيز (يظهر فقط في وضع التركيز) --}}
-    <div x-show="focusMode" class="flex items-center justify-between px-3 py-2 border-b border-slate-200 bg-white flex-shrink-0">
-        <button @click="focusMode = false" class="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 hover:bg-sky-50 hover:border-sky-300 text-slate-600 hover:text-sky-600 text-sm font-medium transition-all">
-            <i class="fas fa-compress-arrows-alt"></i>
-            <span>خروج من وضع التركيز</span>
+    {{-- رأس الكورس (مخفي في وضع التركيز) --}}
+    <section x-show="!focusMode" class="st-join-hero" aria-label="{{ $course->title }}">
+        <div class="st-join-hero__copy">
+            <p class="st-join-hero__kicker">{{ __('student_timeline.courses_learn') }}</p>
+            <h2 class="st-join-hero__title">{{ $course->title }}</h2>
+            <p class="st-join-hero__meta">
+                {{ ($completedLessons ?? 0) }}/{{ ($totalLessons ?? 0) }}
+                · {{ number_format((float)($progress ?? 0), 0) }}%
+            </p>
+            <div class="st-course-card__progress" style="max-width:220px;margin-top:10px;background:rgba(255,255,255,.25)" aria-hidden="true">
+                <span class="learn-progress-fill" style="width: {{ min(100, (float)($progress ?? 0)) }}%;background:var(--st-gold,#C9952A)"></span>
+            </div>
+        </div>
+        <div class="st-join-hero__actions">
+            <button type="button" @click="toggleFocusMode()" class="st-pill st-pill--solid">
+                <i class="fas fa-expand-arrows-alt" aria-hidden="true"></i>
+                وضع التركيز
+            </button>
+            <button type="button" @click="toggleFullscreen()" class="st-pill st-pill--outline">
+                <i class="fas" :class="isFullscreen ? 'fa-compress' : 'fa-expand'" aria-hidden="true"></i>
+                ملء الشاشة
+            </button>
+            <a href="{{ route('my-courses.show', $course) }}" class="st-pill st-pill--outline">{{ __('student_timeline.courses_back') }}</a>
+        </div>
+    </section>
+
+    {{-- شريط وضع التركيز --}}
+    <div x-show="focusMode" class="st-learn-focusbar flex items-center justify-between px-3 py-2 border-b border-slate-200 bg-white flex-shrink-0">
+        <button type="button" @click="focusMode = false" class="st-pill st-pill--outline">
+            <i class="fas fa-compress-arrows-alt" aria-hidden="true"></i>
+            خروج من وضع التركيز
         </button>
         <div class="flex items-center gap-2">
             <div class="h-2 w-24 bg-slate-200 rounded-full overflow-hidden">
-                <div class="learn-progress-fill h-full bg-gradient-to-l from-sky-400 to-sky-500 rounded-full transition-all duration-500" style="width: {{ min(100, (float)($progress ?? 0)) }}%"></div>
+                <div class="learn-progress-fill h-full bg-gradient-to-l from-[#1E4E8C] to-[#2A6BB5] rounded-full transition-all duration-500" style="width: {{ min(100, (float)($progress ?? 0)) }}%"></div>
             </div>
             <span class="learn-progress-count text-xs font-semibold text-slate-600">{{ $completedLessons ?? 0 }}/{{ $totalLessons ?? 0 }}</span>
-            <span class="learn-progress-pct text-xs font-bold text-sky-600">{{ number_format((float)($progress ?? 0), 0) }}%</span>
+            <span class="learn-progress-pct text-xs font-bold text-[#1E4E8C]">{{ number_format((float)($progress ?? 0), 0) }}%</span>
         </div>
     </div>
 
@@ -711,21 +711,21 @@
             <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden sticky top-4">
                 <div class="p-4 border-b border-slate-200">
                     <h3 class="text-gray-900 font-bold text-sm flex items-center gap-2 mb-3">
-                        <span class="w-7 h-7 rounded-lg bg-sky-100 flex items-center justify-center"><i class="fas fa-list text-sky-500 text-xs"></i></span>
+                        <span class="w-7 h-7 rounded-lg bg-[#E8F0FA] flex items-center justify-center"><i class="fas fa-list text-[#1E4E8C] text-xs"></i></span>
                         المنهج
                     </h3>
                     <div class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-slate-50 border border-slate-200 mb-3">
                         <div class="h-1.5 flex-1 rounded-full bg-slate-200 overflow-hidden">
-                            <div class="h-full bg-gradient-to-l from-sky-400 to-sky-500 rounded-full" style="width: {{ min(100, (float)($progress ?? 0)) }}%"></div>
+                            <div class="h-full bg-gradient-to-l from-[#1E4E8C] to-[#2A6BB5] rounded-full" style="width: {{ min(100, (float)($progress ?? 0)) }}%"></div>
                         </div>
                         <span class="learn-progress-count text-[10px] font-bold text-gray-600 whitespace-nowrap">{{ $completedLessons ?? 0 }}/{{ $totalLessons ?? 0 }}</span>
-                        <span class="learn-progress-pct text-[10px] font-bold text-sky-600">{{ number_format((float)($progress ?? 0), 0) }}%</span>
+                        <span class="learn-progress-pct text-[10px] font-bold text-[#1E4E8C]">{{ number_format((float)($progress ?? 0), 0) }}%</span>
                     </div>
                     <div class="search-box relative">
                         <input type="text" 
                                x-model="searchQuery"
                                placeholder="ابحث..."
-                               class="w-full bg-slate-50 border border-slate-200 text-gray-900 placeholder-gray-400 px-3 py-2 pr-9 rounded-xl text-xs focus:outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 transition-all"
+                               class="w-full bg-slate-50 border border-slate-200 text-gray-900 placeholder-gray-400 px-3 py-2 pr-9 rounded-xl text-xs focus:outline-none focus:border-[#1E4E8C] focus:ring-2 focus:ring-[#1E4E8C]/20 transition-all"
                                @keydown.escape="searchQuery = ''">
                         <div class="absolute right-2.5 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"><i class="fas fa-search text-xs"></i></div>
                     </div>
@@ -742,7 +742,7 @@
                                  @keydown.enter.prevent="toggleSection('sidebar-exams')"
                                  @keydown.space.prevent="toggleSection('sidebar-exams')">
                                 <span class="flex items-center gap-1.5">
-                                    <i class="fas fa-clipboard-check text-sky-400/90 text-[10px]"></i>
+                                    <i class="fas fa-clipboard-check text-[#2A6BB5]/90 text-[10px]"></i>
                                     <span>الاختبارات</span>
                                     <span class="text-gray-500 text-[10px]">({{ $sidebarExams->count() }})</span>
                                 </span>
@@ -799,8 +799,8 @@
                          x-transition
                          class="empty-content-state">
                         <div class="relative mb-8">
-                            <div class="w-28 h-28 md:w-36 md:h-36 rounded-3xl bg-gradient-to-br from-sky-500/20 to-emerald-500/20 border border-sky-500/30 flex items-center justify-center mx-auto shadow-xl shadow-sky-500/10">
-                                <i class="fas fa-book-open text-sky-400 text-5xl md:text-6xl"></i>
+                            <div class="w-28 h-28 md:w-36 md:h-36 rounded-3xl bg-gradient-to-br from-[#E8F0FA]0/20 to-emerald-500/20 border border-[#1E4E8C]/30 flex items-center justify-center mx-auto shadow-xl shadow-[#1E4E8C]/10">
+                                <i class="fas fa-book-open text-[#2A6BB5] text-5xl md:text-6xl"></i>
                             </div>
                             <div class="absolute -bottom-1 -right-2 w-12 h-12 rounded-xl bg-emerald-500/20 border border-emerald-400/30 flex items-center justify-center">
                                 <i class="fas fa-play text-emerald-400 text-lg"></i>
@@ -843,7 +843,7 @@
                         <!-- شريط تقدم المشاهدة — للمحاضرة: تحديث مباشر من سكربت الفيديو (بدون Alpine). للدرس: Alpine -->
                         <div class="flex-shrink-0 px-3 py-2.5 bg-slate-800 border-b border-slate-600 min-h-[52px] flex flex-col justify-center" id="learn-watch-percent-bar">
                             <div class="flex items-center justify-between gap-2 mb-1.5">
-                                <span class="text-sm font-semibold text-sky-300">نسبة المشاهدة</span>
+                                <span class="text-sm font-semibold text-[#93B4D8]">نسبة المشاهدة</span>
                                 <template x-if="selectedLecture">
                                     <span id="lecture-watch-pct-text" class="text-sm font-bold text-white tabular-nums">0.0%</span>
                                 </template>
@@ -851,9 +851,9 @@
                             </div>
                             <div class="h-2.5 bg-slate-700 rounded-full overflow-hidden">
                                 <template x-if="selectedLecture">
-                                    <div id="lecture-watch-pct-fill" class="h-full bg-gradient-to-r from-sky-400 to-sky-500 rounded-full transition-all duration-300 min-w-[2px]" style="width: 0%;"></div>
+                                    <div id="lecture-watch-pct-fill" class="h-full bg-gradient-to-r from-[#1E4E8C] to-[#2A6BB5] rounded-full transition-all duration-300 min-w-[2px]" style="width: 0%;"></div>
                                 </template>
-                                <div x-show="selectedLesson && showVideoPlayer" class="h-full bg-gradient-to-r from-sky-400 to-sky-500 rounded-full transition-all duration-300 min-w-[2px]" :style="'width: ' + Math.min(100, Math.max(0, videoProgressPercent || 0)) + '%'"></div>
+                                <div x-show="selectedLesson && showVideoPlayer" class="h-full bg-gradient-to-r from-[#1E4E8C] to-[#2A6BB5] rounded-full transition-all duration-300 min-w-[2px]" :style="'width: ' + Math.min(100, Math.max(0, videoProgressPercent || 0)) + '%'"></div>
                             </div>
                         </div>
                         <div class="aspect-video w-full relative bg-black flex-1 min-h-0" x-show="(selectedLesson && showVideoPlayer) || (selectedLecture && showVideoPlayer)">
@@ -874,28 +874,28 @@
                     <!-- مواد المحاضرة (ظاهرة عند اختيار محاضرة ولديها مواد) -->
                     <div x-show="selectedLecture && lectureMaterials && lectureMaterials.length" x-transition
                          class="mt-5 rounded-2xl border border-slate-200 dark:border-slate-600 overflow-hidden bg-white dark:bg-slate-800/50 shadow-sm">
-                        <div class="px-4 sm:px-5 py-3.5 bg-gradient-to-l from-sky-50 to-white dark:from-slate-800 dark:to-slate-800/80 border-b border-slate-100 dark:border-slate-600 flex items-center justify-between gap-3 flex-wrap">
+                        <div class="px-4 sm:px-5 py-3.5 bg-gradient-to-l from-[#E8F0FA] to-white dark:from-slate-800 dark:to-slate-800/80 border-b border-slate-100 dark:border-slate-600 flex items-center justify-between gap-3 flex-wrap">
                             <h3 class="text-base font-bold text-slate-800 dark:text-white flex items-center gap-2.5">
-                                <span class="w-9 h-9 rounded-xl bg-sky-100 dark:bg-sky-900/40 flex items-center justify-center">
-                                    <i class="fas fa-paperclip text-sky-600 dark:text-sky-400"></i>
+                                <span class="w-9 h-9 rounded-xl bg-[#E8F0FA] dark:bg-[#1E4E8C]/40 flex items-center justify-center">
+                                    <i class="fas fa-paperclip text-[#1E4E8C] dark:text-[#2A6BB5]"></i>
                                 </span>
                                 مواد المحاضرة
-                                <span class="text-xs font-semibold text-sky-600 dark:text-sky-400 bg-sky-100 dark:bg-sky-900/40 px-2.5 py-0.5 rounded-full" x-text="lectureMaterials.length"></span>
+                                <span class="text-xs font-semibold text-[#1E4E8C] dark:text-[#2A6BB5] bg-[#E8F0FA] dark:bg-[#1E4E8C]/40 px-2.5 py-0.5 rounded-full" x-text="lectureMaterials.length"></span>
                             </h3>
                         </div>
                         <div class="p-4 sm:p-5">
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 <template x-for="mat in lectureMaterials" :key="mat.id">
                                     <a :href="mat.download_url" target="_blank" rel="noopener"
-                                       class="group flex items-center gap-4 p-4 rounded-xl bg-slate-50 dark:bg-slate-700/50 border border-slate-100 dark:border-slate-600 hover:bg-sky-50 dark:hover:bg-sky-900/20 hover:border-sky-200 dark:hover:border-sky-700 transition-all duration-200">
-                                        <span class="w-12 h-12 rounded-xl bg-white dark:bg-slate-600 shadow-sm border border-slate-200 dark:border-slate-500 flex items-center justify-center shrink-0 group-hover:bg-sky-100 dark:group-hover:bg-sky-900/30 transition-colors">
+                                       class="group flex items-center gap-4 p-4 rounded-xl bg-slate-50 dark:bg-slate-700/50 border border-slate-100 dark:border-slate-600 hover:bg-[#E8F0FA] dark:hover:bg-[#1E4E8C]/20 hover:border-[#93B4D8] dark:hover:border-[#2A6BB5] transition-all duration-200">
+                                        <span class="w-12 h-12 rounded-xl bg-white dark:bg-slate-600 shadow-sm border border-slate-200 dark:border-slate-500 flex items-center justify-center shrink-0 group-hover:bg-[#E8F0FA] dark:group-hover:bg-[#1E4E8C]/30 transition-colors">
                                             <i class="fas text-lg" :class="getMaterialIconClass(mat)"></i>
                                         </span>
                                         <div class="flex-1 min-w-0">
-                                            <span class="block font-semibold text-slate-800 dark:text-white truncate group-hover:text-sky-700 dark:group-hover:text-sky-300 transition-colors" x-text="mat.title"></span>
+                                            <span class="block font-semibold text-slate-800 dark:text-white truncate group-hover:text-[#152A4A] dark:group-hover:text-[#93B4D8] transition-colors" x-text="mat.title"></span>
                                             <span class="text-xs text-slate-500 dark:text-slate-400 mt-0.5 block truncate" x-text="mat.file_name"></span>
                                         </div>
-                                        <span class="w-10 h-10 rounded-lg bg-sky-500 text-white flex items-center justify-center shrink-0 group-hover:bg-sky-600 transition-colors">
+                                        <span class="w-10 h-10 rounded-lg bg-[#E8F0FA]0 text-white flex items-center justify-center shrink-0 group-hover:bg-[#152A4A] transition-colors">
                                             <i class="fas fa-download text-sm"></i>
                                         </span>
                                     </a>
@@ -967,7 +967,7 @@ function courseFocusMode() {
             this.showVideoPlayer = false;
             this.currentLessonVideoUrl = null;
             this.currentLessonId = lessonId;
-            this.lessonContent = '<div class="text-center p-8"><i class="fas fa-spinner fa-spin text-4xl text-sky-500 mb-4"></i><p class="text-gray-600">جاري تحميل الدرس...</p></div>';
+            this.lessonContent = '<div class="text-center p-8"><i class="fas fa-spinner fa-spin text-4xl text-[#1E4E8C] mb-4"></i><p class="text-gray-600">جاري تحميل الدرس...</p></div>';
             
             try {
                 // جلب بيانات الدرس من API
@@ -1038,9 +1038,9 @@ function courseFocusMode() {
                 }
                 html += '<div class="grid grid-cols-2 gap-4 text-sm">';
                 if (lesson.duration_minutes) {
-                    html += '<div class="flex items-center gap-2 text-gray-600"><i class="fas fa-clock text-sky-500"></i><span class="font-semibold">المدة:</span> ' + lesson.duration_minutes + ' دقيقة</div>';
+                    html += '<div class="flex items-center gap-2 text-gray-600"><i class="fas fa-clock text-[#1E4E8C]"></i><span class="font-semibold">المدة:</span> ' + lesson.duration_minutes + ' دقيقة</div>';
                 }
-                html += '<div class="flex items-center gap-2 text-gray-600"><i class="fas fa-' + (lesson.type === 'video' ? 'video' : lesson.type === 'quiz' ? 'question-circle' : 'file-alt') + ' text-sky-500"></i><span class="font-semibold">النوع:</span> ' + (lesson.type === 'video' ? 'فيديو' : lesson.type === 'quiz' ? 'كويز' : 'مستند') + '</div>';
+                html += '<div class="flex items-center gap-2 text-gray-600"><i class="fas fa-' + (lesson.type === 'video' ? 'video' : lesson.type === 'quiz' ? 'question-circle' : 'file-alt') + ' text-[#1E4E8C]"></i><span class="font-semibold">النوع:</span> ' + (lesson.type === 'video' ? 'فيديو' : lesson.type === 'quiz' ? 'كويز' : 'مستند') + '</div>';
                 html += '</div></div>';
                 
                 // المحتوى النصي
@@ -1053,12 +1053,12 @@ function courseFocusMode() {
                 // المرفقات
                 if (lesson.attachments && Array.isArray(lesson.attachments) && lesson.attachments.length > 0) {
                     html += '<div class="bg-gray-50 border-2 border-gray-200 rounded-xl p-6 w-full">';
-                    html += '<h3 class="text-xl font-black text-gray-900 mb-4 flex items-center gap-2"><i class="fas fa-paperclip text-sky-500"></i><span>المرفقات</span></h3>';
+                    html += '<h3 class="text-xl font-black text-gray-900 mb-4 flex items-center gap-2"><i class="fas fa-paperclip text-[#1E4E8C]"></i><span>المرفقات</span></h3>';
                     html += '<div class="space-y-2">';
                     lesson.attachments.forEach(attachment => {
                         const fileName = attachment.name || attachment.url || 'مرفق';
                         const fileUrl = attachment.url || attachment;
-                        html += '<a href="' + this.escapeHtml(fileUrl) + '" target="_blank" class="block bg-white border-2 border-gray-300 rounded-lg p-4 hover:bg-gray-50 transition-all hover:shadow-lg w-full"><div class="flex items-center justify-between"><div class="flex items-center gap-3"><i class="fas fa-file text-sky-500 text-xl"></i><div><div class="font-bold text-gray-900">' + this.escapeHtml(fileName) + '</div></div></div><i class="fas fa-external-link-alt text-gray-400"></i></div></a>';
+                        html += '<a href="' + this.escapeHtml(fileUrl) + '" target="_blank" class="block bg-white border-2 border-gray-300 rounded-lg p-4 hover:bg-gray-50 transition-all hover:shadow-lg w-full"><div class="flex items-center justify-between"><div class="flex items-center gap-3"><i class="fas fa-file text-[#1E4E8C] text-xl"></i><div><div class="font-bold text-gray-900">' + this.escapeHtml(fileName) + '</div></div></div><i class="fas fa-external-link-alt text-gray-400"></i></div></a>';
                     });
                     html += '</div></div>';
                 }
@@ -1243,8 +1243,8 @@ function courseFocusMode() {
                 html += '<p class="text-gray-700 leading-relaxed mb-4">' + this.escapeHtml(lecture.description) + '</p>';
             }
             html += '<div class="grid grid-cols-2 gap-4 text-sm">';
-            html += '<div class="flex items-center gap-2 text-gray-600"><i class="fas fa-calendar text-sky-500"></i><span class="font-semibold">التاريخ:</span> ' + (lecture.scheduled_at_formatted || '') + '</div>';
-            html += '<div class="flex items-center gap-2 text-gray-600"><i class="fas fa-clock text-sky-500"></i><span class="font-semibold">المدة:</span> ' + (lecture.duration_minutes || 60) + ' دقيقة</div>';
+            html += '<div class="flex items-center gap-2 text-gray-600"><i class="fas fa-calendar text-[#1E4E8C]"></i><span class="font-semibold">التاريخ:</span> ' + (lecture.scheduled_at_formatted || '') + '</div>';
+            html += '<div class="flex items-center gap-2 text-gray-600"><i class="fas fa-clock text-[#1E4E8C]"></i><span class="font-semibold">المدة:</span> ' + (lecture.duration_minutes || 60) + ' دقيقة</div>';
             html += '</div></div>';
             
             // رسالة عدم وجود فيديو
@@ -1255,7 +1255,7 @@ function courseFocusMode() {
             // الملاحظات
             if (lecture.notes) {
                 html += '<div class="bg-gray-50 border-2 border-gray-200 rounded-xl p-6 w-full">';
-                html += '<h3 class="text-xl font-black text-gray-900 mb-4 flex items-center gap-2"><i class="fas fa-sticky-note text-sky-500"></i><span>ملاحظات</span></h3>';
+                html += '<h3 class="text-xl font-black text-gray-900 mb-4 flex items-center gap-2"><i class="fas fa-sticky-note text-[#1E4E8C]"></i><span>ملاحظات</span></h3>';
                 html += '<div class="text-gray-700 leading-relaxed whitespace-pre-wrap">' + this.escapeHtml(lecture.notes) + '</div>';
                 html += '</div>';
             }
@@ -1269,7 +1269,7 @@ function courseFocusMode() {
         async loadExam(examId) {
             this.selectedLesson = null;
             this.selectedLecture = null;
-            this.lectureContent = '<div class="text-center p-8"><i class="fas fa-spinner fa-spin text-4xl text-sky-500 mb-4"></i><p class="text-gray-600">جاري تحميل الاختبار...</p></div>';
+            this.lectureContent = '<div class="text-center p-8"><i class="fas fa-spinner fa-spin text-4xl text-[#1E4E8C] mb-4"></i><p class="text-gray-600">جاري تحميل الاختبار...</p></div>';
 
             try {
                 const response = await fetch(`/student/exams/${examId}`, {
@@ -1331,7 +1331,7 @@ function courseFocusMode() {
             if (/\.(docx?|doc)$/.test(n)) return 'fa-file-word text-blue-600 dark:text-blue-400';
             if (/\.(pptx?|ppt)$/.test(n)) return 'fa-file-powerpoint text-orange-600 dark:text-orange-400';
             if (/\.(zip|rar|7z)$/.test(n)) return 'fa-file-archive text-amber-600 dark:text-amber-400';
-            return 'fa-file-alt text-sky-600 dark:text-sky-400';
+            return 'fa-file-alt text-[#1E4E8C] dark:text-[#2A6BB5]';
         },
         escapeHtml(text) {
             if (!text) return '';
@@ -1824,13 +1824,13 @@ function videoPlayer() {
             '<h3 class="text-lg font-bold text-slate-800 mb-2">سؤال</h3>' +
             '<p id="lecture-vq-text" class="text-slate-700 mb-4"></p>' +
             '<div id="lecture-vq-options" class="space-y-2 mb-4"></div>' +
-            '<button type="button" id="lecture-vq-submit" class="w-full py-2.5 bg-sky-500 hover:bg-sky-600 text-white rounded-xl font-semibold">إرسال</button>' +
+            '<button type="button" id="lecture-vq-submit" class="w-full py-2.5 bg-[#E8F0FA]0 hover:bg-[#152A4A] text-white rounded-xl font-semibold">إرسال</button>' +
             '</div>' +
             '<div id="lecture-vq-feedback-view" class="hidden text-center">' +
             '<p id="lecture-vq-result-label" class="text-xl font-bold mb-2"></p>' +
             '<p id="lecture-vq-result-emoji" class="text-4xl mb-3"></p>' +
             '<p id="lecture-vq-result-message" class="text-slate-600 mb-4"></p>' +
-            '<button type="button" id="lecture-vq-continue-btn" class="w-full py-2.5 bg-sky-500 hover:bg-sky-600 text-white rounded-xl font-semibold">متابعة</button>' +
+            '<button type="button" id="lecture-vq-continue-btn" class="w-full py-2.5 bg-[#E8F0FA]0 hover:bg-[#152A4A] text-white rounded-xl font-semibold">متابعة</button>' +
             '</div></div></div>';
         overlay = document.getElementById('lecture-vq-overlay');
         submitBtn = document.getElementById('lecture-vq-submit');
@@ -1874,7 +1874,7 @@ function videoPlayer() {
                     radio.type = 'radio';
                     radio.name = 'lecture_vq_answer';
                     radio.value = opt;
-                    radio.className = 'text-sky-500';
+                    radio.className = 'text-[#1E4E8C]';
                     label.appendChild(radio);
                     label.appendChild(document.createTextNode(opt));
                     optionsEl.appendChild(label);

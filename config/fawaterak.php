@@ -47,7 +47,7 @@ return [
 
     'version' => env('FAWATERAK_VERSION', '0'),
 
-    'currency' => env('FAWATERAK_CURRENCY', 'USD'),
+    'currency' => env('FAWATERAK_CURRENCY', 'SAR'),
 
     'test' => [
         'plugin_url' => env('FAWATERAK_TEST_PLUGIN_URL', 'https://staging.fawaterk.com/fawaterkPlugin/fawaterkPlugin.min.js?v=1.2'),

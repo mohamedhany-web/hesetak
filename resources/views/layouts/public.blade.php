@@ -1,17 +1,22 @@
 @php
     $publicLocale = app()->getLocale();
     $publicRtl = $publicLocale === 'ar';
+    $mcCss = public_path('css/landing/mycourses.css');
+    $mcVer = is_file($mcCss) ? (string) filemtime($mcCss) : (string) time();
+    $brand = config('app.name', 'حصتك');
+    $langSwitch = fn (string $lang) => request()->fullUrlWithQuery(array_merge(request()->query(), ['lang' => $lang]));
 @endphp
 <!DOCTYPE html>
-<html lang="{{ $publicLocale }}" dir="{{ $publicRtl ? 'rtl' : 'ltr' }}" class="dark">
+<html lang="{{ $publicLocale }}" dir="{{ $publicRtl ? 'rtl' : 'ltr' }}">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     @php
-        $seoTitle = trim($__env->yieldContent('title')) ?: (config('app.name') . ' - ' . __('landing.nav.brand'));
+        $seoTitle = trim($__env->yieldContent('title')) ?: ($brand.' — حصتك');
         $seoDescription = trim($__env->yieldContent('meta_description')) ?: __('landing.meta.description');
-        $seoKeywords = trim($__env->yieldContent('meta_keywords')) ?: 'تعليم ألماني, تعليم إنجليزي, كول سنتر, سوق العمل, ألمانيا, Glottical';
-        $seoImage = trim($__env->yieldContent('meta_image')) ?: asset('images/og-image.jpg');
+        $seoKeywords = trim($__env->yieldContent('meta_keywords')) ?: __('landing.meta.keywords');
+        $seoImage = trim($__env->yieldContent('meta_image')) ?: \App\Services\SeoAssets::ogImageUrl();
         $seoType = trim($__env->yieldContent('meta_type')) ?: 'website';
         $seoCanonical = trim($__env->yieldContent('canonical_url')) ?: url()->current();
         $seoAltBase = url()->current();
@@ -27,97 +32,34 @@
     <link rel="alternate" hreflang="ar" href="{{ $seoAltBase }}?lang=ar">
     <link rel="alternate" hreflang="en" href="{{ $seoAltBase }}?lang=en">
     <link rel="alternate" hreflang="x-default" href="{{ $seoAltBase }}">
-    <meta name="theme-color" content="{{ config('academy-theme.navy') }}">
-
+    <meta name="theme-color" content="#00C2A8">
     @include('partials.favicon-links')
-
-    @php
-        $r2PublicBase = config('filesystems.r2_public_url');
-        $navLogoPreload = \App\Services\AdminPanelBranding::logoPublicUrl();
-    @endphp
-    @if(is_string($r2PublicBase) && $r2PublicBase !== '')
-        @php
-            $r2Host = parse_url($r2PublicBase, PHP_URL_SCHEME).'://'.parse_url($r2PublicBase, PHP_URL_HOST);
-        @endphp
-        <link rel="dns-prefetch" href="{{ $r2Host }}">
-        <link rel="preconnect" href="{{ $r2Host }}" crossorigin>
-    @endif
-    @if(is_string($navLogoPreload) && $navLogoPreload !== '' && ! str_starts_with($navLogoPreload, 'data:'))
-        <link rel="preload" as="image" href="{{ $navLogoPreload }}" fetchpriority="high">
-    @endif
-
-    <!-- الخطوط العربية - تحميل غير معطل للرسم (تحسين FCP/LCP) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Tajawal:wght@400;500;700;800&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
-    
-    <!-- Resource Hints للأداء -->
-    <link rel="dns-prefetch" href="https://cdn.tailwindcss.com">
-    <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
-    <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
-    
-    <!-- Tailwind CSS (ألوان موحّدة مع الصفحة الرئيسية) -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        @include('partials.academy-tailwind-colors')
-                    },
-                    fontFamily: {
-                        sans: ['Cairo', 'Tajawal', 'IBM Plex Sans Arabic', 'system-ui', 'sans-serif'],
-                    },
-                },
-            },
-        };
-    </script>
-    
-    <!-- Alpine.js -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Rubik:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ route('assets.landing.css', ['sheet' => 'mycourses']) }}?v={{ $mcVer }}">
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-
-    <!-- Font Awesome - محسّن -->
-    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
-    <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"></noscript>
-
-    @include('partials.academy-theme-vars')
-    @include('partials.public-academy-surface')
-    <!-- Custom Styles from welcome.blade.php -->
-    @include('layouts.public-styles')
+    <style>
+      .mc-public-legacy { min-height: 50vh; padding: 1.5rem 0 3rem; }
+    </style>
     @stack('styles')
+    @stack('head')
     @include('partials.seo-jsonld', ['jsonldType' => 'website'])
 </head>
-
-<body class="page-academy font-sans antialiased text-white"
+<body class="mc-body page-academy font-sans antialiased"
       x-data="{ mobileMenu: false, searchQuery: '' }"
       :class="{ 'overflow-hidden': mobileMenu }">
 
-    <div id="scroll-progress" class="fixed top-0 left-0 h-[3px] w-0 z-[100000] bg-gradient-to-l from-acad-yellow to-acad-blue"></div>
+    @include('partials.landing.mycourses.nav')
 
-    @include('components.unified-navbar')
-
-    <!-- Main Content -->
-    <main class="flex-1 w-full">
-        @yield('content')
+    <main class="flex-1 w-full mc-public-legacy">
+        <div class="mc-container">
+            @yield('content')
+        </div>
     </main>
 
-    <!-- Footer - نفس فوتر الصفحة الرئيسية -->
-    @include('components.unified-footer')
-
-    <script>
-    (function () {
-        function scrollProgress() {
-            var s = window.pageYOffset || document.documentElement.scrollTop;
-            var h = document.documentElement.scrollHeight - window.innerHeight;
-            var p = h > 0 ? (s / h) * 100 : 0;
-            var b = document.getElementById('scroll-progress');
-            if (b) b.style.width = p + '%';
-        }
-        window.addEventListener('scroll', scrollProgress, { passive: true });
-        scrollProgress();
-    })();
-    </script>
+    @include('partials.landing.mycourses.footer')
     @stack('scripts')
 </body>
 </html>
-

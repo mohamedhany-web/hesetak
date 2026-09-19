@@ -1,0 +1,10 @@
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="22.4586" height="28.1389" viewBox="0 0 22.4586 28.1389" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="Mask Group">
+<mask id="mask0_0_263" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="0" y="0" width="23" height="29">
+<path id="Vector 38" d="M0 21.2188C1.58386 12.1116 1.02584 3.68429 0.778358 0.776434C1.1248 -1.94583 15.5292 3.15288 22.4586 5.87514C18.5485 7.85497 17.4885 17.7541 17.4472 22.4562C17.5709 24.0029 16.6058 27.282 11.7552 28.0244C3.63793 28.9648 0.536204 23.8792 0 21.2188Z" fill="#BABABA"/>
+</mask>
+<g mask="url(#mask0_0_263)">
+<path id="Vector 37" opacity="0.1" d="M20.0608 15.3235C10.3059 13.8015 3.07359 5.22519 0.676788 1.12731C6.24449 -0.0212705 18.7636 -1.62928 24.2983 1.12731C29.833 3.8839 23.7795 11.74 20.0608 15.3235Z" fill="black"/>
+</g>
+</g>
+</svg>

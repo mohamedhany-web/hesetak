@@ -12,8 +12,8 @@
         false => ['label' => 'معطلة', 'classes' => 'bg-canvas-muted text-muted'],
     ];
     $kpis = [
-        ['label' => 'إجمالي القيم الممولة', 'value' => number_format($stats['total_amount'] ?? 0, 2) . ' $', 'icon' => 'fa-coins', 'tone' => 'accent', 'note' => 'إجمالي المبالغ التي تغطيها الخطط الحالية'],
-        ['label' => 'إجمالي الدفعات المقدمة', 'value' => number_format($stats['total_deposit'] ?? 0, 2) . ' $', 'icon' => 'fa-piggy-bank', 'tone' => 'metal', 'note' => 'قيمة الدفعات المقدمة المطلوبة عند الاشتراك'],
+        ['label' => 'إجمالي القيم الممولة', 'value' => number_format($stats['total_amount'] ?? 0, 2) . ' ' . currency_symbol(), 'icon' => 'fa-coins', 'tone' => 'accent', 'note' => 'إجمالي المبالغ التي تغطيها الخطط الحالية'],
+        ['label' => 'إجمالي الدفعات المقدمة', 'value' => number_format($stats['total_deposit'] ?? 0, 2) . ' ' . currency_symbol(), 'icon' => 'fa-piggy-bank', 'tone' => 'metal', 'note' => 'قيمة الدفعات المقدمة المطلوبة عند الاشتراك'],
         ['label' => 'متوسط عدد الأقساط', 'value' => number_format($stats['average_installments'] ?? 0, 1), 'icon' => 'fa-chart-area', 'tone' => 'accent', 'note' => 'متوسط الأقساط لكل خطة تمويلية'],
         ['label' => 'خطط جديدة هذا الشهر', 'value' => number_format($monthlyNew ?? 0), 'icon' => 'fa-calendar-plus', 'tone' => 'muted', 'note' => 'بقيمة ' . number_format($monthlyAmount ?? 0, 2) . ' $ منذ بداية الشهر'],
     ];

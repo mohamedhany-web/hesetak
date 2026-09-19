@@ -25,7 +25,7 @@
         ['label' => 'إجمالي المصروفات', 'value' => $stats['total'], 'icon' => 'fa-receipt', 'tone' => 'accent', 'note' => 'كل المصروفات المسجلة'],
         ['label' => 'قيد المراجعة', 'value' => $stats['pending'], 'icon' => 'fa-hourglass-half', 'tone' => 'metal', 'note' => 'بانتظار الموافقة أو الرفض'],
         ['label' => 'موافق عليها', 'value' => $stats['approved'], 'icon' => 'fa-check-circle', 'tone' => 'accent', 'note' => 'تمت الموافقة عليها'],
-        ['label' => 'إجمالي المبلغ', 'value' => number_format($stats['total_amount'], 2), 'icon' => 'fa-money-bill-wave', 'tone' => 'muted', 'note' => 'المبالغ المعتمدة ($)', 'suffix' => ' $'],
+        ['label' => 'إجمالي المبلغ', 'value' => number_format($stats['total_amount'], 2), 'icon' => 'fa-money-bill-wave', 'tone' => 'muted', 'note' => 'المبالغ المعتمدة (' . currency_symbol() . ')', 'suffix' => ' ' . currency_symbol()],
     ] : [];
     $toneClass = [
         'accent' => 'bg-accent-soft text-accent',

@@ -125,7 +125,7 @@ class SecureClassroomJoinTest extends TestCase
             'user_id' => $instructor->id,
             'one_to_one_session_id' => $session->id,
             'code' => 'PRIV1234',
-            'room_name' => 'Glottical-PRIV1234',
+            'room_name' => 'حصتك-PRIV1234',
             'title' => 'حصة خاصة',
             'max_participants' => 4,
             'settings' => ['allow_guest_join' => false, 'private_lesson' => true],
@@ -163,7 +163,7 @@ class SecureClassroomJoinTest extends TestCase
         $meeting = ClassroomMeeting::create([
             'user_id' => $host->id,
             'code' => 'OPEN9999',
-            'room_name' => 'Glottical-OPEN9999',
+            'room_name' => 'حصتك-OPEN9999',
             'title' => 'اجتماع مفتوح',
             'started_at' => now(),
             'max_participants' => 10,

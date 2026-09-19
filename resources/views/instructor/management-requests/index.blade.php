@@ -4,49 +4,80 @@
 @section('page_title', __('instructor.submit_requests_to_management'))
 
 @section('content')
-<div class="su-page">
-    <div class="su-page-head">
-        <div class="min-w-0">
-            <h1 class="su-page-head__title">
-                <i class="fas fa-inbox su-page-head__ico" aria-hidden="true"></i>
-                {{ __('instructor.my_requests_to_management') }}
-            </h1>
-            <p class="su-page-head__sub">{{ __('instructor.my_requests_description') }}</p>
+@php
+    $locale = app()->getLocale();
+    $statusFilter = request('status');
+@endphp
+
+<div class="id-page">
+    <section class="id-hero" aria-label="{{ __('instructor.my_requests_to_management') }}">
+        <div class="id-hero__copy">
+            <p class="id-hero__kicker">{{ __('instructor.submit_requests_to_management') }}</p>
+            <h2 class="id-hero__title">{{ __('instructor.my_requests_to_management') }}</h2>
+            <p class="id-hero__meta">{{ __('instructor.my_requests_description') }}</p>
         </div>
-        <div class="su-page-head__actions">
-            <a href="{{ route('instructor.management-requests.create') }}" class="su-btn su-btn--primary">
+        <div class="id-hero__actions">
+            <a href="{{ route('instructor.management-requests.create') }}" class="id-btn id-btn--gold">
                 <i class="fas fa-plus" aria-hidden="true"></i>
                 {{ __('instructor.new_request') }}
             </a>
+            @if(Route::has('instructor.tasks.index'))
+                <a href="{{ route('instructor.tasks.index') }}" class="id-btn id-btn--ghost">
+                    <i class="fas fa-tasks" aria-hidden="true"></i>
+                    {{ __('instructor.tasks_from_management') }}
+                </a>
+            @endif
         </div>
-    </div>
-
-    @if(session('success'))
-        <div class="su-card" style="margin-bottom:16px;padding:12px 16px;border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.08);color:#15803d;font-size:13px">
-            {{ session('success') }}
-        </div>
-    @endif
-
-    <section class="su-card" style="margin-bottom:16px">
-        <form method="GET" class="su-form-grid" style="grid-template-columns:1fr auto">
-            <div class="su-field">
-                <label for="status">{{ __('common.status') }}</label>
-                <select name="status" id="status" class="su-select">
-                    <option value="">{{ __('instructor.all_statuses_filter') }}</option>
-                    <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>{{ __('instructor.pending_review') }}</option>
-                    <option value="approved" {{ request('status') == 'approved' ? 'selected' : '' }}>{{ __('instructor.approved') }}</option>
-                    <option value="rejected" {{ request('status') == 'rejected' ? 'selected' : '' }}>{{ __('instructor.rejected') }}</option>
-                </select>
-            </div>
-            <div class="su-form-actions" style="align-items:flex-end">
-                <button type="submit" class="su-btn su-btn--primary" style="height:40px">{{ __('common.search') }}</button>
-            </div>
-        </form>
     </section>
 
-    <section class="su-card su-card--flush">
-        <div class="su-table-wrap" style="border:0;border-radius:0;background:transparent">
-            <table class="su-table">
+    <section class="id-kpis" aria-label="{{ __('instructor.my_requests_to_management') }}">
+        <a href="{{ route('instructor.management-requests.index') }}" class="id-kpi">
+            <span class="id-kpi__icon" aria-hidden="true"><i class="fas fa-inbox"></i></span>
+            <span class="id-kpi__body">
+                <span class="id-kpi__label">{{ __('instructor.my_requests_to_management') }}</span>
+                <span class="id-kpi__value">{{ number_format($stats['total'] ?? 0) }}</span>
+            </span>
+        </a>
+        <a href="{{ route('instructor.management-requests.index', ['status' => 'pending']) }}" class="id-kpi">
+            <span class="id-kpi__icon id-kpi__icon--gold" aria-hidden="true"><i class="fas fa-clock"></i></span>
+            <span class="id-kpi__body">
+                <span class="id-kpi__label">{{ __('instructor.pending_review') }}</span>
+                <span class="id-kpi__value">{{ number_format($stats['pending'] ?? 0) }}</span>
+            </span>
+        </a>
+        <a href="{{ route('instructor.management-requests.index', ['status' => 'approved']) }}" class="id-kpi">
+            <span class="id-kpi__icon id-kpi__icon--teal" aria-hidden="true"><i class="fas fa-check"></i></span>
+            <span class="id-kpi__body">
+                <span class="id-kpi__label">{{ __('instructor.approved') }}</span>
+                <span class="id-kpi__value">{{ number_format($stats['approved'] ?? 0) }}</span>
+            </span>
+        </a>
+        <a href="{{ route('instructor.management-requests.index', ['status' => 'rejected']) }}" class="id-kpi">
+            <span class="id-kpi__icon id-kpi__icon--rose" aria-hidden="true"><i class="fas fa-times"></i></span>
+            <span class="id-kpi__body">
+                <span class="id-kpi__label">{{ __('instructor.rejected') }}</span>
+                <span class="id-kpi__value">{{ number_format($stats['rejected'] ?? 0) }}</span>
+            </span>
+        </a>
+    </section>
+
+    <nav class="id-filters" aria-label="{{ __('instructor.all_statuses_filter') }}">
+        <a href="{{ route('instructor.management-requests.index') }}" class="id-filter {{ ! $statusFilter ? 'is-on' : '' }}">{{ __('instructor.all_statuses_filter') }}</a>
+        <a href="{{ route('instructor.management-requests.index', ['status' => 'pending']) }}" class="id-filter {{ $statusFilter === 'pending' ? 'is-on' : '' }}">{{ __('instructor.pending_review') }}</a>
+        <a href="{{ route('instructor.management-requests.index', ['status' => 'approved']) }}" class="id-filter {{ $statusFilter === 'approved' ? 'is-on' : '' }}">{{ __('instructor.approved') }}</a>
+        <a href="{{ route('instructor.management-requests.index', ['status' => 'rejected']) }}" class="id-filter {{ $statusFilter === 'rejected' ? 'is-on' : '' }}">{{ __('instructor.rejected') }}</a>
+    </nav>
+
+    <section class="id-panel id-panel--wide" aria-label="{{ __('instructor.my_requests_to_management') }}">
+        <header class="id-panel__head">
+            <h2>{{ __('instructor.my_requests_to_management') }}</h2>
+            @if(($stats['pending'] ?? 0) > 0)
+                <span class="id-panel__badge">{{ number_format($stats['pending']) }} {{ __('instructor.pending_review') }}</span>
+            @endif
+        </header>
+
+        <div class="id-table-wrap">
+            <table class="id-table">
                 <thead>
                     <tr>
                         <th>{{ __('instructor.request_subject') }}</th>
@@ -59,9 +90,9 @@
                     @forelse($requests as $req)
                         @php
                             $chip = match ($req->status) {
-                                'pending' => 'su-chip--warn',
-                                'approved' => 'su-chip--ok',
-                                default => 'su-chip--off',
+                                'pending' => 'id-chip--warn',
+                                'approved' => 'id-chip--ok',
+                                default => 'id-chip--rose',
                             };
                             $label = match ($req->status) {
                                 'pending' => __('instructor.pending_review'),
@@ -71,13 +102,13 @@
                         @endphp
                         <tr>
                             <td>
-                                <strong style="font-weight:600">{{ $req->subject }}</strong>
-                                <div style="font-size:12px;color:var(--su-ink-40);margin-top:2px">{{ Str::limit($req->message, 60) }}</div>
+                                <strong>{{ $req->subject }}</strong>
+                                <div class="muted" style="font-size:12px;margin-top:2px">{{ Str::limit($req->message, 60) }}</div>
                             </td>
-                            <td><span class="su-chip {{ $chip }}">{{ $label }}</span></td>
-                            <td class="tabular-nums" style="color:var(--su-ink-40)">{{ $req->created_at->format('Y-m-d H:i') }}</td>
-                            <td style="text-align:end">
-                                <a href="{{ route('instructor.management-requests.show', $req) }}" class="su-btn" style="height:32px">
+                            <td><span class="id-chip {{ $chip }}">{{ $label }}</span></td>
+                            <td class="tabular-nums"><span class="muted">{{ $req->created_at->format('Y-m-d H:i') }}</span></td>
+                            <td class="id-table__end">
+                                <a href="{{ route('instructor.management-requests.show', $req) }}" class="id-btn id-btn--outline" style="min-height:34px;padding:0 12px;font-size:12px">
                                     {{ __('common.view') }}
                                 </a>
                             </td>
@@ -85,12 +116,15 @@
                     @empty
                         <tr>
                             <td colspan="4">
-                                <div class="su-empty">
-                                    <i class="fas fa-inbox" aria-hidden="true"></i>
+                                <div class="id-empty" style="border:0;background:transparent;padding:28px 8px">
+                                    <span class="id-empty__mark" aria-hidden="true"><i class="fas fa-inbox"></i></span>
                                     <p>{{ __('instructor.no_requests_yet') }}</p>
-                                    <a href="{{ route('instructor.management-requests.create') }}" class="su-btn su-btn--primary" style="margin-top:8px">
-                                        {{ __('instructor.new_request') }}
-                                    </a>
+                                    <div class="id-empty__actions">
+                                        <a href="{{ route('instructor.management-requests.create') }}" class="id-btn id-btn--navy">
+                                            <i class="fas fa-plus" aria-hidden="true"></i>
+                                            {{ __('instructor.new_request') }}
+                                        </a>
+                                    </div>
                                 </div>
                             </td>
                         </tr>
@@ -98,8 +132,9 @@
                 </tbody>
             </table>
         </div>
+
         @if($requests->hasPages())
-            <div class="su-pager" style="padding:12px">{{ $requests->appends(request()->query())->links() }}</div>
+            <div class="id-pager">{{ $requests->appends(request()->query())->links() }}</div>
         @endif
     </section>
 </div>

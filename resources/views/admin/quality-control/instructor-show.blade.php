@@ -108,7 +108,7 @@
                     <tr class="hover:bg-slate-50">
                         <td class="px-4 py-3">{{ $c->id }}</td>
                         <td class="px-4 py-3"><a href="{{ route('admin.advanced-courses.show', $c) }}" class="font-medium text-sky-600 hover:text-sky-700">{{ $c->title }}</a></td>
-                        <td class="px-4 py-3">{{ $c->price ? number_format($c->price, 2) . ' $' : '—' }}</td>
+                        <td class="px-4 py-3">{{ $c->price ? number_format($c->price, 2) . ' ' . currency_symbol() : '—' }}</td>
                         <td class="px-4 py-3">{{ $c->is_active ? 'نعم' : 'لا' }}</td>
                         <td class="px-4 py-3">{{ $c->created_at->format('Y-m-d') }}</td>
                     </tr>
@@ -182,7 +182,7 @@
                         <td class="px-4 py-3">{{ $a->agreement_number ?? '—' }}</td>
                         <td class="px-4 py-3">{{ $a->title ?? '—' }}</td>
                         <td class="px-4 py-3">{{ $a->billing_type ?? '—' }}</td>
-                        <td class="px-4 py-3">{{ $a->total_amount ? number_format($a->total_amount, 2) . ' $' : ($a->monthly_amount ? number_format($a->monthly_amount, 2) . ' $/شهر' : '—') }}</td>
+                        <td class="px-4 py-3">{{ $a->total_amount ? number_format($a->total_amount, 2) . ' ' . currency_symbol() : ($a->monthly_amount ? number_format($a->monthly_amount, 2) . ' $/شهر' : '—') }}</td>
                         <td class="px-4 py-3"><span class="rounded-full px-2 py-0.5 text-xs font-semibold {{ $a->status === 'active' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-600' }}">{{ $a->status ?? '—' }}</span></td>
                         <td class="px-4 py-3">{{ $a->start_date ? $a->start_date->format('Y-m-d') : '—' }} — {{ $a->end_date ? $a->end_date->format('Y-m-d') : '—' }}</td>
                     </tr>

@@ -1,5 +1,5 @@
 /**
- * Glottical Classroom — in-meeting curriculum presenter (host picker + shared stage).
+ * فصول حصتك — in-meeting curriculum presenter (host picker + shared stage).
  * Syncs via HTTP Cache polling. Optional LiveKit DataChannel hooks remain no-ops if absent.
  * window.MxClassroomCurriculumPresenter.attach(api, config)
  */

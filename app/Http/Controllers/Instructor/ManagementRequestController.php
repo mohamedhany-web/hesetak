@@ -14,9 +14,16 @@ class ManagementRequestController extends Controller
      */
     public function index(Request $request)
     {
-        $query = InstructorRequest::where('instructor_id', Auth::id())
-            ->with('repliedByUser')
-            ->latest();
+        $base = InstructorRequest::query()->where('instructor_id', Auth::id());
+
+        $stats = [
+            'total' => (clone $base)->count(),
+            'pending' => (clone $base)->where('status', 'pending')->count(),
+            'approved' => (clone $base)->where('status', 'approved')->count(),
+            'rejected' => (clone $base)->where('status', 'rejected')->count(),
+        ];
+
+        $query = (clone $base)->with('repliedByUser')->latest();
 
         if ($request->filled('status')) {
             $query->where('status', $request->status);
@@ -24,7 +31,7 @@ class ManagementRequestController extends Controller
 
         $requests = $query->paginate(15);
 
-        return view('instructor.management-requests.index', compact('requests'));
+        return view('instructor.management-requests.index', compact('requests', 'stats'));
     }
 
     /**

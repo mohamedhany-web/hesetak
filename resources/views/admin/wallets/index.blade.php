@@ -11,9 +11,9 @@
     $labelClass = 'mb-1.5 block text-xs font-medium text-muted';
     $kpis = [
         ['label' => 'إجمالي المحافظ', 'value' => $stats['total'] ?? 0, 'icon' => 'fa-wallet', 'tone' => 'accent', 'note' => 'يشمل كل المحافظ المربوطة بالطلاب'],
-        ['label' => 'الرصيد المتاح', 'value' => number_format($stats['total_balance'] ?? 0, 2), 'icon' => 'fa-coins', 'tone' => 'accent', 'note' => 'إجمالي الأرصدة الحالية بكل المحافظ', 'suffix' => ' $'],
-        ['label' => 'الرصيد المعلّق', 'value' => number_format($stats['pending_balance'] ?? 0, 2), 'icon' => 'fa-hourglass-half', 'tone' => 'metal', 'note' => 'المبالغ المعلّقة أو قيد المراجعة', 'suffix' => ' $'],
-        ['label' => 'صافي تدفقات الشهر', 'value' => number_format($netMonth, 2), 'icon' => 'fa-wave-square', 'tone' => 'muted', 'note' => 'الإيداعات ناقص السحوبات خلال ' . \Carbon\Carbon::now()->translatedFormat('F'), 'suffix' => ' $'],
+        ['label' => 'الرصيد المتاح', 'value' => number_format($stats['total_balance'] ?? 0, 2), 'icon' => 'fa-coins', 'tone' => 'accent', 'note' => 'إجمالي الأرصدة الحالية بكل المحافظ', 'suffix' => ' ' . currency_symbol()],
+        ['label' => 'الرصيد المعلّق', 'value' => number_format($stats['pending_balance'] ?? 0, 2), 'icon' => 'fa-hourglass-half', 'tone' => 'metal', 'note' => 'المبالغ المعلّقة أو قيد المراجعة', 'suffix' => ' ' . currency_symbol()],
+        ['label' => 'صافي تدفقات الشهر', 'value' => number_format($netMonth, 2), 'icon' => 'fa-wave-square', 'tone' => 'muted', 'note' => 'الإيداعات ناقص السحوبات خلال ' . \Carbon\Carbon::now()->translatedFormat('F'), 'suffix' => ' ' . currency_symbol()],
     ];
     $toneClass = [
         'accent' => 'bg-accent-soft text-accent',
@@ -99,7 +99,7 @@
                         <option value="">اختر محفظة المصدر</option>
                         @foreach(($transferWallets ?? collect()) as $walletOption)
                             <option value="{{ $walletOption->id }}" {{ (string) old('from_wallet_id') === (string) $walletOption->id ? 'selected' : '' }}>
-                                {{ $walletOption->name }} ({{ number_format($walletOption->balance, 2) }} {{ $walletOption->currency ?? 'USD' }})
+                                {{ $walletOption->name }} ({{ number_format($walletOption->balance, 2) }} {{ $walletOption->currency ?? platform_currency() }})
                             </option>
                         @endforeach
                     </select>
@@ -114,7 +114,7 @@
                         <option value="">اختر محفظة الوجهة</option>
                         @foreach(($transferWallets ?? collect()) as $walletOption)
                             <option value="{{ $walletOption->id }}" {{ (string) old('to_wallet_id') === (string) $walletOption->id ? 'selected' : '' }}>
-                                {{ $walletOption->name }} ({{ number_format($walletOption->balance, 2) }} {{ $walletOption->currency ?? 'USD' }})
+                                {{ $walletOption->name }} ({{ number_format($walletOption->balance, 2) }} {{ $walletOption->currency ?? platform_currency() }})
                             </option>
                         @endforeach
                     </select>

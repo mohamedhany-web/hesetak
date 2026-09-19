@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'تفاصيل حجز مجموعة - Glottical')
+@section('title', 'تفاصيل حجز مجموعة - حصتك')
 @section('page_title', 'تفاصيل الحجز')
 
 @section('content')

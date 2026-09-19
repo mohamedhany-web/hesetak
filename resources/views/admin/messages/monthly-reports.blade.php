@@ -1,6 +1,6 @@
-﻿@extends('layouts.admin')
+@extends('layouts.admin')
 
-@section('title', 'التقارير الشهرية - Glottical')
+@section('title', 'التقارير الشهرية - حصتك')
 @section('header', 'التقارير الشهرية')
 
 @section('content')
@@ -9,7 +9,7 @@
         <div class="flex items-center justify-between mb-2">
             <div>
                 <h1 class="text-2xl font-bold text-gray-900">{{ __('التقارير الشهرية للطلاب') }}</h1>
-                <p class="text-gray-600">{{ __('متابعة التقارير الشهرية المرسلة للطلاب وأولياء الأمور عبر منصة Glottical') }}</p>
+                <p class="text-gray-600">{{ __('متابعة التقارير الشهرية المرسلة للطلاب وأولياء الأمور عبر منصة حصتك') }}</p>
             </div>
             <div class="flex space-x-2 space-x-reverse">
                 <button onclick="showGenerateModal()" 

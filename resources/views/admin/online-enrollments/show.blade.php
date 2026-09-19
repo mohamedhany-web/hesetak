@@ -91,7 +91,7 @@
                     @if($enrollment->final_price !== null)
                         <div>
                             <p class="text-xs font-medium text-muted">مبلغ التفعيل</p>
-                            <p class="mt-1 tabular-nums font-semibold text-ink">{{ number_format((float) $enrollment->final_price, 2) }} USD</p>
+                            <p class="mt-1 tabular-nums font-semibold text-ink">{{ number_format((float) $enrollment->final_price, 2) }} {{ currency_symbol() }}</p>
                         </div>
                     @endif
                 </div>

@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', $liveSession->title.' - Glottical')
+@section('title', $liveSession->title.' - حصتك')
 @section('page_title', 'تفاصيل جلسة البث')
 
 @section('content')

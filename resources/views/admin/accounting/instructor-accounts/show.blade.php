@@ -22,10 +22,10 @@
         'paid' => ['label' => 'مدفوع', 'classes' => 'bg-accent-soft text-accent'],
     ];
     $kpis = [
-        ['label' => 'مطلوب الدفع', 'value' => number_format($totals['pending'], 2), 'suffix' => '$', 'icon' => 'fa-hourglass-half', 'tone' => 'metal'],
-        ['label' => 'تم الدفع (إجمالي)', 'value' => number_format($totals['paid'], 2), 'suffix' => '$', 'icon' => 'fa-check-circle', 'tone' => 'accent'],
-        ['label' => 'من تفعيلات الطلاب (نسبة الكورس)', 'value' => number_format($totals['from_activations'], 2), 'suffix' => '$', 'icon' => 'fa-graduation-cap', 'tone' => 'accent'],
-        ['label' => 'من الاستشارات', 'value' => number_format($totals['from_consultations'], 2), 'suffix' => '$', 'icon' => 'fa-comments', 'tone' => 'muted'],
+        ['label' => 'مطلوب الدفع', 'value' => number_format($totals['pending'], 2), 'suffix' => currency_symbol(), 'icon' => 'fa-hourglass-half', 'tone' => 'metal'],
+        ['label' => 'تم الدفع (إجمالي)', 'value' => number_format($totals['paid'], 2), 'suffix' => currency_symbol(), 'icon' => 'fa-check-circle', 'tone' => 'accent'],
+        ['label' => 'من تفعيلات الطلاب (نسبة الكورس)', 'value' => number_format($totals['from_activations'], 2), 'suffix' => currency_symbol(), 'icon' => 'fa-graduation-cap', 'tone' => 'accent'],
+        ['label' => 'من الاستشارات', 'value' => number_format($totals['from_consultations'], 2), 'suffix' => currency_symbol(), 'icon' => 'fa-comments', 'tone' => 'muted'],
     ];
 @endphp
 

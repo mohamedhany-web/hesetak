@@ -37,7 +37,7 @@ class ReferralController extends Controller
         $activeProgram = ReferralProgram::currentForNewReferrals();
         $shareMessage = $activeProgram
             ? $this->referralService->buildShareMessage($activeProgram, $referralCode, $referralLink)
-            : ('سجّل في Glottical من رابطي: '.$referralLink);
+            : ('سجّل في حصتك من رابطي: '.$referralLink);
         $whatsappUrl = 'https://wa.me/?text='.rawurlencode($shareMessage);
 
         return view('student.referrals.index', compact(

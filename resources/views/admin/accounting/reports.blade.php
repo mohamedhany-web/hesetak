@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'التقارير المحاسبية - Glottical')
+@section('title', 'التقارير المحاسبية - حصتك')
 @section('page_title', 'التقارير المحاسبية')
 
 @section('content')
@@ -13,13 +13,13 @@
         'muted' => 'bg-canvas-muted text-muted',
     ];
     $mainKpis = [
-        ['label' => 'إجمالي الإيرادات', 'value' => number_format($stats['total_revenue'], 2) . ' $', 'icon' => 'fa-arrow-down', 'tone' => 'accent', 'note' => 'مدفوعات ومقبوضات الفترة', 'raw' => true],
-        ['label' => 'إجمالي المصروفات', 'value' => number_format($stats['total_expenses'], 2) . ' $', 'icon' => 'fa-arrow-up', 'tone' => 'muted', 'note' => 'مصروفات وتكاليف الفترة', 'raw' => true],
-        ['label' => 'الربح الصافي', 'value' => number_format($stats['net_profit'], 2) . ' $', 'icon' => 'fa-chart-line', 'tone' => $stats['net_profit'] >= 0 ? 'accent' : 'muted', 'note' => 'الإيرادات ناقص المصروفات', 'raw' => true],
+        ['label' => 'إجمالي الإيرادات', 'value' => number_format($stats['total_revenue'], 2) . ' ' . currency_symbol(), 'icon' => 'fa-arrow-down', 'tone' => 'accent', 'note' => 'مدفوعات ومقبوضات الفترة', 'raw' => true],
+        ['label' => 'إجمالي المصروفات', 'value' => number_format($stats['total_expenses'], 2) . ' ' . currency_symbol(), 'icon' => 'fa-arrow-up', 'tone' => 'muted', 'note' => 'مصروفات وتكاليف الفترة', 'raw' => true],
+        ['label' => 'الربح الصافي', 'value' => number_format($stats['net_profit'], 2) . ' ' . currency_symbol(), 'icon' => 'fa-chart-line', 'tone' => $stats['net_profit'] >= 0 ? 'accent' : 'muted', 'note' => 'الإيرادات ناقص المصروفات', 'raw' => true],
         ['label' => 'نسبة الربحية', 'value' => ($stats['total_revenue'] > 0 ? number_format(($stats['net_profit'] / $stats['total_revenue']) * 100, 2) : '0') . '%', 'icon' => 'fa-percentage', 'tone' => 'metal', 'note' => 'من إجمالي الإيرادات', 'raw' => true],
     ];
     $secondaryKpis = [
-        ['label' => 'محافظ المنصة', 'value' => $stats['wallet_stats']['total_wallets'], 'icon' => 'fa-wallet', 'tone' => 'accent', 'note' => $stats['wallet_stats']['active_wallets'] . ' نشطة · ' . number_format($stats['wallet_stats']['total_balance'], 2) . ' $'],
+        ['label' => 'محافظ المنصة', 'value' => $stats['wallet_stats']['total_wallets'], 'icon' => 'fa-wallet', 'tone' => 'accent', 'note' => $stats['wallet_stats']['active_wallets'] . ' نشطة · ' . number_format($stats['wallet_stats']['total_balance'], 2) . ' ' . currency_symbol()],
         ['label' => 'الطلبات (الفترة)', 'value' => $stats['order_stats']['total_orders'], 'icon' => 'fa-shopping-cart', 'tone' => 'metal', 'note' => $stats['order_stats']['approved_orders'] . ' معتمدة · ' . $stats['order_stats']['pending_orders'] . ' معلقة'],
     ];
     $sectionLinks = [

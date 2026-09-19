@@ -1,7 +1,7 @@
 @php
   $locale = app()->getLocale();
   $isRtl = $locale === 'ar';
-  $brand = config('app.name', 'Glottical');
+  $brand = config('app.name', 'حصتك');
   $footer = \App\Services\PublicFooterSettings::payload();
   $waUrl = $footer['whatsapp_url'] ?? '#';
   $fawaterakActive = !empty($fawaterakUseGateway);
@@ -9,10 +9,7 @@
   $fawaterakIntegration = $fawaterakIntegration ?? 'iframe';
   $paypalActive = !empty($paypalUseGateway);
   $paypalMis = !empty($paypalMisconfigured);
-  $amountLabel = '$'.number_format((float) $order->amount, 2).' USD';
-  if (($order->custom_package_data['currency'] ?? 'USD') === 'EGP') {
-      $amountLabel = number_format((float) $order->amount, 2).' EGP';
-  }
+  $amountLabel = format_money((float) $order->amount);
 @endphp
 <!DOCTYPE html>
 <html lang="{{ $locale }}" dir="{{ $isRtl ? 'rtl' : 'ltr' }}">

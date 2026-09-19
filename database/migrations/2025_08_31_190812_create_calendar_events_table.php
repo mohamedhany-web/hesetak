@@ -17,8 +17,9 @@ return new class extends Migration
 
         $hasAcademicYears = Schema::hasTable('academic_years');
         $hasAcademicSubjects = Schema::hasTable('academic_subjects');
+        $hasAdvancedCourses = Schema::hasTable('advanced_courses');
 
-        Schema::create('calendar_events', function (Blueprint $table) use ($hasAcademicYears, $hasAcademicSubjects) {
+        Schema::create('calendar_events', function (Blueprint $table) use ($hasAcademicYears, $hasAcademicSubjects, $hasAdvancedCourses) {
             $table->id();
             $table->string('title');
             $table->text('description')->nullable();
@@ -46,7 +47,12 @@ return new class extends Migration
             } else {
                 $table->unsignedBigInteger('academic_subject_id')->nullable()->index();
             }
-            $table->foreignId('advanced_course_id')->nullable()->constrained('advanced_courses')->onDelete('cascade');
+
+            if ($hasAdvancedCourses) {
+                $table->foreignId('advanced_course_id')->nullable()->constrained('advanced_courses')->onDelete('cascade');
+            } else {
+                $table->unsignedBigInteger('advanced_course_id')->nullable()->index();
+            }
             
             // التذكيرات
             $table->boolean('has_reminder')->default(false);

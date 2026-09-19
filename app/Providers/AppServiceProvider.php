@@ -170,13 +170,20 @@ class AppServiceProvider extends ServiceProvider
         // لوجو المنصة: نسخ إلى التخزين إن لم يكن موجوداً (نفس أسلوب صورة تسجيل الدخول)
         $logoPath = self::SITE_LOGO_STORAGE_PATH;
         if (! $disk->exists($logoPath)) {
-            $logoSource = public_path('logo-removebg-preview.png');
-            if (File::isFile($logoSource)) {
+            $logoSources = [
+                public_path('img/brand/hesetak-logo.png'),
+                public_path('img/brand/hesetak-mark.png'),
+            ];
+            foreach ($logoSources as $logoSource) {
+                if (! File::isFile($logoSource)) {
+                    continue;
+                }
                 $dir = dirname($logoPath);
                 if (! $disk->exists($dir)) {
                     $disk->makeDirectory($dir);
                 }
                 $disk->put($logoPath, File::get($logoSource));
+                break;
             }
         }
         // حساب رابط اللوجو عند عرض الصفحة (مثل authBackgroundUrl) لضمان ظهور الصورة مع الطلب الحالي
@@ -273,13 +280,6 @@ class AppServiceProvider extends ServiceProvider
             if (Auth::check()) {
                 Auth::user()->loadMissing(['roles.permissions']);
             }
-        });
-
-        View::composer('components.unified-navbar', function ($view) {
-            $view->with([
-                'navbarLogoUrl' => AdminPanelBranding::logoPublicUrl(),
-                'navbarBrandTagline' => PublicFooterSettings::payload()['brand_tagline'],
-            ]);
         });
 
         View::composer('errors.*', function ($view) {

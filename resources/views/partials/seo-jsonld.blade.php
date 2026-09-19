@@ -1,6 +1,6 @@
 @php
 /*
- * Glottical — JSON-LD Structured Data
+ * حصتك — JSON-LD Structured Data
  * Usage: @include('partials.seo-jsonld', ['jsonldType' => 'website|course|instructor|about'])
  */
 $_jldType    = $jsonldType ?? 'website';
@@ -86,7 +86,7 @@ if ($_jldType === 'course' && isset($course)) {
     if (isset($course->price) && $course->effectivePurchasePrice() > 0) {
         $_courseData['offers'] = [
             '@type' => 'Offer', 'price' => (string) $course->effectivePurchasePrice(),
-            'priceCurrency' => 'USD', 'availability' => 'https://schema.org/InStock',
+            'priceCurrency' => platform_currency(), 'availability' => 'https://schema.org/InStock',
         ];
     }
     if (!empty($course->instructor) && !empty($course->instructor->name)) {
@@ -134,7 +134,7 @@ if ($_jldType === 'instructor' && isset($profile)) {
         '@type'      => 'ProfilePage',
         '@id'        => $_instrUrl . '#profile',
         'url'        => $_instrUrl,
-        'name'       => $_instrName . ' — مدرب على ' . $_siteName,
+        'name'       => $_instrName . '، مدرب على ' . $_siteName,
         'mainEntity' => $_personData,
     ];
 
@@ -174,7 +174,7 @@ if ($_jldType === 'about') {
         '@context'    => 'https://schema.org',
         '@type'       => 'AboutPage',
         'url'         => url('/about'),
-        'name'        => 'من نحن — ' . $_siteName,
+        'name'        => 'من نحن، ' . $_siteName,
         'description' => __('public.about_intro', ['brand' => $_siteName]),
         'mainEntity'  => [
             '@type'       => 'EducationalOrganization',

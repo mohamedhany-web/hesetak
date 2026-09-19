@@ -1,34 +1,42 @@
 /*
- * Sana — Public marketing design tokens
- * Design-only. Source of truth for designs/public-pages/*.html
- * Brand: config/brand.php + landing/sana/theme.blade.php
+ * حصتك — Public marketing design tokens
+ * Align with الدليل v3.0 + logo brand (كحلي · ذهبي · أبيض/رمادي)
+ * Legacy --brand-purple* aliases map to navy tints so older design HTML keeps working.
  */
 :root {
-  --brand-purple: #6A2CFF;
-  --brand-purple-dark: #5520CC;
-  --brand-purple-deep: #4C1D95;
-  --brand-purple-light: #F0EBFF;
-  --brand-blue: #1D4EDB;
-  --brand-yellow: #F4B000;
-  --brand-yellow-dark: #D99E00;
+  --brand-navy: #152a4a;
+  --brand-blue: #1e4e8c;
+  --brand-blue-deep: #184888;
+  --brand-blue-tint: #e8eef6;
+  --brand-gold: #c9952a;
+  --brand-gold-deep: #a88050;
+  --brand-gold-tint: #f7f1e8;
 
-  --p: #6D28D9;
-  --p-dark: #5B21B6;
-  --p-deep: #4C1D95;
-  --p-light: #8B5CF6;
-  --gold: #FBBF24;
+  /* Legacy aliases → navy / gold */
+  --brand-purple: #1e4e8c;
+  --brand-purple-dark: #184888;
+  --brand-purple-deep: #152a4a;
+  --brand-purple-light: #e8eef6;
+  --brand-yellow: #c9952a;
+  --brand-yellow-dark: #a88050;
 
-  --bg: #F8F7FC;
+  --p: #1e4e8c;
+  --p-dark: #184888;
+  --p-deep: #152a4a;
+  --p-light: #4a7ab0;
+  --gold: #c9952a;
+
+  --bg: #f4f6f9;
   --surface: #ffffff;
-  --text: #1e1b4b;
-  --muted: #64748b;
-  --line: #e2e8f0;
+  --text: #152a4a;
+  --muted: #5a6472;
+  --line: #e4e4e4;
 
   --radius: 24px;
   --radius-sm: 14px;
-  --font: "Tajawal", "Cairo", system-ui, sans-serif;
-  --font-display: "Cairo", "Tajawal", system-ui, sans-serif;
-  --shadow: 0 24px 60px -24px rgba(91, 33, 182, 0.35);
+  --font: "Gilroy", "Plus Jakarta Sans", "Rubik", "Tajawal", system-ui, sans-serif;
+  --font-display: "Gilroy", "Plus Jakarta Sans", "Cairo", system-ui, sans-serif;
+  --shadow: 0 24px 60px -24px rgba(21, 42, 74, 0.28);
   --max: 1200px;
 }
 
@@ -71,7 +79,7 @@ img { max-width: 100%; display: block; }
   inset-inline-start: 12px;
   bottom: 12px;
   z-index: 9999;
-  background: #0f172a;
+  background: #152a4a;
   color: #fff;
   font-size: 11px;
   font-weight: 700;

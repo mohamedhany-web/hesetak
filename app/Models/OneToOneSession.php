@@ -27,6 +27,7 @@ class OneToOneSession extends Model
         'duration_minutes',
         'is_private_lecture',
         'system_channel',
+        'is_complimentary',
         'status',
         'classroom_meeting_id',
         'booked_by_user_id',
@@ -43,8 +44,14 @@ class OneToOneSession extends Model
             'scheduled_at' => 'datetime',
             'duration_minutes' => 'integer',
             'is_private_lecture' => 'boolean',
+            'is_complimentary' => 'boolean',
             'student_unlocked_at' => 'datetime',
         ];
+    }
+
+    public function isComplimentary(): bool
+    {
+        return (bool) ($this->is_complimentary ?? false);
     }
 
     public static function allowedDurations(): array
@@ -172,6 +179,9 @@ class OneToOneSession extends Model
             $end = $session->scheduled_at->copy()->addMinutes($session->duration_minutes ?? 60);
             $isStudent = $perspective === 'student';
             $courseTitle = $session->course->title ?? 'كورس فردي';
+            if ($session->isComplimentary()) {
+                $courseTitle = 'حصة مجانية';
+            }
 
             $title = $isStudent
                 ? ('حصة 1:1: '.$courseTitle.' — '.($session->instructor->name ?? ''))
@@ -185,8 +195,8 @@ class OneToOneSession extends Model
                 'start_date' => $session->scheduled_at,
                 'end_date' => $end,
                 'is_all_day' => false,
-                'type' => 'one_to_one',
-                'color' => '#7c3aed',
+                'type' => $session->isComplimentary() ? 'free_session' : 'one_to_one',
+                'color' => $session->isComplimentary() ? '#C9952A' : '#7c3aed',
                 'priority' => 'high',
                 'url' => $isStudent
                     ? route('student.one-to-one-sessions.show', $session)

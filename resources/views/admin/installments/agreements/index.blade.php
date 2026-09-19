@@ -1,4 +1,4 @@
-﻿@extends('layouts.admin')
+@extends('layouts.admin')
 
 @section('title', 'اتفاقيات التقسيط')
 @section('page_title', 'اتفاقيات التقسيط')
@@ -20,8 +20,8 @@
     ];
     $kpis = [
         ['label' => 'اتفاقيات نشطة', 'value' => number_format($agreements->where('status', \App\Models\InstallmentAgreement::STATUS_ACTIVE)->count()), 'icon' => 'fa-bolt', 'tone' => 'accent', 'note' => 'الانتقالات الحالية التي تتطلب متابعة دورية'],
-        ['label' => 'إجمالي المبالغ الممولة', 'value' => number_format($agreements->sum('total_amount'), 2) . ' $', 'icon' => 'fa-coins', 'tone' => 'metal', 'note' => 'القيمة الإجمالية التي تغطيها جميع الاتفاقيات'],
-        ['label' => 'دفعات مقدمة', 'value' => number_format($agreements->sum('deposit_amount'), 2) . ' $', 'icon' => 'fa-hand-holding-usd', 'tone' => 'accent', 'note' => 'إجمالي المبالغ المحصلة كدفعات مقدمة'],
+        ['label' => 'إجمالي المبالغ الممولة', 'value' => number_format($agreements->sum('total_amount'), 2) . ' ' . currency_symbol(), 'icon' => 'fa-coins', 'tone' => 'metal', 'note' => 'القيمة الإجمالية التي تغطيها جميع الاتفاقيات'],
+        ['label' => 'دفعات مقدمة', 'value' => number_format($agreements->sum('deposit_amount'), 2) . ' ' . currency_symbol(), 'icon' => 'fa-hand-holding-usd', 'tone' => 'accent', 'note' => 'إجمالي المبالغ المحصلة كدفعات مقدمة'],
         ['label' => 'اتفاقيات متأخرة', 'value' => number_format($agreements->where('status', \App\Models\InstallmentAgreement::STATUS_OVERDUE)->count()), 'icon' => 'fa-exclamation-circle', 'tone' => 'muted', 'note' => 'الاتفاقيات التي تحتاج تدخلاً بسبب تأخر السداد'],
     ];
     $toneClass = [

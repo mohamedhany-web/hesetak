@@ -70,7 +70,7 @@ class StudentWalletCreditController extends Controller
                 [
                     'balance' => 0,
                     'pending_balance' => 0,
-                    'currency' => 'USD',
+                    'currency' => platform_currency(),
                     'is_active' => true,
                 ]
             );

@@ -1,6 +1,6 @@
-﻿@extends('layouts.admin')
+@extends('layouts.admin')
 
-@section('title', 'إدارة الرسائل - Glottical')
+@section('title', 'إدارة الرسائل - حصتك')
 @section('header', 'إدارة الرسائل')
 
 @section('content')
@@ -42,7 +42,7 @@
     <section class="rounded-3xl bg-white/95 backdrop-blur border border-slate-200 shadow-lg overflow-hidden">
         <div class="px-5 py-6 sm:px-8 lg:px-12 border-b border-slate-200 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-                <h2 class="text-2xl font-bold text-slate-900">لوحة إدارة الرسائل في Glottical</h2>
+                <h2 class="text-2xl font-bold text-slate-900">لوحة إدارة الرسائل في حصتك</h2>
                 <p class="text-sm text-slate-500 mt-2">مركز موحد لإدارة وإرسال الرسائل والتنبيهات للطلاب والموظفين</p>
             </div>
             <div class="flex flex-wrap gap-2">

@@ -1,7 +1,7 @@
 <?php
 
 return [
-    'app_name' => 'Glottical',
+    'app_name' => 'حصتك',
     'save' => 'Save',
     'cancel' => 'Cancel',
     'edit' => 'Edit',

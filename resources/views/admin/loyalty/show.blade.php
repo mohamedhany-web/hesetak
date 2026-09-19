@@ -1,4 +1,4 @@
-﻿@extends('layouts.admin')
+@extends('layouts.admin')
 
 @section('title', 'تفاصيل برنامج الولاء - ' . config('app.name'))
 @section('page_title', 'تفاصيل برنامج الولاء')

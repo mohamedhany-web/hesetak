@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\AcademicYear;
 use App\Models\FreeTrialBooking;
+use App\Models\OneToOneSession;
 use App\Models\StudentServiceEntitlement;
 use App\Models\TutoringClassAttendance;
 use App\Models\TutoringClassSession;
@@ -197,6 +198,26 @@ class StudentSchoolHomeService
             ? 0
             : (int) round($classes->avg('progress_percent'));
 
+        // حصتك: املأ نفس هيكل اللوحة من الحصص الفردية إن لم تكن هناك فصول جماعية
+        $privateBundle = $this->buildPrivateLessonBundle($user, $isRtl);
+        if ($classes->isEmpty() && $privateBundle['classes']->isNotEmpty()) {
+            $classes = $privateBundle['classes'];
+            $primaryClass = $classes->first();
+            $attendedTotal = $classes->sum('attended');
+            $completedTotal = $classes->sum('completed_sessions');
+            $sessionsTotal = max(1, (int) $classes->sum('total_sessions'));
+            $progressPercent = (int) round($classes->avg('progress_percent'));
+        }
+        if (! $todayMission && $privateBundle['todayMission']) {
+            $todayMission = $privateBundle['todayMission'];
+        }
+        if ($privateBundle['upcoming']->isNotEmpty()) {
+            $upcomingSessions = $upcomingSessions
+                ->concat($privateBundle['upcoming'])
+                ->sortBy(fn ($s) => $s->starts_at?->timestamp ?? PHP_INT_MAX)
+                ->values();
+        }
+
         $entitlements = collect();
         $creditsLeft = 0;
         if (Schema::hasTable('student_service_entitlements')) {
@@ -265,6 +286,25 @@ class StudentSchoolHomeService
             ->sortBy('starts_at')
             ->first();
 
+        if (! $todayMission && $nextAppointment) {
+            $todayMission = (object) [
+                'session_id' => $nextAppointment->ref_id,
+                'title' => $nextAppointment->title,
+                'subtitle' => $nextAppointment->subtitle,
+                'starts_at' => $nextAppointment->starts_at,
+                'duration_minutes' => max(1, (int) ($nextAppointment->starts_at && $nextAppointment->ends_at
+                    ? $nextAppointment->starts_at->diffInMinutes($nextAppointment->ends_at)
+                    : 50)),
+                'is_today' => $nextAppointment->starts_at?->isToday() ?? false,
+                'is_joinable' => ! empty($nextAppointment->join_url),
+                'status' => 'scheduled',
+                'join_url' => $nextAppointment->join_url ?: '#',
+                'class_url' => Route::has('student.private-lectures.index')
+                    ? route('student.private-lectures.index')
+                    : route('dashboard'),
+            ];
+        }
+
         $placement = null;
         if (Schema::hasTable('free_trial_bookings')) {
             $placement = FreeTrialBooking::query()
@@ -287,6 +327,14 @@ class StudentSchoolHomeService
             }
         }
 
+        $progressLabel = $classes->isNotEmpty() && ($classes->first()->kind ?? null) === 'private'
+            ? ($isRtl
+                ? ($progressPercent.'% من حصصك الخاصة')
+                : ($progressPercent.'% of your private lessons'))
+            : ($isRtl
+                ? ($progressPercent.'% من مسار فصلك')
+                : ($progressPercent.'% of your class path'));
+
         return [
             'greeting' => $greeting,
             'primaryClass' => $primaryClass,
@@ -298,9 +346,7 @@ class StudentSchoolHomeService
                 'attended' => (int) $attendedTotal,
                 'completed_sessions' => (int) $completedTotal,
                 'total_sessions' => (int) $sessionsTotal,
-                'label' => $isRtl
-                    ? ($progressPercent.'% من مسار فصلك')
-                    : ($progressPercent.'% of your class path'),
+                'label' => $progressLabel,
             ],
             'credits' => [
                 'total_left' => $creditsLeft,
@@ -329,8 +375,146 @@ class StudentSchoolHomeService
             'nextAppointment' => $nextAppointment,
             'recommendedYear' => $recommendedYear,
             'placement' => $placement,
-            'hasSchoolLife' => $classes->isNotEmpty() || $creditsLeft > 0,
+            'hasSchoolLife' => $classes->isNotEmpty() || $creditsLeft > 0 || $todayMission !== null,
             'game' => StudentSchoolGameService::profileSnapshot($user),
+        ];
+    }
+
+    /**
+     * يحوّل الحصص الفردية لنفس شكل بطاقات الفصول / المهمة / القادم في لوحة الجدول الزمني.
+     *
+     * @return array{classes: Collection, todayMission: ?object, upcoming: Collection}
+     */
+    private function buildPrivateLessonBundle(User $user, bool $isRtl): array
+    {
+        $empty = [
+            'classes' => collect(),
+            'todayMission' => null,
+            'upcoming' => collect(),
+        ];
+
+        if (! Schema::hasTable('one_to_one_sessions')) {
+            return $empty;
+        }
+
+        $sessions = OneToOneSession::query()
+            ->with(['course:id,title', 'instructor:id,name', 'classroomMeeting'])
+            ->where('student_id', $user->id)
+            ->whereIn('status', [
+                OneToOneSession::STATUS_PENDING,
+                OneToOneSession::STATUS_SCHEDULED,
+                OneToOneSession::STATUS_COMPLETED,
+            ])
+            ->orderByRaw("CASE status WHEN 'scheduled' THEN 0 WHEN 'pending_schedule' THEN 1 ELSE 2 END")
+            ->orderBy('scheduled_at')
+            ->get();
+
+        if ($sessions->isEmpty()) {
+            return $empty;
+        }
+
+        $lessonsUrl = Route::has('student.private-lectures.index')
+            ? route('student.private-lectures.index')
+            : route('dashboard');
+
+        $classes = $sessions
+            ->groupBy(fn (OneToOneSession $s) => ($s->instructor_id ?: 0).':'.($s->advanced_course_id ?: 0))
+            ->map(function (Collection $group) use ($isRtl, $lessonsUrl, $user) {
+                /** @var OneToOneSession $sample */
+                $sample = $group->first();
+                $total = max(1, $group->count());
+                $completed = $group->where('status', OneToOneSession::STATUS_COMPLETED)->count();
+                $percent = (int) round(($completed / $total) * 100);
+                $next = $group
+                    ->filter(fn (OneToOneSession $s) => $s->status === OneToOneSession::STATUS_SCHEDULED
+                        && $s->scheduled_at
+                        && $s->scheduled_at->gte(now()->subHour()))
+                    ->sortBy('scheduled_at')
+                    ->first();
+
+                return (object) [
+                    'enrollment_id' => null,
+                    'cohort_id' => null,
+                    'kind' => 'private',
+                    'title' => $sample->course?->title
+                        ?: ($isRtl ? 'حصص خاصة' : 'Private lessons'),
+                    'group_title' => $sample->instructor?->name,
+                    'year_name' => null,
+                    'subject_name' => $sample->course?->title
+                        ?: ($sample->instructor?->name ?: ($isRtl ? 'حصة فردية' : '1:1 lesson')),
+                    'instructor_name' => $sample->instructor?->name,
+                    'schedule' => $next?->scheduled_at
+                        ? AppTimezone::formatFor($next->scheduled_at, AppTimezone::forUser($user), 'D g:i A')
+                        : ($isRtl ? 'بانتظار الجدولة' : 'Awaiting schedule'),
+                    'progress_percent' => min(100, $percent),
+                    'attended' => $completed,
+                    'completed_sessions' => $completed,
+                    'total_sessions' => $total,
+                    'next_session' => $next,
+                    'url' => $next && Route::has('student.one-to-one-sessions.show')
+                        ? route('student.one-to-one-sessions.show', $next)
+                        : $lessonsUrl,
+                ];
+            })
+            ->values();
+
+        $nextPrivate = $sessions
+            ->filter(fn (OneToOneSession $s) => $s->status === OneToOneSession::STATUS_SCHEDULED
+                && $s->scheduled_at
+                && $s->scheduled_at->gte(now()->subHour()))
+            ->sortBy('scheduled_at')
+            ->first();
+
+        $todayMission = null;
+        if ($nextPrivate) {
+            $dur = max(30, (int) ($nextPrivate->duration_minutes ?: 50));
+            $joinUrl = Route::has('student.schedule.join')
+                ? route('student.schedule.join', ['type' => 'private', 'id' => $nextPrivate->id])
+                : ($nextPrivate->joinUrl() ?: '#');
+            $todayMission = (object) [
+                'session_id' => $nextPrivate->id,
+                'title' => $nextPrivate->course?->title
+                    ?: ($isRtl ? 'حصة خاصة' : 'Private lesson'),
+                'subtitle' => $nextPrivate->instructor?->name
+                    ?: ($isRtl ? 'معلم خاص' : 'Private tutor'),
+                'starts_at' => $nextPrivate->scheduled_at,
+                'duration_minutes' => $dur,
+                'is_today' => $nextPrivate->scheduled_at?->isToday() ?? false,
+                'is_joinable' => (bool) $nextPrivate->joinUrl(),
+                'status' => $nextPrivate->status,
+                'join_url' => $joinUrl,
+                'class_url' => Route::has('student.one-to-one-sessions.show')
+                    ? route('student.one-to-one-sessions.show', $nextPrivate)
+                    : $lessonsUrl,
+            ];
+        }
+
+        $upcoming = $sessions
+            ->filter(fn (OneToOneSession $s) => $s->status === OneToOneSession::STATUS_SCHEDULED
+                && $s->scheduled_at
+                && $s->scheduled_at->gte(now()->subHour()))
+            ->sortBy('scheduled_at')
+            ->take(5)
+            ->values()
+            ->map(function (OneToOneSession $s) use ($isRtl) {
+                return (object) [
+                    'id' => $s->id,
+                    'starts_at' => $s->scheduled_at,
+                    'title' => $s->course?->title ?: ($isRtl ? 'حصة خاصة' : 'Private lesson'),
+                    'subtitle' => $s->instructor?->name ?: '',
+                    'join_url' => Route::has('student.schedule.join')
+                        ? route('student.schedule.join', ['type' => 'private', 'id' => $s->id])
+                        : ($s->joinUrl() ?: '#'),
+                    'kind' => 'private',
+                    'cohort' => null,
+                    'tutoringGroup' => null,
+                ];
+            });
+
+        return [
+            'classes' => $classes,
+            'todayMission' => $todayMission,
+            'upcoming' => $upcoming,
         ];
     }
 }

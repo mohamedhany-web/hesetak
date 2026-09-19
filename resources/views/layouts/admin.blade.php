@@ -100,25 +100,25 @@
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.3/dist/cdn.min.js"></script>
     
     <script>
-        // Glottical brand tokens for admin (blue #0B3D91 · gold #F5B800)
+        // حصتك brand tokens for admin (navy #1E4E8C · gold #C9952A)
         (function () {
             var base = (typeof tailwind !== 'undefined' && tailwind.config) ? tailwind.config : {};
             var extend = (base.theme && base.theme.extend) ? base.theme.extend : {};
             var colors = Object.assign({}, extend.colors || {}, {
                 canvas: '#F4F7FC',
-                'canvas-muted': '#E8EEF8',
-                accent: '#0B3D91',
-                'accent-soft': '#E8EEF8',
-                gold: '#F5B800',
-                'gold-soft': '#FFF6D6',
-                metal: '#F5B800',
+                'canvas-muted': '#E8EEF6',
+                accent: '#1E4E8C',
+                'accent-soft': '#E8EEF6',
+                gold: '#C9952A',
+                'gold-soft': '#F7F1E8',
+                metal: '#C9952A',
                 navy: {
-                    50: '#f0f4ff', 100: '#dfe6ff', 200: '#c7d6fe',
-                    300: '#a4b8fc', 400: '#818cf8', 500: '#6366f1',
-                    600: '#4f46e5', 700: '#0B3D91', 800: '#0F172A',
-                    900: '#0B1120', 950: '#060B16',
+                    50: '#e8eef6', 100: '#d5e0ef', 200: '#b0c4df',
+                    300: '#7a9cc6', 400: '#4a7ab0', 500: '#1e4e8c',
+                    600: '#184888', 700: '#152a4a', 800: '#11223c',
+                    900: '#0d1a2e', 950: '#091220',
                 },
-                brand: { DEFAULT: '#0B3D91', light: '#1A56B0', dark: '#072A66' }
+                brand: { DEFAULT: '#1E4E8C', light: '#2A5FA0', dark: '#152A4A' }
             });
             tailwind.config = Object.assign({}, base, {
                 darkMode: 'class',
@@ -161,13 +161,13 @@
         }
         .stat-card::after {
             content: ''; position: absolute; inset: 0;
-            background: linear-gradient(135deg, transparent 60%, rgba(11, 61, 145, 0.03) 100%);
+            background: linear-gradient(135deg, transparent 60%, rgba(30, 78, 140, 0.03) 100%);
             pointer-events: none; border-radius: 16px;
         }
         .stat-card:hover {
             transform: translateY(-3px);
             box-shadow: 0 20px 40px -12px rgba(15, 23, 42, 0.08), 0 4px 6px -2px rgba(15, 23, 42, 0.03);
-            border-color: rgba(11, 61, 145, 0.14);
+            border-color: rgba(30, 78, 140, 0.14);
         }
         .stat-card:active { transform: translateY(-1px); }
 
@@ -188,7 +188,7 @@
         }
         .section-card:hover {
             box-shadow: 0 12px 28px -6px rgba(15, 23, 42, 0.06);
-            border-color: rgba(11, 61, 145, 0.1);
+            border-color: rgba(30, 78, 140, 0.1);
         }
         .section-card-header {
             padding: 1.25rem 1.5rem;
@@ -318,8 +318,8 @@
         .animate-fade-in-5 { animation-delay: 0.30s; }
 
         /* ========== BUTTONS ========== */
-        .btn-primary { background: #0B3D91; color: white; padding: 0.5rem 1rem; border-radius: 0.5rem; font-weight: 600; transition: all 0.2s; }
-        .btn-primary:hover { background: #072A66; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(11, 61, 145, 0.28); }
+        .btn-primary { background: #1E4E8C; color: white; padding: 0.5rem 1rem; border-radius: 0.5rem; font-weight: 600; transition: all 0.2s; }
+        .btn-primary:hover { background: #152A4A; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(30, 78, 140, 0.28); }
         .btn-primary:active { transform: translateY(0); }
         .btn-secondary { background: #64748b; color: white; padding: 0.5rem 1rem; border-radius: 0.5rem; font-weight: 600; transition: all 0.2s; }
         .btn-secondary:hover { background: #475569; }
@@ -327,26 +327,26 @@
         .btn-success:hover { background: #047857; }
         .btn-danger { background: #dc2626; color: white; padding: 0.5rem 1rem; border-radius: 0.5rem; font-weight: 600; transition: all 0.2s; }
         .btn-danger:hover { background: #b91c1c; }
-        .btn-warning { background: #F5B800; color: #0B1220; padding: 0.5rem 1rem; border-radius: 0.5rem; font-weight: 600; transition: all 0.2s; }
-        .btn-warning:hover { background: #e0a800; }
+        .btn-warning { background: #C9952A; color: #152A4A; padding: 0.5rem 1rem; border-radius: 0.5rem; font-weight: 600; transition: all 0.2s; }
+        .btn-warning:hover { background: #b8861f; }
 
         /* ========== COMPAT for other admin pages ========== */
         .nav-link { display: flex; align-items: center; gap: 0.75rem; padding: 0.5rem 1rem; border-radius: 0.5rem; color: #475569; transition: all 0.2s; }
         .nav-link:hover { background: #f1f5f9; color: #1e293b; }
-        .nav-link.active { background: #E8EEF8; color: #0B3D91; }
+        .nav-link.active { background: #E8EEF6; color: #1E4E8C; }
         .dashboard-card { background: white; border: 1px solid rgba(226, 232, 240, 0.8); border-radius: 16px; transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); }
         .dashboard-card:hover { box-shadow: 0 16px 32px -8px rgba(0, 0, 0, 0.06); }
         .card-hover-effect { transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); }
         .card-hover-effect:hover { transform: translateY(-2px); }
-        .card-icon { background: linear-gradient(135deg, #0B3D91, #1A56B0); box-shadow: 0 4px 14px rgba(11, 61, 145, 0.28); }
+        .card-icon { background: linear-gradient(135deg, #1E4E8C, #2A5FA0); box-shadow: 0 4px 14px rgba(30, 78, 140, 0.28); }
         .card-icon:hover { transform: scale(1.08); }
         .section-header { padding: 1rem 1.5rem; border-bottom: 1px solid rgba(226, 232, 240, 0.6); background: rgba(248, 250, 252, 0.4); }
         .list-item-card { background: white; border: 1px solid rgba(226, 232, 240, 0.6); border-radius: 12px; transition: all 0.2s; }
-        .list-item-card:hover { background: #f8fafc; border-color: rgba(11, 61, 145, 0.14); }
+        .list-item-card:hover { background: #f8fafc; border-color: rgba(30, 78, 140, 0.14); }
 
         /* ========== FOCUS STATES ========== */
         button:focus-visible, a:focus-visible, input:focus-visible {
-            outline: 2px solid rgba(11, 61, 145, 0.45);
+            outline: 2px solid rgba(30, 78, 140, 0.45);
             outline-offset: 2px;
             border-radius: 0.375rem;
         }
@@ -355,6 +355,7 @@
     @stack('styles')
     {{-- بعد الـ styles المضمّنة حتى لا تُلغى قواعد الشِل --}}
     <link rel="stylesheet" href="{{ versioned_asset('css/admin-atheer.css') }}">
+    <script>window.platformCurrencySymbol = @json(currency_symbol()); window.platformCurrency = @json(platform_currency());</script>
 </head>
 <body class="admin-body font-sans antialiased"
       x-data="{
@@ -405,8 +406,30 @@
     <div id="admin-drawer" class="fixed inset-0 z-50 lg:hidden" x-show="sidebarOpen" x-cloak>
         <button type="button" class="absolute inset-0 bg-ink/50" @click="sidebarOpen = false" aria-label="إغلاق"></button>
         <aside class="drawer-panel absolute inset-y-0 right-0 flex h-full w-[min(88vw,300px)] flex-col overflow-hidden bg-ink text-white shadow-lift admin-sidebar">
-            <div class="flex h-16 shrink-0 items-center justify-between border-b border-white/10 px-4">
-                <p class="font-bold">{{ config('app.name') }} Control</p>
+            <div class="flex h-16 shrink-0 items-center justify-between gap-3 border-b border-white/10 px-4">
+                @php
+                    $drawerLogoUrl = $adminPanelLogoUrl
+                        ?: \App\Services\AdminPanelBranding::defaultPublicMarkUrl();
+                    $drawerLogoVer = @filemtime(public_path(\App\Services\AdminPanelBranding::PUBLIC_MARK_PATH)) ?: time();
+                    if (is_string($drawerLogoUrl) && ! str_contains($drawerLogoUrl, '?') && str_contains($drawerLogoUrl, 'hesetak-mark')) {
+                        $drawerLogoUrl .= '?v='.$drawerLogoVer;
+                    }
+                @endphp
+                <div class="flex min-w-0 items-center gap-2.5">
+                    <div class="sidebar-brand-mark">
+                        <img
+                            src="{{ $drawerLogoUrl }}"
+                            alt="{{ config('app.name') }}"
+                            width="44"
+                            height="44"
+                            onerror="this.onerror=null;this.src='{{ \App\Services\AdminPanelBranding::inlineFallbackDataUri() }}';"
+                        >
+                    </div>
+                    <div class="min-w-0">
+                        <p class="truncate text-sm font-bold leading-tight text-white">{{ config('app.name') }}</p>
+                        <p class="truncate text-[10px] font-medium text-white/50">{{ __('admin.admin_panel') }}</p>
+                    </div>
+                </div>
                 <button type="button" class="btn-press px-2 text-xl leading-none text-white/80" @click="sidebarOpen = false" aria-label="إغلاق">×</button>
             </div>
             <div class="flex min-h-0 flex-1 flex-col overflow-hidden">

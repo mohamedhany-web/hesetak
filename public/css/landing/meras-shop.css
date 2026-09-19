@@ -1,0 +1,321 @@
+/**
+ * حصتك — Homepage shop layer (layout + typography)
+ * Loaded with body.mc-body--shop on `/`.
+ * Colors stay in mycourses tokens; this file owns shell, hero rhythm, type.
+ */
+
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Lato:wght@400;700;900&family=Rubik:wght@400;500;700&display=swap");
+
+body.mc-body--shop {
+  --mc-font: "IBM Plex Sans Arabic", "Lato", "Rubik", system-ui, sans-serif;
+  --mc-max: 1180px;
+  --dp-hero-h: clamp(22rem, 44vw, 28rem);
+  --dp-hero-pad-y: clamp(3.5rem, 7.5vw, 5.5rem);
+  --dp-copy-max: 34rem;
+  font-family: var(--mc-font);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+body.mc-body--shop .mc-container,
+body.mc-body--shop .dp-shell {
+  width: min(100% - 1.5rem, var(--mc-max));
+  margin-inline: auto;
+}
+
+/* ===== Full-bleed shop hero ===== */
+body.mc-body--shop .dp-hero {
+  position: relative;
+  min-height: var(--dp-hero-h);
+  display: grid;
+  align-items: end;
+  overflow: hidden;
+  background: var(--mc-navy-deep);
+  color: #fff;
+}
+body.mc-body--shop .dp-hero__media {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+}
+body.mc-body--shop .dp-hero__media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 30%;
+  display: block;
+}
+body.mc-body--shop .dp-hero__shade {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(100deg, rgba(21, 42, 74, 0.88) 0%, rgba(21, 42, 74, 0.55) 48%, rgba(21, 42, 74, 0.28) 100%);
+  pointer-events: none;
+}
+[dir="ltr"] body.mc-body--shop .dp-hero__shade {
+  background:
+    linear-gradient(260deg, rgba(21, 42, 74, 0.88) 0%, rgba(21, 42, 74, 0.55) 48%, rgba(21, 42, 74, 0.28) 100%);
+}
+body.mc-body--shop .dp-hero__inner {
+  position: relative;
+  z-index: 1;
+  padding-block: var(--dp-hero-pad-y);
+  padding-bottom: clamp(2rem, 5vw, 3rem);
+}
+body.mc-body--shop .dp-hero__copy {
+  max-width: var(--dp-copy-max);
+}
+body.mc-body--shop .dp-hero .mc-eyebrow {
+  color: rgba(255, 255, 255, 0.82);
+  margin-bottom: 0.65rem;
+}
+body.mc-body--shop .dp-hero__title {
+  margin: 0 0 0.75rem;
+  font-size: clamp(1.55rem, 3.4vw, 2.15rem);
+  font-weight: 800;
+  line-height: 1.3;
+  letter-spacing: -0.02em;
+  color: #fff;
+}
+body.mc-body--shop .dp-hero__title .mc-brand-word {
+  -webkit-text-fill-color: #fff;
+  background: none;
+  color: #fff;
+}
+body.mc-body--shop .dp-hero__title .mc-brand-word::after {
+  background: color-mix(in srgb, var(--mc-secondary) 70%, white);
+  opacity: 0.95;
+}
+body.mc-body--shop .dp-hero__lead {
+  margin: 0 0 1.25rem;
+  font-size: clamp(0.95rem, 1.5vw, 1.1rem);
+  font-weight: 500;
+  line-height: 1.55;
+  color: rgba(255, 255, 255, 0.9);
+  max-width: 32rem;
+}
+body.mc-body--shop .dp-hero__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+}
+body.mc-body--shop .dp-hero__actions .mc-btn--secondary {
+  background: var(--mc-secondary);
+  border-color: var(--mc-secondary);
+  color: #152a4a !important;
+  font-weight: 800;
+}
+body.mc-body--shop .dp-hero__actions .mc-btn--ghost-on-dark {
+  background: transparent;
+  border-color: rgba(255, 255, 255, 0.45);
+  color: #fff !important;
+  font-weight: 700;
+}
+body.mc-body--shop .dp-hero__actions .mc-btn--ghost-on-dark:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: #fff;
+}
+
+/* Brand word on dark hero */
+body.mc-body--shop .dp-hero .mc-brand-word {
+  position: relative;
+  display: inline-block;
+  padding: 0 0.04em 0.08em;
+}
+
+/* ===== Promo mosaic ===== */
+body.mc-body--shop .dp-mosaic {
+  padding-block: clamp(1.75rem, 4vw, 2.75rem);
+}
+body.mc-body--shop .dp-mosaic__grid {
+  display: grid;
+  gap: 0.85rem;
+  grid-template-columns: 1fr;
+}
+@media (min-width: 768px) {
+  body.mc-body--shop .dp-mosaic__grid {
+    grid-template-columns: 1.2fr 1fr 1fr;
+    grid-template-rows: auto;
+  }
+}
+body.mc-body--shop .dp-mosaic__card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  min-height: 11.5rem;
+  padding: 1.25rem 1.2rem;
+  border-radius: var(--mc-radius-xl);
+  overflow: hidden;
+  text-decoration: none !important;
+  color: #fff;
+  background: var(--mc-navy);
+  box-shadow: var(--mc-shadow-sm);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+body.mc-body--shop .dp-mosaic__card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--mc-shadow);
+}
+body.mc-body--shop .dp-mosaic__card--featured {
+  min-height: 14rem;
+  background: linear-gradient(145deg, var(--mc-navy-deep), var(--mc-primary) 70%, color-mix(in srgb, var(--mc-secondary) 55%, var(--mc-navy)));
+}
+@media (min-width: 768px) {
+  body.mc-body--shop .dp-mosaic__card--featured {
+    grid-row: span 1;
+    min-height: 100%;
+  }
+}
+body.mc-body--shop .dp-mosaic__card h3 {
+  margin: 0 0 0.35rem;
+  font-size: var(--mc-fs-24);
+  font-weight: 800;
+  line-height: 1.3;
+  letter-spacing: -0.015em;
+}
+body.mc-body--shop .dp-mosaic__card p {
+  margin: 0 0 0.75rem;
+  font-size: 0.92rem;
+  line-height: 1.5;
+  font-weight: 500;
+  opacity: 0.92;
+}
+body.mc-body--shop .dp-mosaic__cta {
+  font-size: 0.88rem;
+  font-weight: 800;
+}
+
+/* ===== Section rhythm in shop ===== */
+body.mc-body--shop .mc-section {
+  padding-block: clamp(2.25rem, 5vw, 3.75rem);
+}
+body.mc-body--shop .mc-section--compact {
+  padding-block: clamp(1.75rem, 4vw, 2.75rem);
+}
+body.mc-body--shop .mc-title {
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: var(--mc-lh-bold);
+}
+body.mc-body--shop .mc-lead {
+  font-weight: 500;
+  line-height: var(--mc-lh-regular);
+  max-width: 38rem;
+}
+body.mc-body--shop .mc-brand {
+  font-weight: 900;
+  letter-spacing: -0.03em;
+}
+
+/* Compact teacher/course grids already defined; tighten shop gaps */
+body.mc-body--shop .mc-teachers,
+body.mc-body--shop .mc-grid,
+body.mc-body--shop .mc-packages {
+  gap: 0.85rem;
+}
+
+/* ===== Global responsive polish (shop + shared) ===== */
+@media (max-width: 959px) {
+  body.mc-body--shop {
+    --mc-nav-h: 64px;
+    --dp-hero-h: clamp(19.5rem, 68vw, 24.5rem);
+    --dp-hero-pad-y: clamp(2.75rem, 9vw, 4rem);
+  }
+  body.mc-body--shop .mc-container,
+  body.mc-body--shop .dp-shell {
+    width: min(100% - 1.25rem, var(--mc-max));
+  }
+  body.mc-body--shop .dp-hero__actions .mc-btn {
+    flex: 1 1 auto;
+    justify-content: center;
+    min-width: min(100%, 10.5rem);
+  }
+  body.mc-body--shop .dp-mosaic__card {
+    min-height: 9.5rem;
+    padding: 1.05rem 1.05rem;
+    border-radius: var(--mc-radius-lg);
+  }
+  body.mc-body--shop .dp-mosaic__card--featured { min-height: 11rem; }
+  body.mc-body--shop .dp-mosaic__card h3 { font-size: 1.15rem; }
+  body.mc-body--shop .dp-mosaic__card p { font-size: 0.86rem; margin-bottom: 0.55rem; }
+  body.mc-body--shop .mc-section-head {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.65rem;
+  }
+  body.mc-body--shop .mc-cta {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+    text-align: start;
+  }
+  body.mc-body--shop .mc-cta__actions {
+    width: 100%;
+  }
+  body.mc-body--shop .mc-cta__actions .mc-btn {
+    flex: 1;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 640px) {
+  body.mc-body--shop .mc-topbar__socials { display: none; }
+  body.mc-body--shop .mc-topbar__contact { gap: 0.55rem; justify-content: center; }
+  body.mc-body--shop .mc-packages { grid-template-columns: 1fr; }
+  body.mc-body--shop .mc-quotes { grid-template-columns: 1fr; }
+  body.mc-body--shop .mc-btn--lg {
+    height: 46px;
+    padding-inline: 1.15rem;
+    font-size: 0.92rem;
+  }
+  body.mc-body--shop .dp-hero__actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  body.mc-body--shop .dp-hero__actions .mc-btn {
+    width: 100%;
+    min-width: 0;
+  }
+  body.mc-body--shop .mc-teachers--dir {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 420px) {
+  body.mc-body--shop .mc-teachers--dir { gap: 0.55rem; }
+  body.mc-body--shop .mc-teacher--sm .mc-teacher__body { padding: 0.55rem 0.55rem 0.65rem; }
+  body.mc-body--shop .mc-teacher--sm h3 { font-size: 0.82rem; }
+  body.mc-body--shop .mc-teacher--sm .mc-teacher__cta {
+    width: 100%;
+    justify-content: center;
+  }
+  body.mc-body--shop .mc-teacher--sm .mc-teacher__footer {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  body.mc-body--shop .mc-topbar__item span:not(.mc-topbar__icon) {
+    max-width: 7.5rem;
+  }
+}
+
+/* Touch targets + overflow safety */
+body.mc-body--shop,
+body.mc-body {
+  overflow-x: clip;
+}
+body.mc-body--shop img,
+body.mc-body--shop svg { max-width: 100%; height: auto; }
+body.mc-body--shop .mc-package,
+body.mc-body--shop .mc-teacher,
+body.mc-body--shop .mc-quote {
+  max-width: 100%;
+}
+body.mc-body--shop .mc-packages {
+  padding-block: 0.15rem;
+}
+@supports (padding: max(0px)) {
+  body.mc-body--shop .mc-nav__inner {
+    padding-inline: max(0.15rem, env(safe-area-inset-left)) max(0.15rem, env(safe-area-inset-right));
+  }
+}

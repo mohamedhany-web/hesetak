@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'مراجعة طلبات المعلمين - Glottical')
+@section('title', 'مراجعة طلبات المعلمين - حصتك')
 @section('page_title', 'مراجعة طلبات التوظيف')
 
 @section('content')

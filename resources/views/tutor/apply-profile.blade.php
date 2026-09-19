@@ -1,12 +1,16 @@
 @php
-    $locale = app()->getLocale();
-    $isRtl = $locale === 'ar';
-    $brand = config('app.name', 'Glottical');
-    $application = $application ?? null;
-    $form = $form ?? null;
-    $fields = $fields ?? collect();
-    $oldAnswers = old('answers', []);
-    $saved = is_array($application->answers ?? null) ? $application->answers : [];
+  $locale = app()->getLocale();
+  $isRtl = $locale === 'ar';
+  $brand = __('landing.nav.brand');
+  $application = $application ?? null;
+  $form = $form ?? null;
+  $fields = $fields ?? collect();
+  $oldAnswers = old('answers', []);
+  $saved = is_array($application->answers ?? null) ? $application->answers : [];
+  $mcCss = public_path('css/landing/mycourses.css');
+  $mcVer = is_file($mcCss) ? (string) filemtime($mcCss) : (string) time();
+  $mcActive = 'for-teachers';
+  $inGroup = false;
 @endphp
 <!DOCTYPE html>
 <html lang="{{ $locale }}" dir="{{ $isRtl ? 'rtl' : 'ltr' }}">
@@ -14,149 +18,121 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes">
   <meta name="csrf-token" content="{{ csrf_token() }}">
-  <title>{{ $form->title ?? ($isRtl ? 'إكمال بيانات المعلم' : 'Complete teacher profile') }} — {{ $brand }}</title>
-  <meta name="theme-color" content="#0B3D91">
+  <title>{{ $form->title ?? ($isRtl ? 'إكمال بيانات المعلم' : 'Complete teacher profile') }} · {{ $brand }}</title>
+  <meta name="robots" content="noindex">
+  <meta name="theme-color" content="#1E4E8C">
   @include('partials.favicon-links')
-  @include('partials.landing.head', ['landingCss' => ['theme', 'instructor-profile']])
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700;800&family=Lato:wght@400;700;900&family=Rubik:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="{{ route('assets.landing.css', ['sheet' => 'mycourses']) }}?v={{ $mcVer }}">
 </head>
-<body class="sana-home sana-courses-page ta-page">
-@include('partials.landing.navbar', ['navActive' => null, 'navSolid' => true, 'navHero' => false])
+<body class="mc-body mc-body--ta">
+@include('partials.landing.mycourses.nav')
 
-<main class="ta-wrap">
-  <p class="ta-chip">{{ $isRtl ? 'الخطوة 2 من 2' : 'Step 2 of 2' }}</p>
-  <h1 class="ta-title">{{ $form->title ?? ($isRtl ? 'أكمل بياناتك' : 'Complete your details') }}</h1>
-  <p class="ta-sub">
-    {{ $form->description ?: ($isRtl
-      ? 'حسابك جاهز: '.($user->email ?? '').' — أكمل الملف التعريفي ثم أرسله للإدارة. لوحة المعلم لا تُفتح إلا بعد التفعيل.'
-      : 'Your account is ready: '.($user->email ?? '').' — complete your profile and submit it. The dashboard opens only after admin activation.') }}
-  </p>
-
-  @if(session('success'))
-    <div class="ta-ok">{{ session('success') }}</div>
-  @endif
-  @if(session('error'))
-    <div class="ta-note" style="background:#FEF2F2;border-color:#FECACA;color:#991B1B">{{ session('error') }}</div>
-  @endif
-  @error('form')
-    <div class="ta-note" style="background:#FEF2F2;border-color:#FECACA;color:#991B1B">{{ $message }}</div>
-  @enderror
-  @error('intro_video')
-    <div class="ta-note" style="background:#FEF2F2;border-color:#FECACA;color:#991B1B">{{ $message }}</div>
-  @enderror
-  @error('phone')
-    <div class="ta-note" style="background:#FEF2F2;border-color:#FECACA;color:#991B1B">{{ $message }}</div>
-  @enderror
-
-  <form method="POST" action="{{ route('public.tutor.apply.profile.store') }}" enctype="multipart/form-data">
-    @csrf
-
-    @foreach($fields as $field)
-      @if($field->isSection())
-        <div class="ta-card" style="background:linear-gradient(135deg,#EEF3FB,#fff);border-style:dashed">
-          <h2 style="margin:0">{{ $field->label }}</h2>
-          @if($field->help_text)<p class="ta-hint" style="margin-top:.35rem">{{ $field->help_text }}</p>@endif
+<main class="mc-ta">
+  <div class="mc-container mc-ta__layout mc-ta__layout--profile">
+    <aside class="mc-ta-aside" aria-labelledby="mc-ta-aside-title">
+      <p class="mc-eyebrow">{{ $isRtl ? 'للمعلمين' : 'For teachers' }}</p>
+      <h1 id="mc-ta-aside-title">{{ $isRtl ? 'أكمل ملفك للمراجعة' : 'Complete your profile' }}</h1>
+      <p class="mc-ta-aside__lead">
+        {{ $form->description ?: ($isRtl
+          ? 'أدخل بياناتك الشخصية والمستندات بدقة. الإدارة تراجع الطلب قبل تفعيل لوحة المعلم.'
+          : 'Enter personal details and documents carefully. Admin reviews before unlocking the instructor dashboard.') }}
+      </p>
+      <ol class="mc-ta-steps" aria-label="{{ $isRtl ? 'خطوات التقديم' : 'Application steps' }}">
+        <li class="is-done"><span>1</span>{{ $isRtl ? 'إنشاء الحساب' : 'Create account' }}</li>
+        <li class="is-on"><span>2</span>{{ $isRtl ? 'بياناتك ومستنداتك' : 'Profile & documents' }}</li>
+        <li><span>3</span>{{ $isRtl ? 'مراجعة ثم تفعيل' : 'Review then activate' }}</li>
+      </ol>
+      @if($user ?? null)
+        <div class="mc-ta-aside__account">
+          <span>{{ $isRtl ? 'مسجّل كـ' : 'Signed in as' }}</span>
+          <strong>{{ $user->name }}</strong>
+          <em dir="ltr">{{ $user->email }}</em>
         </div>
-        @continue
       @endif
+    </aside>
 
-      @php
-        $fid = $field->id;
-        $savedVal = $saved[(string)$fid]['value'] ?? null;
-        if ($savedVal === null && $field->system_key) {
-          $savedVal = $application->{$field->system_key} ?? null;
-          if ($field->system_key === 'photo') $savedVal = null;
-        }
-        $value = $oldAnswers[$fid] ?? $savedVal;
-      @endphp
+    <section class="mc-ta-main" aria-labelledby="mc-ta-form-title">
+      @if(session('success'))
+        <div class="mc-ta-alert is-ok" role="status">{{ session('success') }}</div>
+      @endif
+      @if(session('error'))
+        <div class="mc-ta-alert is-err" role="alert">{{ session('error') }}</div>
+      @endif
+      @error('form')
+        <div class="mc-ta-alert is-err" role="alert">{{ $message }}</div>
+      @enderror
+      @error('intro_video')
+        <div class="mc-ta-alert is-err" role="alert">{{ $message }}</div>
+      @enderror
+      @error('phone')
+        <div class="mc-ta-alert is-err" role="alert">{{ $message }}</div>
+      @enderror
 
-      <section class="ta-card">
-        <div class="ta-field">
-          <label for="field_{{ $fid }}">
-            {{ $field->label }}
-            @if($field->is_required)<span class="req">*</span>@endif
-          </label>
-          @if($field->help_text)<p class="ta-hint">{{ $field->help_text }}</p>@endif
+      <div class="mc-ta-card">
+        <header class="mc-ta-card__head">
+          <p class="mc-ta-card__step">{{ $isRtl ? 'الخطوة 2 من 2' : 'Step 2 of 2' }}</p>
+          <h2 id="mc-ta-form-title">{{ $form->title ?? ($isRtl ? 'بيانات المعلم' : 'Teacher details') }}</h2>
+          <p>{{ $isRtl
+            ? 'الحقول المطلوبة معلّمة بعلامة *. ارفع المستندات بصيغة واضحة.'
+            : 'Required fields are marked *. Upload clear document files.' }}</p>
+        </header>
 
-          @switch($field->type)
-            @case('long_text')
-              <textarea id="field_{{ $fid }}" name="answers[{{ $fid }}]" @if($field->is_required) required @endif placeholder="{{ $field->placeholder }}">{{ $value }}</textarea>
-              @break
-            @case('email')
-              <input id="field_{{ $fid }}" type="email" name="answers[{{ $fid }}]" value="{{ $value }}" @if($field->is_required) required @endif dir="ltr" placeholder="{{ $field->placeholder }}">
-              @break
-            @case('phone')
-              <input id="field_{{ $fid }}" type="tel" name="answers[{{ $fid }}]" value="{{ $value ?? $application->phone }}" @if($field->is_required) required @endif dir="ltr" placeholder="{{ $field->placeholder ?: '+9665...' }}">
-              @break
-            @case('number')
-              <input id="field_{{ $fid }}" type="number" name="answers[{{ $fid }}]" value="{{ $value }}" @if($field->is_required) required @endif placeholder="{{ $field->placeholder }}">
-              @break
-            @case('date')
-              <input id="field_{{ $fid }}" type="date" name="answers[{{ $fid }}]" value="{{ $value }}" @if($field->is_required) required @endif>
-              @break
-            @case('url')
-              <input id="field_{{ $fid }}" type="url" name="answers[{{ $fid }}]" value="{{ $value }}" @if($field->is_required) required @endif dir="ltr" placeholder="{{ $field->placeholder ?: 'https://' }}">
-              @break
-            @case('select')
-              <select id="field_{{ $fid }}" name="answers[{{ $fid }}]" @if($field->is_required) required @endif>
-                <option value="">{{ $isRtl ? '— اختر —' : '— choose —' }}</option>
-                @foreach($field->options ?? [] as $opt)
-                  @php $ov = is_array($opt) ? ($opt['value'] ?? '') : $opt; $ol = is_array($opt) ? ($opt['label'] ?? $ov) : $opt; @endphp
-                  <option value="{{ $ov }}" @selected((string)$value === (string)$ov)>{{ $ol }}</option>
-                @endforeach
-              </select>
-              @break
-            @case('radio')
-              <div class="ta-grid" style="gap:.45rem">
-                @foreach($field->options ?? [] as $opt)
-                  @php $ov = is_array($opt) ? ($opt['value'] ?? '') : $opt; $ol = is_array($opt) ? ($opt['label'] ?? $ov) : $opt; @endphp
-                  <label style="display:flex;align-items:center;gap:.5rem;font:700 .88rem Tajawal,sans-serif;color:#334155">
-                    <input type="radio" name="answers[{{ $fid }}]" value="{{ $ov }}" @checked((string)$value === (string)$ov) @if($field->is_required) required @endif>
-                    {{ $ol }}
-                  </label>
-                @endforeach
-              </div>
-              @break
-            @case('checkbox')
-              @php $arr = is_array($value) ? $value : (filled($value) ? [$value] : []); @endphp
-              <div class="ta-grid" style="gap:.45rem">
-                @foreach($field->options ?? [] as $opt)
-                  @php $ov = is_array($opt) ? ($opt['value'] ?? '') : $opt; $ol = is_array($opt) ? ($opt['label'] ?? $ov) : $opt; @endphp
-                  <label style="display:flex;align-items:center;gap:.5rem;font:700 .88rem Tajawal,sans-serif;color:#334155">
-                    <input type="checkbox" name="answers[{{ $fid }}][]" value="{{ $ov }}" @checked(in_array((string)$ov, array_map('strval', $arr), true))>
-                    {{ $ol }}
-                  </label>
-                @endforeach
-              </div>
-              @break
-            @case('file')
-              @php
-                $existingPath = $saved[(string)$fid]['path'] ?? null;
-                if (! $existingPath && $field->system_key === 'photo') $existingPath = $application->photo_path;
-                if (! $existingPath && $field->system_key === 'id_document') $existingPath = $application->id_document_path;
-                if (! $existingPath && $field->system_key === 'certificate') $existingPath = $application->certificate_path;
-                if (! $existingPath && $field->system_key === 'intro_video') $existingPath = $application->intro_video_path;
-              @endphp
-              @if($existingPath)
-                <p class="ta-hint" style="color:#065F46">{{ $isRtl ? 'تم الرفع مسبقاً — يمكنك استبداله بملف جديد.' : 'Already uploaded — you can replace it.' }}</p>
+        <form method="POST" action="{{ route('public.tutor.apply.profile.store') }}" enctype="multipart/form-data" class="mc-ta-form">
+          @csrf
+
+          @forelse($fields as $field)
+            @if($field->isSection())
+              @if($inGroup)
+                  </div>
+                </div>
+                @php $inGroup = false; @endphp
               @endif
-              <input id="field_{{ $fid }}" type="file" name="hiring_upload[{{ $fid }}]" accept="{{ $field->fileAccept() }}" @if($field->is_required && ! $existingPath) required @endif>
-              @break
-            @default
-              <input id="field_{{ $fid }}" type="text" name="answers[{{ $fid }}]" value="{{ $value }}" @if($field->is_required) required @endif placeholder="{{ $field->placeholder }}">
-          @endswitch
+              <div class="mc-ta-section">
+                <h3>{{ $field->label }}</h3>
+                @if($field->help_text)
+                  <p>{{ $field->help_text }}</p>
+                @endif
+              </div>
+            @else
+              @unless($inGroup)
+                <div class="mc-ta-panel">
+                  <div class="mc-ta-grid">
+                @php $inGroup = true; @endphp
+              @endunless
+              @include('partials.landing.mycourses.tutor-apply-field', compact('field', 'saved', 'oldAnswers', 'application', 'isRtl'))
+            @endif
+          @empty
+            <div class="mc-ta-alert is-info">
+              {{ $isRtl
+                ? 'لا توجد حقول نموذج منشورة حالياً. تواصل مع الإدارة.'
+                : 'No published form fields yet. Please contact support.' }}
+            </div>
+          @endforelse
 
-          @error('answers.'.$fid)<p class="ta-err">{{ $message }}</p>@enderror
-          @error('hiring_upload.'.$fid)<p class="ta-err">{{ $message }}</p>@enderror
-        </div>
-      </section>
-    @endforeach
+          @if($inGroup)
+              </div>
+            </div>
+          @endif
 
-    <button type="submit" class="sana-btn sana-btn--yellow sana-btn--lg" style="width:100%;justify-content:center;margin-top:.5rem">
-      {{ $isRtl ? 'إرسال للمراجعة' : 'Submit for review' }}
-    </button>
-  </form>
+          <button type="submit" class="mc-btn mc-btn--lg mc-btn--secondary mc-ta-submit">
+            <i class="fas fa-paper-plane" aria-hidden="true"></i>
+            {{ $isRtl ? 'إرسال للمراجعة' : 'Submit for review' }}
+          </button>
+          <p class="mc-ta-foot mc-ta-foot--muted">
+            {{ $isRtl
+              ? 'بعد الإرسال لن تُفتح لوحة المعلم إلا بعد مراجعة الإدارة وتفعيل الحساب.'
+              : 'After submit, the instructor dashboard opens only after admin review and activation.' }}
+          </p>
+        </form>
+      </div>
+    </section>
+  </div>
 </main>
 
-@include('partials.landing.footer')
+@include('partials.landing.mycourses.footer')
 </body>
 </html>

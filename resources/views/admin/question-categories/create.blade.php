@@ -1,4 +1,4 @@
-﻿@extends('layouts.admin')
+@extends('layouts.admin')
 
 @section('title', 'إنشاء تصنيف جديد')
 @section('header', 'إنشاء تصنيف جديد للأسئلة')

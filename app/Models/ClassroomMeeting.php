@@ -99,7 +99,7 @@ class ClassroomMeeting extends Model
      */
     public static function canonicalRoomName(string $code): string
     {
-        return 'Glottical-'.strtoupper(preg_replace('/[^A-Za-z0-9]/', '', $code));
+        return 'حصتك-'.strtoupper(preg_replace('/[^A-Za-z0-9]/', '', $code));
     }
 
     public function liveRoomName(): string

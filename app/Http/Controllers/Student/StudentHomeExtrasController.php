@@ -26,6 +26,15 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class StudentHomeExtrasController extends Controller
 {
+    private function denyLegacyLibraries(): ?RedirectResponse
+    {
+        if (student_ui('show_libraries')) {
+            return null;
+        }
+
+        return redirect()->route('dashboard');
+    }
+
     public function join(Request $request, string $type, int $id): RedirectResponse
     {
         $url = StudentScheduleService::resolveJoinUrl($request->user(), $type, $id);
@@ -40,8 +49,12 @@ class StudentHomeExtrasController extends Controller
     /**
      * بوابة المكتبة الآمنة — كتب، ألعاب، HTML، أطفال، إسلامي.
      */
-    public function libraryHome(Request $request): View
+    public function libraryHome(Request $request): View|RedirectResponse
     {
+        if ($deny = $this->denyLegacyLibraries()) {
+            return $deny;
+        }
+
         $locale = app()->getLocale();
         $user = $request->user();
         $themes = FamilyLibraryThemes::all();
@@ -168,8 +181,12 @@ class StudentHomeExtrasController extends Controller
     /**
      * مكتبة الملفات الموحّدة — ماتريال الأكاديمية/المعلمين + المناهج التفاعلية.
      */
-    public function files(Request $request): View
+    public function files(Request $request): View|RedirectResponse
     {
+        if ($deny = $this->denyLegacyLibraries()) {
+            return $deny;
+        }
+
         $user = $request->user();
         $locale = app()->getLocale();
         $tab = strtolower(trim((string) $request->query('tab', 'all')));
@@ -276,8 +293,12 @@ class StudentHomeExtrasController extends Controller
         ]);
     }
 
-    public function materials(Request $request): View
+    public function materials(Request $request): View|RedirectResponse
     {
+        if ($deny = $this->denyLegacyLibraries()) {
+            return $deny;
+        }
+
         $user = $request->user();
         $q = trim((string) $request->query('q', ''));
         $courseId = (int) $request->query('course', 0);
@@ -651,6 +672,10 @@ class StudentHomeExtrasController extends Controller
 
     public function videos(Request $request): View|RedirectResponse
     {
+        if ($deny = $this->denyLegacyLibraries()) {
+            return $deny;
+        }
+
         $q = trim((string) $request->query('q', ''));
         $folderId = $request->query('folder');
         $theme = strtolower(trim((string) $request->query('theme', '')));
@@ -840,8 +865,12 @@ class StudentHomeExtrasController extends Controller
         ]);
     }
 
-    public function lectures(Request $request): View
+    public function lectures(Request $request): View|RedirectResponse
     {
+        if ($deny = $this->denyLegacyLibraries()) {
+            return $deny;
+        }
+
         $user = $request->user();
         $q = trim((string) $request->query('q', ''));
         $filter = (string) $request->query('filter', 'all');

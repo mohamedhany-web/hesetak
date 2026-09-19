@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'بوابة الدفع - التقارير المحاسبية - Glottical')
+@section('title', 'بوابة الدفع - التقارير المحاسبية - حصتك')
 @section('page_title', 'مدفوعات بوابة الدفع')
 
 @section('content')
@@ -14,9 +14,9 @@
     ];
     $kpis = [
         ['label' => 'عدد العمليات', 'value' => number_format($gatewaySummary['count']), 'icon' => 'fa-hashtag', 'tone' => 'accent', 'note' => 'مدفوعات أونلاين مكتملة', 'raw' => true],
-        ['label' => 'إجمالي المحصّل (عميل)', 'value' => number_format($gatewaySummary['gross'], 2) . ' $', 'icon' => 'fa-money-bill-wave', 'tone' => 'accent', 'note' => 'ما دفعه العملاء', 'raw' => true],
-        ['label' => 'عمولات البوابة (تقدير)', 'value' => number_format($gatewaySummary['fees'], 2) . ' $', 'icon' => 'fa-percentage', 'tone' => 'metal', 'note' => 'رسوم البوابة التقديرية', 'raw' => true],
-        ['label' => 'صافي بعد العمولة', 'value' => number_format($gatewaySummary['net'], 2) . ' $', 'icon' => 'fa-chart-line', 'tone' => 'muted', 'note' => 'المحصّل ناقص العمولات', 'raw' => true],
+        ['label' => 'إجمالي المحصّل (عميل)', 'value' => number_format($gatewaySummary['gross'], 2) . ' ' . currency_symbol(), 'icon' => 'fa-money-bill-wave', 'tone' => 'accent', 'note' => 'ما دفعه العملاء', 'raw' => true],
+        ['label' => 'عمولات البوابة (تقدير)', 'value' => number_format($gatewaySummary['fees'], 2) . ' ' . currency_symbol(), 'icon' => 'fa-percentage', 'tone' => 'metal', 'note' => 'رسوم البوابة التقديرية', 'raw' => true],
+        ['label' => 'صافي بعد العمولة', 'value' => number_format($gatewaySummary['net'], 2) . ' ' . currency_symbol(), 'icon' => 'fa-chart-line', 'tone' => 'muted', 'note' => 'المحصّل ناقص العمولات', 'raw' => true],
     ];
 @endphp
 

@@ -1,4 +1,4 @@
-﻿@extends('layouts.admin')
+@extends('layouts.admin')
 
 @section('title', 'تفاصيل المصروف #' . $expense->expense_number)
 @section('page_title', 'تفاصيل المصروف #' . $expense->expense_number)
@@ -285,7 +285,7 @@
                         <dl class="mt-3 grid grid-cols-2 gap-3 border-t border-line pt-3 text-xs">
                             <div>
                                 <dt class="text-muted">{{ __('المبلغ:') }}</dt>
-                                <dd class="mt-0.5 font-semibold text-ink">{{ number_format($expense->invoice->total_amount, 2) }} {{ $expense->invoice->currency ?? 'USD' }}</dd>
+                                <dd class="mt-0.5 font-semibold text-ink">{{ number_format($expense->invoice->total_amount, 2) }} {{ $expense->invoice->currency ?? platform_currency() }}</dd>
                             </div>
                             <div>
                                 <dt class="text-muted">{{ __('الحالة:') }}</dt>

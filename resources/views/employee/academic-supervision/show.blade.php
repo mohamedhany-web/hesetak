@@ -32,7 +32,7 @@
                 <p class="text-sm text-amber-700">لا يوجد اشتراك نشط حالياً.</p>
             @endif
             <p class="text-sm mt-3">
-                <span class="text-gray-500">Glottical Classroom:</span>
+                <span class="text-gray-500">فصول حصتك:</span>
                 @if($hasClassroom)
                     <span class="font-semibold text-emerald-700">مفعّل</span>
                 @else

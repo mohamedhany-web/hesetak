@@ -150,7 +150,7 @@
                                     <div class="rounded-xl bg-canvas p-3"><span class="block text-xs text-muted">الحصص</span><strong>{{ $custom['sessions'] ?? '—' }}</strong></div>
                                     <div class="rounded-xl bg-canvas p-3"><span class="block text-xs text-muted">مدة الحصة</span><strong>{{ $custom['session_minutes'] ?? '—' }} دقيقة</strong></div>
                                     <div class="rounded-xl bg-canvas p-3"><span class="block text-xs text-muted">الصلاحية</span><strong>{{ $custom['duration_days'] ?? '—' }} يوم</strong></div>
-                                    <div class="rounded-xl bg-canvas p-3"><span class="block text-xs text-muted">سعر الحصة النهائي</span><strong>${{ number_format((float) ($custom['final_price_per_session'] ?? 0), 2) }}</strong></div>
+                                    <div class="rounded-xl bg-canvas p-3"><span class="block text-xs text-muted">سعر الحصة النهائي</span><strong>{{ number_format((float) ($custom['final_price_per_session'] ?? 0), 2) }} {{ currency_symbol() }}</strong></div>
                                     <div class="rounded-xl bg-canvas p-3"><span class="block text-xs text-muted">خصم الكمية</span><strong>{{ $custom['discount_percent'] ?? 0 }}%</strong></div>
                                     <div class="rounded-xl bg-canvas p-3"><span class="block text-xs text-muted">النطاق</span><strong>{{ $custom['scope_label'] ?? '—' }}</strong></div>
                                 </div>

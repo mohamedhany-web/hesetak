@@ -97,7 +97,7 @@
                 <i class="fas fa-money-bill text-sm"></i>
             </div>
             <p class="mt-3 text-xs text-muted">العملة</p>
-            <p class="mt-1 text-sm font-semibold text-ink">{{ $transaction->currency ?? 'USD' }}</p>
+            <p class="mt-1 text-sm font-semibold text-ink">{{ $transaction->currency ?? platform_currency() }}</p>
         </article>
     </section>
 

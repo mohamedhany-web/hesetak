@@ -1,12 +1,13 @@
 @extends('layouts.admin')
 
-@section('title', 'حجوزات الحصة المجانية - Glottical')
+@section('title', 'حجوزات الحصة المجانية - حصتك')
 @section('page_title', 'حجوزات الحصة المجانية')
 
 @section('content')
 @php
     $kpis = [
         ['label' => 'الإجمالي', 'value' => $stats['total'], 'icon' => 'fa-inbox', 'tone' => 'accent'],
+        ['label' => 'طلبات', 'value' => $stats['pending'] ?? 0, 'icon' => 'fa-paper-plane', 'tone' => 'metal'],
         ['label' => 'مؤكد', 'value' => $stats['confirmed'], 'icon' => 'fa-check-circle', 'tone' => 'accent'],
         ['label' => 'قادم', 'value' => $stats['upcoming'], 'icon' => 'fa-hourglass-half', 'tone' => 'metal'],
         ['label' => 'اليوم', 'value' => $stats['today'], 'icon' => 'fa-calendar-day', 'tone' => 'metal'],
@@ -26,13 +27,13 @@
 <div class="space-y-5">
     <section class="flex flex-wrap items-end justify-between gap-4">
         <div class="min-w-0">
-            <p class="text-xs font-medium text-muted">تقييم المستوى · 30 دقيقة من الصفحة الرئيسية</p>
+            <p class="text-xs font-medium text-muted">حصة مجانية لحاملي الباقة · من جدول المعلم أو طلب تنسيق · بدون خصم من الرصيد</p>
             <h2 class="mt-1 text-2xl font-semibold tracking-tight text-ink md:text-[28px]">حجوزات الحصة المجانية</h2>
         </div>
         <div class="admin-hero-actions flex flex-wrap gap-2">
-            <a href="{{ route('admin.free-trial-bookings.availability') }}" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl bg-accent px-4 text-sm font-medium text-white">
-                <i class="fas fa-clock text-xs"></i>
-                ضبط أوقات الأسبوع
+            <a href="{{ route('admin.free-trial-bookings.create') }}" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl bg-accent px-4 text-sm font-medium text-white">
+                <i class="fas fa-plus text-xs"></i>
+                توصيف يدوي
             </a>
         </div>
     </section>
@@ -44,7 +45,7 @@
         </div>
     @endif
 
-    <section class="admin-kpi-grid grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+    <section class="admin-kpi-grid grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7">
         @foreach($kpis as $kpi)
             <article class="rounded-2xl border border-line bg-surface p-4 shadow-soft">
                 <div class="inline-flex size-9 items-center justify-center rounded-xl {{ $toneClass[$kpi['tone']] }}">
@@ -70,6 +71,7 @@
                 <label class="{{ $labelClass }}" for="status">الحالة</label>
                 <select id="status" name="status" class="{{ $fieldClass }}">
                     <option value="">الكل</option>
+                    <option value="pending" @selected(request('status')==='pending')>طلب / بانتظار</option>
                     <option value="confirmed" @selected(request('status')==='confirmed')>مؤكد</option>
                     <option value="completed" @selected(request('status')==='completed')>مكتمل</option>
                     <option value="cancelled" @selected(request('status')==='cancelled')>ملغي</option>
@@ -113,6 +115,8 @@
                         <th class="px-3 py-3 font-medium">الطالب</th>
                         <th class="px-3 py-3 font-medium">التواصل</th>
                         <th class="px-3 py-3 font-medium">الموعد</th>
+                        <th class="px-3 py-3 font-medium">المعلم</th>
+                        <th class="px-3 py-3 font-medium">الجدول</th>
                         <th class="px-3 py-3 font-medium">المدة</th>
                         <th class="px-3 py-3 font-medium">الحالة</th>
                         <th class="px-5 py-3 font-medium">إجراءات</th>
@@ -124,13 +128,16 @@
                             $badgeClass = match($b->status) {
                                 'completed' => 'bg-accent-soft text-accent',
                                 'cancelled' => 'bg-danger/10 text-danger',
+                                'pending' => 'bg-amber-100 text-amber-800',
                                 default => 'bg-metal/15 text-metal',
                             };
                             $statusLabel = match($b->status) {
                                 'completed' => 'مكتمل',
                                 'cancelled' => 'ملغي',
+                                'pending' => 'طلب',
                                 default => 'مؤكد',
                             };
+                            $linked = $b->oneToOneSession;
                         @endphp
                         <tr class="transition hover:bg-[#f7f8fa]">
                             <td class="px-5 py-3 tabular-nums text-muted">{{ $b->id }}</td>
@@ -153,6 +160,19 @@
                             </td>
                             <td class="whitespace-nowrap px-3 py-3 font-medium tabular-nums text-ink">
                                 <x-app-datetime :at="$b->starts_at" :timezone="$b->timezone" pattern="Y-m-d H:i" />
+                            </td>
+                            <td class="px-3 py-3 text-sm text-ink">
+                                {{ $b->instructor?->name ?: '—' }}
+                            </td>
+                            <td class="px-3 py-3 text-xs">
+                                @if($linked)
+                                    <span class="inline-flex items-center gap-1 rounded-lg bg-accent-soft px-2 py-1 font-medium text-accent" title="لا تُخصم من الرصيد">
+                                        <i class="fas fa-calendar-check text-[10px]"></i>
+                                        في الجدول
+                                    </span>
+                                @else
+                                    <span class="text-muted">—</span>
+                                @endif
                             </td>
                             <td class="px-3 py-3 tabular-nums text-muted">{{ $b->duration_minutes }} د</td>
                             <td class="px-3 py-3">
@@ -178,12 +198,13 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="px-5 py-16 text-center">
+                            <td colspan="9" class="px-5 py-16 text-center">
                                 <div class="mx-auto mb-3 inline-flex size-12 items-center justify-center rounded-2xl bg-accent-soft text-accent">
                                     <i class="fas fa-calendar-check"></i>
                                 </div>
                                 <p class="text-sm font-medium text-ink">لا توجد حجوزات</p>
-                                <p class="mt-1 text-xs text-muted">ستظهر هنا حجوزات الحصة المجانية القادمة من الموقع.</p>
+                                <p class="mt-1 text-xs text-muted">حجوزات الطلاب ذوي الباقة أو التوصيف اليدوي تظهر هنا.</p>
+                                <a href="{{ route('admin.free-trial-bookings.create') }}" class="mt-3 inline-flex text-sm font-semibold text-accent hover:underline">توصيف حصة مجانية الآن</a>
                             </td>
                         </tr>
                     @endforelse

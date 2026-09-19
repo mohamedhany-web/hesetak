@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'الملف الشخصي - Glottical')
+@section('title', 'الملف الشخصي - حصتك')
 @section('page_title', 'الملف الشخصي')
 
 @section('content')

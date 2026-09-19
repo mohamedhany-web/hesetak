@@ -10,7 +10,7 @@
     {{-- هيدر الصفحة (عرض الصفحة كاملاً) --}}
     <div class="rounded-2xl bg-white dark:bg-slate-800/95 border border-slate-200 dark:border-slate-700 shadow-sm p-5 sm:p-6">
         <nav class="text-sm text-slate-500 dark:text-slate-400 mb-2">
-            <a href="{{ route('employee.crm.dashboard') }}" class="hover:text-teal-600 transition-colors">Glottical CRM</a>
+            <a href="{{ route('employee.crm.dashboard') }}" class="hover:text-teal-600 transition-colors">CRM حصتك</a>
             <span class="mx-2">/</span>
             <a href="{{ route('employee.crm.leads.index') }}" class="hover:text-teal-600 transition-colors">العملاء المحتملون</a>
             <span class="mx-2">/</span>

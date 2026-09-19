@@ -199,7 +199,7 @@ if ($instructor) {
         'user_id' => $instructor->id,
         'code' => $code,
         'title' => '[VERIFY CLASSROOM] '.$code,
-        'room_name' => 'Glottical-'.$code,
+        'room_name' => 'حصتك-'.$code,
         'started_at' => null,
         'ended_at' => null,
         'planned_duration_minutes' => 60,

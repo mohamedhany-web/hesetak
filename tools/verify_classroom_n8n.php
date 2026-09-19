@@ -20,7 +20,7 @@ use App\Models\IntegrationSetting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 
-echo "=== Glottical Classroom + n8n verification ===\n";
+echo "=== فصول حصتك + n8n verification ===\n";
 echo "Meeting ID: {$meetingId}\n\n";
 
 $token = IntegrationSetting::get('n8n_token', config('services.n8n.token'));

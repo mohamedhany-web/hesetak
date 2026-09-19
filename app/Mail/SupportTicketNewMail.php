@@ -23,7 +23,7 @@ class SupportTicketNewMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: '[Glottical] تذكرة دعم فني جديدة: '.Str::limit($this->ticket->subject, 60),
+            subject: '[حصتك] تذكرة دعم فني جديدة: '.Str::limit($this->ticket->subject, 60),
         );
     }
 

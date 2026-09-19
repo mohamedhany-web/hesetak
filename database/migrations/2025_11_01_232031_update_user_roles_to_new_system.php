@@ -59,29 +59,46 @@ return new class extends Migration
             )";
             
             DB::statement($createTableSQL);
+
+            // SELECT expressions must match CREATE column order; missing source cols → NULL
+            $expr = static function (string $column, ?string $asSql = null) use ($columnNames): string {
+                if ($asSql !== null) {
+                    return $asSql;
+                }
+
+                return in_array($column, $columnNames, true)
+                    ? $column
+                    : "NULL AS {$column}";
+            };
             
             // بناء استعلام INSERT بناءً على الأعمدة الموجودة
-            $selectColumns = ['id', 'name', 'email', 'phone', 'password'];
-            $selectColumns[] = "CASE 
+            $selectColumns = [
+                $expr('id'),
+                $expr('name'),
+                $expr('email'),
+                $expr('phone'),
+                $expr('password'),
+                "CASE 
                 WHEN role = 'admin' THEN 'super_admin'
                 WHEN role = 'teacher' THEN 'instructor'
                 WHEN role = 'parent' THEN 'student'
                 ELSE COALESCE(role, 'student')
-            END as role";
-            $selectColumns[] = 'avatar';
-            $selectColumns[] = 'is_active';
-            $selectColumns[] = 'bio';
+            END as role",
+                $expr('avatar'),
+                $expr('is_active'),
+                $expr('bio'),
+            ];
             
             // إضافة الأعمدة الاختيارية إذا كانت موجودة
             foreach ($optionalColumns as $col) {
-                if (in_array($col, $columnNames)) {
+                if (in_array($col, $columnNames, true)) {
                     $selectColumns[] = $col;
                 }
             }
             
-            $selectColumns[] = 'remember_token';
-            $selectColumns[] = 'created_at';
-            $selectColumns[] = 'updated_at';
+            $selectColumns[] = $expr('remember_token');
+            $selectColumns[] = $expr('created_at');
+            $selectColumns[] = $expr('updated_at');
             
             $insertSQL = "INSERT INTO users SELECT " . implode(', ', $selectColumns) . " FROM users_backup";
             DB::statement($insertSQL);

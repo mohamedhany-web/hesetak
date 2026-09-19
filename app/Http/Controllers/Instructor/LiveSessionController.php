@@ -25,21 +25,44 @@ class LiveSessionController extends Controller
     {
         $instructorId = auth()->id();
 
-        $query = LiveSession::forInstructor($instructorId)
-            ->with(['course'])
-            ->withCount('attendance');
+        // حصتك: المدرب لا ينشئ بثاً مستقلاً — هنا تظهر جلساته 1:1 فقط
+        $query = \App\Models\OneToOneSession::query()
+            ->where('instructor_id', $instructorId)
+            ->with(['course:id,title', 'student:id,name', 'classroomMeeting']);
 
-        if ($request->filled('status')) {
-            $query->where('status', $request->status);
+        $status = $request->query('status');
+        if ($status === 'live' || $status === 'scheduled') {
+            $query->where('status', \App\Models\OneToOneSession::STATUS_SCHEDULED)
+                ->whereNotNull('scheduled_at')
+                ->where('scheduled_at', '>=', now()->subMinutes(15));
+        } elseif ($status === 'pending') {
+            $query->where('status', \App\Models\OneToOneSession::STATUS_PENDING);
+        } elseif ($status === 'ended' || $status === 'completed') {
+            $query->where('status', \App\Models\OneToOneSession::STATUS_COMPLETED);
         }
 
-        $sessions = $query->latest('scheduled_at')->paginate(15)->withQueryString();
+        $sessions = $query
+            ->orderByRaw("CASE status WHEN 'pending_schedule' THEN 0 WHEN 'scheduled' THEN 1 WHEN 'completed' THEN 2 ELSE 3 END")
+            ->orderBy('scheduled_at')
+            ->paginate(20)
+            ->withQueryString();
 
+        $base = \App\Models\OneToOneSession::query()->where('instructor_id', $instructorId);
         $stats = [
-            'total' => LiveSession::forInstructor($instructorId)->count(),
-            'live' => LiveSession::forInstructor($instructorId)->where('status', 'live')->count(),
-            'scheduled' => LiveSession::forInstructor($instructorId)->where('status', 'scheduled')->count(),
-            'ended' => LiveSession::forInstructor($instructorId)->where('status', 'ended')->count(),
+            'total' => (clone $base)->count(),
+            'live' => (clone $base)
+                ->where('status', \App\Models\OneToOneSession::STATUS_SCHEDULED)
+                ->whereNotNull('scheduled_at')
+                ->whereBetween('scheduled_at', [now()->subMinutes(15), now()->addMinutes(90)])
+                ->count(),
+            'scheduled' => (clone $base)
+                ->where('status', \App\Models\OneToOneSession::STATUS_SCHEDULED)
+                ->where(function ($q) {
+                    $q->whereNull('scheduled_at')->orWhere('scheduled_at', '>=', now());
+                })
+                ->count(),
+            'ended' => (clone $base)->where('status', \App\Models\OneToOneSession::STATUS_COMPLETED)->count(),
+            'pending' => (clone $base)->where('status', \App\Models\OneToOneSession::STATUS_PENDING)->count(),
         ];
 
         return view('instructor.live-sessions.index', compact('sessions', 'stats'));
@@ -47,56 +70,20 @@ class LiveSessionController extends Controller
 
     public function create()
     {
-        $courses = AdvancedCourse::whereHas('enrollments', function ($q) {
-            $q->where('user_id', auth()->id());
-        })
-            ->orWhere('instructor_id', auth()->id())
-            ->select('id', 'title')
-            ->orderBy('title')
-            ->get();
-
-        if ($courses->isEmpty()) {
-            $courses = AdvancedCourse::select('id', 'title')->orderBy('title')->get();
-        }
-
-        return view('instructor.live-sessions.create', compact('courses'));
+        return redirect()
+            ->route('instructor.live-sessions.index')
+            ->with('info', app()->getLocale() === 'ar'
+                ? 'إنشاء بث مستقل غير متاح — جلساتك تظهر من الحصص الخاصة (1:1).'
+                : 'Creating standalone broadcasts is disabled — your 1:1 sessions appear here.');
     }
 
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'course_id' => 'nullable|exists:advanced_courses,id',
-            'scheduled_at' => 'required|date',
-            'timezone' => AppTimezone::inputRules(),
-            'max_participants' => 'nullable|integer|min:2|max:500',
-            'is_recorded' => 'boolean',
-            'allow_chat' => 'boolean',
-            'password' => 'nullable|string|max:50',
-        ]);
-        $validated = AppTimezone::shiftRequestDateTime($request, $validated, 'scheduled_at', mustBeFuture: true);
-        unset($validated['timezone']);
-
-        $validated['instructor_id'] = auth()->id();
-        $validated['is_recorded'] = true;
-        $validated['allow_chat'] = false;
-        $validated['allow_screen_share'] = true;
-        $validated['require_enrollment'] = LiveSetting::get('require_enrollment', true);
-        $validated['mute_on_join'] = LiveSetting::get('mute_students_on_join', true);
-        $validated['video_off_on_join'] = LiveSetting::get('video_off_students_on_join', true);
-        $validated['status'] = 'scheduled';
-
-        $defaultServer = app(\App\Services\LiveMeetingProvider::class)->preferredLiveKitServer()
-            ?: LiveServer::where('status', 'active')->orderByDesc('id')->first();
-        if ($defaultServer) {
-            $validated['server_id'] = $defaultServer->id;
-        }
-
-        $session = LiveSession::create($validated);
-
-        return redirect()->route('instructor.live-sessions.show', $session)
-            ->with('success', 'تم إنشاء جلسة البث بنجاح — يمكنك بدء البث في الموعد المحدد');
+        return redirect()
+            ->route('instructor.live-sessions.index')
+            ->with('error', app()->getLocale() === 'ar'
+                ? 'لا يمكن إنشاء جلسة بث مباشرة من لوحة المدرب.'
+                : 'Instructors cannot create standalone live sessions.');
     }
 
     public function show(LiveSession $liveSession)

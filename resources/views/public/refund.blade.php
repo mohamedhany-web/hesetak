@@ -1,91 +1,91 @@
-﻿@extends('layouts.public')
-
-@section('title', __('public.refund_page_title') . ' - ' . __('public.site_suffix'))
-@section('meta_description', 'سياسة الاسترداد والإلغاء لمنصة ' . config('app.name') . ' — تعرف على شروط استرداد مدفوعاتك.')
-@section('meta_keywords', 'سياسة الاسترداد, استرداد المبلغ, Glottical, إلغاء الاشتراك')
-@section('canonical_url', url('/refund'))
+@extends('layouts.mycourses-public')
 
 @section('content')
-<!-- Hero Section -->
-<section class="hero-gradient min-h-[50vh] flex items-center relative overflow-hidden pt-28" style="background: linear-gradient(135deg, rgba(15, 23, 42, 0.9) 0%, rgba(30, 41, 59, 0.85) 25%, rgba(14, 165, 233, 0.7) 50%, rgba(14, 165, 233, 0.75) 75%, rgba(2, 132, 199, 0.8) 100%);">
-    <div class="container mx-auto px-4 text-center relative z-10">
-        <h1 class="text-5xl md:text-6xl font-black text-white leading-tight mb-6 fade-in" style="text-shadow: 0 4px 16px rgba(0,0,0,0.8), 0 2px 8px rgba(0,0,0,0.6), 0 0 12px rgba(14, 165, 233, 0.4);">
-            سياسة الاسترجاع
-        </h1>
-        <p class="text-xl md:text-2xl text-white mb-10 fade-in font-semibold" style="text-shadow: 0 3px 12px rgba(0,0,0,0.7), 0 1px 6px rgba(0,0,0,0.5), 0 0 8px rgba(14, 165, 233, 0.3);">
-            نحن ملتزمون برضاك التام
-        </p>
+@php
+  $brand = __('landing.nav.brand');
+  $isRtl = app()->getLocale() === 'ar';
+@endphp
+
+<section class="mc-page-hero">
+  <div class="mc-container">
+    <p class="mc-eyebrow">{{ __('public.refund_page_title') }}</p>
+    <h1>
+      {{ $isRtl ? 'سياسة الاسترجاع على' : 'Refund policy on' }}
+      <span class="mc-contact-hero__accent">{{ $brand }}</span>
+    </h1>
+    <p class="mc-lead">
+      {{ $isRtl
+        ? 'نلتزم بوضوح شروط الاسترجاع لأولياء الأمور والطلاب عند شراء باقات الحصص والكورسات.'
+        : 'Clear refund rules for parents and students when buying session packages and courses.' }}
+    </p>
+    <div class="mc-hero__actions">
+      <a href="{{ route('public.contact') }}" class="mc-btn mc-btn--lg mc-btn--primary">{{ __('public.contact_page_title') }}</a>
+      <a href="{{ route('public.pricing') }}" class="mc-btn mc-btn--lg mc-btn--outline">{{ $isRtl ? 'تصفّح الباقات' : 'See packages' }}</a>
     </div>
+  </div>
 </section>
 
-<!-- Content Section -->
-<section class="py-16 bg-white">
-    <div class="container mx-auto px-4 max-w-4xl">
-        <div class="bg-white rounded-xl shadow-lg p-8 md:p-12">
-            <div class="prose prose-lg max-w-none">
-                <p class="text-gray-700 text-lg leading-relaxed mb-8">
-                    نحن ملتزمون برضاك التام. إذا لم تكن راضياً عن خدمتنا، يمكنك طلب استرجاع المبلغ خلال 30 يوماً من تاريخ الشراء.
-                </p>
-                
-                <div class="space-y-8">
-                    <div class="card-hover p-6 rounded-xl bg-gradient-to-br from-sky-50 to-sky-100 border-r-4 border-sky-500">
-                        <h2 class="text-2xl font-bold text-gray-800 mb-4 flex items-center">
-                            <i class="fas fa-list-check text-sky-500 ml-3"></i>
-                            شروط الاسترجاع
-                        </h2>
-                        <ul class="space-y-2 text-gray-700">
-                            <li class="flex items-start">
-                                <i class="fas fa-check text-sky-500 ml-3 mt-1"></i>
-                                <span>يجب أن يكون الطلب خلال 30 يوماً من تاريخ الشراء</span>
-                            </li>
-                            <li class="flex items-start">
-                                <i class="fas fa-check text-sky-500 ml-3 mt-1"></i>
-                                <span>لم تكمل أكثر من 50% من محتوى الكورس</span>
-                            </li>
-                            <li class="flex items-start">
-                                <i class="fas fa-check text-sky-500 ml-3 mt-1"></i>
-                                <span>يجب تقديم سبب واضح للاسترجاع</span>
-                            </li>
-                        </ul>
-                    </div>
+<section class="mc-section">
+  <div class="mc-container">
+    <div class="mc-legal-intro">
+      <span class="mc-legal-intro__icon" aria-hidden="true"><i class="fas fa-rotate-left"></i></span>
+      <p>
+        {{ $isRtl
+          ? 'إذا لم تكن راضياً عن الخدمة، يمكنك طلب استرجاع وفق الشروط أدناه خلال المدة المحددة من تاريخ الشراء، مع مراعاة ما يُعرض عند إتمام الطلب.'
+          : 'If you are not satisfied, you may request a refund under the rules below within the stated period from purchase, subject to what is shown at checkout.' }}
+      </p>
+    </div>
 
-                    <div class="card-hover p-6 rounded-xl bg-gradient-to-br from-sky-50 to-sky-100 border-r-4 border-sky-500">
-                        <h2 class="text-2xl font-bold text-gray-800 mb-4 flex items-center">
-                            <i class="fas fa-envelope-open text-sky-500 ml-3"></i>
-                            كيفية طلب الاسترجاع
-                        </h2>
-                        <p class="text-gray-700 leading-relaxed mb-4">
-                            يمكنك طلب الاسترجاع من خلال التواصل معنا عبر صفحة 
-                            <a href="{{ route('public.contact') }}" class="text-sky-600 hover:underline font-semibold">تواصل معنا</a> 
-                            أو إرسال بريد إلكتروني إلى دعم العملاء.
-                        </p>
-                    </div>
-
-                    <div class="card-hover p-6 rounded-xl bg-gradient-to-br from-sky-50 to-sky-100 border-r-4 border-sky-500">
-                        <h2 class="text-2xl font-bold text-gray-800 mb-4 flex items-center">
-                            <i class="fas fa-clock text-sky-500 ml-3"></i>
-                            مدة معالجة الطلب
-                        </h2>
-                        <p class="text-gray-700 leading-relaxed">
-                            سيتم معالجة طلبك خلال 5-7 أيام عمل. سيتم إرجاع المبلغ إلى نفس طريقة الدفع المستخدمة في الشراء.
-                        </p>
-                    </div>
-                </div>
-            </div>
+    <div class="mc-legal-grid" style="margin-top:1.5rem">
+      <article class="mc-legal-card">
+        <div class="mc-legal-card__head">
+          <span class="mc-legal-card__icon" aria-hidden="true"><i class="fas fa-list-check"></i></span>
+          <h2>{{ $isRtl ? 'شروط الاسترجاع' : 'Refund conditions' }}</h2>
         </div>
+        <ul class="mc-legal-list">
+          <li>{{ $isRtl ? 'يُقدَّم الطلب خلال 30 يوماً من تاريخ الشراء.' : 'Request within 30 days of purchase.' }}</li>
+          <li>{{ $isRtl ? 'يُراجع الطلب من فريق الدعم قبل التنفيذ.' : 'Support reviews the request before processing.' }}</li>
+          <li>{{ $isRtl ? 'قد تختلف التفاصيل حسب نوع الباقة أو الكورس المعروض عند الشراء.' : 'Details may vary by package or course shown at purchase.' }}</li>
+        </ul>
+      </article>
+      <article class="mc-legal-card">
+        <div class="mc-legal-card__head">
+          <span class="mc-legal-card__icon" aria-hidden="true"><i class="fas fa-ban"></i></span>
+          <h2>{{ $isRtl ? 'حالات غير قابلة للاسترجاع' : 'Non-refundable cases' }}</h2>
+        </div>
+        <ul class="mc-legal-list">
+          <li>{{ $isRtl ? 'استهلاك جزء كبير من رصيد الحصص أو المحتوى.' : 'Most session credits or content already used.' }}</li>
+          <li>{{ $isRtl ? 'مخالفة شروط الاستخدام أو إساءة استخدام الحساب.' : 'Terms violations or account misuse.' }}</li>
+          <li>{{ $isRtl ? 'طلبات بعد انتهاء المهلة المحددة.' : 'Requests after the stated deadline.' }}</li>
+        </ul>
+      </article>
+      <article class="mc-legal-card mc-legal-card--wide">
+        <div class="mc-legal-card__head">
+          <span class="mc-legal-card__icon" aria-hidden="true"><i class="fas fa-headset"></i></span>
+          <h2>{{ $isRtl ? 'كيف تطلب الاسترجاع؟' : 'How to request a refund' }}</h2>
+        </div>
+        <p>
+          {{ $isRtl
+            ? 'تواصل معنا عبر صفحة التواصل أو واتساب مع رقم الطلب وتفاصيل المشكلة. سنراجع الطلب ونرد خلال أيام العمل.'
+            : 'Contact us via the contact page or WhatsApp with your order number and issue details. We review and reply within business days.' }}
+        </p>
+      </article>
     </div>
+  </div>
 </section>
 
-<!-- Contact Section -->
-<section class="py-12 bg-gray-50">
-    <div class="container mx-auto px-4 text-center">
-        <h3 class="text-2xl font-bold text-gray-900 mb-4">هل تحتاج مساعدة؟</h3>
-        <p class="text-gray-600 mb-6">فريقنا جاهز لمساعدتك في أي وقت</p>
-        <a href="{{ route('public.contact') }}" class="btn-primary">
-            <i class="fas fa-envelope ml-2"></i>
-            تواصل معنا
-        </a>
+<section class="mc-section">
+  <div class="mc-container">
+    <div class="mc-cta">
+      <div>
+        <h2>{{ $isRtl ? 'تحتاج مساعدة؟' : 'Need help?' }}</h2>
+        <p>{{ $isRtl ? 'فريق حصتك جاهز يوضح لك وضع طلبك خطوة بخطوة.' : 'The Hesetak team can walk you through your request step by step.' }}</p>
+      </div>
+      <div class="mc-cta__actions">
+        <a href="{{ route('public.contact') }}" class="mc-btn mc-btn--lg mc-btn--secondary">{{ __('public.contact_page_title') }}</a>
+        <a href="{{ route('public.faq') }}" class="mc-btn mc-btn--lg mc-btn--ghost-on-dark">{{ __('public.faq_page_title') }}</a>
+      </div>
     </div>
+  </div>
 </section>
 @endsection
-

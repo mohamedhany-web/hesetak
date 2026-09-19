@@ -15,8 +15,8 @@
     ];
     $kpis = [
         ['label' => 'عدد المدربين', 'value' => number_format($globalStats['instructors_count']), 'suffix' => '', 'icon' => 'fa-chalkboard-teacher', 'tone' => 'muted', 'note' => 'مدربون لديهم اتفاقيات أو مدفوعات'],
-        ['label' => 'إجمالي مطلوب الدفع', 'value' => number_format($globalStats['pending_total'], 2), 'suffix' => '$', 'icon' => 'fa-hourglass-half', 'tone' => 'metal', 'note' => 'مجموع المدفوعات المعلقة'],
-        ['label' => 'إجمالي تم الدفع', 'value' => number_format($globalStats['paid_total'], 2), 'suffix' => '$', 'icon' => 'fa-check-circle', 'tone' => 'accent', 'note' => 'مجموع المدفوعات المنفّذة'],
+        ['label' => 'إجمالي مطلوب الدفع', 'value' => number_format($globalStats['pending_total'], 2), 'suffix' => currency_symbol(), 'icon' => 'fa-hourglass-half', 'tone' => 'metal', 'note' => 'مجموع المدفوعات المعلقة'],
+        ['label' => 'إجمالي تم الدفع', 'value' => number_format($globalStats['paid_total'], 2), 'suffix' => currency_symbol(), 'icon' => 'fa-check-circle', 'tone' => 'accent', 'note' => 'مجموع المدفوعات المنفّذة'],
     ];
 @endphp
 

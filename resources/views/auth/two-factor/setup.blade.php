@@ -3,7 +3,7 @@
 @section('title', __('auth.two_factor_setup_title'))
 
 @section('nav_action')
-  <a href="{{ route('home') }}" class="gl-auth-nav-link">{{ __('auth.back_to_home') }}</a>
+  <a href="{{ route('home') }}" class="lasles-auth-nav-link">{{ __('auth.back_to_home') }}</a>
 @endsection
 
 @section('content')
@@ -26,24 +26,22 @@
     }
 @endphp
 
-<div class="gl-auth-card gl-auth-card--wide">
-  <div class="gl-auth-brand">{{ config('app.name', 'Glottical') }}</div>
-
-  <div class="gl-auth-badge" aria-hidden="true">
+<div class="lasles-auth-card lasles-auth-card--wide">
+  <div class="lasles-auth-badge" aria-hidden="true">
     <i class="fas fa-mobile-screen-button"></i>
   </div>
 
-  <h1 class="gl-auth-title">{{ __('auth.two_factor_setup_title') }}</h1>
-  <p class="gl-auth-lead">{{ __('auth.two_factor_setup_lead') }}</p>
+  <h1 class="lasles-auth-title">{{ __('auth.two_factor_setup_title') }}</h1>
+  <p class="lasles-auth-lead">{{ __('auth.two_factor_setup_lead') }}</p>
 
   @if (session('warning'))
-    <div class="gl-auth-alert gl-auth-alert--warn">{{ session('warning') }}</div>
+    <div class="lasles-auth-alert lasles-auth-alert--warn">{{ session('warning') }}</div>
   @endif
   @if ($errors->has('code'))
-    <div class="gl-auth-alert gl-auth-alert--err">{{ $errors->first('code') }}</div>
+    <div class="lasles-auth-alert lasles-auth-alert--err">{{ $errors->first('code') }}</div>
   @endif
 
-  <div class="gl-auth-qr">
+  <div class="lasles-auth-qr">
     <img
       src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data={{ urlencode($qrCodeUrl) }}"
       alt="QR Code"
@@ -53,17 +51,17 @@
     >
   </div>
 
-  <p class="gl-auth-secret">
+  <p class="lasles-auth-secret">
     {{ __('auth.two_factor_manual_key') }}
     <code dir="ltr">{{ $secret }}</code>
   </p>
 
   <form action="{{ route('two-factor.enable') }}" method="POST" novalidate>
     @csrf
-    <div class="gl-auth-field">
+    <div class="lasles-auth-field">
       <label for="code">{{ __('auth.two_factor_code_label') }}</label>
-      <div class="gl-auth-input-wrap">
-        <span class="gl-auth-icon" aria-hidden="true"><i class="fas fa-key"></i></span>
+      <div class="lasles-auth-input-wrap">
+        <span class="lasles-auth-icon" aria-hidden="true"><i class="fas fa-key"></i></span>
         <input
           type="text"
           name="code"
@@ -76,20 +74,20 @@
           required
           dir="ltr"
           placeholder="000000"
-          class="gl-auth-input gl-auth-input--otp has-icon @error('code') has-error @enderror"
+          class="lasles-auth-input lasles-auth-input--otp has-icon @error('code') has-error @enderror"
         >
       </div>
-      @error('code')<p class="gl-auth-error">{{ $message }}</p>@enderror
+      @error('code')<p class="lasles-auth-error">{{ $message }}</p>@enderror
     </div>
 
-    <button type="submit" class="gl-auth-submit">
+    <button type="submit" class="lasles-auth-submit">
       <i class="fas fa-check" aria-hidden="true"></i>
       <span>{{ __('auth.two_factor_enable_cta') }}</span>
     </button>
   </form>
 
-  <div class="gl-auth-foot">
-    <a href="{{ $cancelRoute }}" class="gl-auth-link">
+  <div class="lasles-auth-foot">
+    <a href="{{ $cancelRoute }}" class="lasles-auth-link">
       <i class="fas fa-arrow-{{ $isRtl ? 'right' : 'left' }}" aria-hidden="true"></i>
       {{ __('auth.two_factor_cancel') }}
     </a>
@@ -99,31 +97,31 @@
 
 @push('head')
 <style>
-  .gl-auth-badge {
+  .lasles-auth-badge {
     width: 3.25rem; height: 3.25rem; margin: 0 auto .9rem;
     border-radius: 16px; display: grid; place-items: center;
     background: linear-gradient(145deg, #0B3D91, #072A66);
     color: #fff; font-size: 1.15rem;
     box-shadow: 0 12px 28px -10px rgba(11,61,145,.55);
   }
-  .gl-auth-qr {
+  .lasles-auth-qr {
     display: grid; place-items: center;
     margin: .2rem auto 1rem; padding: .85rem;
     width: fit-content; border-radius: 16px;
     background: #F4F7FC; border: 1.5px solid #D7DDE6;
   }
-  .gl-auth-qr img { display: block; border-radius: 10px; }
-  .gl-auth-secret {
+  .lasles-auth-qr img { display: block; border-radius: 10px; }
+  .lasles-auth-secret {
     margin: 0 0 1rem; text-align: center;
     font: 600 .8rem/1.65 Tajawal, sans-serif; color: #5B6577;
   }
-  .gl-auth-secret code {
+  .lasles-auth-secret code {
     display: inline-block; margin-top: .35rem;
     padding: .35rem .65rem; border-radius: 8px;
     background: #E8EEF8; color: #0B3D91;
     font: 800 .78rem/1 ui-monospace, monospace;
   }
-  .gl-auth-input--otp {
+  .lasles-auth-input--otp {
     letter-spacing: .42em;
     font-weight: 800;
     font-size: 1.2rem;

@@ -32,7 +32,7 @@ return new class extends Migration
             }
             
             if (!Schema::hasColumn('certificates', 'academy_signature_title')) {
-                $table->string('academy_signature_title')->default('Glottical Academy')->after('academy_signature_name');
+                $table->string('academy_signature_title')->default('حصتك')->after('academy_signature_name');
             }
             
             // إضافة توقيع المدرب

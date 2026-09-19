@@ -20,7 +20,7 @@ class EmailNotificationService
             ];
         }
 
-        $subject = $subject ?: 'رسالة من منصة Glottical';
+        $subject = $subject ?: 'رسالة من منصة حصتك';
 
         try {
             Mail::raw($message, function ($mail) use ($user, $subject) {

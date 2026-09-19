@@ -48,7 +48,7 @@ assertTrue(isset($deskData['stats']['mine_won_month'], $deskData['stats']['rejec
 
 $html = $desk->render();
 assertTrue(str_contains($html, 'لوحة المبيعات'), 'desk renders Arabic title');
-assertTrue(str_contains($html, 'لوحة CRM') || str_contains($html, 'Glottical CRM'), 'desk CRM CTA');
+assertTrue(str_contains($html, 'لوحة CRM') || str_contains($html, 'CRM حصتك'), 'desk CRM CTA');
 
 $reqBoth = Illuminate\Http\Request::create('/employee/sales/orders', 'GET', ['mine' => 1, 'unassigned' => 1]);
 $ordersView = $ctrl->ordersIndex($reqBoth);

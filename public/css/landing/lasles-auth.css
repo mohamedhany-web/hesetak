@@ -1,0 +1,567 @@
+/* حصتك auth — Lasles tokens (login / register / 2FA)
+   Extends public home language; focused form + teacher CX panel. */
+
+:root {
+  /* Official حصتك logo palette */
+  --lasles-blue: #1E4E8C;
+  --lasles-blue-deep: #184888;
+  --lasles-blue-soft: #3B7BC4;
+  --lasles-blue-tint: #E8EEF6;
+  --lasles-blue-glow: rgba(59, 123, 196, 0.35);
+  --lasles-cta: #3B7BC4;
+  --lasles-cta-hover: #4A8AD0;
+  --lasles-gold: #A88050;
+  --lasles-gold-soft: #B8956A;
+  --lasles-gold-tint: #F7F1E8;
+  --lasles-gold-glow: rgba(168, 128, 80, 0.28);
+
+  /* Primary actions (legacy aliases → brighter CTA blue) */
+  --lasles-red: var(--lasles-cta);
+  --lasles-red-soft: var(--lasles-blue-soft);
+  --lasles-red-tint: var(--lasles-blue-tint);
+  --lasles-red-glow: var(--lasles-blue-glow);
+
+  --lasles-navy: #1A3558;
+  --lasles-muted: #5A6472;
+  --lasles-border: #D8DEE8;
+  --lasles-bg: #FFFFFF;
+  --lasles-bg-soft: #F7F8FB;
+  --lasles-max: 1140px;
+  --lasles-gutter: 1.25rem;
+  --lasles-radius: 10px;
+  --lasles-radius-pill: 50px;
+  --lasles-shadow: 0 40px 60px -30px rgba(13, 16, 37, 0.12);
+  --lasles-shadow-card: 0 25px 50px -20px rgba(13, 16, 37, 0.1);
+  --lasles-font: "Rubik", system-ui, sans-serif;
+  --fs-hero: clamp(1.5rem, 1.1rem + 1.6vw, 2.25rem);
+  --fs-section: clamp(1.15rem, 1rem + 0.6vw, 1.35rem);
+  --fs-body: clamp(0.9375rem, 0.9rem + 0.15vw, 1rem);
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+body.lasles-auth {
+  margin: 0;
+  min-height: 100dvh;
+  font-family: var(--lasles-font);
+  font-size: var(--fs-body);
+  color: var(--lasles-navy);
+  background: var(--lasles-bg);
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: clip;
+}
+
+body.lasles-auth a { color: inherit; text-decoration: none; }
+body.lasles-auth img { max-width: 100%; height: auto; display: block; }
+body.lasles-auth button { font-family: inherit; }
+
+.lasles-auth-shell { position: relative; min-height: 100dvh; }
+.lasles-auth-bg {
+  position: absolute; inset: 0; z-index: 0; pointer-events: none; overflow: hidden;
+  background:
+    radial-gradient(ellipse 65% 45% at 100% 0%, rgba(30, 78, 140, 0.12), transparent 55%),
+    radial-gradient(ellipse 45% 40% at 0% 100%, rgba(168, 128, 80, 0.10), transparent 50%),
+    linear-gradient(180deg, #F5F8FC 0%, #FFFFFF 42%, #F7F8FB 100%);
+}
+.lasles-auth-bg__grid {
+  position: absolute; inset: 0; opacity: .35;
+  background-image: radial-gradient(rgba(11, 19, 42, 0.1) 1px, transparent 1px);
+  background-size: 22px 22px;
+}
+
+.lasles-auth-layer {
+  position: relative; z-index: 1; min-height: 100dvh;
+  display: flex; flex-direction: column;
+}
+
+.lasles-auth-nav {
+  display: flex; align-items: center; justify-content: space-between; gap: .75rem;
+  padding: max(.85rem, env(safe-area-inset-top)) clamp(1rem, 4vw, 2rem) .65rem;
+}
+.lasles-auth-logo {
+  display: inline-flex; align-items: center; gap: .55rem;
+  font-weight: 700; font-size: 1.05rem; color: var(--lasles-navy);
+}
+.lasles-auth-logo em { font-style: normal; font-weight: 700; color: var(--lasles-gold); }
+.lasles-auth-logo b { font-weight: 700; color: var(--lasles-blue); }
+.lasles-auth-nav__actions {
+  display: flex; align-items: center; gap: .55rem; flex-wrap: wrap; justify-content: flex-end;
+}
+.lasles-auth-lang {
+  display: inline-flex; gap: 2px; padding: 3px;
+  border: 1px solid var(--lasles-border); border-radius: 999px; background: #fff;
+}
+.lasles-auth-lang a {
+  min-height: 32px; padding: 0 .75rem; border-radius: 999px;
+  display: inline-flex; align-items: center;
+  font-weight: 500; font-size: .75rem; color: var(--lasles-muted);
+}
+.lasles-auth-lang a.is-on { background: var(--lasles-navy); color: #fff; }
+.lasles-auth-nav-link {
+  font-weight: 500; font-size: .875rem; color: var(--lasles-navy);
+  padding: .45rem .85rem; border-radius: 999px; border: 1px solid var(--lasles-border);
+  background: #fff;
+}
+.lasles-auth-nav-link:hover { border-color: var(--lasles-red); color: var(--lasles-red); }
+
+.lasles-auth-main {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: clamp(1.25rem, 3vw, 2.5rem);
+  align-items: center;
+  width: min(100% - (var(--lasles-gutter) * 2), var(--lasles-max));
+  margin-inline: auto;
+  padding: 1rem 0 2.5rem;
+}
+.lasles-auth-main--top { align-items: start; }
+@media (min-width: 900px) {
+  .lasles-auth-main {
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr);
+    padding-block: 1.25rem 3rem;
+  }
+}
+
+.lasles-auth-aside { padding-block: .25rem 1rem; }
+.lasles-auth-kicker {
+  display: inline-flex; align-items: center; gap: .4rem;
+  margin: 0 0 1rem;
+  padding: .35rem .75rem;
+  border-radius: 999px;
+  background: var(--lasles-gold-tint);
+  color: var(--lasles-gold);
+  font-weight: 500; font-size: .8rem;
+}
+.lasles-auth-aside__title {
+  margin: 0 0 .75rem;
+  font-size: var(--fs-hero);
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--lasles-navy);
+  max-width: 18ch;
+}
+.lasles-auth-aside__title em {
+  font-style: normal;
+  color: var(--lasles-gold);
+}
+.lasles-auth-aside__lead {
+  margin: 0 0 1.5rem;
+  color: var(--lasles-muted);
+  font-weight: 400;
+  font-size: var(--fs-body);
+  line-height: 1.75;
+  max-width: 38ch;
+}
+.lasles-auth-loop {
+  list-style: none; margin: 0; padding: 0;
+  display: grid; gap: .75rem;
+}
+.lasles-auth-loop li {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: .75rem;
+  align-items: start;
+  padding: .85rem 1rem;
+  border-radius: var(--lasles-radius);
+  background: #fff;
+  border: 1px solid rgba(221, 221, 221, .9);
+  box-shadow: var(--lasles-shadow-card);
+}
+.lasles-auth-loop__num {
+  width: 1.75rem; height: 1.75rem;
+  border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--lasles-red-tint);
+  color: var(--lasles-red);
+  font-weight: 700; font-size: .8rem;
+}
+.lasles-auth-loop__label {
+  margin: 0;
+  font-weight: 700;
+  font-size: .95rem;
+  color: var(--lasles-navy);
+}
+.lasles-auth-loop__desc {
+  margin: .15rem 0 0;
+  font-size: .85rem;
+  color: var(--lasles-muted);
+  line-height: 1.5;
+}
+@media (max-width: 899px) {
+  .lasles-auth-aside { order: -1; }
+  .lasles-auth-loop { grid-template-columns: 1fr 1fr; }
+  .lasles-auth-aside__title { max-width: none; }
+}
+@media (max-width: 479px) {
+  .lasles-auth-loop { grid-template-columns: 1fr; }
+}
+
+.lasles-auth-card {
+  width: 100%;
+  background: #fff;
+  border: 1px solid var(--lasles-border);
+  border-radius: 16px;
+  padding: clamp(1.15rem, 2.5vw, 1.75rem);
+  box-shadow: var(--lasles-shadow);
+}
+.lasles-auth-card--wide { max-width: none; }
+.lasles-auth-eyebrow {
+  margin: 0 0 .5rem;
+  text-align: center;
+  font-weight: 500;
+  font-size: .8rem;
+  color: var(--lasles-red);
+  letter-spacing: .02em;
+}
+.lasles-auth-title {
+  margin: 0 0 .4rem;
+  text-align: center;
+  font-weight: 700;
+  font-size: clamp(1.35rem, 2.5vw, 1.75rem);
+  line-height: 1.3;
+  color: var(--lasles-navy);
+}
+.lasles-auth-title em { font-style: normal; color: var(--lasles-gold); }
+.lasles-auth-lead {
+  margin: 0 0 1.2rem;
+  text-align: center;
+  color: var(--lasles-muted);
+  font-size: .9rem;
+  line-height: 1.65;
+}
+
+.lasles-auth-alert {
+  margin: 0 0 .85rem;
+  padding: .7rem .85rem;
+  border-radius: var(--lasles-radius);
+  font-weight: 500;
+  font-size: .82rem;
+  line-height: 1.5;
+}
+.lasles-auth-alert--ok { background: #ECFDF5; color: #047857; }
+.lasles-auth-alert--warn { background: #FFF8E6; color: #9A7200; }
+.lasles-auth-alert--err { background: #FEF2F2; color: #B91C1C; }
+.lasles-auth-alert--info { background: var(--lasles-blue-tint); color: var(--lasles-blue-deep); }
+
+.lasles-auth-field { margin-bottom: .9rem; }
+.lasles-auth-field label {
+  display: block;
+  margin-bottom: .35rem;
+  font-weight: 500;
+  font-size: .82rem;
+  color: var(--lasles-navy);
+}
+.lasles-auth-input-wrap { position: relative; }
+.lasles-auth-input {
+  width: 100%;
+  height: 3rem;
+  border: 1px solid var(--lasles-border);
+  border-radius: var(--lasles-radius);
+  padding: 0 1rem;
+  background: var(--lasles-bg-soft);
+  font: 400 .95rem/1 var(--lasles-font);
+  color: var(--lasles-navy);
+  outline: none;
+  transition: border-color .15s, box-shadow .15s, background .15s;
+}
+.lasles-auth-input:focus {
+  border-color: var(--lasles-red);
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(30, 78, 140, 0.12);
+}
+.lasles-auth-input.has-error { border-color: #DC2626; }
+.lasles-auth-input::placeholder { color: #94A3B8; }
+.lasles-auth-input.has-icon { padding-inline-start: 2.55rem; }
+select.lasles-auth-input {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%234F5665' d='M1 1l5 5 5-5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: left 1rem center;
+  padding-inline-end: 2.25rem;
+}
+html[dir="rtl"] select.lasles-auth-input {
+  background-position: right 1rem center;
+}
+
+.lasles-auth-icon {
+  position: absolute; top: 50%; transform: translateY(-50%);
+  inset-inline-start: .85rem; color: #94A3B8; pointer-events: none;
+  display: inline-flex; width: 1.1rem; justify-content: center;
+}
+.lasles-auth-pw-btn {
+  position: absolute; top: 50%; transform: translateY(-50%);
+  inset-inline-end: .35rem; border: 0; background: transparent;
+  min-width: 2.4rem; height: 2.4rem; border-radius: 8px; cursor: pointer;
+  font-weight: 500; font-size: .72rem; color: var(--lasles-muted);
+}
+.lasles-auth-pw-btn:hover { background: var(--lasles-red-tint); color: var(--lasles-red); }
+.lasles-auth-error {
+  margin: .3rem 0 0;
+  font-weight: 500; font-size: .75rem; color: #DC2626;
+}
+.lasles-auth-hint {
+  margin: .35rem 0 0;
+  font-size: .75rem;
+  color: var(--lasles-muted);
+  line-height: 1.5;
+}
+
+.lasles-auth-phone {
+  display: grid;
+  grid-template-columns: minmax(8.5rem, 11.5rem) minmax(0, 1fr);
+  gap: .5rem;
+  align-items: start;
+}
+.lasles-auth-phone > input[type="tel"] {
+  width: 100%; height: 3rem;
+  border: 1px solid var(--lasles-border);
+  border-radius: var(--lasles-radius);
+  background: var(--lasles-bg-soft);
+  padding: 0 .85rem;
+  font: 400 .9rem/1 var(--lasles-font);
+  color: var(--lasles-navy);
+  outline: none;
+}
+.lasles-auth-phone > input[type="tel"]:focus {
+  border-color: var(--lasles-red);
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(30, 78, 140, 0.12);
+}
+.lasles-auth-phone.has-error > input[type="tel"],
+.lasles-auth-phone.has-error .lasles-auth-cc-btn { border-color: #DC2626; }
+.lasles-auth-cc { position: relative; min-width: 0; }
+.lasles-auth-cc-btn {
+  width: 100%; height: 3rem;
+  display: inline-flex; align-items: center; gap: .35rem;
+  border: 1px solid var(--lasles-border);
+  border-radius: var(--lasles-radius);
+  background: var(--lasles-bg-soft);
+  padding: 0 .55rem 0 .7rem;
+  cursor: pointer;
+  font: 400 .82rem/1 var(--lasles-font);
+  color: var(--lasles-navy);
+  text-align: start;
+}
+.lasles-auth-cc-btn:hover,
+.lasles-auth-cc-btn:focus-visible {
+  border-color: var(--lasles-red);
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(30, 78, 140, 0.12);
+  outline: none;
+}
+.lasles-auth-cc-dial { flex: 0 0 auto; font-weight: 700; color: var(--lasles-red); white-space: nowrap; }
+.lasles-auth-cc-name {
+  flex: 1 1 auto; min-width: 0;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  color: var(--lasles-muted); font-size: .74rem;
+}
+.lasles-auth-cc-btn > i { margin-inline-start: auto; color: #94A3B8; font-size: .65rem; }
+.lasles-auth-cc-panel {
+  position: absolute; z-index: 40;
+  top: calc(100% + .35rem); inset-inline: 0;
+  width: max(100%, 16.5rem); max-width: min(22rem, 92vw);
+  border: 1px solid var(--lasles-border);
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: var(--lasles-shadow-card);
+  overflow: hidden;
+}
+.lasles-auth-cc-search {
+  display: flex; align-items: center; gap: .45rem;
+  padding: .55rem .7rem;
+  border-bottom: 1px solid #EEE;
+  background: var(--lasles-bg-soft);
+}
+.lasles-auth-cc-search i { color: #94A3B8; font-size: .8rem; }
+.lasles-auth-cc-search input {
+  flex: 1; min-width: 0; border: 0; background: transparent; outline: none;
+  font: 400 .82rem/1 var(--lasles-font); color: var(--lasles-navy); height: 1.8rem;
+}
+.lasles-auth-cc-list {
+  list-style: none; margin: 0; padding: .25rem; max-height: 14rem; overflow: auto;
+}
+.lasles-auth-cc-option {
+  width: 100%; display: flex; align-items: center; gap: .55rem;
+  border: 0; background: transparent; border-radius: 8px;
+  padding: .55rem .6rem; cursor: pointer; text-align: start;
+  font: 400 .82rem/1.3 var(--lasles-font); color: var(--lasles-navy);
+}
+.lasles-auth-cc-option:hover,
+.lasles-auth-cc-option.is-active { background: var(--lasles-red-tint); }
+.lasles-auth-cc-option-dial { flex: 0 0 3.4rem; font-weight: 700; color: var(--lasles-red); }
+.lasles-auth-cc-option-name { flex: 1; min-width: 0; color: var(--lasles-muted); }
+.lasles-auth-cc-empty {
+  padding: .85rem .7rem; text-align: center;
+  font: 400 .8rem/1 var(--lasles-font); color: #94A3B8;
+}
+@media (max-width: 520px) {
+  .lasles-auth-phone { grid-template-columns: 1fr; }
+  .lasles-auth-cc-panel { width: 100%; max-width: none; }
+}
+
+.lasles-auth-row {
+  display: flex; align-items: center; justify-content: space-between; gap: .75rem;
+  flex-wrap: wrap; margin: .15rem 0 1rem;
+}
+.lasles-auth-check {
+  display: inline-flex; align-items: center; gap: .45rem; cursor: pointer;
+  font-weight: 400; font-size: .85rem; color: var(--lasles-muted);
+}
+.lasles-auth-check input { accent-color: var(--lasles-red); width: 1rem; height: 1rem; }
+.lasles-auth-link {
+  font-weight: 500; font-size: .85rem; color: var(--lasles-red);
+}
+.lasles-auth-link:hover { text-decoration: underline; }
+.lasles-auth-terms {
+  display: flex; align-items: flex-start; gap: .55rem;
+  margin: .35rem 0 1rem;
+  font-weight: 400; font-size: .82rem; line-height: 1.55;
+  color: var(--lasles-muted); cursor: pointer;
+}
+.lasles-auth-terms input { margin-top: .2rem; accent-color: var(--lasles-red); flex-shrink: 0; }
+
+.lasles-auth-submit {
+  width: 100%;
+  min-height: 3.15rem;
+  border: 0;
+  border-radius: var(--lasles-radius-pill);
+  cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center; gap: .5rem;
+  background: var(--lasles-cta);
+  color: #fff;
+  font-weight: 700; font-size: .95rem;
+  box-shadow: 0 14px 28px var(--lasles-blue-glow);
+  transition: background .15s, transform .15s, box-shadow .15s;
+}
+.lasles-auth-submit:hover {
+  background: var(--lasles-cta-hover);
+  box-shadow: 0 16px 30px rgba(59, 123, 196, 0.42);
+}
+.lasles-auth-submit:active { transform: translateY(1px); }
+
+.lasles-auth-or {
+  display: flex; align-items: center; gap: .75rem;
+  margin: 1rem 0 .85rem;
+  color: #94a3b8; font-weight: 500; font-size: .75rem;
+}
+.lasles-auth-or::before,
+.lasles-auth-or::after {
+  content: ""; flex: 1; height: 1px; background: #E8E8E8;
+}
+.lasles-auth-google {
+  width: 100%; min-height: 3rem;
+  border-radius: var(--lasles-radius-pill);
+  display: inline-flex; align-items: center; justify-content: center; gap: .6rem;
+  border: 1px solid var(--lasles-border);
+  background: #fff;
+  color: var(--lasles-navy);
+  font-weight: 500; font-size: .9rem;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, .04);
+}
+.lasles-auth-google:hover { border-color: #cfcfcf; background: var(--lasles-bg-soft); }
+.lasles-auth-google i { color: #ea4335; font-size: 1rem; }
+
+.lasles-auth-foot {
+  margin-top: 1.15rem;
+  padding-top: 1rem;
+  border-top: 1px solid #EEE;
+  text-align: center;
+  font-weight: 400; font-size: .875rem;
+  color: var(--lasles-muted);
+}
+.lasles-auth-trust {
+  display: flex; flex-wrap: wrap; justify-content: center; gap: .45rem .85rem;
+  margin-top: 1rem;
+  font-weight: 500; font-size: .72rem;
+  color: var(--lasles-muted);
+}
+.lasles-auth-trust span { display: inline-flex; align-items: center; gap: 5px; }
+.lasles-auth-trust i { color: var(--lasles-red); }
+
+.lasles-auth-sr-only {
+  position: absolute !important; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+}
+.lasles-auth-badge {
+  width: 3rem; height: 3rem; margin: 0 auto .85rem;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--lasles-red-tint); color: var(--lasles-red); font-size: 1.25rem;
+}
+.lasles-auth-qr {
+  display: flex; justify-content: center;
+  margin: 0 0 1rem; padding: 1rem;
+  border: 1px dashed var(--lasles-border); border-radius: 12px; background: var(--lasles-bg-soft);
+}
+.lasles-auth-qr img { display: block; border-radius: 10px; }
+.lasles-auth-secret {
+  text-align: center; margin: 0 0 1rem;
+  font-size: .85rem; color: var(--lasles-muted);
+}
+.lasles-auth-secret code {
+  display: inline-block; margin-top: .35rem;
+  padding: .35rem .6rem; border-radius: 8px;
+  background: #fff; border: 1px solid var(--lasles-border);
+  font-size: .8rem; color: var(--lasles-navy);
+}
+.lasles-auth-input--otp {
+  letter-spacing: .35em; text-align: center; font-weight: 600;
+}
+
+[x-cloak] { display: none !important; }
+
+/* Subtle auth entrance */
+@media (prefers-reduced-motion: no-preference) {
+  .lasles-auth-aside {
+    animation: lasles-auth-rise .65s cubic-bezier(.22, 1, .36, 1) both;
+  }
+  .lasles-auth-panel {
+    animation: lasles-auth-rise .7s .08s cubic-bezier(.22, 1, .36, 1) both;
+  }
+  .lasles-auth-loop li {
+    opacity: 0;
+    animation: lasles-auth-rise .5s cubic-bezier(.22, 1, .36, 1) both;
+  }
+  .lasles-auth-loop li:nth-child(1) { animation-delay: .12s; }
+  .lasles-auth-loop li:nth-child(2) { animation-delay: .18s; }
+  .lasles-auth-loop li:nth-child(3) { animation-delay: .24s; }
+  .lasles-auth-loop li:nth-child(4) { animation-delay: .3s; }
+
+  .lasles-auth-submit,
+  .lasles-auth-google,
+  .lasles-auth-nav-link {
+    transition: transform .2s ease, filter .15s ease, border-color .2s ease, background .2s ease;
+  }
+  .lasles-auth-submit:hover { transform: translateY(-1px); }
+  .lasles-auth-google:hover { transform: translateY(-1px); }
+  .lasles-auth-card {
+    transition: box-shadow .25s ease;
+  }
+}
+
+@keyframes lasles-auth-rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lasles-auth-aside,
+  .lasles-auth-panel,
+  .lasles-auth-loop li {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
+@media (min-width: 1440px) {
+  body.lasles-auth { font-size: 16px; }
+  .lasles-auth-aside__title { font-size: 2.25rem; }
+}

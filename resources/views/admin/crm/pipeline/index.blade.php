@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'Pipeline CRM - Glottical')
+@section('title', 'Pipeline CRM - حصتك')
 @section('page_title', 'لوحة مسار البيع')
 
 @section('content')

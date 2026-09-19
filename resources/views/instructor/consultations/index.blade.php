@@ -4,32 +4,62 @@
 @section('page_title', __('instructor.cons_title'))
 
 @section('content')
-<div class="su-page">
-    <div class="su-page-head">
-        <div class="min-w-0">
-            <h1 class="su-page-head__title">
-                <i class="fas fa-comments su-page-head__ico" aria-hidden="true"></i>
-                {{ __('instructor.cons_title') }}
-            </h1>
-            <p class="su-page-head__sub">{{ __('instructor.cons_subtitle') }}</p>
+@php
+    $total = method_exists($requests, 'total') ? $requests->total() : $requests->count();
+    $scheduled = collect(method_exists($requests, 'items') ? $requests->items() : $requests)
+        ->filter(fn ($r) => $r->scheduled_at && $r->scheduled_at >= now())
+        ->count();
+    $calHref = Route::has('instructor.calendar') ? route('instructor.calendar') : null;
+    $coursesHref = Route::has('instructor.courses.index') ? route('instructor.courses.index') : null;
+@endphp
+
+<div class="id-page">
+    <section class="id-hero" aria-label="{{ __('instructor.cons_title') }}">
+        <div class="id-hero__copy">
+            <p class="id-hero__kicker">{{ __('instructor.student_consultations') }}</p>
+            <h2 class="id-hero__title">{{ __('instructor.cons_title') }}</h2>
+            <p class="id-hero__meta">{{ __('instructor.cons_subtitle') }}</p>
         </div>
-        <div class="su-page-head__actions">
-            <a href="{{ route('instructor.courses.index') }}" class="su-btn">
-                <i class="fas fa-book" aria-hidden="true"></i>
-                {{ __('instructor.courses') }}
-            </a>
-            @if(\Illuminate\Support\Facades\Route::has('instructor.calendar'))
-                <a href="{{ route('instructor.calendar') }}" class="su-btn su-btn--primary">
+        <div class="id-hero__actions">
+            @if($calHref)
+                <a href="{{ $calHref }}" class="id-btn id-btn--gold">
                     <i class="fas fa-calendar-alt" aria-hidden="true"></i>
                     {{ __('instructor.cons_my_calendar') }}
                 </a>
             @endif
+            @if($coursesHref && instructor_ui('show_courses', false))
+                <a href="{{ $coursesHref }}" class="id-btn id-btn--ghost">
+                    <i class="fas fa-book" aria-hidden="true"></i>
+                    {{ __('instructor.courses') }}
+                </a>
+            @endif
         </div>
-    </div>
+    </section>
 
-    <section class="su-card su-card--flush">
-        <div class="su-table-wrap" style="border:0;border-radius:0;background:transparent">
-            <table class="su-table">
+    <section class="id-kpis" style="grid-template-columns:repeat(2,minmax(0,1fr))" aria-label="{{ __('instructor.cons_title') }}">
+        <article class="id-kpi" style="cursor:default">
+            <span class="id-kpi__icon" aria-hidden="true"><i class="fas fa-comments-dollar"></i></span>
+            <span class="id-kpi__body">
+                <span class="id-kpi__label">{{ __('instructor.cons_title') }}</span>
+                <span class="id-kpi__value">{{ number_format($total) }}</span>
+            </span>
+        </article>
+        <article class="id-kpi" style="cursor:default">
+            <span class="id-kpi__icon id-kpi__icon--gold" aria-hidden="true"><i class="fas fa-calendar-check"></i></span>
+            <span class="id-kpi__body">
+                <span class="id-kpi__label">{{ __('instructor.cons_when') }}</span>
+                <span class="id-kpi__value">{{ number_format($scheduled) }}</span>
+            </span>
+        </article>
+    </section>
+
+    <section class="id-panel id-panel--wide" aria-label="{{ __('instructor.cons_title') }}">
+        <header class="id-panel__head">
+            <h2>{{ __('instructor.cons_title') }}</h2>
+        </header>
+
+        <div class="id-table-wrap">
+            <table class="id-table">
                 <thead>
                     <tr>
                         <th>{{ __('instructor.cons_student') }}</th>
@@ -42,18 +72,20 @@
                 <tbody>
                     @forelse($requests as $r)
                         <tr>
-                            <td><strong style="font-weight:600">{{ $r->student->name ?? '—' }}</strong></td>
-                            <td class="tabular-nums" style="color:var(--su-ink-40)">{{ number_format($r->price_amount, 2) }} $</td>
-                            <td><span class="su-chip">{{ $r->statusLabel() }}</span></td>
-                            <td class="tabular-nums" style="color:var(--su-ink-40)">
+                            <td><strong>{{ $r->student->name ?? '—' }}</strong></td>
+                            <td class="tabular-nums">
+                                <span class="muted">{{ number_format($r->price_amount, 2) }} {{ currency_symbol() }}</span>
+                            </td>
+                            <td><span class="id-chip id-chip--muted">{{ $r->statusLabel() }}</span></td>
+                            <td class="tabular-nums">
                                 @if($r->scheduled_at)
                                     <x-app-datetime :at="$r->scheduled_at" pattern="Y-m-d H:i" />
                                 @else
-                                    —
+                                    <span class="muted">—</span>
                                 @endif
                             </td>
-                            <td style="text-align:end">
-                                <a href="{{ route('instructor.consultations.show', $r) }}" class="su-btn" style="height:32px">
+                            <td class="id-table__end">
+                                <a href="{{ route('instructor.consultations.show', $r) }}" class="id-btn id-btn--outline" style="min-height:34px;padding:0 12px;font-size:12px">
                                     {{ __('instructor.cons_details') }}
                                 </a>
                             </td>
@@ -61,8 +93,8 @@
                     @empty
                         <tr>
                             <td colspan="5">
-                                <div class="su-empty">
-                                    <i class="fas fa-comments" aria-hidden="true"></i>
+                                <div class="id-empty" style="border:0;background:transparent;padding:28px 8px">
+                                    <span class="id-empty__mark" aria-hidden="true"><i class="fas fa-comments-dollar"></i></span>
                                     <p>{{ __('instructor.cons_empty') }}</p>
                                 </div>
                             </td>
@@ -71,8 +103,9 @@
                 </tbody>
             </table>
         </div>
+
         @if(method_exists($requests, 'links') && $requests->hasPages())
-            <div class="su-pager" style="padding:12px">{{ $requests->links() }}</div>
+            <div class="id-pager">{{ $requests->links() }}</div>
         @endif
     </section>
 </div>

@@ -341,7 +341,7 @@ class PackageController extends Controller
             $validated['card_summary'] = trim($validated['card_summary']) ?: null;
         }
 
-        $validated['currency'] = strtoupper(trim((string) ($validated['currency'] ?? 'USD'))) ?: 'USD';
+        $validated['currency'] = strtoupper(trim((string) ($validated['currency'] ?? platform_currency()))) ?: platform_currency();
         $validated['track'] = $validated['track'] ?? null;
         $validated['is_active'] = $request->boolean('is_active');
         $validated['is_featured'] = $request->boolean('is_featured');

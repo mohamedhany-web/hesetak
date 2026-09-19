@@ -1,167 +1,138 @@
 @extends('layouts.student-timeline')
 
 @section('title', __('student.course_subscriptions_title'))
-@section('header', __('student.course_subscriptions_title'))
 
 @section('content')
-<div class="w-full px-4 sm:px-6 lg:px-8 py-6 space-y-6">
-    <div class="rounded-2xl bg-white dark:bg-slate-800/95 border border-slate-200 dark:border-slate-700 shadow-sm p-6">
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-                <h1 class="text-xl sm:text-2xl font-black text-slate-900 dark:text-slate-100">{{ __('student.course_subscriptions_title') }}</h1>
-                <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">{{ __('student.course_subscriptions_subtitle') }}</p>
-            </div>
-            <a href="{{ route('public.courses') }}" class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-sky-600 hover:bg-sky-700 text-white text-sm font-bold transition shrink-0">
-                <i class="fas fa-search"></i>
-                {{ __('student.browse_courses') }}
-            </a>
+@php
+    $locale = app()->getLocale();
+    $browseUrl = Route::has('public.courses') ? route('public.courses') : route('dashboard');
+@endphp
+
+@include('partials.student-timeline-top', [
+    'locale' => $locale,
+    'pageTitle' => __('student.course_subscriptions_title'),
+    'crumbs' => [
+        ['label' => __('student_timeline.school_gate'), 'url' => route('dashboard')],
+        ['label' => __('student.my_courses'), 'url' => route('my-courses.index')],
+        ['label' => __('student.course_subscriptions_title'), 'url' => null],
+    ],
+])
+
+<section class="st-join-hero" aria-label="{{ __('student.course_subscriptions_title') }}">
+    <div class="st-join-hero__copy">
+        <p class="st-join-hero__kicker">{{ __('student.my_courses') }}</p>
+        <h2 class="st-join-hero__title">{{ __('student.course_subscriptions_title') }}</h2>
+        <p class="st-join-hero__meta">{{ __('student.course_subscriptions_subtitle') }}</p>
+    </div>
+    <div class="st-join-hero__actions">
+        <a href="{{ $browseUrl }}" class="st-pill st-pill--solid st-pill--lg">{{ __('student.browse_courses') }}</a>
+        <a href="{{ route('my-courses.index') }}" class="st-pill st-pill--outline">{{ __('student_timeline.courses_back') }}</a>
+    </div>
+</section>
+
+<section class="st-stats st-stats--classes" aria-label="{{ __('student_timeline.courses_stats') }}">
+    <article class="st-stat-card">
+        <p class="st-stat-card__label">{{ __('student.course_subscriptions_stat_total') }}</p>
+        <p class="st-stat-card__value">{{ (int) $stats['total'] }}</p>
+    </article>
+    <article class="st-stat-card">
+        <p class="st-stat-card__label">{{ __('student.course_subscriptions_stat_active') }}</p>
+        <p class="st-stat-card__value">{{ (int) $stats['active'] }}</p>
+    </article>
+    <article class="st-stat-card">
+        <p class="st-stat-card__label">{{ __('student.course_subscriptions_stat_soon') }}</p>
+        <p class="st-stat-card__value">{{ (int) $stats['expiring_soon'] }}</p>
+    </article>
+    <article class="st-stat-card">
+        <p class="st-stat-card__label">{{ __('student.course_subscriptions_stat_expired') }}</p>
+        <p class="st-stat-card__value">{{ (int) $stats['expired'] }}</p>
+    </article>
+</section>
+
+@if($enrollments->isEmpty())
+    <div class="st-empty-panel">
+        <h3>{{ __('student.course_subscriptions_empty_title') }}</h3>
+        <p>{{ __('student.course_subscriptions_empty_desc') }}</p>
+        <div class="st-biz-banner__actions">
+            <a href="{{ $browseUrl }}" class="st-pill st-pill--solid">{{ __('student.browse_courses_btn') }}</a>
+            <a href="{{ route('my-courses.index') }}" class="st-pill st-pill--outline">{{ __('student.my_courses') }}</a>
         </div>
     </div>
-
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div class="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 text-center">
-            <p class="text-2xl font-black text-slate-900 dark:text-slate-100">{{ $stats['total'] }}</p>
-            <p class="text-xs font-semibold text-slate-500 mt-1">{{ __('student.course_subscriptions_stat_total') }}</p>
-        </div>
-        <div class="rounded-xl border border-emerald-200 dark:border-emerald-900/50 bg-emerald-50/50 dark:bg-emerald-950/20 p-4 text-center">
-            <p class="text-2xl font-black text-emerald-700 dark:text-emerald-300">{{ $stats['active'] }}</p>
-            <p class="text-xs font-semibold text-emerald-600/80 mt-1">{{ __('student.course_subscriptions_stat_active') }}</p>
-        </div>
-        <div class="rounded-xl border border-amber-200 dark:border-amber-900/50 bg-amber-50/50 dark:bg-amber-950/20 p-4 text-center">
-            <p class="text-2xl font-black text-amber-700 dark:text-amber-300">{{ $stats['expiring_soon'] }}</p>
-            <p class="text-xs font-semibold text-amber-600/80 mt-1">{{ __('student.course_subscriptions_stat_soon') }}</p>
-        </div>
-        <div class="rounded-xl border border-rose-200 dark:border-rose-900/50 bg-rose-50/50 dark:bg-rose-950/20 p-4 text-center">
-            <p class="text-2xl font-black text-rose-700 dark:text-rose-300">{{ $stats['expired'] }}</p>
-            <p class="text-xs font-semibold text-rose-600/80 mt-1">{{ __('student.course_subscriptions_stat_expired') }}</p>
-        </div>
-    </div>
-
-    @if($enrollments->isEmpty())
-        <div class="rounded-2xl border border-dashed border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900/40 p-10 text-center">
-            <div class="w-16 h-16 rounded-2xl bg-sky-100 dark:bg-sky-900/40 text-sky-600 flex items-center justify-center mx-auto mb-4">
-                <i class="fas fa-calendar-check text-2xl"></i>
-            </div>
-            <h2 class="text-lg font-black text-slate-800 dark:text-slate-100">{{ __('student.course_subscriptions_empty_title') }}</h2>
-            <p class="text-sm text-slate-600 dark:text-slate-400 mt-2 max-w-md mx-auto">{{ __('student.course_subscriptions_empty_desc') }}</p>
-            <a href="{{ route('public.courses') }}" class="inline-flex items-center gap-2 mt-6 px-6 py-3 rounded-xl bg-sky-600 hover:bg-sky-700 text-white font-bold text-sm transition">
-                <i class="fas fa-graduation-cap"></i>
-                {{ __('student.browse_courses_btn') }}
-            </a>
-        </div>
-    @else
-        <div class="space-y-4">
-            @foreach($enrollments as $enrollment)
-                @php
-                    $course = $enrollment->course;
-                    if (!$course) { continue; }
-                    $thumb = $course->thumbnail_url ?? null;
-                    $isActive = $enrollment->subscriptionIsActive();
-                    $isExpired = $enrollment->subscriptionIsExpired();
-                    $expiringSoon = $enrollment->subscriptionExpiringSoon(7);
-                    $daysLeft = $enrollment->daysUntilExpiry();
-                    $monthlyPrice = $course->effectiveMonthlyPrice();
-                @endphp
-                <article class="rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
-                    <div class="flex flex-col md:flex-row">
-                        <div class="md:w-48 lg:w-56 shrink-0 bg-slate-100 dark:bg-slate-900 aspect-video md:aspect-auto md:min-h-[140px]">
-                            @if($thumb)
-                                <img src="{{ $thumb }}" alt="" class="w-full h-full object-cover">
+@else
+    <section class="st-credit-list" aria-label="{{ __('student.course_subscriptions_title') }}">
+        @foreach($enrollments as $enrollment)
+            @php
+                $course = $enrollment->course;
+                if (! $course) {
+                    continue;
+                }
+                $thumb = $course->thumbnail_url ?? null;
+                $isActive = $enrollment->subscriptionIsActive();
+                $isExpired = $enrollment->subscriptionIsExpired();
+                $expiringSoon = $enrollment->subscriptionExpiringSoon(7);
+                $daysLeft = $enrollment->daysUntilExpiry();
+                $monthlyPrice = $course->effectiveMonthlyPrice();
+                $tone = $isExpired ? 'orange' : ($expiringSoon ? 'pink' : 'blue');
+                $status = $isExpired
+                    ? __('student.course_subscriptions_status_expired')
+                    : ($expiringSoon
+                        ? __('student.course_subscriptions_status_soon')
+                        : __('student.course_subscriptions_status_active'));
+            @endphp
+            <article class="st-credit-card st-credit-card--{{ $tone }} {{ $isExpired ? 'is-dim' : '' }}">
+                <div class="st-credit-card__main">
+                    <div class="st-credit-card__copy">
+                        <div class="st-credit-card__badges">
+                            <span class="st-credit-card__badge {{ $isActive && ! $isExpired ? 'is-ok' : '' }}">{{ $status }}</span>
+                            @if($course->isOneToOne() && $course->instructor)
+                                <span class="st-credit-card__badge">{{ __('student.course_subscriptions_one_to_one') }}</span>
                             @else
-                                <div class="w-full h-full flex items-center justify-center text-slate-400">
-                                    <i class="fas fa-book-open text-3xl"></i>
-                                </div>
+                                <span class="st-credit-card__badge">{{ __('student.course_subscriptions_group') }}</span>
                             @endif
                         </div>
-                        <div class="flex-1 p-5 sm:p-6 flex flex-col gap-4">
-                            <div class="flex flex-wrap items-start justify-between gap-3">
-                                <div class="min-w-0">
-                                    <h2 class="text-lg font-black text-slate-900 dark:text-slate-100 leading-snug">{{ $course->title }}</h2>
-                                    <div class="flex flex-wrap items-center gap-2 mt-2 text-xs text-slate-500 dark:text-slate-400">
-                                        @if($course->isOneToOne() && $course->instructor)
-                                            <span class="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-violet-100 dark:bg-violet-900/30 text-violet-700 dark:text-violet-300 font-semibold">
-                                                <i class="fas fa-user"></i>
-                                                {{ __('student.course_subscriptions_one_to_one') }}: {{ $course->instructor->name }}
-                                            </span>
-                                        @else
-                                            <span class="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-sky-100 dark:bg-sky-900/30 text-sky-700 dark:text-sky-300 font-semibold">
-                                                <i class="fas fa-users"></i>
-                                                {{ __('student.course_subscriptions_group') }}
-                                            </span>
-                                        @endif
-                                        @if($monthlyPrice > 0)
-                                            <span>{{ number_format($monthlyPrice, 0) }} {{ __('public.currency_egp') }} / {{ __('public.per_month') }}</span>
-                                        @endif
-                                    </div>
-                                </div>
-                                @if($isExpired)
-                                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-rose-100 dark:bg-rose-900/40 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800">
-                                        <i class="fas fa-times-circle"></i>
-                                        {{ __('student.course_subscriptions_status_expired') }}
-                                    </span>
-                                @elseif($expiringSoon)
-                                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-200 border border-amber-200 dark:border-amber-800">
-                                        <i class="fas fa-hourglass-half"></i>
-                                        {{ __('student.course_subscriptions_status_soon') }}
-                                    </span>
-                                @elseif($isActive)
-                                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
-                                        <i class="fas fa-check-circle"></i>
-                                        {{ __('student.course_subscriptions_status_active') }}
-                                    </span>
+                        <h3>{{ $course->title }}</h3>
+                        <p class="st-credit-card__meta">
+                            {{ __('student.course_subscriptions_activated') }}: {{ $enrollment->activated_at?->format('Y-m-d') ?? '—' }}
+                            · {{ __('student.course_subscriptions_expires') }}: {{ $enrollment->expires_at?->format('Y-m-d') ?? '—' }}
+                        </p>
+                        <p class="st-credit-card__bookable">
+                            <small>
+                                @if($daysLeft === null)
+                                    —
+                                @elseif($daysLeft < 0)
+                                    {{ __('student.course_subscriptions_expired_days', ['days' => abs($daysLeft)]) }}
+                                @else
+                                    {{ __('student.course_subscriptions_days_remaining', ['days' => $daysLeft]) }}
                                 @endif
-                            </div>
-
-                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
-                                <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-700">
-                                    <p class="text-xs font-semibold text-slate-500 uppercase">{{ __('student.course_subscriptions_activated') }}</p>
-                                    <p class="font-bold text-slate-800 dark:text-slate-100 mt-0.5">{{ $enrollment->activated_at?->format('Y-m-d') ?? '—' }}</p>
-                                </div>
-                                <div class="p-3 rounded-xl {{ $isExpired ? 'bg-rose-50 dark:bg-rose-950/30 border-rose-100 dark:border-rose-900/50' : 'bg-slate-50 dark:bg-slate-900/50 border-slate-100 dark:border-slate-700' }} border">
-                                    <p class="text-xs font-semibold {{ $isExpired ? 'text-rose-600' : 'text-slate-500' }} uppercase">{{ __('student.course_subscriptions_expires') }}</p>
-                                    <p class="font-bold text-slate-800 dark:text-slate-100 mt-0.5">{{ $enrollment->expires_at?->format('Y-m-d') ?? '—' }}</p>
-                                </div>
-                                <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-700">
-                                    <p class="text-xs font-semibold text-slate-500 uppercase">{{ __('student.course_subscriptions_days_left') }}</p>
-                                    <p class="font-bold text-slate-800 dark:text-slate-100 mt-0.5">
-                                        @if($daysLeft === null)
-                                            —
-                                        @elseif($daysLeft < 0)
-                                            {{ __('student.course_subscriptions_expired_days', ['days' => abs($daysLeft)]) }}
-                                        @else
-                                            {{ __('student.course_subscriptions_days_remaining', ['days' => $daysLeft]) }}
-                                        @endif
-                                    </p>
-                                </div>
-                            </div>
-
-                            <div class="flex flex-wrap gap-3 pt-1">
-                                @if($isActive)
-                                    <a href="{{ route('my-courses.show', $course->id) }}" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-sky-600 hover:bg-sky-700 text-white text-sm font-bold transition">
-                                        <i class="fas fa-play"></i>
-                                        {{ __('student.continue_learning') }}
-                                    </a>
+                                @if($monthlyPrice > 0)
+                                    · {{ number_format($monthlyPrice, 0) }} {{ currency_symbol() }} / {{ __('public.per_month') }}
                                 @endif
-                                @if($isExpired || $expiringSoon)
-                                    <a href="{{ $enrollment->renewalCheckoutUrl() }}" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl {{ $isExpired ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-amber-500 hover:bg-amber-600' }} text-white text-sm font-bold transition">
-                                        <i class="fas fa-sync-alt"></i>
-                                        {{ __('student.course_subscriptions_renew') }}
-                                    </a>
-                                @endif
-                                <a href="{{ route('public.course.show', $course->id) }}" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-200 text-sm font-bold hover:bg-slate-50 dark:hover:bg-slate-700 transition">
-                                    <i class="fas fa-external-link-alt"></i>
-                                    {{ __('student.course_subscriptions_view_course') }}
-                                </a>
-                            </div>
-                        </div>
+                            </small>
+                        </p>
                     </div>
-                </article>
-            @endforeach
-        </div>
-    @endif
+                    @if($thumb)
+                        <img src="{{ $thumb }}" alt="" width="72" height="72" style="border-radius:14px;object-fit:cover;flex-shrink:0">
+                    @endif
+                </div>
+                <div class="st-credit-card__foot">
+                    @if($isActive)
+                        <a href="{{ route('my-courses.learn', $course->id) }}" class="st-pill st-pill--solid">
+                            <i class="fas fa-play" aria-hidden="true"></i>
+                            {{ __('student.continue_learning') }}
+                        </a>
+                    @endif
+                    @if($isExpired || $expiringSoon)
+                        <a href="{{ $enrollment->renewalCheckoutUrl() }}" class="st-pill st-pill--solid">
+                            <i class="fas fa-sync-alt" aria-hidden="true"></i>
+                            {{ __('student.course_subscriptions_renew') }}
+                        </a>
+                    @endif
+                    <a href="{{ route('my-courses.show', $course->id) }}" class="st-pill st-pill--outline">{{ __('student_timeline.courses_open') }}</a>
+                </div>
+            </article>
+        @endforeach
+    </section>
+@endif
 
-    <p class="text-sm text-slate-500 dark:text-slate-400">
-        {{ __('student.course_subscriptions_footer') }}
-    </p>
-</div>
+<p class="st-learn-note" style="margin:8px 0 24px">{{ __('student.course_subscriptions_footer') }}</p>
 @endsection

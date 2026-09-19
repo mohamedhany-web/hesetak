@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'لوحة الإدارة - Glottical')
+@section('title', 'لوحة الإدارة - حصتك')
 @section('page_title', 'لوحة الإدارة')
 
 @section('content')
@@ -23,7 +23,7 @@
     };
     $ordersPending = (int) data_get($salesSection, 'orders_pending', 0);
     $recentOrders = collect(data_get($salesSection, 'recent_orders', []));
-    $currency = '$';
+    $currency = currency_symbol();
 
     $studentsTotal = (int) data_get($metrics, 'students.total', data_get($stats, 'total_students', 0));
     $coursesTotal = (int) data_get($metrics, 'courses.total', data_get($stats, 'total_courses', 0));

@@ -133,7 +133,7 @@ class ClassroomRecordingR2UploadTest extends TestCase
             'user_id' => $instructor->id,
             'one_to_one_session_id' => $session->id,
             'code' => 'R2'.strtoupper(substr(uniqid(), -5)),
-            'room_name' => 'Glottical-R2TEST',
+            'room_name' => 'حصتك-R2TEST',
             'title' => 'حصة 1:1',
             'started_at' => now()->subMinutes(30),
             'ended_at' => $ended ? now()->subMinutes(2) : null,

@@ -111,7 +111,7 @@ class PaymentGatewaysController extends Controller
             'client_id' => $paypalClientId,
             'client_secret' => $paypalSecret !== '' ? $paypalSecret : null,
             'webhook_id' => (string) $request->input('paypal_webhook_id', ''),
-            'currency' => (string) $request->input('paypal_currency', 'USD'),
+            'currency' => (string) $request->input('paypal_currency', platform_currency()),
         ]);
 
         KashierSettings::save([
@@ -120,7 +120,7 @@ class PaymentGatewaysController extends Controller
             'mid' => $kashierMid,
             'api_key' => $kashierApiKey !== '' ? $kashierApiKey : null,
             'secret' => $kashierSecret !== '' ? $kashierSecret : null,
-            'currency' => (string) $request->input('kashier_currency', 'USD'),
+            'currency' => (string) $request->input('kashier_currency', platform_currency()),
             'merchant_redirect_url' => $redirectRaw,
         ]);
 

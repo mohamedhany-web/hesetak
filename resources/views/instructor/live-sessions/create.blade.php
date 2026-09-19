@@ -6,116 +6,118 @@
 @section('content')
 @php
     $isRtl = app()->getLocale() === 'ar';
+    $backHref = route('instructor.live-sessions.index');
 @endphp
 
-<div class="su-page">
-    <div class="su-page-head">
-        <div class="min-w-0">
-            <nav class="su-crumb-inline" aria-label="breadcrumb">
-                <a href="{{ route('instructor.live-sessions.index') }}">{{ __('instructor.ls_title') }}</a>
-                <span>/</span>
-                <strong style="color:var(--su-ink)">{{ __('instructor.ls_create_title') }}</strong>
-            </nav>
-            <h1 class="su-page-head__title">
-                <i class="fas fa-broadcast-tower su-page-head__ico" aria-hidden="true"></i>
-                {{ __('instructor.ls_create_title') }}
-            </h1>
-            <p class="su-page-head__sub">{{ __('instructor.ls_create_subtitle') }}</p>
+<div class="id-page">
+    <section class="id-hero" aria-label="{{ __('instructor.ls_create_title') }}">
+        <div class="id-hero__copy">
+            <p class="id-hero__kicker">{{ __('instructor.ls_title') }}</p>
+            <h2 class="id-hero__title">{{ __('instructor.ls_create_title') }}</h2>
+            <p class="id-hero__meta">{{ __('instructor.ls_create_subtitle') }}</p>
         </div>
-        <div class="su-page-head__actions">
-            <a href="{{ route('instructor.live-sessions.index') }}" class="su-btn">
+        <div class="id-hero__actions">
+            <a href="{{ $backHref }}" class="id-btn id-btn--ghost">
                 <i class="fas fa-arrow-{{ $isRtl ? 'right' : 'left' }}" aria-hidden="true"></i>
                 {{ __('instructor.ls_back_list') }}
             </a>
         </div>
-    </div>
+    </section>
 
-    <section class="su-card">
-        <h2 class="su-card__title">
-            <i class="fas fa-info-circle" aria-hidden="true"></i>
-            {{ __('instructor.ls_session_info') }}
-        </h2>
+    @if($errors->any())
+        <div class="id-alert id-alert--err">
+            <i class="fas fa-exclamation-circle" aria-hidden="true"></i>
+            <ul style="margin:0;padding-inline-start:18px">
+                @foreach($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
 
-        <form method="POST" action="{{ route('instructor.live-sessions.store') }}">
+    <section class="id-panel">
+        <header class="id-panel__head">
+            <h2>{{ __('instructor.ls_session_info') }}</h2>
+        </header>
+
+        <form method="POST" action="{{ route('instructor.live-sessions.store') }}" class="id-form">
             @csrf
 
-            <div class="su-field" style="margin-bottom:14px">
-                <label for="live_title">{{ __('instructor.ls_session_title') }} <span style="color:#b91c1c">*</span></label>
+            <div class="id-field">
+                <label for="live_title">{{ __('instructor.ls_session_title') }} <span style="color:#B91C1C">*</span></label>
                 <input type="text" name="title" id="live_title" value="{{ old('title') }}" required
-                       class="su-input"
+                       class="id-input"
                        placeholder="{{ $isRtl ? 'مثال: مراجعة الوحدة الثانية — جلسة تفاعلية' : 'e.g. Unit 2 review — interactive session' }}">
                 @error('title')
-                    <p style="margin:6px 0 0;font-size:12px;color:#b91c1c">{{ $message }}</p>
+                    <p class="id-field__err">{{ $message }}</p>
                 @enderror
             </div>
 
-            <div class="su-field" style="margin-bottom:14px">
+            <div class="id-field">
                 <label for="course_id">{{ __('instructor.ls_course_optional') }}</label>
-                <select name="course_id" id="course_id" class="su-select">
+                <select name="course_id" id="course_id" class="id-input">
                     <option value="">{{ __('instructor.ls_general_session') }}</option>
                     @foreach ($courses as $course)
                         <option value="{{ $course->id }}" {{ old('course_id') == $course->id ? 'selected' : '' }}>{{ $course->title }}</option>
                     @endforeach
                 </select>
-                <p style="margin:6px 0 0;font-size:11px;color:var(--su-ink-40)">{{ __('instructor.ls_course_hint') }}</p>
+                <p class="id-field__hint">{{ __('instructor.ls_course_hint') }}</p>
                 @error('course_id')
-                    <p style="margin:6px 0 0;font-size:12px;color:#b91c1c">{{ $message }}</p>
+                    <p class="id-field__err">{{ $message }}</p>
                 @enderror
             </div>
 
-            <div class="su-form-grid" style="margin-bottom:14px;align-items:start">
-                <div class="su-field">
+            <div class="id-form-grid">
+                <div class="id-field">
                     @include('partials.timezone-select', [
                         'value' => old('timezone', auth()->user()?->timezoneCode()),
-                        'class' => 'su-select',
-                        'labelClass' => '',
+                        'class' => 'id-input',
+                        'labelClass' => 'block text-[12px] font-extrabold text-[#3A4A63] mb-1.5',
                         'hint' => null,
                     ])
                 </div>
-                <div class="su-field">
-                    <label for="scheduled_at">{{ __('instructor.ls_scheduled_at') }} <span style="color:#b91c1c">*</span></label>
-                    <input type="datetime-local" name="scheduled_at" id="scheduled_at" value="{{ old('scheduled_at') }}" required
-                           class="su-input">
+                <div class="id-field">
+                    <label for="scheduled_at">{{ __('instructor.ls_scheduled_at') }} <span style="color:#B91C1C">*</span></label>
+                    <input type="datetime-local" name="scheduled_at" id="scheduled_at" value="{{ old('scheduled_at') }}" required class="id-input">
                     @error('scheduled_at')
-                        <p style="margin:6px 0 0;font-size:12px;color:#b91c1c">{{ $message }}</p>
+                        <p class="id-field__err">{{ $message }}</p>
                     @enderror
                 </div>
-                <div class="su-field">
+                <div class="id-field">
                     <label for="max_participants">{{ __('instructor.ls_max_participants') }}</label>
-                    <input type="number" name="max_participants" id="max_participants" value="{{ old('max_participants', 100) }}" min="2" max="500"
-                           class="su-input">
+                    <input type="number" name="max_participants" id="max_participants" value="{{ old('max_participants', 100) }}" min="2" max="500" class="id-input">
                     @error('max_participants')
-                        <p style="margin:6px 0 0;font-size:12px;color:#b91c1c">{{ $message }}</p>
+                        <p class="id-field__err">{{ $message }}</p>
                     @enderror
                 </div>
             </div>
 
-            <div class="su-field" style="margin-bottom:14px">
+            <div class="id-field">
                 <label for="password">{{ __('instructor.ls_password_optional') }}</label>
                 <input type="text" name="password" id="password" value="{{ old('password') }}" autocomplete="off"
-                       class="su-input"
+                       class="id-input"
                        placeholder="{{ __('instructor.ls_password_ph') }}">
                 @error('password')
-                    <p style="margin:6px 0 0;font-size:12px;color:#b91c1c">{{ $message }}</p>
+                    <p class="id-field__err">{{ $message }}</p>
                 @enderror
             </div>
 
-            <div class="su-field" style="margin-bottom:20px">
+            <div class="id-field">
                 <label for="description">{{ __('instructor.ls_description') }}</label>
                 <textarea name="description" id="description" rows="4"
-                          class="su-input" style="height:auto;min-height:100px;padding:10px 12px;resize:vertical"
+                          class="id-input" style="height:auto;min-height:100px;padding:10px 12px;resize:vertical"
                           placeholder="{{ __('instructor.ls_description_ph') }}">{{ old('description') }}</textarea>
                 @error('description')
-                    <p style="margin:6px 0 0;font-size:12px;color:#b91c1c">{{ $message }}</p>
+                    <p class="id-field__err">{{ $message }}</p>
                 @enderror
             </div>
 
-            <div class="su-form-actions" style="justify-content:flex-end;padding-top:16px;border-top:0.5px solid var(--su-line)">
-                <a href="{{ route('instructor.live-sessions.index') }}" class="su-btn" style="height:40px">
+            <div class="id-foot-actions">
+                <a href="{{ $backHref }}" class="id-btn id-btn--outline">
                     <i class="fas fa-times" aria-hidden="true"></i>
                     {{ __('instructor.ls_cancel') }}
                 </a>
-                <button type="submit" class="su-btn su-btn--primary" style="height:40px">
+                <button type="submit" class="id-btn id-btn--gold">
                     <i class="fas fa-broadcast-tower" aria-hidden="true"></i>
                     {{ __('instructor.ls_create') }}
                 </button>

@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'سنوات المدرسة - Glottical')
+@section('title', 'سنوات المدرسة - حصتك')
 @section('page_title', 'سنوات المدرسة')
 
 @section('content')

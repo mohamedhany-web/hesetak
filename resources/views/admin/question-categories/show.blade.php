@@ -1,4 +1,4 @@
-﻿@extends('layouts.admin')
+@extends('layouts.admin')
 
 @section('title', 'تفاصيل التصنيف')
 @section('header', 'تفاصيل التصنيف: ' . $questionCategory->name)

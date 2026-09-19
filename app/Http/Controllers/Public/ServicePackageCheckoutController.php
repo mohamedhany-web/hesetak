@@ -24,8 +24,13 @@ use Illuminate\View\View;
 
 class ServicePackageCheckoutController extends Controller
 {
-    public function index(Request $request): View
+    public function index(Request $request): View|RedirectResponse
     {
+        // Canonical public catalog is /pricing (navbar). Keep checkout routes here.
+        if (! $request->filled('year') && ! $request->filled('subject') && ! $request->boolean('catalog')) {
+            return redirect()->route('public.pricing');
+        }
+
         $yearId = $request->filled('year') ? (int) $request->query('year') : null;
         $subjectId = $request->filled('subject') ? (int) $request->query('subject') : null;
 
@@ -153,14 +158,14 @@ class ServicePackageCheckoutController extends Controller
 
         if (! PaymentGatewaySettings::isFawaterakEnabled()) {
             return redirect()
-                ->route('public.service-packages.index')
+                ->route('public.pricing')
                 ->with('error', 'بوابة الدفع الإلكترونية (فواتيرك) غير مفعّلة حالياً. تواصل مع الدعم.');
         }
 
         [$useGateway, $misconfigured] = $this->fawaterakFlags();
         if ($misconfigured || ! $useGateway) {
             return redirect()
-                ->route('public.service-packages.index')
+                ->route('public.pricing')
                 ->with('error', 'تم تفعيل فواتيرك لكن الربط غير مكتمل على الخادم.');
         }
 
@@ -439,7 +444,7 @@ class ServicePackageCheckoutController extends Controller
             $phone = '0000000000';
         }
 
-        $currency = $order->currencyCode() ?: (string) config('currency.code', 'USD');
+        $currency = $order->currencyCode() ?: (string) config('currency.code', 'SAR');
         $cartTotal = number_format((float) $order->amount, 2, '.', '');
 
         $bearer = trim((string) config('fawaterak.plugin_bearer_token', ''));
@@ -567,7 +572,7 @@ class ServicePackageCheckoutController extends Controller
         }
 
         $amount = (float) $order->amount;
-        $currency = $order->currencyCode() ?: (string) config('currency.code', 'USD');
+        $currency = $order->currencyCode() ?: (string) config('currency.code', 'SAR');
         $cartTotal = number_format($amount, 2, '.', '');
 
         $payload = [

@@ -104,7 +104,7 @@ class ClassroomRoomRoleUiTest extends TestCase
             'user_id' => $instructor->id,
             'one_to_one_session_id' => $session->id,
             'code' => 'UI'.strtoupper(substr(uniqid(), -4)),
-            'room_name' => 'Glottical-UI-TEST',
+            'room_name' => 'حصتك-UI-TEST',
             'title' => 'حصة تسكين',
             'planned_duration_minutes' => 50,
             'max_participants' => 4,

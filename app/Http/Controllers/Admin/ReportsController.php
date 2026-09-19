@@ -766,7 +766,7 @@ class ReportsController extends Controller
             };
 
             $excelService->addHeader(
-                'تقرير المستخدمين الشامل - Glottical',
+                'تقرير المستخدمين الشامل - حصتك',
                 'من تاريخ: ' . $startDate->format('Y-m-d')
                 . ' إلى تاريخ: ' . $endDate->format('Y-m-d')
                 . ' | الدور: ' . $roleLabel
@@ -866,7 +866,7 @@ class ReportsController extends Controller
             $excelService = new ExcelExportService();
 
             $excelService->addHeader(
-                'تقرير الكورسات الشامل - Glottical',
+                'تقرير الكورسات الشامل - حصتك',
                 'من تاريخ: ' . $startDate->format('Y-m-d')
                 . ' إلى تاريخ: ' . $endDate->format('Y-m-d')
                 . ' | الحالة: ' . ($status === 'active' ? 'نشط' : ($status === 'inactive' ? 'غير نشط' : 'كل الحالات'))
@@ -896,7 +896,7 @@ class ReportsController extends Controller
                     $course->academicSubject->name ?? 'غير محدد',
                     $course->is_active ? 'نشط' : 'غير نشط',
                     number_format($course->enrollments_count),
-                    number_format($course->price ?? 0, 2) . ' $',
+                    number_format($course->price ?? 0, 2) . ' ' . currency_symbol(),
                     $course->created_at->format('Y-m-d H:i:s'),
                 ];
             }
@@ -944,7 +944,7 @@ class ReportsController extends Controller
             $excelService = new ExcelExportService();
 
             $excelService->addHeader(
-                'التقارير المالية الشاملة - Glottical',
+                'التقارير المالية الشاملة - حصتك',
                 'من تاريخ: ' . $startDate->format('Y-m-d')
                 . ' إلى تاريخ: ' . $endDate->format('Y-m-d')
                 . ' | النوع: ' . match($type) {
@@ -967,9 +967,9 @@ class ReportsController extends Controller
                 $netProfit = $totalRevenue - $totalExpenses;
                 
                 $stats = [
-                    'إجمالي الإيرادات' => number_format($totalRevenue, 2) . ' $',
-                    'إجمالي المصروفات' => number_format($totalExpenses, 2) . ' $',
-                    'الربح الصافي' => number_format($netProfit, 2) . ' $',
+                    'إجمالي الإيرادات' => number_format($totalRevenue, 2) . ' ' . currency_symbol(),
+                    'إجمالي المصروفات' => number_format($totalExpenses, 2) . ' ' . currency_symbol(),
+                    'الربح الصافي' => number_format($netProfit, 2) . ' ' . currency_symbol(),
                     'نسبة الربحية' => $totalRevenue > 0 ? number_format(($netProfit / $totalRevenue) * 100, 2) . '%' : '0%',
                 ];
                 
@@ -994,7 +994,7 @@ class ReportsController extends Controller
                         $invoice->invoice_number ?? 'N/A',
                         $invoice->user->name ?? 'غير محدد',
                         $invoice->type ?? '-',
-                        number_format($invoice->total_amount ?? 0, 2) . ' $',
+                        number_format($invoice->total_amount ?? 0, 2) . ' ' . currency_symbol(),
                         $invoice->status,
                         $invoice->due_date ? $invoice->due_date->format('Y-m-d') : '-',
                         $invoice->paid_at ? $invoice->paid_at->format('Y-m-d') : '-',
@@ -1021,7 +1021,7 @@ class ReportsController extends Controller
                     $rows[] = [
                         $payment->id,
                         $payment->user->name ?? 'غير محدد',
-                        number_format($payment->amount, 2) . ' $',
+                        number_format($payment->amount, 2) . ' ' . currency_symbol(),
                         $payment->payment_method ?? '-',
                         $payment->status,
                         $payment->paid_at ? $payment->paid_at->format('Y-m-d H:i:s') : '-',
@@ -1048,7 +1048,7 @@ class ReportsController extends Controller
                         $expense->expense_number ?? 'N/A',
                         $expense->title ?? '-',
                         $expense->category ?? '-',
-                        number_format($expense->amount, 2) . ' $',
+                        number_format($expense->amount, 2) . ' ' . currency_symbol(),
                         $expense->payment_method ?? '-',
                         $expense->status ?? '-',
                         $expense->expense_date ? $expense->expense_date->format('Y-m-d') : '-',
@@ -1075,7 +1075,7 @@ class ReportsController extends Controller
                         $transaction->id,
                         $transaction->user->name ?? 'غير محدد',
                         $transaction->type ?? '-',
-                        number_format((float) ($transaction->amount ?? 0), 2) . ' $',
+                        number_format((float) ($transaction->amount ?? 0), 2) . ' ' . currency_symbol(),
                         $transaction->status ?? '-',
                         $transaction->payment->id ?? '-',
                         $transaction->created_at ? $transaction->created_at->format('Y-m-d H:i:s') : '-',
@@ -1119,7 +1119,7 @@ class ReportsController extends Controller
 
             $excelService = new ExcelExportService();
             $excelService->addHeader(
-                'التقرير الأكاديمي الشامل - Glottical',
+                'التقرير الأكاديمي الشامل - حصتك',
                 'من تاريخ: ' . $startDate->format('Y-m-d') . ' إلى تاريخ: ' . $endDate->format('Y-m-d')
             );
 
@@ -1211,7 +1211,7 @@ class ReportsController extends Controller
             $excelService = new ExcelExportService();
 
             $excelService->addHeader(
-                'التقرير الشامل - Glottical',
+                'التقرير الشامل - حصتك',
                 'من تاريخ: ' . $startDate->format('Y-m-d') . ' إلى تاريخ: ' . $endDate->format('Y-m-d')
             );
 
@@ -1246,9 +1246,9 @@ class ReportsController extends Controller
             $totalExpenses = Expense::whereBetween('expense_date', [$startDate, $endDate])
                 ->sum('amount');
             $stats = [
-                'إجمالي الإيرادات' => number_format($totalRevenue, 2) . ' $',
-                'إجمالي المصروفات' => number_format($totalExpenses, 2) . ' $',
-                'الربح الصافي' => number_format($totalRevenue - $totalExpenses, 2) . ' $',
+                'إجمالي الإيرادات' => number_format($totalRevenue, 2) . ' ' . currency_symbol(),
+                'إجمالي المصروفات' => number_format($totalExpenses, 2) . ' ' . currency_symbol(),
+                'الربح الصافي' => number_format($totalRevenue - $totalExpenses, 2) . ' ' . currency_symbol(),
                 'عدد الفواتير' => number_format(Invoice::whereBetween('created_at', [$startDate, $endDate])->count()),
                 'عدد المدفوعات' => number_format(Payment::whereBetween('paid_at', [$startDate, $endDate])->count()),
             ];

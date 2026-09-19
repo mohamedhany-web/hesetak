@@ -100,7 +100,7 @@ class AcademyInsightsService
                 'key' => 'revenue_month',
                 'label' => 'إيراد الشهر',
                 'value' => round($revenueMonth, 2),
-                'formatted' => number_format($revenueMonth, 2).' $',
+                'formatted' => number_format($revenueMonth, 2) . ' ' . currency_symbol(),
                 'delta' => number_format($revenueToday, 2).' $ اليوم',
                 'hint' => 'طلبات معتمدة',
                 'tone' => 'gold',

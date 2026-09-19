@@ -52,7 +52,7 @@ class TutoringGroupPackageController extends Controller
                 'duration_months' => 1,
                 'sessions_per_month' => $spm,
                 'hourly_rate' => $hourly,
-                'currency' => $tutoringGroup->currency ?: 'USD',
+                'currency' => $tutoringGroup->currency ?: platform_currency(),
                 'is_active' => true,
                 'sort_order' => 0,
             ]),

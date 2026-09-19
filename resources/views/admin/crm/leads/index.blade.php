@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'العملاء المحتملون - Glottical')
+@section('title', 'العملاء المحتملون - حصتك')
 @section('page_title', 'العملاء المحتملون')
 
 @section('content')

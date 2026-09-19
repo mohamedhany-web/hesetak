@@ -185,7 +185,7 @@ class CrmLeadService
     }
 
     /**
-     * فرض حالة من إدارة Glottical CRM (تخطي القيود بما فيها إعادة فتح مغلق).
+     * فرض حالة من إدارة CRM حصتك (تخطي القيود بما فيها إعادة فتح مغلق).
      */
     public static function forceStatus(SalesLead $lead, string $toStatus, User $actor, ?string $note = null): SalesLead
     {

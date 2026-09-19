@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'دفعات '.$group->title.' - Glottical')
+@section('title', 'دفعات '.$group->title.' - حصتك')
 @section('page_title', 'دفعات المجموعة')
 
 @section('content')

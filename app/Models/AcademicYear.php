@@ -27,14 +27,21 @@ class AcademicYear extends Model
         'color',
         'order',
         'is_active',
+        'is_public',
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
+        'is_public' => 'boolean',
         'price' => 'decimal:2',
         'level_number' => 'integer',
         'order' => 'integer',
     ];
+
+    public function getRouteKeyName(): string
+    {
+        return 'slug';
+    }
 
     public function subjects()
     {
@@ -120,6 +127,11 @@ class AcademicYear extends Model
     public function scopeActive($query)
     {
         return $query->where('is_active', true);
+    }
+
+    public function scopePublicCatalog($query)
+    {
+        return $query->where('is_public', true)->where('is_active', true);
     }
 
     public function scopeOrdered($query)

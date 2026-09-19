@@ -14,13 +14,7 @@ class PageController extends Controller
 
     public function about()
     {
-        $stats = [
-            'courses' => \App\Models\AdvancedCourse::where('is_active', true)->count(),
-            'students' => \App\Models\User::where('role', 'student')->where('is_active', true)->count(),
-            'instructors' => \App\Models\User::where('role', 'instructor')->where('is_active', true)->count(),
-        ];
-        
-        return view('public.about', compact('stats'));
+        return redirect()->route('public.about');
     }
 
     public function faq()
@@ -42,41 +36,80 @@ class PageController extends Controller
             ? PlatformFaqDefaults::items()
             : [];
 
-        return view('public.faq', compact('faqs', 'categories', 'defaultFaqs'));
+        return view('public.marketing.faq', [
+            'faqs' => $faqs,
+            'categories' => $categories,
+            'defaultFaqs' => $defaultFaqs,
+            'mcActive' => 'faq',
+            'pageTitle' => __('hesetak_pages.faq.meta_title'),
+            'pageDescription' => __('hesetak_pages.faq.meta_description'),
+        ]);
+    }
+
+    public function forStudents()
+    {
+        return view('public.marketing.for-students', [
+            'mcActive' => 'for-students',
+            'pageTitle' => __('hesetak_pages.for_students.meta_title'),
+            'pageDescription' => __('hesetak_pages.for_students.meta_description'),
+        ]);
+    }
+
+    public function forTeachers()
+    {
+        return view('public.marketing.for-teachers', [
+            'mcActive' => 'for-teachers',
+            'pageTitle' => __('hesetak_pages.for_teachers.meta_title'),
+            'pageDescription' => __('hesetak_pages.for_teachers.meta_description'),
+        ]);
+    }
+
+    public function how()
+    {
+        return view('public.marketing.how', [
+            'mcActive' => 'how',
+            'pageTitle' => __('hesetak_pages.how.meta_title'),
+            'pageDescription' => __('hesetak_pages.how.meta_description'),
+        ]);
+    }
+
+    public function curricula()
+    {
+        return redirect()->route('public.curricula');
     }
 
     public function terms()
     {
-        return view('public.terms');
+        return view('public.terms', [
+            'pageTitle' => __('public.terms_page_title').' — '.__('landing.nav.brand'),
+            'pageDescription' => __('public.legal_terms_meta', ['brand' => __('landing.nav.brand')]),
+            'mcActive' => '',
+        ]);
     }
 
     public function privacy()
     {
-        return view('public.privacy');
+        return view('public.privacy', [
+            'pageTitle' => __('public.privacy_page_title').' — '.__('landing.nav.brand'),
+            'pageDescription' => __('public.legal_privacy_meta', ['brand' => __('landing.nav.brand')]),
+            'mcActive' => '',
+        ]);
     }
 
     public function pricing()
     {
-        $packages = \App\Models\Package::active()
-            ->with(['courses' => function ($query) {
-                $query->where('is_active', true);
-            }])
-            ->withCount('courses')
-            ->orderBy('is_popular', 'desc')
-            ->orderBy('is_featured', 'desc')
-            ->orderBy('order')
-            ->orderBy('price', 'asc')
-            ->get();
+        $packages = collect();
+        if (\Illuminate\Support\Facades\Schema::hasTable('service_packages')) {
+            $packages = \App\Models\ServicePackage::storefrontCatalog();
+        }
 
-        $tutoringGroups = \App\Models\TutoringGroup::query()
-            ->active()
-            ->with(['instructor:id,name'])
-            ->orderByDesc('is_featured')
-            ->orderBy('sort_order')
-            ->orderBy('price')
-            ->get();
-
-        return view('public.pricing', compact('packages', 'tutoringGroups'));
+        return view('public.marketing.pricing', [
+            'mcActive' => 'pricing',
+            'bodyClass' => 'mc-body--dir',
+            'pageTitle' => __('public.pricing_page_title'),
+            'pageDescription' => __('public.pricing_meta_description'),
+            'packages' => $packages,
+        ]);
     }
 
     public function team()
@@ -91,12 +124,25 @@ class PageController extends Controller
 
     public function help()
     {
-        return view('public.help');
+        return view('public.help', [
+            'pageTitle' => __('public.help_page_title').' — '.__('landing.nav.brand'),
+            'pageDescription' => __('public.help_meta_description', ['brand' => __('landing.nav.brand')]),
+            'mcActive' => '',
+        ]);
+    }
+
+    public function path()
+    {
+        return redirect()->route('public.how');
     }
 
     public function refund()
     {
-        return view('public.refund');
+        return view('public.refund', [
+            'pageTitle' => __('public.refund_page_title').' — '.__('landing.nav.brand'),
+            'pageDescription' => __('public.refund_page_title'),
+            'mcActive' => '',
+        ]);
     }
 
     public function testimonials()

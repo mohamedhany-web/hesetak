@@ -151,7 +151,7 @@ class ExpenseController extends Controller
                 'description' => $validated['description'] ?? null,
                 'category' => $validated['category'],
                 'amount' => $validated['amount'],
-                'currency' => 'USD',
+                'currency' => platform_currency(),
                 'expense_date' => $validated['expense_date'],
                 'payment_method' => $validated['payment_method'],
                 'wallet_id' => $validated['wallet_id'] ?? null,
@@ -263,7 +263,7 @@ class ExpenseController extends Controller
                         // التحقق من وجود رصيد كافي
                         if ($wallet->balance < $expense->amount) {
                             DB::rollback();
-                            return back()->with('error', 'رصيد المحفظة غير كافي. الرصيد الحالي: ' . number_format($wallet->balance, 2) . ' $');
+                            return back()->with('error', 'رصيد المحفظة غير كافي. الرصيد الحالي: ' . number_format($wallet->balance, 2) . ' ' . currency_symbol());
                         }
 
                         // خصم المبلغ من المحفظة

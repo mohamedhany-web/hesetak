@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', ($mode === 'create' ? 'باقة جديدة' : 'تعديل باقة').' - Glottical')
+@section('title', ($mode === 'create' ? 'باقة جديدة' : 'تعديل باقة').' - حصتك')
 @section('page_title', $mode === 'create' ? 'باقة خدمات جديدة' : 'تعديل باقة')
 
 @section('content')
@@ -146,15 +146,17 @@
                 <div>
                     <label class="{{ $labelClass }}" for="currency">العملة *</label>
                     @php
-                        $currencyValue = strtoupper((string) old('currency', $package->currency ?: config('currency.code', 'USD')));
-                        if (! in_array($currencyValue, ['EGP', 'USD'], true)) {
-                            $currencyValue = 'USD';
+                        $currencyValue = strtoupper((string) old('currency', $package->currency ?: platform_currency()));
+                        if (! in_array($currencyValue, ['SAR', 'USD', 'EGP'], true)) {
+                            $currencyValue = platform_currency();
                         }
                     @endphp
                     <select id="currency" name="currency" required class="{{ $fieldClass }}">
-                        <option value="USD" @selected($currencyValue === 'USD' || $currencyValue === 'EGP')>USD — دولار أمريكي</option>
+                        <option value="SAR" @selected($currencyValue === 'SAR')>SAR — ريال سعودي</option>
+                        <option value="USD" @selected($currencyValue === 'USD')>USD — دولار (قديم)</option>
+                        <option value="EGP" @selected($currencyValue === 'EGP')>EGP — جنيه (قديم)</option>
                     </select>
-                    <p class="mt-1 text-[11px] text-muted">عملة المنصة هي الدولار الأمريكي فقط.</p>
+                    <p class="mt-1 text-[11px] text-muted">عملة المنصة الافتراضية: {{ currency_label() }} ({{ platform_currency() }}).</p>
                 </div>
                 <div>
                     <label class="{{ $labelClass }}" for="sort_order">الترتيب</label>

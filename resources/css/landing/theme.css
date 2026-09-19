@@ -1,5 +1,5 @@
 ﻿:root {
-    /* Glottical brand: blue #0B3D91 + yellow #F5B800 (from designs/public-pages structure) */
+    /* حصتك brand: blue #0B3D91 + yellow #F5B800 (from designs/public-pages structure) */
     --p: #0B3D91;
     --p-dark: #072A66;
     --p-deep: #051F4D;
@@ -2732,7 +2732,7 @@ html.js .sana-reveal.is-visible { opacity: 1; transform: none; }
     .sana-hero__meta li { font-size: 0.8rem; }
 }
 
-/* ===== Glottical start journey (homepage) ===== */
+/* ===== حصتك start journey (homepage) ===== */
 .gl-start {
     background:
         radial-gradient(circle at 12% 0%, rgba(245,184,0,0.10), transparent 42%),

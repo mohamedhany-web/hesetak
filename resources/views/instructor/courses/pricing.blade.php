@@ -25,7 +25,7 @@
                 {{ $isRtl ? 'أسعار الكورس المسجّل' : 'Recorded course pricing' }}
             </h1>
             <p class="su-page-head__sub">
-                {{ $isRtl ? 'جميع الأسعار بالدولار الأمريكي (USD).' : 'All prices are in US dollars (USD).' }}
+                {{ $isRtl ? 'جميع الأسعار بالريال السعودي (ر.س).' : 'All prices are in Saudi Riyal (SAR).' }}
             </p>
         </div>
         <div class="su-page-head__actions">
@@ -48,12 +48,12 @@
 
         <div class="su-form-grid" style="grid-template-columns:1fr 1fr;margin-bottom:16px">
             <div class="su-field">
-                <label for="price_usd">{{ $isRtl ? 'السعر بالدولار (USD)' : 'Price (USD)' }}</label>
+                <label for="price_usd">{{ $isRtl ? 'السعر بالريال (ر.س)' : 'Price (SAR)' }}</label>
                 <input type="number" step="0.01" min="0" name="price_usd" id="price_usd"
                        value="{{ $usdPrice }}" class="su-input">
             </div>
             <div class="su-field">
-                <label for="price_usd_after_discount">{{ $isRtl ? 'بعد الخصم (USD)' : 'After discount (USD)' }}</label>
+                <label for="price_usd_after_discount">{{ $isRtl ? 'بعد الخصم (ر.س)' : 'After discount (SAR)' }}</label>
                 <input type="number" step="0.01" min="0" name="price_usd_after_discount" id="price_usd_after_discount"
                        value="{{ $usdSale }}" class="su-input">
             </div>

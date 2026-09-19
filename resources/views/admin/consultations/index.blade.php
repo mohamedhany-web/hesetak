@@ -17,7 +17,7 @@
         <form method="POST" action="{{ route('admin.consultations.settings') }}" class="grid grid-cols-1 md:grid-cols-2 gap-4">
             @csrf
             <div>
-                <label class="block text-xs font-semibold text-slate-600 mb-1">السعر الافتراضي (دولار أمريكي — $)</label>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">السعر الافتراضي (ريال سعودي — ر.س)</label>
                 <p class="text-[11px] text-slate-500 mb-1">يُستخدم للمدربين الذين لم يُحدَّد لهم سعر خاص من صفحة <a href="{{ route('admin.personal-branding.index') }}" class="text-sky-600 font-semibold underline">التسويق الشخصي</a>.</p>
                 <input type="number" step="0.01" name="default_price" value="{{ old('default_price', $settings->default_price) }}" class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm" required>
             </div>

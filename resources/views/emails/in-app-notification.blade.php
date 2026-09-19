@@ -12,7 +12,7 @@
             <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:560px;background:#ffffff;border-radius:16px;overflow:hidden;border:1px solid #e2e8f0;">
                 <tr>
                     <td style="background:linear-gradient(135deg,#0B3D91,#0997d9);padding:18px 22px;color:#fff;">
-                        <div style="font-size:13px;opacity:.9;">{{ config('app.name', 'Glottical') }}</div>
+                        <div style="font-size:13px;opacity:.9;">{{ config('app.name', 'حصتك') }}</div>
                         <div style="font-size:18px;font-weight:700;margin-top:4px;">{{ $notification->title }}</div>
                     </td>
                 </tr>

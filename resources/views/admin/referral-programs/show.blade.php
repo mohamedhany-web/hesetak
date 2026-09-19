@@ -9,8 +9,8 @@
         ['label' => 'إجمالي الإحالات', 'value' => number_format($stats['total_referrals']), 'icon' => 'fa-users'],
         ['label' => 'مكتملة', 'value' => number_format($stats['completed_referrals']), 'icon' => 'fa-check-circle', 'tone' => 'emerald'],
         ['label' => 'قيد الانتظار', 'value' => number_format($stats['pending_referrals']), 'icon' => 'fa-hourglass-half', 'tone' => 'amber'],
-        ['label' => 'إجمالي الخصومات', 'value' => number_format($stats['total_discount_given'], 2) . ' $', 'icon' => 'fa-tag'],
-        ['label' => 'إجمالي المكافآت', 'value' => number_format($stats['total_rewards_given'], 2) . ' $', 'icon' => 'fa-gift', 'tone' => 'emerald'],
+        ['label' => 'إجمالي الخصومات', 'value' => number_format($stats['total_discount_given'], 2) . ' ' . currency_symbol(), 'icon' => 'fa-tag'],
+        ['label' => 'إجمالي المكافآت', 'value' => number_format($stats['total_rewards_given'], 2) . ' ' . currency_symbol(), 'icon' => 'fa-gift', 'tone' => 'emerald'],
     ];
 @endphp
 

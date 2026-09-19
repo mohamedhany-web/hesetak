@@ -12,8 +12,8 @@
         'muted' => 'bg-canvas-muted text-muted',
     ];
     $kpis = [
-        ['label' => 'إجمالي مطلوب الدفع', 'value' => number_format($globalStats['pending_total'], 2), 'suffix' => '$', 'icon' => 'fa-hourglass-half', 'tone' => 'metal', 'note' => ($globalStats['pending_count'] ?? 0) . ' مدفوعة'],
-        ['label' => 'إجمالي تم الدفع', 'value' => number_format($globalStats['paid_total'], 2), 'suffix' => '$', 'icon' => 'fa-check-circle', 'tone' => 'accent', 'note' => ($globalStats['paid_count'] ?? 0) . ' مدفوعة'],
+        ['label' => 'إجمالي مطلوب الدفع', 'value' => number_format($globalStats['pending_total'], 2), 'suffix' => currency_symbol(), 'icon' => 'fa-hourglass-half', 'tone' => 'metal', 'note' => ($globalStats['pending_count'] ?? 0) . ' مدفوعة'],
+        ['label' => 'إجمالي تم الدفع', 'value' => number_format($globalStats['paid_total'], 2), 'suffix' => currency_symbol(), 'icon' => 'fa-check-circle', 'tone' => 'accent', 'note' => ($globalStats['paid_count'] ?? 0) . ' مدفوعة'],
         ['label' => 'عدد المدربين', 'value' => number_format($instructors->count()), 'suffix' => '', 'icon' => 'fa-chalkboard-teacher', 'tone' => 'muted', 'note' => 'مدربون لديهم اتفاقيات أو مدفوعات'],
     ];
 @endphp

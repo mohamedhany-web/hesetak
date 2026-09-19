@@ -76,7 +76,7 @@ class ClassroomShareAnnotationSyncTest extends TestCase
             'user_id' => $instructor->id,
             'one_to_one_session_id' => $session->id,
             'code' => 'ANN'.strtoupper(substr(uniqid(), -4)),
-            'room_name' => 'Glottical-ANN',
+            'room_name' => 'حصتك-ANN',
             'title' => 'حصة رسم',
             'started_at' => now()->subMinutes(2),
             'settings' => ['allow_guest_join' => false, 'allow_participant_whiteboard' => true],

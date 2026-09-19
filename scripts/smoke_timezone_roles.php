@@ -109,7 +109,8 @@ if (! $admin) {
     Auth::login($admin);
     foreach ([
         'admin.free-trial-bookings.index',
-        'admin.free-trial-bookings.availability',
+        'admin.free-trial-bookings.index',
+        'admin.free-trial-bookings.create',
     ] as $routeName) {
         try {
             $url = route($routeName);

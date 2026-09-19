@@ -1,0 +1,30 @@
+---
+description: Blade/public UI — presentation only; reuse mc-* and hesetak public CX
+globs: resources/views/**/*.blade.php,public/css/**/*.css,lang/**/*.php
+alwaysApply: false
+---
+
+# Blade & public UI
+
+## Responsibility
+- Blade = layout, copy via `__()`, links, light display conditionals.
+- No duplicated business rules in `@php` blocks (commissions, eligibility, payment confirmation).
+- Prefer partials under `partials/landing/mycourses/` and existing layouts.
+
+## Styling
+- Public marketing: follow `.cursor/skills/hesetak-public-pages` + rule `hesetak-public-pages.mdc`.
+- Use `mc-*` / `meras-shop` tokens. No new CSS framework.
+- Brand mark: `partials/landing/mycourses/brand` + `img/brand/hesetak-mark.png`.
+
+## i18n
+- User-facing strings in `lang/ar` + `lang/en`.
+- Brand word: `__('landing.nav.brand')` (حصتك / Hesetak).
+- No hardcoded long copy when a lang key fits.
+
+## CX
+- Default audience: student/parent + 1:1 + curricula + courses.
+- Each page: one target, one job, one primary CTA (see skill `page-experience.md`).
+- No teacher-PD-only as whole-site identity; no مرجعي UX.
+
+## Assets
+- Descriptive filenames; reuse `public/img/brand/` and existing landing images.

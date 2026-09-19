@@ -69,7 +69,7 @@
                     </div>
                     <div>
                         <dt class="text-xs font-medium text-muted">العملة</dt>
-                        <dd class="mt-1 text-sm font-semibold text-ink">{{ $payment->currency ?? 'USD' }}</dd>
+                        <dd class="mt-1 text-sm font-semibold text-ink">{{ $payment->currency ?? platform_currency() }}</dd>
                     </div>
                     @if(($payment->gateway_fee_amount ?? 0) > 0 || $payment->net_after_gateway_fee !== null)
                     <div>

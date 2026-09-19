@@ -1,4 +1,4 @@
-﻿@extends('layouts.admin')
+@extends('layouts.admin')
 
 @section('title', $academicSubject->name.' - مادة')
 @section('page_title', $academicSubject->name)

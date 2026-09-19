@@ -21,6 +21,10 @@ class CurriculumLibraryController extends Controller
 {
     public function index(Request $request)
     {
+        if (! student_ui('show_libraries')) {
+            return redirect()->route('dashboard');
+        }
+
         $user = Auth::user();
         $hasFullAccess = $user && $user->hasCurriculumLibraryAccess();
         $usedFreePreview = $user

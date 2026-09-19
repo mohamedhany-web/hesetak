@@ -6,10 +6,10 @@
 @section('content')
 @php
     $kpis = [
-        ['label' => 'الرصيد الحالي', 'value' => number_format($wallet->balance, 2), 'icon' => 'fa-coins', 'tone' => 'accent', 'note' => 'الرصيد المتاح حالياً بعد آخر حركة', 'suffix' => ' ' . ($wallet->currency ?? '$')],
-        ['label' => 'إجمالي الإيداعات', 'value' => number_format($metrics['total_deposits'] ?? 0, 2), 'icon' => 'fa-arrow-down', 'tone' => 'accent', 'note' => 'جميع المبالغ المضافة منذ إنشاء المحفظة', 'suffix' => ' ' . ($wallet->currency ?? '$')],
-        ['label' => 'إجمالي السحوبات', 'value' => number_format($metrics['total_withdrawals'] ?? 0, 2), 'icon' => 'fa-arrow-up', 'tone' => 'muted', 'note' => 'جميع المبالغ المسحوبة من المحفظة', 'suffix' => ' ' . ($wallet->currency ?? '$')],
-        ['label' => 'صافي التدفقات', 'value' => number_format($metrics['net_flow'] ?? 0, 2), 'icon' => 'fa-balance-scale', 'tone' => 'metal', 'note' => 'الفرق بين الإيداعات والسحوبات', 'suffix' => ' ' . ($wallet->currency ?? '$')],
+        ['label' => 'الرصيد الحالي', 'value' => number_format($wallet->balance, 2), 'icon' => 'fa-coins', 'tone' => 'accent', 'note' => 'الرصيد المتاح حالياً بعد آخر حركة', 'suffix' => ' ' . ($wallet->currency ?? currency_symbol())],
+        ['label' => 'إجمالي الإيداعات', 'value' => number_format($metrics['total_deposits'] ?? 0, 2), 'icon' => 'fa-arrow-down', 'tone' => 'accent', 'note' => 'جميع المبالغ المضافة منذ إنشاء المحفظة', 'suffix' => ' ' . ($wallet->currency ?? currency_symbol())],
+        ['label' => 'إجمالي السحوبات', 'value' => number_format($metrics['total_withdrawals'] ?? 0, 2), 'icon' => 'fa-arrow-up', 'tone' => 'muted', 'note' => 'جميع المبالغ المسحوبة من المحفظة', 'suffix' => ' ' . ($wallet->currency ?? currency_symbol())],
+        ['label' => 'صافي التدفقات', 'value' => number_format($metrics['net_flow'] ?? 0, 2), 'icon' => 'fa-balance-scale', 'tone' => 'metal', 'note' => 'الفرق بين الإيداعات والسحوبات', 'suffix' => ' ' . ($wallet->currency ?? currency_symbol())],
     ];
     $toneClass = [
         'accent' => 'bg-accent-soft text-accent',
@@ -109,7 +109,7 @@
                             <i class="fas fa-plus text-accent"></i>
                         </div>
                         <p class="mt-3 text-2xl font-semibold tabular-nums text-ink">
-                            {{ number_format($metrics['current_month_deposits'] ?? 0, 2) }} <span class="text-sm font-normal text-muted">{{ $wallet->currency ?? '$' }}</span>
+                            {{ number_format($metrics['current_month_deposits'] ?? 0, 2) }} <span class="text-sm font-normal text-muted">{{ $wallet->currency ?? currency_symbol() }}</span>
                         </p>
                     </div>
                     <div class="rounded-xl border border-line bg-canvas-muted/50 p-4">
@@ -118,7 +118,7 @@
                             <i class="fas fa-minus text-muted"></i>
                         </div>
                         <p class="mt-3 text-2xl font-semibold tabular-nums text-ink">
-                            {{ number_format($metrics['current_month_withdrawals'] ?? 0, 2) }} <span class="text-sm font-normal text-muted">{{ $wallet->currency ?? '$' }}</span>
+                            {{ number_format($metrics['current_month_withdrawals'] ?? 0, 2) }} <span class="text-sm font-normal text-muted">{{ $wallet->currency ?? currency_symbol() }}</span>
                         </p>
                     </div>
                 </div>
@@ -144,7 +144,7 @@
                     </div>
                     <div>
                         <dt class="text-xs font-medium text-muted">الرصيد المعلق</dt>
-                        <dd class="mt-1 text-sm font-semibold tabular-nums text-ink">{{ number_format($wallet->pending_balance ?? 0, 2) }} {{ $wallet->currency ?? '$' }}</dd>
+                        <dd class="mt-1 text-sm font-semibold tabular-nums text-ink">{{ number_format($wallet->pending_balance ?? 0, 2) }} {{ $wallet->currency ?? currency_symbol() }}</dd>
                     </div>
                     <div>
                         <dt class="text-xs font-medium text-muted">تاريخ الإنشاء</dt>
@@ -184,9 +184,9 @@
                                     {{ $transaction->created_at?->format('Y-m-d H:i') }}
                                 </p>
                             </div>
-                            <p class="mt-1 text-base font-semibold tabular-nums text-ink">{{ number_format($transaction->amount, 2) }} {{ $wallet->currency ?? '$' }}</p>
+                            <p class="mt-1 text-base font-semibold tabular-nums text-ink">{{ number_format($transaction->amount, 2) }} {{ $wallet->currency ?? currency_symbol() }}</p>
                             <p class="mt-1 text-xs text-muted">
-                                الرصيد بعد العملية: {{ number_format($transaction->balance_after, 2) }} {{ $wallet->currency ?? '$' }}
+                                الرصيد بعد العملية: {{ number_format($transaction->balance_after, 2) }} {{ $wallet->currency ?? currency_symbol() }}
                             </p>
                             @if($transaction->notes)
                                 <p class="mt-2 text-xs leading-relaxed text-ink-soft">{{ $transaction->notes }}</p>

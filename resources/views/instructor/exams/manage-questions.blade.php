@@ -8,224 +8,224 @@
 @endpush
 
 @section('content')
-@php $isRtl = app()->getLocale() === 'ar'; @endphp
-<div class="su-page" x-data="{ activeTab: 'current', showAddModal: false, showCreateModal: false }">
-    <div class="su-page-head">
-        <div class="min-w-0">
-            <nav class="su-crumb-inline" aria-label="breadcrumb">
-                <a href="{{ route('instructor.exams.index') }}">{{ __('instructor.exams') }}</a>
-                <span>/</span>
-                <a href="{{ route('instructor.exams.show', $exam) }}">{{ Str::limit($exam->title, 40) }}</a>
-                <span>/</span>
-                <strong style="color:var(--su-ink)">{{ __('instructor.questions') }}</strong>
-            </nav>
-            <h1 class="su-page-head__title">
-                <i class="fas fa-list su-page-head__ico" aria-hidden="true"></i>
-                {{ __('instructor.manage_questions') }}
-            </h1>
-            <p class="su-page-head__sub">{{ $exam->title }}</p>
+@php $locale = app()->getLocale(); @endphp
+
+<div class="id-page" x-data="{ activeTab: 'current', showAddModal: false, showCreateModal: false }">
+    <section class="id-hero" aria-label="{{ __('instructor.manage_questions') }}">
+        <div class="id-hero__copy">
+            <p class="id-hero__kicker">{{ __('instructor.exams') }}</p>
+            <h2 class="id-hero__title">{{ __('instructor.manage_questions') }}</h2>
+            <p class="id-hero__meta">{{ $exam->title }}</p>
         </div>
-        <div class="su-page-head__actions">
-            <button type="button" @click="showAddModal = true" class="su-btn su-btn--primary">
+        <div class="id-hero__actions">
+            <button type="button" @click="showAddModal = true" class="id-btn id-btn--gold">
                 <i class="fas fa-database" aria-hidden="true"></i>
                 {{ __('instructor.add_from_bank') }}
             </button>
-            <button type="button" @click="showCreateModal = true" class="su-btn">
+            <button type="button" @click="showCreateModal = true" class="id-btn id-btn--ghost">
                 <i class="fas fa-plus-circle" aria-hidden="true"></i>
                 {{ __('instructor.new_question') }}
             </button>
-            <a href="{{ route('instructor.exams.show', $exam) }}" class="su-btn">
-                <i class="fas fa-arrow-{{ $isRtl ? 'right' : 'left' }}" aria-hidden="true"></i>
+            <a href="{{ route('instructor.exams.show', $exam) }}" class="id-btn id-btn--ghost">
+                <i class="fas fa-arrow-{{ $locale === 'ar' ? 'right' : 'left' }}" aria-hidden="true"></i>
                 {{ __('instructor.back') }}
             </a>
         </div>
-    </div>
+    </section>
 
     @if(session('success'))
-        <div class="su-card" style="margin-bottom:16px;border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.08)">
-            <p style="margin:0;font-size:13px;color:#15803d"><i class="fas fa-check-circle" aria-hidden="true"></i> {{ session('success') }}</p>
+        <div class="id-alert id-alert--ok">
+            <i class="fas fa-check-circle" aria-hidden="true"></i> {{ session('success') }}
         </div>
     @endif
     @if(session('error'))
-        <div class="su-card" style="margin-bottom:16px;border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.08)">
-            <p style="margin:0;font-size:13px;color:#b91c1c"><i class="fas fa-exclamation-circle" aria-hidden="true"></i> {{ session('error') }}</p>
+        <div class="id-alert id-alert--err">
+            <i class="fas fa-exclamation-circle" aria-hidden="true"></i> {{ session('error') }}
         </div>
     @endif
     @if($errors->any())
-        <div class="su-card" style="margin-bottom:16px;border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.08)">
-            <p style="margin:0 0 8px;font-weight:600;color:#b91c1c">{{ __('instructor.fix_fix_errors') }}</p>
-            <ul style="margin:0;padding-inline-start:1.25rem;font-size:13px;color:#b91c1c">
+        <div class="id-alert id-alert--err">
+            <p style="margin:0 0 8px;font-weight:800">{{ __('instructor.form_fix_errors') }}</p>
+            <ul style="margin:0;padding-inline-start:1.25rem;font-size:13px">
                 @foreach($errors->all() as $err)<li>{{ $err }}</li>@endforeach
             </ul>
         </div>
     @endif
 
-    <section class="su-card" style="padding:16px">
-        <div class="su-tabs-bar" role="tablist">
-            <button type="button" class="su-tab" :class="{ 'is-on': activeTab === 'current' }" @click="activeTab = 'current'">
+    <section class="id-panel id-panel--wide">
+        <div class="id-tabs" role="tablist">
+            <button type="button" class="id-tab" :class="{ 'is-on': activeTab === 'current' }" @click="activeTab = 'current'">
                 <i class="fas fa-list" aria-hidden="true"></i>
                 {{ __('instructor.current_questions') }} ({{ $exam->questions->count() }})
             </button>
-            <button type="button" class="su-tab" :class="{ 'is-on': activeTab === 'bank' }" @click="activeTab = 'bank'">
+            <button type="button" class="id-tab" :class="{ 'is-on': activeTab === 'bank' }" @click="activeTab = 'bank'">
                 <i class="fas fa-database" aria-hidden="true"></i>
                 {{ __('instructor.question_bank') }} ({{ $availableQuestions->count() }})
             </button>
         </div>
 
-        <div style="padding:16px 4px 4px">
-            <div x-show="activeTab === 'current'" x-cloak>
-                @if($exam->questions->count() > 0)
-                    <div class="su-list" id="questions-list">
-                        @foreach($exam->questions as $index => $question)
-                            <article class="su-list-item">
-                                <span class="su-list-item__ico su-soft-1" style="font-weight:700">{{ $index + 1 }}</span>
-                                <div class="su-list-item__body">
-                                    <div class="su-list-item__title" style="font-size:14px">{{ $question->question }}</div>
-                                    <div class="su-list-item__meta">
-                                        {{ $question->getTypeLabel() }} ·
-                                        {{ $question->pivot->marks ?? 1 }} {{ __('instructor.point_unit') }} ·
-                                        {{ $question->getDifficultyLabel() }}
-                                    </div>
+        <div x-show="activeTab === 'current'" x-cloak>
+            @if($exam->questions->count() > 0)
+                <div class="id-list" id="questions-list">
+                    @foreach($exam->questions as $index => $question)
+                        <article class="id-list__row">
+                            <span class="id-list__ico" aria-hidden="true" style="font-weight:800">{{ $index + 1 }}</span>
+                            <div class="id-list__body">
+                                <div class="id-list__title" style="font-size:14px">{{ $question->question }}</div>
+                                <div class="id-list__meta">
+                                    {{ $question->getTypeLabel() }} ·
+                                    {{ $question->pivot->marks ?? 1 }} {{ __('instructor.point_unit') }} ·
+                                    {{ $question->getDifficultyLabel() }}
                                 </div>
-                                <div class="su-list-item__actions">
-                                    <form action="{{ route('instructor.exams.questions.remove', [$exam, $question->id]) }}" method="POST" onsubmit="return confirm(@json(__('instructor.confirm_remove_question')));">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="su-icon-link" style="color:#b91c1c" title="{{ __('common.delete') }}">
-                                            <i class="fas fa-trash" aria-hidden="true"></i>
-                                        </button>
-                                    </form>
-                                </div>
-                            </article>
-                        @endforeach
+                            </div>
+                            <div class="id-list__actions">
+                                <form action="{{ route('instructor.exams.questions.remove', [$exam, $question->id]) }}" method="POST"
+                                      onsubmit="return confirm(@json(__('instructor.confirm_remove_question')));">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="id-icon-btn" title="{{ __('common.delete') }}">
+                                        <i class="fas fa-trash" aria-hidden="true"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </article>
+                    @endforeach
+                </div>
+            @else
+                <div class="id-empty" style="border:0;background:transparent;padding:28px 8px">
+                    <span class="id-empty__mark" aria-hidden="true"><i class="fas fa-question-circle"></i></span>
+                    <p>{{ __('instructor.no_questions') }}</p>
+                    <p class="id-field__hint" style="margin-top:6px">{{ __('instructor.add_questions_hint') }}</p>
+                    <div class="id-empty__actions">
+                        <button type="button" @click="showAddModal = true" class="id-btn id-btn--navy">{{ __('instructor.add_from_bank') }}</button>
+                        <button type="button" @click="showCreateModal = true" class="id-btn id-btn--outline">{{ __('instructor.new_question') }}</button>
                     </div>
-                @else
-                    <div class="su-empty">
-                        <i class="fas fa-question-circle" aria-hidden="true"></i>
-                        <p><strong>{{ __('instructor.no_questions') }}</strong></p>
-                        <p>{{ __('instructor.add_questions_hint') }}</p>
-                        <div class="su-page-head__actions" style="justify-content:center;margin-top:12px">
-                            <button type="button" @click="showAddModal = true" class="su-btn su-btn--primary">{{ __('instructor.add_from_bank') }}</button>
-                            <button type="button" @click="showCreateModal = true" class="su-btn">{{ __('instructor.new_question') }}</button>
-                        </div>
-                    </div>
-                @endif
-            </div>
+                </div>
+            @endif
+        </div>
 
-            <div x-show="activeTab === 'bank'" x-cloak>
-                @if($availableQuestions->count() > 0)
-                    <div class="su-course-grid">
-                        @foreach($availableQuestions as $question)
-                            <article class="su-course-card">
-                                <div class="su-course-card__body">
-                                    <p class="su-course-card__title" style="font-size:14px">{{ Str::limit($question->question, 100) }}</p>
-                                    <div class="su-chip-row" style="margin:8px 0">
-                                        <span class="su-chip">{{ $question->getTypeLabel() }}</span>
-                                        <span class="su-chip">{{ $question->getDifficultyLabel() }}</span>
-                                        @if(!$question->is_active)
-                                            <span class="su-chip su-chip--warn">{{ __('instructor.inactive') }}</span>
-                                        @endif
-                                        @if($question->questionBank)
-                                            <span class="su-chip su-soft-1">{{ $question->questionBank->title }}</span>
-                                        @endif
-                                    </div>
-                                    <form action="{{ route('instructor.exams.questions.add-from-bank', $exam) }}" method="POST" class="su-form-actions">
-                                        @csrf
-                                        <input type="hidden" name="question_id" value="{{ $question->id }}">
-                                        <input type="number" name="marks" value="{{ $question->points ?? 1 }}" min="0.5" step="0.5" required class="su-input" style="width:5rem;height:36px">
-                                        <button type="submit" class="su-btn su-btn--primary" style="flex:1;justify-content:center;height:36px">
-                                            <i class="fas fa-plus" aria-hidden="true"></i> {{ __('instructor.add_short') }}
-                                        </button>
-                                    </form>
-                                </div>
-                            </article>
-                        @endforeach
-                    </div>
-                @else
-                    <div class="su-empty">
-                        <i class="fas fa-database" aria-hidden="true"></i>
-                        <p><strong>{{ __('instructor.no_bank_questions') }}</strong></p>
-                        <p>{{ __('instructor.create_bank_first') }}</p>
-                    </div>
-                @endif
-            </div>
+        <div x-show="activeTab === 'bank'" x-cloak>
+            @if($availableQuestions->count() > 0)
+                <div class="id-cards">
+                    @foreach($availableQuestions as $question)
+                        <article class="id-card">
+                            <p class="id-card__title">{{ Str::limit($question->question, 100) }}</p>
+                            <div class="id-card__meta">
+                                <span class="id-chip id-chip--muted">{{ $question->getTypeLabel() }}</span>
+                                <span class="id-chip id-chip--muted">{{ $question->getDifficultyLabel() }}</span>
+                                @if(!$question->is_active)
+                                    <span class="id-chip id-chip--warn">{{ __('instructor.inactive') }}</span>
+                                @endif
+                                @if($question->questionBank)
+                                    <span class="id-chip">{{ $question->questionBank->title }}</span>
+                                @endif
+                            </div>
+                            <form action="{{ route('instructor.exams.questions.add-from-bank', $exam) }}" method="POST"
+                                  style="display:flex;gap:8px;align-items:center;margin-top:auto">
+                                @csrf
+                                <input type="hidden" name="question_id" value="{{ $question->id }}">
+                                <input type="number" name="marks" value="{{ $question->points ?? 1 }}" min="0.5" step="0.5" required
+                                       class="id-input" style="width:5rem;min-height:36px">
+                                <button type="submit" class="id-btn id-btn--navy id-btn--sm" style="flex:1">
+                                    <i class="fas fa-plus" aria-hidden="true"></i> {{ __('instructor.add_short') }}
+                                </button>
+                            </form>
+                        </article>
+                    @endforeach
+                </div>
+            @else
+                <div class="id-empty" style="border:0;background:transparent;padding:28px 8px">
+                    <span class="id-empty__mark" aria-hidden="true"><i class="fas fa-database"></i></span>
+                    <p>{{ __('instructor.no_bank_questions') }}</p>
+                    <p class="id-field__hint" style="margin-top:6px">{{ __('instructor.create_bank_first') }}</p>
+                </div>
+            @endif
         </div>
     </section>
 
     {{-- Create question modal --}}
-    <div x-show="showCreateModal" x-cloak
-         style="position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(15,23,42,.45)"
-         @click.self="showCreateModal = false">
-        <div class="su-card" style="width:100%;max-width:40rem;max-height:90vh;overflow:hidden;display:flex;flex-direction:column;margin:0;padding:0" @click.stop>
-            <div class="su-section-head" style="padding:16px 20px;border-bottom:1px solid var(--su-line);margin:0">
+    <div class="id-modal" x-show="showCreateModal" x-cloak @click.self="showCreateModal = false" style="display:none" :style="showCreateModal && { display: 'flex' }">
+        <div class="id-modal__panel" @click.stop>
+            <div class="id-modal__head">
                 <h3>{{ __('instructor.create_new_question') }}</h3>
-                <button type="button" @click="showCreateModal = false" class="su-icon-link su-icon-link--ghost"><i class="fas fa-times" aria-hidden="true"></i></button>
+                <button type="button" @click="showCreateModal = false" class="id-icon-btn" style="background:#F1F4F8;color:#6B7A93" aria-label="{{ __('common.cancel') }}">
+                    <i class="fas fa-times" aria-hidden="true"></i>
+                </button>
             </div>
             @if($questionBanks->isEmpty())
-                <div class="su-empty" style="padding:24px">
-                    <p>{{ __('instructor.need_question_bank_first') }}</p>
-                    <a href="{{ route('instructor.question-banks.index') }}" class="su-btn su-btn--primary" style="margin-top:12px">
-                        <i class="fas fa-database" aria-hidden="true"></i> {{ __('instructor.question_banks') }}
-                    </a>
+                <div class="id-modal__body">
+                    <div class="id-empty" style="border:0;background:transparent;padding:16px">
+                        <p>{{ __('instructor.need_question_bank_first') }}</p>
+                        <div class="id-empty__actions">
+                            <a href="{{ route('instructor.question-banks.index') }}" class="id-btn id-btn--navy">
+                                <i class="fas fa-database" aria-hidden="true"></i> {{ __('instructor.question_banks') }}
+                            </a>
+                        </div>
+                    </div>
                 </div>
             @else
-                <form action="{{ route('instructor.exams.questions.create-new', $exam) }}" method="POST" style="padding:20px;overflow-y:auto;flex:1">
+                <form action="{{ route('instructor.exams.questions.create-new', $exam) }}" method="POST" class="id-modal__body id-form">
                     @csrf
-                    <div class="su-form-grid" style="grid-template-columns:1fr 1fr">
-                        <div class="su-field" style="grid-column:1 / -1">
-                            <label>{{ __('instructor.question_bank') }} <span style="color:#b91c1c">*</span></label>
-                            <select name="question_bank_id" required class="su-select">
+                    <div class="id-form-grid">
+                        <div class="id-field id-field--span2">
+                            <label>{{ __('instructor.question_bank') }} <span style="color:#B91C1C">*</span></label>
+                            <select name="question_bank_id" required class="id-select">
                                 <option value="">{{ __('instructor.choose_question_bank') }}</option>
                                 @foreach($questionBanks as $bank)
-                                    <option value="{{ $bank->id }}" {{ old('question_bank_id') == $bank->id ? 'selected' : '' }}>{{ $bank->title }}</option>
+                                    <option value="{{ $bank->id }}" @selected(old('question_bank_id') == $bank->id)>{{ $bank->title }}</option>
                                 @endforeach
                             </select>
-                            @error('question_bank_id')<p class="su-field-error">{{ $message }}</p>@enderror
+                            @error('question_bank_id')<p class="id-field__err">{{ $message }}</p>@enderror
                         </div>
-                        <div class="su-field" style="grid-column:1 / -1">
-                            <label>{{ __('instructor.question_type') }} <span style="color:#b91c1c">*</span></label>
-                            <select name="type" id="question_type" required onchange="updateQuestionForm()" class="su-select">
+                        <div class="id-field id-field--span2">
+                            <label>{{ __('instructor.question_type') }} <span style="color:#B91C1C">*</span></label>
+                            <select name="type" id="question_type" required onchange="updateQuestionForm()" class="id-select">
                                 <option value="">{{ __('instructor.choose_type') }}</option>
                                 <option value="multiple_choice">{{ __('instructor.type_multiple_choice') }}</option>
                                 <option value="true_false">{{ __('instructor.type_true_false') }}</option>
                             </select>
                         </div>
-                        <div class="su-field" style="grid-column:1 / -1">
-                            <label>{{ __('instructor.question_text') }} <span style="color:#b91c1c">*</span></label>
-                            <textarea name="question" rows="3" required class="su-input" style="min-height:88px;resize:vertical" placeholder="{{ __('instructor.question_text_ph') }}"></textarea>
+                        <div class="id-field id-field--span2">
+                            <label>{{ __('instructor.question_text') }} <span style="color:#B91C1C">*</span></label>
+                            <textarea name="question" rows="3" required class="id-input"
+                                      style="min-height:88px;padding-top:10px;padding-bottom:10px;resize:vertical"
+                                      placeholder="{{ __('instructor.question_text_ph') }}"></textarea>
                         </div>
-                        <div class="su-field" style="grid-column:1 / -1;display:none" id="options_field">
+                        <div class="id-field id-field--span2" id="options_field" style="display:none">
                             <label>{{ __('instructor.options_one_per_line') }}</label>
-                            <textarea name="options_text" rows="3" class="su-input" style="min-height:88px;resize:vertical" placeholder="{{ __('instructor.options_ph') }}"></textarea>
+                            <textarea name="options_text" rows="3" class="id-input"
+                                      style="min-height:88px;padding-top:10px;padding-bottom:10px;resize:vertical"
+                                      placeholder="{{ __('instructor.options_ph') }}"></textarea>
                         </div>
-                        <div class="su-field" style="grid-column:1 / -1">
-                            <label>{{ __('instructor.correct_answer') }} <span style="color:#b91c1c">*</span></label>
-                            <input type="text" name="correct_answer" required class="su-input" placeholder="{{ __('instructor.correct_answer') }}">
+                        <div class="id-field id-field--span2">
+                            <label>{{ __('instructor.correct_answer') }} <span style="color:#B91C1C">*</span></label>
+                            <input type="text" name="correct_answer" required class="id-input" placeholder="{{ __('instructor.correct_answer') }}">
                         </div>
-                        <div class="su-field" style="grid-column:1 / -1">
+                        <div class="id-field id-field--span2">
                             <label>{{ __('instructor.explanation') }}</label>
-                            <textarea name="explanation" rows="2" class="su-input" style="min-height:72px;resize:vertical"></textarea>
+                            <textarea name="explanation" rows="2" class="id-input"
+                                      style="min-height:72px;padding-top:10px;padding-bottom:10px;resize:vertical"></textarea>
                         </div>
-                        <div class="su-field">
-                            <label>{{ __('instructor.points') }} <span style="color:#b91c1c">*</span></label>
-                            <input type="number" name="points" value="1" min="0.5" step="0.5" required class="su-input">
+                        <div class="id-field">
+                            <label>{{ __('instructor.points') }} <span style="color:#B91C1C">*</span></label>
+                            <input type="number" name="points" value="1" min="0.5" step="0.5" required class="id-input">
                         </div>
-                        <div class="su-field">
-                            <label>{{ __('instructor.difficulty') }} <span style="color:#b91c1c">*</span></label>
-                            <select name="difficulty_level" required class="su-select">
+                        <div class="id-field">
+                            <label>{{ __('instructor.difficulty') }} <span style="color:#B91C1C">*</span></label>
+                            <select name="difficulty_level" required class="id-select">
                                 <option value="easy">{{ __('instructor.easy') }}</option>
                                 <option value="medium" selected>{{ __('instructor.medium') }}</option>
                                 <option value="hard">{{ __('instructor.hard') }}</option>
                             </select>
                         </div>
-                        <div class="su-field">
-                            <label>{{ __('instructor.exam_marks') }} <span style="color:#b91c1c">*</span></label>
-                            <input type="number" name="marks" value="1" min="0.5" step="0.5" required class="su-input">
+                        <div class="id-field">
+                            <label>{{ __('instructor.exam_marks') }} <span style="color:#B91C1C">*</span></label>
+                            <input type="number" name="marks" value="1" min="0.5" step="0.5" required class="id-input">
                         </div>
                     </div>
-                    <div class="su-page-head__actions" style="justify-content:flex-end;margin-top:16px;border-top:1px solid var(--su-line);padding-top:16px">
-                        <button type="button" @click="showCreateModal = false" class="su-btn">{{ __('common.cancel') }}</button>
-                        <button type="submit" class="su-btn su-btn--primary">
+                    <div class="id-foot-actions" style="margin-top:16px">
+                        <button type="button" @click="showCreateModal = false" class="id-btn id-btn--outline">{{ __('common.cancel') }}</button>
+                        <button type="submit" class="id-btn id-btn--navy">
                             <i class="fas fa-save" aria-hidden="true"></i> {{ __('instructor.create_and_add') }}
                         </button>
                     </div>
@@ -235,38 +235,41 @@
     </div>
 
     {{-- Add from bank modal --}}
-    <div x-show="showAddModal" x-cloak
-         style="position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(15,23,42,.45)"
-         @click.self="showAddModal = false">
-        <div class="su-card" style="width:100%;max-width:40rem;max-height:90vh;overflow:hidden;display:flex;flex-direction:column;margin:0;padding:0" @click.stop>
-            <div class="su-section-head" style="padding:16px 20px;border-bottom:1px solid var(--su-line);margin:0">
+    <div class="id-modal" x-show="showAddModal" x-cloak @click.self="showAddModal = false" style="display:none" :style="showAddModal && { display: 'flex' }">
+        <div class="id-modal__panel" @click.stop>
+            <div class="id-modal__head">
                 <h3>{{ __('instructor.add_from_bank') }}</h3>
-                <button type="button" @click="showAddModal = false" class="su-icon-link su-icon-link--ghost"><i class="fas fa-times" aria-hidden="true"></i></button>
+                <button type="button" @click="showAddModal = false" class="id-icon-btn" style="background:#F1F4F8;color:#6B7A93" aria-label="{{ __('common.cancel') }}">
+                    <i class="fas fa-times" aria-hidden="true"></i>
+                </button>
             </div>
-            <div style="padding:20px;overflow-y:auto;flex:1">
-                <p style="margin:0 0 12px;font-size:13px;color:var(--su-ink-40)">{{ __('instructor.add_from_bank_hint') }}</p>
+            <div class="id-modal__body">
+                <p class="id-modal__sub">{{ __('instructor.add_from_bank_hint') }}</p>
                 @if($availableQuestions->isEmpty())
-                    <div class="su-empty">
-                        <i class="fas fa-database" aria-hidden="true"></i>
+                    <div class="id-empty" style="border:0;background:transparent;padding:16px">
+                        <span class="id-empty__mark" aria-hidden="true"><i class="fas fa-database"></i></span>
                         <p>{{ __('instructor.no_bank_questions') }}</p>
-                        <a href="{{ route('instructor.question-banks.index') }}" class="su-btn" style="margin-top:8px">{{ __('instructor.question_banks') }}</a>
+                        <div class="id-empty__actions">
+                            <a href="{{ route('instructor.question-banks.index') }}" class="id-btn id-btn--outline">{{ __('instructor.question_banks') }}</a>
+                        </div>
                     </div>
                 @else
-                    <div class="su-list">
+                    <div class="id-list">
                         @foreach($availableQuestions as $question)
-                            <form action="{{ route('instructor.exams.questions.add-from-bank', $exam) }}" method="POST" class="su-list-item">
+                            <form action="{{ route('instructor.exams.questions.add-from-bank', $exam) }}" method="POST" class="id-list__row" style="margin:0">
                                 @csrf
                                 <input type="hidden" name="question_id" value="{{ $question->id }}">
-                                <div class="su-list-item__body">
-                                    <div class="su-list-item__title" style="font-size:13px">{{ Str::limit($question->question, 70) }}</div>
-                                    <div class="su-list-item__meta">
+                                <div class="id-list__body">
+                                    <div class="id-list__title" style="font-size:13px">{{ Str::limit($question->question, 70) }}</div>
+                                    <div class="id-list__meta">
                                         {{ $question->getTypeLabel() }} · {{ $question->getDifficultyLabel() }}
                                         @if(!$question->is_active) · {{ __('instructor.inactive') }} @endif
                                     </div>
                                 </div>
-                                <div class="su-list-item__actions">
-                                    <input type="number" name="marks" value="{{ $question->points ?? 1 }}" min="0.5" step="0.5" required class="su-input" style="width:4.5rem;height:32px">
-                                    <button type="submit" class="su-btn su-btn--primary" style="height:32px">
+                                <div class="id-list__actions">
+                                    <input type="number" name="marks" value="{{ $question->points ?? 1 }}" min="0.5" step="0.5" required
+                                           class="id-input" style="width:4.5rem;min-height:32px">
+                                    <button type="submit" class="id-btn id-btn--navy id-btn--sm">
                                         <i class="fas fa-plus" aria-hidden="true"></i> {{ __('instructor.add_short') }}
                                     </button>
                                 </div>

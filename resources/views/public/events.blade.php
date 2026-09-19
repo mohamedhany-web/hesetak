@@ -1,8 +1,8 @@
-﻿@extends('layouts.public')
+@extends('layouts.public')
 
 @section('title', __('public.events_page_title') . ' - ' . __('public.site_suffix'))
 @section('meta_description', 'فعاليات ' . config('app.name') . ' — ورش لغوية ومهنية، ندوات، وأيام توظيف.')
-@section('meta_keywords', 'فعاليات, Glottical, ورش عمل, كول سنتر, ألمانيا')
+@section('meta_keywords', 'فعاليات, حصتك, ورش عمل, كول سنتر, ألمانيا')
 @section('canonical_url', url('/events'))
 
 @section('content')

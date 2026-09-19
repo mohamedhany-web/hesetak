@@ -8,8 +8,8 @@
     $fieldClass = 'h-11 rounded-xl border border-line bg-surface px-4 text-sm text-ink transition focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20';
     $labelClass = 'mb-1.5 block text-xs font-medium text-muted';
     $kpis = [
-        ['label' => 'الرصيد الحالي', 'value' => number_format($wallet->balance, 2), 'icon' => 'fa-coins', 'tone' => 'accent', 'suffix' => ' ' . ($wallet->currency ?? '$')],
-        ['label' => 'الرصيد المعلق', 'value' => number_format($wallet->pending_balance ?? 0, 2), 'icon' => 'fa-hourglass-half', 'tone' => 'metal', 'suffix' => ' ' . ($wallet->currency ?? '$')],
+        ['label' => 'الرصيد الحالي', 'value' => number_format($wallet->balance, 2), 'icon' => 'fa-coins', 'tone' => 'accent', 'suffix' => ' ' . ($wallet->currency ?? currency_symbol())],
+        ['label' => 'الرصيد المعلق', 'value' => number_format($wallet->pending_balance ?? 0, 2), 'icon' => 'fa-hourglass-half', 'tone' => 'metal', 'suffix' => ' ' . ($wallet->currency ?? currency_symbol())],
         ['label' => 'عدد التقارير', 'value' => $reports->count(), 'icon' => 'fa-file-alt', 'tone' => 'accent', 'suffix' => ''],
         ['label' => 'آخر تحديث', 'value' => $wallet->updated_at?->format('Y-m-d H:i') ?? 'غير متوفر', 'icon' => 'fa-clock', 'tone' => 'muted', 'suffix' => '', 'small' => true],
     ];
@@ -103,16 +103,16 @@
                                 {{ $report->title ?? 'تقرير بدون عنوان' }}
                             </td>
                             <td class="px-4 py-3 font-semibold tabular-nums text-accent">
-                                {{ number_format($report->total_deposits ?? 0, 2) }} <span class="text-xs font-normal text-muted">{{ $wallet->currency ?? '$' }}</span>
+                                {{ number_format($report->total_deposits ?? 0, 2) }} <span class="text-xs font-normal text-muted">{{ $wallet->currency ?? currency_symbol() }}</span>
                             </td>
                             <td class="px-4 py-3 font-semibold tabular-nums text-ink">
-                                {{ number_format($report->total_withdrawals ?? 0, 2) }} <span class="text-xs font-normal text-muted">{{ $wallet->currency ?? '$' }}</span>
+                                {{ number_format($report->total_withdrawals ?? 0, 2) }} <span class="text-xs font-normal text-muted">{{ $wallet->currency ?? currency_symbol() }}</span>
                             </td>
                             <td class="px-4 py-3 font-semibold tabular-nums text-ink">
-                                {{ number_format($report->ending_balance ?? 0, 2) }} <span class="text-xs font-normal text-muted">{{ $wallet->currency ?? '$' }}</span>
+                                {{ number_format($report->ending_balance ?? 0, 2) }} <span class="text-xs font-normal text-muted">{{ $wallet->currency ?? currency_symbol() }}</span>
                             </td>
                             <td class="px-4 py-3 font-semibold tabular-nums {{ ($report->difference ?? 0) == 0 ? 'text-muted' : (($report->difference ?? 0) > 0 ? 'text-accent' : 'text-ink') }}">
-                                {{ number_format($report->difference ?? 0, 2) }} <span class="text-xs font-normal text-muted">{{ $wallet->currency ?? '$' }}</span>
+                                {{ number_format($report->difference ?? 0, 2) }} <span class="text-xs font-normal text-muted">{{ $wallet->currency ?? currency_symbol() }}</span>
                                 @if($report->notes)
                                     <div class="mt-1 text-xs font-normal text-muted">{{ $report->notes }}</div>
                                 @endif

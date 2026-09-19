@@ -7,8 +7,8 @@
 @php
     $fieldClass = 'h-11 w-full rounded-xl border border-line bg-surface px-4 text-sm text-ink transition placeholder:text-muted focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20';
     $kpis = [
-        ['label' => 'رصيد المحفظة', 'value' => number_format($wallet->balance, 2), 'icon' => 'fa-coins', 'tone' => 'accent', 'suffix' => ' ' . ($wallet->currency ?? '$')],
-        ['label' => 'الرصيد المعلّق', 'value' => number_format($wallet->pending_balance ?? 0, 2), 'icon' => 'fa-hourglass-half', 'tone' => 'metal', 'suffix' => ' ' . ($wallet->currency ?? '$')],
+        ['label' => 'رصيد المحفظة', 'value' => number_format($wallet->balance, 2), 'icon' => 'fa-coins', 'tone' => 'accent', 'suffix' => ' ' . ($wallet->currency ?? currency_symbol())],
+        ['label' => 'الرصيد المعلّق', 'value' => number_format($wallet->pending_balance ?? 0, 2), 'icon' => 'fa-hourglass-half', 'tone' => 'metal', 'suffix' => ' ' . ($wallet->currency ?? currency_symbol())],
         ['label' => 'عدد المعاملات', 'value' => $transactions->count(), 'icon' => 'fa-receipt', 'tone' => 'accent', 'suffix' => ''],
         ['label' => 'آخر عملية', 'value' => optional($transactions->first())->created_at?->format('Y-m-d H:i') ?? 'غير متوفر', 'icon' => 'fa-clock', 'tone' => 'muted', 'suffix' => '', 'small' => true],
     ];
@@ -82,10 +82,10 @@
                                 </span>
                             </td>
                             <td class="px-4 py-3 font-semibold tabular-nums {{ $transaction->type === 'deposit' ? 'text-accent' : 'text-ink' }}">
-                                {{ number_format($transaction->amount, 2) }} <span class="text-xs font-normal text-muted">{{ $wallet->currency ?? '$' }}</span>
+                                {{ number_format($transaction->amount, 2) }} <span class="text-xs font-normal text-muted">{{ $wallet->currency ?? currency_symbol() }}</span>
                             </td>
                             <td class="px-4 py-3 tabular-nums text-ink-soft">
-                                {{ number_format($transaction->balance_after ?? 0, 2) }} <span class="text-xs text-muted">{{ $wallet->currency ?? '$' }}</span>
+                                {{ number_format($transaction->balance_after ?? 0, 2) }} <span class="text-xs text-muted">{{ $wallet->currency ?? currency_symbol() }}</span>
                             </td>
                             <td class="px-4 py-3 text-ink-soft">
                                 {{ $transaction->reference_number ?? '—' }}

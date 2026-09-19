@@ -4,69 +4,92 @@
 @section('page_title', __('instructor.withdrawal_requests'))
 
 @section('content')
-<div class="su-page">
-    <div class="su-page-head">
-        <div class="min-w-0">
-            <h1 class="su-page-head__title">
-                <i class="fas fa-money-check-dollar su-page-head__ico" aria-hidden="true"></i>
-                {{ __('instructor.withdrawal_requests') }}
-            </h1>
-            <p class="su-page-head__sub">{{ __('instructor.withdrawals_subtitle') }}</p>
+@php
+    $currency = currency_symbol();
+    $canWithdraw = ($stats['available_amount'] ?? 0) > 0;
+    $transferHref = Route::has('instructor.transfer-account.index')
+        ? route('instructor.transfer-account.index')
+        : null;
+    $agreementsHref = Route::has('instructor.agreements.index')
+        ? route('instructor.agreements.index')
+        : null;
+@endphp
+
+<div class="id-page">
+    <section class="id-hero" aria-label="{{ __('instructor.withdrawal_requests') }}">
+        <div class="id-hero__copy">
+            <p class="id-hero__kicker">{{ __('instructor.withdraw_finances') }}</p>
+            <h2 class="id-hero__title">{{ __('instructor.withdrawal_requests') }}</h2>
+            <p class="id-hero__meta">{{ __('instructor.withdrawals_subtitle') }}</p>
         </div>
-        <div class="su-page-head__actions">
-            @if($stats['available_amount'] > 0)
-                <a href="{{ route('instructor.withdrawals.create') }}" class="su-btn su-btn--primary">
+        <div class="id-hero__actions">
+            @if($canWithdraw)
+                <a href="{{ route('instructor.withdrawals.create') }}" class="id-btn id-btn--gold">
                     <i class="fas fa-plus" aria-hidden="true"></i>
                     {{ __('instructor.new_withdrawal_request') }}
                 </a>
             @endif
-        </div>
-    </div>
-
-    <section class="su-kpi-row" style="margin-bottom:20px">
-        <div class="su-kpi su-kpi--1">
-            <div class="su-kpi__l">{{ __('instructor.total_earned') }}</div>
-            <div class="su-kpi__row">
-                <div class="su-kpi__v tabular-nums">{{ number_format($stats['total_earned'], 2) }}</div>
-                <div class="su-kpi__d"><i class="fas fa-sack-dollar" aria-hidden="true"></i></div>
-            </div>
-            <div style="font-size:12px;color:var(--su-ink-40)">{{ __('public.currency_egp') }}</div>
-        </div>
-        <div class="su-kpi su-kpi--2">
-            <div class="su-kpi__l">{{ __('instructor.total_withdrawn') }}</div>
-            <div class="su-kpi__row">
-                <div class="su-kpi__v tabular-nums">{{ number_format($stats['total_withdrawn'], 2) }}</div>
-                <div class="su-kpi__d"><i class="fas fa-arrow-down" aria-hidden="true"></i></div>
-            </div>
-            <div style="font-size:12px;color:var(--su-ink-40)">{{ __('public.currency_egp') }}</div>
-        </div>
-        <div class="su-kpi su-kpi--3">
-            <div class="su-kpi__l">{{ __('instructor.pending_withdrawals') }}</div>
-            <div class="su-kpi__row">
-                <div class="su-kpi__v tabular-nums">{{ number_format($stats['pending_withdrawals'], 2) }}</div>
-                <div class="su-kpi__d"><i class="fas fa-clock" aria-hidden="true"></i></div>
-            </div>
-            <div style="font-size:12px;color:var(--su-ink-40)">{{ __('public.currency_egp') }}</div>
-        </div>
-        <div class="su-kpi su-kpi--4">
-            <div class="su-kpi__l">{{ __('instructor.available_amount') }}</div>
-            <div class="su-kpi__row">
-                <div class="su-kpi__v tabular-nums">{{ number_format($stats['available_amount'], 2) }}</div>
-                <div class="su-kpi__d"><i class="fas fa-wallet" aria-hidden="true"></i></div>
-            </div>
-            <div style="font-size:12px;color:var(--su-ink-40)">{{ __('public.currency_egp') }}</div>
+            @if($transferHref)
+                <a href="{{ $transferHref }}" class="id-btn id-btn--ghost">
+                    <i class="fas fa-university" aria-hidden="true"></i>
+                    {{ __('instructor.transfer_account') }}
+                </a>
+            @endif
         </div>
     </section>
 
-    <section class="su-card su-card--flush">
-        <div class="su-section-head" style="padding:14px 16px;border-bottom:1px solid var(--su-line,rgba(0,0,0,.06))">
-            <h2 class="su-card__title" style="margin:0">
-                <i class="fas fa-money-check-dollar" aria-hidden="true"></i>
-                {{ __('instructor.withdrawal_requests') }}
-            </h2>
+    <section class="id-kpis" aria-label="{{ __('instructor.available_amount') }}">
+        <article class="id-kpi" style="cursor:default">
+            <span class="id-kpi__icon id-kpi__icon--gold" aria-hidden="true"><i class="fas fa-sack-dollar"></i></span>
+            <span class="id-kpi__body">
+                <span class="id-kpi__label">{{ __('instructor.total_earned') }}</span>
+                <span class="id-kpi__value" style="font-size:1.15rem">{{ number_format($stats['total_earned'], 2) }}</span>
+                <span class="id-field__hint" style="margin-top:2px">{{ $currency }}</span>
+            </span>
+        </article>
+        <article class="id-kpi" style="cursor:default">
+            <span class="id-kpi__icon" aria-hidden="true"><i class="fas fa-arrow-down"></i></span>
+            <span class="id-kpi__body">
+                <span class="id-kpi__label">{{ __('instructor.total_withdrawn') }}</span>
+                <span class="id-kpi__value" style="font-size:1.15rem">{{ number_format($stats['total_withdrawn'], 2) }}</span>
+                <span class="id-field__hint" style="margin-top:2px">{{ $currency }}</span>
+            </span>
+        </article>
+        <article class="id-kpi" style="cursor:default">
+            <span class="id-kpi__icon id-kpi__icon--rose" aria-hidden="true"><i class="fas fa-clock"></i></span>
+            <span class="id-kpi__body">
+                <span class="id-kpi__label">{{ __('instructor.pending_withdrawals') }}</span>
+                <span class="id-kpi__value" style="font-size:1.15rem">{{ number_format($stats['pending_withdrawals'], 2) }}</span>
+                <span class="id-field__hint" style="margin-top:2px">{{ $currency }}</span>
+            </span>
+        </article>
+        <article class="id-kpi" style="cursor:default">
+            <span class="id-kpi__icon id-kpi__icon--teal" aria-hidden="true"><i class="fas fa-wallet"></i></span>
+            <span class="id-kpi__body">
+                <span class="id-kpi__label">{{ __('instructor.available_amount') }}</span>
+                <span class="id-kpi__value" style="font-size:1.15rem">{{ number_format($stats['available_amount'], 2) }}</span>
+                <span class="id-field__hint" style="margin-top:2px">{{ $currency }}</span>
+            </span>
+        </article>
+    </section>
+
+    @unless($canWithdraw)
+        <div class="id-alert id-alert--info" role="note">
+            <i class="fas fa-info-circle" aria-hidden="true"></i>
+            <span>{{ __('instructor.no_available_amount') }} {{ __('instructor.no_available_amount_desc') }}</span>
         </div>
-        <div class="su-table-wrap" style="border:0;border-radius:0;background:transparent">
-            <table class="su-table">
+    @endunless
+
+    <section class="id-panel id-panel--wide" aria-label="{{ __('instructor.withdrawal_requests') }}">
+        <header class="id-panel__head">
+            <h2>{{ __('instructor.withdrawal_requests') }}</h2>
+            @if(method_exists($withdrawals, 'total') && $withdrawals->total() > 0)
+                <span class="id-panel__badge">{{ number_format($withdrawals->total()) }}</span>
+            @endif
+        </header>
+
+        <div class="id-table-wrap">
+            <table class="id-table">
                 <thead>
                     <tr>
                         <th>{{ __('instructor.request_number') }}</th>
@@ -87,12 +110,12 @@
                                 default => __('instructor.other'),
                             };
                             $stChip = match ($withdrawal->status) {
-                                'completed' => 'su-chip--ok',
-                                'processing' => 'su-soft-1',
-                                'approved' => 'su-chip--warn',
-                                'pending' => '',
-                                'rejected', 'cancelled' => 'su-chip--off',
-                                default => '',
+                                'completed' => 'id-chip--ok',
+                                'processing' => 'id-chip--muted',
+                                'approved' => 'id-chip--warn',
+                                'pending' => 'id-chip--warn',
+                                'rejected', 'cancelled' => 'id-chip--rose',
+                                default => 'id-chip--muted',
                             };
                             $stLabel = match ($withdrawal->status) {
                                 'completed' => __('instructor.completed'),
@@ -106,21 +129,21 @@
                         @endphp
                         <tr>
                             <td><strong>{{ $withdrawal->request_number ?? '#' . $withdrawal->id }}</strong></td>
-                            <td class="tabular-nums"><strong>{{ number_format($withdrawal->amount, 2) }} {{ __('public.currency_egp') }}</strong></td>
-                            <td><span class="su-chip su-soft-1">{{ $methodLabel }}</span></td>
-                            <td><span class="su-chip {{ $stChip }}">{{ $stLabel }}</span></td>
-                            <td class="tabular-nums" style="color:var(--su-ink-40)">{{ $withdrawal->created_at->format('Y-m-d H:i') }}</td>
-                            <td style="text-align:end">
-                                <div style="display:inline-flex;gap:6px">
-                                    <a href="{{ route('instructor.withdrawals.show', $withdrawal) }}" class="su-btn" style="height:32px;width:32px;padding:0;justify-content:center" title="{{ __('common.view') }}">
-                                        <i class="fas fa-eye" aria-hidden="true"></i>
+                            <td class="tabular-nums"><strong>{{ number_format($withdrawal->amount, 2) }}</strong> <span class="muted">{{ $currency }}</span></td>
+                            <td><span class="id-chip id-chip--muted">{{ $methodLabel }}</span></td>
+                            <td><span class="id-chip {{ $stChip }}">{{ $stLabel }}</span></td>
+                            <td class="tabular-nums"><span class="muted">{{ $withdrawal->created_at->format('Y-m-d H:i') }}</span></td>
+                            <td class="id-table__end">
+                                <div style="display:inline-flex;flex-wrap:wrap;gap:6px;justify-content:flex-end">
+                                    <a href="{{ route('instructor.withdrawals.show', $withdrawal) }}" class="id-btn id-btn--outline" style="min-height:34px;padding:0 12px;font-size:12px">
+                                        {{ __('common.view') }}
                                     </a>
-                                    @if(in_array($withdrawal->status, ['pending', 'approved']))
+                                    @if(in_array($withdrawal->status, ['pending', 'approved'], true))
                                         <form action="{{ route('instructor.withdrawals.cancel', $withdrawal) }}" method="POST"
-                                              onsubmit="return confirm(@json(__('instructor.confirm_cancel_withdrawal')));" style="display:inline">
+                                              onsubmit="return confirm(@json(__('instructor.confirm_cancel_withdrawal')));" style="margin:0">
                                             @csrf
-                                            <button type="submit" class="su-btn" style="height:32px;width:32px;padding:0;justify-content:center;color:#b91c1c" title="{{ __('instructor.cancel') }}">
-                                                <i class="fas fa-times" aria-hidden="true"></i>
+                                            <button type="submit" class="id-btn id-btn--danger" style="min-height:34px;padding:0 12px;font-size:12px">
+                                                {{ __('instructor.cancel') }}
                                             </button>
                                         </form>
                                     @endif
@@ -130,10 +153,22 @@
                     @empty
                         <tr>
                             <td colspan="6">
-                                <div class="su-empty">
-                                    <i class="fas fa-money-bill-wave" aria-hidden="true"></i>
+                                <div class="id-empty" style="border:0;background:transparent;padding:28px 8px">
+                                    <span class="id-empty__mark" aria-hidden="true"><i class="fas fa-money-bill-wave"></i></span>
                                     <p>{{ __('instructor.no_withdrawals') }}</p>
-                                    <p style="color:var(--su-ink-40);font-size:13px;margin:0">{{ __('instructor.no_withdrawals_description') }}</p>
+                                    <p class="id-field__hint" style="margin-top:6px">{{ __('instructor.no_withdrawals_description') }}</p>
+                                    @if($canWithdraw)
+                                        <div class="id-empty__actions">
+                                            <a href="{{ route('instructor.withdrawals.create') }}" class="id-btn id-btn--navy">
+                                                <i class="fas fa-plus" aria-hidden="true"></i>
+                                                {{ __('instructor.new_withdrawal_request') }}
+                                            </a>
+                                        </div>
+                                    @elseif($agreementsHref)
+                                        <div class="id-empty__actions">
+                                            <a href="{{ $agreementsHref }}" class="id-btn id-btn--outline">{{ __('instructor.agreements_system') }}</a>
+                                        </div>
+                                    @endif
                                 </div>
                             </td>
                         </tr>
@@ -141,8 +176,9 @@
                 </tbody>
             </table>
         </div>
+
         @if($withdrawals->hasPages())
-            <div class="su-pager" style="padding:12px">{{ $withdrawals->links() }}</div>
+            <div class="id-pager">{{ $withdrawals->links() }}</div>
         @endif
     </section>
 </div>

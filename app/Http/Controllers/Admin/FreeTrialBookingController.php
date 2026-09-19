@@ -5,10 +5,11 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\AcademicYear;
 use App\Models\FreeTrialBooking;
-use App\Models\FreeTrialWeeklyAvailability;
+use App\Models\User;
+use App\Services\FreeTrialBookingService;
+use App\Support\AppTimezone;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\View\View;
 
 class FreeTrialBookingController extends Controller
@@ -27,7 +28,12 @@ class FreeTrialBookingController extends Controller
 
     public function index(Request $request): View
     {
-        $query = FreeTrialBooking::query()->with(['user:id,name,email', 'recommendedSchoolYear:id,name,level_number']);
+        $query = FreeTrialBooking::query()->with([
+            'user:id,name,email',
+            'instructor:id,name,email',
+            'oneToOneSession:id,status,is_complimentary,scheduled_at',
+            'recommendedSchoolYear:id,name,level_number',
+        ]);
 
         if ($request->filled('search')) {
             $s = trim((string) $request->input('search'));
@@ -40,6 +46,7 @@ class FreeTrialBookingController extends Controller
         }
 
         if ($request->filled('status') && in_array($request->status, [
+            FreeTrialBooking::STATUS_PENDING,
             FreeTrialBooking::STATUS_CONFIRMED,
             FreeTrialBooking::STATUS_CANCELLED,
             FreeTrialBooking::STATUS_COMPLETED,
@@ -58,6 +65,7 @@ class FreeTrialBookingController extends Controller
 
         $stats = [
             'total' => FreeTrialBooking::count(),
+            'pending' => FreeTrialBooking::where('status', FreeTrialBooking::STATUS_PENDING)->count(),
             'confirmed' => FreeTrialBooking::where('status', FreeTrialBooking::STATUS_CONFIRMED)->count(),
             'upcoming' => FreeTrialBooking::where('status', FreeTrialBooking::STATUS_CONFIRMED)
                 ->where('starts_at', '>=', now())->count(),
@@ -69,23 +77,113 @@ class FreeTrialBookingController extends Controller
         return view('admin.free-trial-bookings.index', compact('bookings', 'stats'));
     }
 
+    public function create(): View
+    {
+        $students = User::query()
+            ->where('role', 'student')
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get(['id', 'name', 'email', 'phone']);
+
+        $instructors = User::query()
+            ->whereIn('role', ['instructor', 'teacher'])
+            ->where('is_active', true)
+            ->whereHas('instructorProfile', fn ($q) => $q->approved())
+            ->orderBy('name')
+            ->get(['id', 'name', 'email', 'timezone']);
+
+        return view('admin.free-trial-bookings.create', [
+            'students' => $students,
+            'instructors' => $instructors,
+            'slotsUrl' => route('admin.placement.slots'),
+        ]);
+    }
+
+    public function store(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'student_id' => ['required', 'integer', 'exists:users,id'],
+            'instructor_id' => ['required', 'integer', 'exists:users,id'],
+            'scheduled_at' => ['required', 'date'],
+            'timezone' => AppTimezone::inputRules(),
+            'notes' => ['nullable', 'string', 'max:2000'],
+            'duration_minutes' => ['nullable', 'integer', 'in:30,45,50,60,90'],
+        ]);
+
+        $student = User::query()->findOrFail($data['student_id']);
+        $instructor = User::query()->findOrFail($data['instructor_id']);
+
+        if (! $student->isStudent()) {
+            return back()->withInput()->with('error', 'المستخدم المحدد ليس طالباً.');
+        }
+        if (! $instructor->isInstructor()) {
+            return back()->withInput()->with('error', 'المستخدم المحدد ليس معلماً.');
+        }
+
+        $clockTz = AppTimezone::resolveInput(
+            is_string($data['timezone'] ?? null) ? $data['timezone'] : null,
+            $instructor
+        );
+
+        $data = AppTimezone::shiftRequestDateTime(
+            $request,
+            $data,
+            'scheduled_at',
+            mustBeFuture: true,
+            fallbackUser: $instructor
+        );
+
+        try {
+            $booking = FreeTrialBookingService::assignManual(
+                $student,
+                $instructor,
+                $data['scheduled_at'],
+                $request->user(),
+                $data['notes'] ?? null,
+                $clockTz,
+                isset($data['duration_minutes']) ? (int) $data['duration_minutes'] : null,
+                requireAvailability: false
+            );
+        } catch (\InvalidArgumentException $e) {
+            return back()->withInput()->with('error', $e->getMessage());
+        }
+
+        return redirect()
+            ->route('admin.free-trial-bookings.show', $booking)
+            ->with('success', 'تم توصيف الحصة المجانية وظهرت في جدولي الطالب والمعلم دون خصم من الرصيد.');
+    }
+
     public function show(FreeTrialBooking $freeTrialBooking): View
     {
-        $freeTrialBooking->load(['user:id,name,email,phone', 'recommendedSchoolYear:id,name,level_number']);
+        $freeTrialBooking->load([
+            'user:id,name,email,phone',
+            'instructor:id,name,email',
+            'oneToOneSession',
+            'recommendedSchoolYear:id,name,level_number',
+        ]);
+
+        $instructors = User::query()
+            ->whereIn('role', ['instructor', 'teacher'])
+            ->where('is_active', true)
+            ->whereHas('instructorProfile', fn ($q) => $q->approved())
+            ->orderBy('name')
+            ->get(['id', 'name', 'email']);
 
         return view('admin.free-trial-bookings.show', [
             'booking' => $freeTrialBooking,
             'schoolYears' => AcademicYear::query()->ordered()->get(['id', 'name', 'level_number', 'code']),
+            'instructors' => $instructors,
         ]);
     }
 
     public function updateStatus(Request $request, FreeTrialBooking $freeTrialBooking): RedirectResponse
     {
         $data = $request->validate([
-            'status' => ['required', 'in:confirmed,cancelled,completed'],
+            'status' => ['required', 'in:pending,confirmed,cancelled,completed'],
             'notes' => ['nullable', 'string', 'max:2000'],
             'admin_notes' => ['nullable', 'string', 'max:5000'],
             'recommended_academic_year_id' => ['nullable', 'exists:academic_years,id'],
+            'instructor_id' => ['nullable', 'integer', 'exists:users,id'],
         ]);
 
         $freeTrialBooking->update([
@@ -93,108 +191,29 @@ class FreeTrialBookingController extends Controller
             'notes' => $data['notes'] ?? $freeTrialBooking->notes,
             'admin_notes' => $data['admin_notes'] ?? $freeTrialBooking->admin_notes,
             'recommended_academic_year_id' => $data['recommended_academic_year_id'] ?? null,
+            'instructor_id' => $data['instructor_id'] ?? null,
         ]);
+
+        FreeTrialBookingService::syncLinkedSessionStatus($freeTrialBooking->fresh(), $data['status']);
 
         return redirect()
             ->route('admin.free-trial-bookings.show', $freeTrialBooking)
-            ->with('success', 'تم تحديث حالة الحجز وتوصية السنة.');
+            ->with('success', 'تم تحديث الحجز ومزامنة الجدول.');
     }
 
     public function destroy(FreeTrialBooking $freeTrialBooking): RedirectResponse
     {
+        if ($freeTrialBooking->one_to_one_session_id) {
+            FreeTrialBookingService::syncLinkedSessionStatus(
+                $freeTrialBooking,
+                FreeTrialBooking::STATUS_CANCELLED
+            );
+        }
+
         $freeTrialBooking->delete();
 
         return redirect()
             ->route('admin.free-trial-bookings.index')
             ->with('success', 'تم حذف الحجز.');
-    }
-
-    public function availability(): View
-    {
-        $windows = FreeTrialWeeklyAvailability::query()
-            ->orderBy('day_of_week')
-            ->orderBy('start_time')
-            ->get();
-
-        $dayNames = [
-            1 => 'الاثنين',
-            2 => 'الثلاثاء',
-            3 => 'الأربعاء',
-            4 => 'الخميس',
-            5 => 'الجمعة',
-            6 => 'السبت',
-            7 => 'الأحد',
-        ];
-
-        return view('admin.free-trial-bookings.availability', compact('windows', 'dayNames'));
-    }
-
-    public function storeAvailability(Request $request): RedirectResponse
-    {
-        $data = $request->validate([
-            'day_of_week' => ['required', 'integer', 'between:1,7'],
-            'start_time' => ['required', 'date_format:H:i'],
-            'end_time' => ['required', 'date_format:H:i', 'after:start_time'],
-            'slot_duration_minutes' => ['required', 'integer', 'in:15,30,45,60'],
-            'is_active' => ['nullable', 'boolean'],
-        ]);
-
-        FreeTrialWeeklyAvailability::create([
-            'day_of_week' => (int) $data['day_of_week'],
-            'start_time' => $data['start_time'],
-            'end_time' => $data['end_time'],
-            'slot_duration_minutes' => (int) $data['slot_duration_minutes'],
-            'is_active' => $request->boolean('is_active', true),
-        ]);
-
-        $this->bustLandingCache();
-
-        return redirect()
-            ->route('admin.free-trial-bookings.availability')
-            ->with('success', 'تمت إضافة نافذة التوفر.');
-    }
-
-    public function updateAvailability(Request $request, FreeTrialWeeklyAvailability $window): RedirectResponse
-    {
-        $data = $request->validate([
-            'day_of_week' => ['required', 'integer', 'between:1,7'],
-            'start_time' => ['required', 'date_format:H:i'],
-            'end_time' => ['required', 'date_format:H:i', 'after:start_time'],
-            'slot_duration_minutes' => ['required', 'integer', 'in:15,30,45,60'],
-            'is_active' => ['nullable', 'boolean'],
-        ]);
-
-        $window->update([
-            'day_of_week' => (int) $data['day_of_week'],
-            'start_time' => $data['start_time'],
-            'end_time' => $data['end_time'],
-            'slot_duration_minutes' => (int) $data['slot_duration_minutes'],
-            'is_active' => $request->boolean('is_active'),
-        ]);
-
-        $this->bustLandingCache();
-
-        return redirect()
-            ->route('admin.free-trial-bookings.availability')
-            ->with('success', 'تم تحديث نافذة التوفر.');
-    }
-
-    public function destroyAvailability(FreeTrialWeeklyAvailability $window): RedirectResponse
-    {
-        $window->delete();
-        $this->bustLandingCache();
-
-        return redirect()
-            ->route('admin.free-trial-bookings.availability')
-            ->with('success', 'تم حذف نافذة التوفر.');
-    }
-
-    private function bustLandingCache(): void
-    {
-        foreach (['ar', 'en'] as $locale) {
-            Cache::forget('landing.home.v5.'.$locale);
-            Cache::forget('landing.home.v12.'.$locale);
-            Cache::forget('landing.home.v13.'.$locale);
-        }
     }
 }

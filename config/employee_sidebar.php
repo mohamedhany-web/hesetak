@@ -299,7 +299,7 @@ return [
             ['title' => 'حسابي', 'keys' => ['profile', 'notifications', 'settings']],
         ],
         'sales' => [
-            ['title' => 'Glottical CRM', 'keys' => ['crm_desk', 'crm_leads', 'crm_marketing_inbox', 'crm_commissions', 'crm_reports', 'crm_messages']],
+            ['title' => 'CRM حصتك', 'keys' => ['crm_desk', 'crm_leads', 'crm_marketing_inbox', 'crm_commissions', 'crm_reports', 'crm_messages']],
             ['title' => 'القيادة والمبيعات', 'keys' => ['dashboard', 'sales_desk', 'sales_orders']],
             ['title' => 'الكتالوج', 'keys' => ['public_catalog']],
             ['title' => 'المهام والمتابعة', 'keys' => ['tasks', 'leaves']],
@@ -331,19 +331,19 @@ return [
             ['title' => 'حسابي', 'keys' => ['profile', 'notifications', 'settings']],
         ],
         'crm_marketing' => [
-            ['title' => 'Glottical CRM', 'keys' => ['crm_desk', 'crm_marketing_desk', 'crm_leads', 'crm_leads_create', 'crm_commissions', 'crm_reports', 'crm_messages']],
+            ['title' => 'CRM حصتك', 'keys' => ['crm_desk', 'crm_marketing_desk', 'crm_leads', 'crm_leads_create', 'crm_commissions', 'crm_reports', 'crm_messages']],
             ['title' => 'المهام والمتابعة', 'keys' => ['tasks', 'leaves']],
             ['title' => 'التخطيط', 'keys' => ['calendar']],
             ['title' => 'حسابي', 'keys' => ['profile', 'notifications', 'settings']],
         ],
         'crm_team_leader' => [
-            ['title' => 'Glottical CRM', 'keys' => ['crm_desk', 'crm_team', 'crm_leads', 'crm_marketing_inbox', 'crm_commissions', 'crm_reports', 'crm_messages']],
+            ['title' => 'CRM حصتك', 'keys' => ['crm_desk', 'crm_team', 'crm_leads', 'crm_marketing_inbox', 'crm_commissions', 'crm_reports', 'crm_messages']],
             ['title' => 'المهام والمتابعة', 'keys' => ['tasks', 'leaves', 'reports']],
             ['title' => 'التخطيط', 'keys' => ['calendar']],
             ['title' => 'حسابي', 'keys' => ['profile', 'notifications', 'settings']],
         ],
         'crm_finance' => [
-            ['title' => 'Glottical CRM', 'keys' => ['crm_desk', 'crm_sales_financial', 'crm_leads', 'crm_team', 'crm_orders', 'crm_commissions', 'crm_messages']],
+            ['title' => 'CRM حصتك', 'keys' => ['crm_desk', 'crm_sales_financial', 'crm_leads', 'crm_team', 'crm_orders', 'crm_commissions', 'crm_messages']],
             ['title' => 'المهام والمتابعة', 'keys' => ['tasks', 'leaves']],
             ['title' => 'حسابي', 'keys' => ['profile', 'notifications', 'settings']],
         ],
@@ -351,7 +351,7 @@ return [
          * الموظف المخصص (custom): يظهر كل الأقسام مُرشَّحة بصلاحياته RBAC.
          */
         'custom' => [
-            ['title' => 'Glottical CRM', 'keys' => ['crm_desk', 'crm_leads', 'crm_commissions']],
+            ['title' => 'CRM حصتك', 'keys' => ['crm_desk', 'crm_leads', 'crm_commissions']],
             ['title' => 'القيادة', 'keys' => ['dashboard', 'admin_panel']],
             ['title' => 'المبيعات', 'keys' => ['sales_desk', 'sales_orders']],
             ['title' => 'المحاسبة والمالية', 'keys' => ['desk_accountant', 'agreements', 'accounting']],

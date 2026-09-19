@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'حجوزات المجموعات - Glottical')
+@section('title', 'حجوزات المجموعات - حصتك')
 @section('page_title', 'حجوزات المجموعات')
 
 @section('content')

@@ -1,4 +1,4 @@
-﻿@extends('layouts.admin')
+@extends('layouts.admin')
 
 @section('title', 'تسجيل طالب جديد')
 @section('header', 'تسجيل طالب جديد')

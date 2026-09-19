@@ -33,7 +33,7 @@ AWS_USE_PATH_STYLE_ENDPOINT=true
 خطأ **"Class League\Flysystem\AwsS3V3\PortableVisibilityConverter not found"** يعني أن الحزمة غير مثبتة في بيئة الإنتاج. نفّذ على السيرفر (SSH أو من مجلد المشروع):
 
 ```bash
-cd /path/to/Glottical
+cd /path/to/حصتك
 composer install --no-dev
 ```
 

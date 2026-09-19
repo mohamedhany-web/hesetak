@@ -15,7 +15,7 @@
             <div class="mb-4 flex justify-center">
                 <span class="inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-bold" style="background:#FFE5F7;color:#283593;border:1px solid #f5c7e8">
                     <i class="fas fa-bullhorn text-[11px]"></i>
-                    إعلان Glottical
+                    إعلان حصتك
                 </span>
             </div>
             <h3 class="text-2xl sm:text-[1.7rem] font-extrabold text-[#1F2A7A] dark:text-slate-100 mb-4 leading-tight text-center">{{ $ad->title }}</h3>

@@ -14,7 +14,7 @@
         <div>
             <p class="text-xs font-medium text-muted">الباقات والأسعار · برامج مسجّلة</p>
             <h2 class="mt-1 text-2xl font-semibold text-ink">إنشاء باقة برامج</h2>
-            <p class="mt-1 text-sm text-muted">اجمع عدة برامج بسعر موحّد بالدولار مع مسار تعليمي اختياري.</p>
+            <p class="mt-1 text-sm text-muted">اجمع عدة برامج بسعر موحّد بالريال السعودي مع مسار تعليمي اختياري.</p>
         </div>
         <a href="{{ route('admin.packages.index') }}" class="btn-press inline-flex h-9 items-center rounded-xl border border-line px-4 text-sm text-ink-soft">رجوع</a>
     </section>
@@ -32,11 +32,11 @@
     <div class="rounded-2xl border border-accent/20 bg-accent-soft/40 px-4 py-3 text-sm text-ink">
         <strong>حاسبة التوفير:</strong>
         مجموع أسعار البرامج المختارة =
-        <span class="font-bold tabular-nums text-accent" x-text="coursesTotal.toFixed(2) + ' USD'"></span>
+        <span class="font-bold tabular-nums text-accent" x-text="coursesTotal.toFixed(2) + ' {{ currency_label() }}'"></span>
         · سعر الباقة =
-        <span class="font-bold tabular-nums" x-text="packagePrice.toFixed(2) + ' USD'"></span>
+        <span class="font-bold tabular-nums" x-text="packagePrice.toFixed(2) + ' {{ currency_label() }}'"></span>
         · التوفير =
-        <span class="font-bold tabular-nums text-emerald-700" x-text="Math.max(0, coursesTotal - packagePrice).toFixed(2) + ' USD'"></span>
+        <span class="font-bold tabular-nums text-emerald-700" x-text="Math.max(0, coursesTotal - packagePrice).toFixed(2) + ' {{ currency_label() }}'"></span>
     </div>
 
     <form action="{{ route('admin.packages.store') }}" method="POST" enctype="multipart/form-data" class="space-y-5">
@@ -72,7 +72,7 @@
                 </div>
                 <div>
                     <label class="{{ $labelClass }}" for="currency">العملة</label>
-                    <input id="currency" name="currency" value="{{ old('currency', 'USD') }}" class="{{ $fieldClass }}" dir="ltr">
+                    <input id="currency" name="currency" value="{{ old('currency', platform_currency()) }}" class="{{ $fieldClass }}" dir="ltr">
                 </div>
                 <div>
                     <label class="{{ $labelClass }}" for="order">ترتيب العرض</label>
@@ -134,7 +134,7 @@
                         <span class="flex-1 text-sm text-ink">{{ $course->title }}</span>
                         <span class="text-xs tabular-nums text-muted">
                             @if((float) $course->price > 0)
-                                {{ number_format((float) $course->price, 2) }} USD
+                                {{ number_format((float) $course->price, 2) }} {{ currency_label() }}
                             @else
                                 مجاني
                             @endif

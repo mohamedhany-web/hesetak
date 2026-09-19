@@ -45,9 +45,7 @@
         function updateSummary(data) {
             var base = parseFloat(summary.getAttribute('data-base-price')) || 0;
             var isMonthly = summary.getAttribute('data-is-monthly') === '1';
-            var curEl = el('checkout_currency');
-            var cur = 'USD';
-            var curLabel = cur === 'USD' ? '{{ __('public.currency_usd') }}' : '{{ __('public.currency_egp') }}';
+            var curLabel = @json(currency_symbol());
             var egpSmall = ' <span style="font-size:.75rem;font-weight:700;color:#8A94A6">' + curLabel + '</span>' + (isMonthly ? ' <span style="font-size:.7rem;font-weight:700;color:#8A94A6">/{{ __('public.per_month') }}</span>' : '');
             var egpLarge = ' <span style="font-size:.8rem;font-weight:700;color:#8A94A6">' + curLabel + '</span>' + (isMonthly ? ' <span style="font-size:.75rem;font-weight:700;color:#8A94A6">/{{ __('public.per_month') }}</span>' : '');
             if (!data || !data.ok) {
@@ -81,7 +79,7 @@
             var cur = el('checkout_currency');
             fd.append('coupon_code', c ? (c.value || '').trim() : '');
             fd.append('wallet_credit', w && w.value !== '' ? w.value : '0');
-            fd.append('currency', 'USD');
+            fd.append('currency', @json(platform_currency()));
             var ar = document.querySelector('input[name="auto_renew"]');
             if (ar && ar.checked) { fd.append('auto_renew', '1'); }
             return fetch(quoteUrl, {
@@ -103,7 +101,7 @@
                         var wIn = el('checkout_wallet_credit');
                         hfW.value = wIn && wIn.value !== '' ? wIn.value : '0';
                     }
-                    if (hfCur && cur) hfCur.value = 'USD';
+                    if (hfCur) hfCur.value = @json(platform_currency());
                     if (typeof window.muallimxOnCheckoutPricingUpdated === 'function') {
                         try { window.muallimxOnCheckoutPricingUpdated(res.data); } catch (e) {}
                     }
@@ -131,7 +129,7 @@
                 var cur = el('checkout_currency');
                 if (el('form_coupon_code')) el('form_coupon_code').value = c ? (c.value || '').trim() : '';
                 if (el('form_wallet_credit')) el('form_wallet_credit').value = w && w.value !== '' ? w.value : '0';
-                if (el('form_currency')) el('form_currency').value = 'USD';
+                if (el('form_currency')) el('form_currency').value = @json(platform_currency());
             });
         }
         var oc = el('checkout_coupon_code');
@@ -225,7 +223,7 @@
             fd.append('coupon_code', cEl ? (cEl.value || '').trim() : '');
             fd.append('wallet_credit', wEl && wEl.value !== '' ? wEl.value : '0');
             var curEl = document.getElementById('checkout_currency');
-            fd.append('currency', 'USD');
+            fd.append('currency', @json(platform_currency()));
             var arEl = document.querySelector('input[name="auto_renew"]');
             if (arEl && arEl.checked) { fd.append('auto_renew', '1'); }
             fetch(prepareUrl, {
@@ -399,7 +397,7 @@
             fd.append('coupon_code', cEl ? (cEl.value || '').trim() : '');
             fd.append('wallet_credit', wEl && wEl.value !== '' ? wEl.value : '0');
             var curEl = document.getElementById('checkout_currency');
-            fd.append('currency', 'USD');
+            fd.append('currency', @json(platform_currency()));
             var arEl = document.querySelector('input[name="auto_renew"]');
             if (arEl && arEl.checked) { fd.append('auto_renew', '1'); }
             fetch(prepareUrl, {

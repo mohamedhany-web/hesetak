@@ -9,7 +9,9 @@ return [
     'show_courses' => false,
 
     // أقسام نشطة (التدريس المباشر / المدرسة)
-    'show_tutoring' => true,
+    // حجوزات المجموعات / قيادة الفصول — خارج نطاق حصتك (1:1 فقط)
+    'show_tutoring' => false,
+    'show_group_classes' => false,
     'show_live_broadcast' => true,
     'show_libraries' => true,
     'show_calendar' => true,

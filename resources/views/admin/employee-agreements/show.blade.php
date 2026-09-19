@@ -16,9 +16,9 @@
     ];
     $status = $statusBadges[$employeeAgreement->status] ?? ['label' => $employeeAgreement->status, 'classes' => 'bg-canvas text-muted'];
     $statCards = [
-        ['label' => 'الراتب الأساسي', 'value' => number_format($employeeAgreement->salary, 2) . ' $', 'icon' => 'fas fa-money-bill-wave'],
-        ['label' => 'إجمالي الخصومات', 'value' => number_format($stats['total_deductions'], 2) . ' $', 'icon' => 'fas fa-minus-circle', 'tone' => 'rose'],
-        ['label' => 'إجمالي المدفوعات', 'value' => number_format($stats['total_payments'], 2) . ' $', 'icon' => 'fas fa-check-circle', 'tone' => 'emerald'],
+        ['label' => 'الراتب الأساسي', 'value' => number_format($employeeAgreement->salary, 2) . ' ' . currency_symbol(), 'icon' => 'fas fa-money-bill-wave'],
+        ['label' => 'إجمالي الخصومات', 'value' => number_format($stats['total_deductions'], 2) . ' ' . currency_symbol(), 'icon' => 'fas fa-minus-circle', 'tone' => 'rose'],
+        ['label' => 'إجمالي المدفوعات', 'value' => number_format($stats['total_payments'], 2) . ' ' . currency_symbol(), 'icon' => 'fas fa-check-circle', 'tone' => 'emerald'],
         ['label' => 'الدفعات المعلقة', 'value' => $stats['pending_payments'], 'icon' => 'fas fa-clock', 'tone' => 'amber'],
     ];
 @endphp

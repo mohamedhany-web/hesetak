@@ -35,11 +35,11 @@
     <div class="rounded-2xl border border-accent/20 bg-accent-soft/40 px-4 py-3 text-sm text-ink">
         <strong>حاسبة التوفير:</strong>
         مجموع أسعار البرامج =
-        <span class="font-bold tabular-nums text-accent" x-text="coursesTotal.toFixed(2) + ' USD'"></span>
+        <span class="font-bold tabular-nums text-accent" x-text="coursesTotal.toFixed(2) + ' ' + @json(currency_symbol())"></span>
         · سعر الباقة =
-        <span class="font-bold tabular-nums" x-text="packagePrice.toFixed(2) + ' USD'"></span>
+        <span class="font-bold tabular-nums" x-text="packagePrice.toFixed(2) + ' ' + @json(currency_symbol())"></span>
         · التوفير =
-        <span class="font-bold tabular-nums text-emerald-700" x-text="Math.max(0, coursesTotal - packagePrice).toFixed(2) + ' USD'"></span>
+        <span class="font-bold tabular-nums text-emerald-700" x-text="Math.max(0, coursesTotal - packagePrice).toFixed(2) + ' ' + @json(currency_symbol())"></span>
     </div>
 
     <form action="{{ route('admin.packages.update', $package) }}" method="POST" enctype="multipart/form-data" class="space-y-5">
@@ -76,7 +76,7 @@
                 </div>
                 <div>
                     <label class="{{ $labelClass }}" for="currency">العملة</label>
-                    <input id="currency" name="currency" value="{{ old('currency', $package->currency ?: 'USD') }}" class="{{ $fieldClass }}" dir="ltr">
+                    <input id="currency" name="currency" value="{{ old('currency', $package->currency ?: platform_currency()) }}" class="{{ $fieldClass }}" dir="ltr">
                 </div>
                 <div>
                     <label class="{{ $labelClass }}" for="order">ترتيب العرض</label>
@@ -153,7 +153,7 @@
                         <span class="flex-1 text-sm text-ink">{{ $course->title }}</span>
                         <span class="text-xs tabular-nums text-muted">
                             @if((float) $course->price > 0)
-                                {{ number_format((float) $course->price, 2) }} USD
+                                {{ number_format((float) $course->price, 2) }} {{ currency_symbol() }}
                             @else
                                 مجاني
                             @endif

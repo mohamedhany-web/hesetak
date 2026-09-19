@@ -1,4 +1,4 @@
-﻿@extends('layouts.admin')
+@extends('layouts.admin')
 
 @section('title', 'إضافة إنجاز جديد')
 @section('header', 'إضافة إنجاز جديد')

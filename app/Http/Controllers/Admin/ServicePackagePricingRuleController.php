@@ -53,7 +53,7 @@ class ServicePackagePricingRuleController extends Controller
         ServicePackagePricingRule::create($data);
 
         return redirect()->route('admin.service-package-pricing-rules.index')
-            ->with('success', 'تمت إضافة قاعدة التسعير بالدولار.');
+            ->with('success', 'تمت إضافة قاعدة التسعير بالريال السعودي.');
     }
 
     public function update(Request $request, ServicePackagePricingRule $servicePackagePricingRule): RedirectResponse

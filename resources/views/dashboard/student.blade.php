@@ -4,112 +4,99 @@
 
 @push('styles')
 <style>
-    .kids-home {
-        --k-blue: #0B3D91;
-        --k-gold: #F5B800;
-        --k-sky: #7EC8FF;
-        --k-mint: #7AD9B0;
-        --k-coral: #FF8FAB;
-        --k-cream: #FFF8E8;
-        --k-ink: #1A2744;
-        --k-muted: #6B7A99;
+    .hs-home {
+        --h-navy: #1E4E8C;
+        --h-ink: #152A4A;
+        --h-gold: #C9952A;
+        --h-muted: #6B7A99;
+        --h-line: #E8EEF8;
     }
-    .kids-hero {
-        border-radius: 28px;
+    .hs-hero {
+        border-radius: 22px;
         background:
-            radial-gradient(circle at 12% 20%, rgba(126,200,255,.55), transparent 42%),
-            radial-gradient(circle at 88% 10%, rgba(245,184,0,.45), transparent 36%),
-            radial-gradient(circle at 70% 90%, rgba(122,217,176,.35), transparent 40%),
+            radial-gradient(ellipse 60% 80% at 100% 0%, rgba(30, 78, 140, 0.14), transparent 55%),
+            radial-gradient(ellipse 40% 50% at 0% 100%, rgba(201, 149, 42, 0.12), transparent 50%),
             linear-gradient(135deg, #fff 0%, #F4F7FC 100%);
-        border: 2px solid #E3ECFF;
+        border: 1px solid var(--h-line);
         padding: 1.25rem 1.35rem 1.4rem;
-        position: relative;
-        overflow: hidden;
     }
-    .kids-hero__cloud {
-        position: absolute; border-radius: 999px; background: rgba(255,255,255,.7);
-        filter: blur(1px); pointer-events: none;
-    }
-    .kids-week {
+    .hs-week {
         display: grid;
         grid-template-columns: repeat(7, minmax(0, 1fr));
         gap: .55rem;
     }
     @media (max-width: 900px) {
-        .kids-week { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .hs-week { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     }
-    .kids-day {
-        border-radius: 22px;
-        border: 2px solid #E8EEF8;
+    .hs-day {
+        border-radius: 16px;
+        border: 1.5px solid var(--h-line);
         background: #fff;
-        min-height: 150px;
+        min-height: 140px;
         padding: .7rem .65rem .85rem;
-        transition: transform .18s ease, box-shadow .18s ease;
     }
-    .kids-day.is-today {
-        border-color: var(--k-gold);
-        box-shadow: 0 12px 28px -14px rgba(245,184,0,.55);
-        background: linear-gradient(180deg, #FFF9E8, #fff);
-        transform: translateY(-2px);
+    .hs-day.is-today {
+        border-color: rgba(201, 149, 42, 0.55);
+        box-shadow: 0 10px 24px -14px rgba(201, 149, 42, 0.45);
+        background: linear-gradient(180deg, #FFFBF3, #fff);
     }
-    .kids-day__badge {
+    .hs-day__badge {
         display: inline-flex; align-items: center; justify-content: center;
         width: 2rem; height: 2rem; border-radius: 999px;
         font-weight: 900; font-size: .85rem; color: #fff;
-        background: var(--k-blue);
+        background: var(--h-navy);
     }
-    .kids-day.is-today .kids-day__badge { background: var(--k-gold); color: #072A66; }
-    .kids-slot {
+    .hs-day.is-today .hs-day__badge { background: var(--h-gold); color: var(--h-ink); }
+    .hs-slot {
         display: block;
         margin-top: .45rem;
-        border-radius: 14px;
+        border-radius: 12px;
         padding: .45rem .5rem;
         text-decoration: none !important;
         color: inherit;
         border: 1.5px solid transparent;
         font-size: .72rem;
         line-height: 1.25;
-        transition: transform .12s ease, filter .12s ease;
     }
-    .kids-slot:hover { transform: scale(1.03); filter: brightness(1.03); }
-    .kids-slot--gold { background: #FFF3C4; border-color: #F5B80055; }
-    .kids-slot--blue { background: #DCECFF; border-color: #0B3D9133; }
-    .kids-slot--teal { background: #D7F5E8; border-color: #2FAE7A44; }
-    .kids-slot__time { font-weight: 900; color: var(--k-ink); display: block; }
-    .kids-slot__title { font-weight: 800; color: #334; display: block; margin-top: 2px; }
-    .kids-hub {
+    .hs-slot--gold { background: #FFF3C4; border-color: rgba(201, 149, 42, 0.35); }
+    .hs-slot--blue { background: #E8F0FA; border-color: rgba(30, 78, 140, 0.2); }
+    .hs-slot--teal { background: #D7F5E8; border-color: rgba(47, 174, 122, 0.25); }
+    .hs-slot__time { font-weight: 900; color: var(--h-ink); display: block; }
+    .hs-slot__title { font-weight: 800; color: #334; display: block; margin-top: 2px; }
+    .hs-hub {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: .85rem;
     }
     @media (min-width: 768px) {
-        .kids-hub { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+        .hs-hub { grid-template-columns: repeat(4, minmax(0, 1fr)); }
     }
-    .kids-hub__card {
+    .hs-hub__card {
         display: flex; flex-direction: column; align-items: center; justify-content: center;
         gap: .75rem; text-align: center;
-        min-height: 148px; padding: 1.1rem .8rem;
-        border-radius: 28px; text-decoration: none !important; color: inherit;
-        border: 2px solid #E8EEF8; background: #fff;
-        box-shadow: 0 10px 24px -18px rgba(11,61,145,.35);
-        transition: transform .18s ease, box-shadow .18s ease;
+        min-height: 140px; padding: 1.1rem .8rem;
+        border-radius: 18px; text-decoration: none !important; color: inherit;
+        border: 1.5px solid var(--h-line); background: #fff;
+        box-shadow: 0 10px 24px -18px rgba(21, 42, 74, 0.28);
+        transition: transform .18s ease, box-shadow .18s ease, border-color .15s ease;
     }
-    .kids-hub__card:hover {
-        transform: translateY(-4px) rotate(-.4deg);
-        box-shadow: 0 18px 34px -16px rgba(11,61,145,.35);
+    .hs-hub__card:hover {
+        transform: translateY(-3px);
+        border-color: rgba(30, 78, 140, 0.28);
+        box-shadow: 0 16px 32px -16px rgba(21, 42, 74, 0.28);
     }
-    .kids-hub__icon {
-        width: 4.25rem; height: 4.25rem; border-radius: 24px;
+    .hs-hub__icon {
+        width: 3.75rem; height: 3.75rem; border-radius: 16px;
         display: inline-flex; align-items: center; justify-content: center;
-        font-size: 1.65rem; color: #fff;
+        font-size: 1.45rem; color: #fff;
     }
-    .kids-hub__icon--materials { background: linear-gradient(135deg, #7EC8FF, #0B3D91); }
-    .kids-hub__icon--videos { background: linear-gradient(135deg, #FF8FAB, #F5B800); }
-    .kids-hub__icon--assignments { background: linear-gradient(135deg, #7AD9B0, #0B8F6A); }
-    .kids-hub__icon--lectures { background: linear-gradient(135deg, #F5B800, #E08900); }
-    .kids-empty {
-        margin-top: .55rem; border-radius: 14px; padding: .55rem;
-        background: #F7FAFF; color: var(--k-muted); font-size: .68rem; font-weight: 700;
+    .hs-hub__icon--lessons { background: linear-gradient(135deg, #1E4E8C, #152A4A); }
+    .hs-hub__icon--credits { background: linear-gradient(135deg, #C9952A, #A67A1F); color: #152A4A; }
+    .hs-hub__icon--teachers { background: linear-gradient(135deg, #2B6CB0, #1E4E8C); }
+    .hs-hub__icon--courses { background: linear-gradient(135deg, #3D6FA8, #1E4E8C); }
+    .hs-empty {
+        margin-top: .55rem; border-radius: 12px; padding: .55rem;
+        background: #F7FAFF; color: var(--h-muted); font-size: .68rem; font-weight: 700;
         text-align: center;
     }
 </style>
@@ -123,16 +110,14 @@
     $nextAppointment = $nextAppointment ?? null;
 @endphp
 
-<div class="kids-home space-y-5">
-    <section class="kids-hero">
-        <span class="kids-hero__cloud" style="width:90px;height:36px;top:12px;{{ $isRtl ? 'left' : 'right' }}:18%;"></span>
-        <span class="kids-hero__cloud" style="width:60px;height:26px;bottom:18px;{{ $isRtl ? 'right' : 'left' }}:8%;"></span>
+<div class="hs-home space-y-5">
+    <section class="hs-hero">
         <div class="relative flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
             <div>
-                <p class="text-xs font-black tracking-wide text-[#0B3D91]/80 mb-1">
-                    {{ $isRtl ? '📅 أسبوعي الجميل' : '📅 My fun week' }}
+                <p class="text-xs font-black tracking-wide text-[#1E4E8C]/80 mb-1">
+                    {{ $isRtl ? 'لوحة الطالب · حصتك' : 'Student panel · Hesetak' }}
                 </p>
-                <h1 class="text-2xl sm:text-[30px] font-black text-[#1A2744] leading-tight">
+                <h1 class="text-2xl sm:text-[30px] font-black text-[#152A4A] leading-tight">
                     {{ __('student.welcome_name', ['name' => auth()->user()->name]) }}
                 </h1>
                 <p class="mt-1 text-sm font-semibold text-[#6B7A99]">
@@ -141,12 +126,12 @@
                         {{ $nextAppointment->title }}
                         · {{ $nextAppointment->starts_at?->format('g:i A') }}
                     @else
-                        {{ $isRtl ? 'اضغط على أي موعد للدخول إلى المحاضرة.' : 'Tap any slot to join your class.' }}
+                        {{ $isRtl ? 'احجز حصة فردية أو تابع كورساتك من الاختصارات أدناه.' : 'Book a 1:1 lesson or open your courses from the shortcuts below.' }}
                     @endif
                 </p>
             </div>
             @if($todayItems->isNotEmpty())
-                <div class="inline-flex items-center gap-2 rounded-full bg-[#F5B800] text-[#072A66] px-3.5 py-2 text-xs font-black shadow-sm">
+                <div class="inline-flex items-center gap-2 rounded-full bg-[#C9952A] text-[#152A4A] px-3.5 py-2 text-xs font-black shadow-sm">
                     <i class="fas fa-star"></i>
                     {{ $todayItems->count() }} {{ $isRtl ? 'موعد اليوم' : 'today' }}
                 </div>
@@ -156,16 +141,16 @@
 
     <section>
         <div class="flex items-center justify-between mb-3 px-1">
-            <h2 class="text-base font-black text-[#1A2744]">{{ $isRtl ? 'تقويمي الأسبوعي' : 'Weekly calendar' }}</h2>
-            <p class="text-[11px] font-bold text-[#6B7A99]">{{ $isRtl ? 'إشعار قبل الموعد بـ 30 دقيقة' : 'Reminder 30 min before' }}</p>
+            <h2 class="text-base font-black text-[#152A4A]">{{ $isRtl ? 'تقويمي الأسبوعي' : 'Weekly calendar' }}</h2>
+            <p class="text-[11px] font-bold text-[#6B7A99]">{{ $isRtl ? 'تذكير قبل الموعد بـ 30 دقيقة' : 'Reminder 30 min before' }}</p>
         </div>
-        <div class="kids-week">
+        <div class="hs-week">
             @foreach($weekDays as $day)
-                <article class="kids-day {{ $day->is_today ? 'is-today' : '' }}">
+                <article class="hs-day {{ $day->is_today ? 'is-today' : '' }}">
                     <div class="flex items-center justify-between gap-1">
-                        <span class="kids-day__badge">{{ $day->date->format('j') }}</span>
+                        <span class="hs-day__badge">{{ $day->date->format('j') }}</span>
                         <div class="text-end min-w-0">
-                            <p class="text-[11px] font-black text-[#1A2744] truncate">{{ $day->short }}</p>
+                            <p class="text-[11px] font-black text-[#152A4A] truncate">{{ $day->short }}</p>
                             @if($day->is_today)
                                 <p class="text-[10px] font-extrabold text-[#8A6A00]">{{ $isRtl ? 'اليوم' : 'Today' }}</p>
                             @endif
@@ -175,25 +160,25 @@
                     @forelse($day->items as $slot)
                         @php
                             $tone = match($slot->color ?? 'blue') {
-                                'gold' => 'kids-slot--gold',
-                                'teal' => 'kids-slot--teal',
-                                default => 'kids-slot--blue',
+                                'gold' => 'hs-slot--gold',
+                                'teal' => 'hs-slot--teal',
+                                default => 'hs-slot--blue',
                             };
                             $href = $slot->join_url
                                 ?: (Route::has('student.schedule.join')
                                     ? route('student.schedule.join', ['type' => $slot->type, 'id' => $slot->ref_id])
                                     : '#');
                         @endphp
-                        <a href="{{ $href }}" class="kids-slot {{ $tone }}" title="{{ $isRtl ? 'دخول المحاضرة' : 'Join class' }}">
-                            <span class="kids-slot__time">
+                        <a href="{{ $href }}" class="hs-slot {{ $tone }}" title="{{ $isRtl ? 'دخول الحصة' : 'Join lesson' }}">
+                            <span class="hs-slot__time">
                                 <i class="far fa-clock text-[10px] opacity-70"></i>
                                 {{ $slot->starts_at?->format('g:i A') }}
                             </span>
-                            <span class="kids-slot__title truncate">{{ $slot->title }}</span>
+                            <span class="hs-slot__title truncate">{{ $slot->title }}</span>
                             <span class="block text-[10px] font-bold text-[#6B7A99] truncate mt-0.5">{{ $slot->subtitle }}</span>
                         </a>
                     @empty
-                        <div class="kids-empty">{{ $isRtl ? 'لا مواعيد' : 'Free' }}</div>
+                        <div class="hs-empty">{{ $isRtl ? 'لا مواعيد' : 'Free' }}</div>
                     @endforelse
                 </article>
             @endforeach
@@ -201,54 +186,68 @@
     </section>
 
     <section>
-        <h2 class="text-base font-black text-[#1A2744] mb-3 px-1">{{ $isRtl ? 'مكتبتي السريعة' : 'Quick library' }}</h2>
-        <div class="kids-hub">
-            <a href="{{ route('student.library.materials') }}" class="kids-hub__card">
-                <span class="kids-hub__icon kids-hub__icon--materials"><i class="fas fa-book-open"></i></span>
+        <h2 class="text-base font-black text-[#152A4A] mb-3 px-1">{{ $isRtl ? 'اختصارات سريعة' : 'Quick actions' }}</h2>
+        <div class="hs-hub">
+            @if(Route::has('student.private-lectures.index'))
+            <a href="{{ route('student.private-lectures.index') }}" class="hs-hub__card">
+                <span class="hs-hub__icon hs-hub__icon--lessons"><i class="fas fa-chalkboard-teacher"></i></span>
                 <div>
-                    <p class="text-sm font-black text-[#1A2744]">{{ $isRtl ? 'مكتبة الماتريال' : 'Materials' }}</p>
-                    <p class="text-[11px] font-bold text-[#6B7A99] mt-0.5">{{ $isRtl ? 'ملفات ودروس' : 'Files & notes' }}</p>
+                    <p class="text-sm font-black text-[#152A4A]">{{ $isRtl ? 'حصصي الخاصة' : 'Private lessons' }}</p>
+                    <p class="text-[11px] font-bold text-[#6B7A99] mt-0.5">{{ $isRtl ? 'مواعيدك ودخول الحصة' : 'Schedule & join' }}</p>
                 </div>
             </a>
-            <a href="{{ route('student.library.videos') }}" class="kids-hub__card">
-                <span class="kids-hub__icon kids-hub__icon--videos"><i class="fas fa-film"></i></span>
+            @endif
+            @if(Route::has('student.service-entitlements.index'))
+            <a href="{{ route('student.service-entitlements.index') }}" class="hs-hub__card">
+                <span class="hs-hub__icon hs-hub__icon--credits"><i class="fas fa-coins"></i></span>
                 <div>
-                    <p class="text-sm font-black text-[#1A2744]">{{ $isRtl ? 'مكتبة الفيديوهات' : 'Videos' }}</p>
-                    <p class="text-[11px] font-bold text-[#6B7A99] mt-0.5">{{ $isRtl ? 'تسجيلات الحصص' : 'Class recordings' }}</p>
+                    <p class="text-sm font-black text-[#152A4A]">{{ $isRtl ? 'رصيد الحصص' : 'Credits' }}</p>
+                    <p class="text-[11px] font-bold text-[#6B7A99] mt-0.5">{{ $isRtl ? 'باقاتك المتبقية' : 'Remaining packages' }}</p>
                 </div>
             </a>
-            <a href="{{ route('student.assignments.index') }}" class="kids-hub__card">
-                <span class="kids-hub__icon kids-hub__icon--assignments"><i class="fas fa-pencil-alt"></i></span>
+            @endif
+            @if(Route::has('public.instructors.index'))
+            <a href="{{ route('public.instructors.index') }}" class="hs-hub__card">
+                <span class="hs-hub__icon hs-hub__icon--teachers"><i class="fas fa-user-graduate"></i></span>
                 <div>
-                    <p class="text-sm font-black text-[#1A2744]">{{ $isRtl ? 'واجباتي' : 'Assignments' }}</p>
-                    <p class="text-[11px] font-bold text-[#6B7A99] mt-0.5">{{ $isRtl ? 'حل وسلّم' : 'Do & submit' }}</p>
+                    <p class="text-sm font-black text-[#152A4A]">{{ $isRtl ? 'ابحث عن معلم' : 'Find a teacher' }}</p>
+                    <p class="text-[11px] font-bold text-[#6B7A99] mt-0.5">{{ $isRtl ? 'حجز حصة فردية' : 'Book 1:1' }}</p>
                 </div>
             </a>
-            <a href="{{ route('student.lectures.index') }}" class="kids-hub__card">
-                <span class="kids-hub__icon kids-hub__icon--lectures"><i class="fas fa-chalkboard"></i></span>
+            @endif
+            @if(student_ui('show_courses', true) && Route::has('my-courses.index'))
+            <a href="{{ route('my-courses.index') }}" class="hs-hub__card">
+                <span class="hs-hub__icon hs-hub__icon--courses"><i class="fas fa-bookmark"></i></span>
                 <div>
-                    <p class="text-sm font-black text-[#1A2744]">{{ $isRtl ? 'محاضراتي' : 'My lectures' }}</p>
-                    <p class="text-[11px] font-bold text-[#6B7A99] mt-0.5">{{ $isRtl ? 'خاصة ومجموعات' : 'Private & groups' }}</p>
+                    <p class="text-sm font-black text-[#152A4A]">{{ __('student.my_courses') }}</p>
+                    <p class="text-[11px] font-bold text-[#6B7A99] mt-0.5">{{ $isRtl ? 'كورساتك المستقلة' : 'Your courses' }}</p>
                 </div>
             </a>
+            @elseif(Route::has('public.courses'))
+            <a href="{{ route('public.courses') }}" class="hs-hub__card">
+                <span class="hs-hub__icon hs-hub__icon--courses"><i class="fas fa-compass"></i></span>
+                <div>
+                    <p class="text-sm font-black text-[#152A4A]">{{ $isRtl ? 'استكشف الكورسات' : 'Browse courses' }}</p>
+                    <p class="text-[11px] font-bold text-[#6B7A99] mt-0.5">{{ $isRtl ? 'مسار مستقل' : 'Independent path' }}</p>
+                </div>
+            </a>
+            @endif
         </div>
     </section>
 
-    @if(student_ui('show_school', true) || student_ui('show_private_lessons', true))
-        <section class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            @if(student_ui('show_school', true) && Route::has('student.classes.index'))
-                <a href="{{ route('student.classes.index') }}" class="rounded-2xl border-2 border-[#E8EEF8] bg-white px-4 py-4 no-underline text-inherit hover:border-[#0B3D91]/30 transition">
-                    <p class="text-xs font-black text-[#0B3D91]">🏫 {{ $isRtl ? 'فصولي' : 'My classes' }}</p>
-                    <p class="mt-1 text-sm font-bold text-[#6B7A99]">{{ $isRtl ? 'الجداول والانضمام للفصل' : 'Schedules & join class' }}</p>
-                </a>
-            @endif
-            @if(student_ui('show_private_lessons', true) && Route::has('student.private-lectures.index'))
-                <a href="{{ route('student.private-lectures.index') }}" class="rounded-2xl border-2 border-[#E8EEF8] bg-white px-4 py-4 no-underline text-inherit hover:border-[#F5B800]/50 transition">
-                    <p class="text-xs font-black text-[#8A6A00]">👨‍🏫 {{ $isRtl ? 'حصصي الخاصة' : 'Private lessons' }}</p>
-                    <p class="mt-1 text-sm font-bold text-[#6B7A99]">{{ $isRtl ? 'معلمك ومواعيدك' : 'Your teacher & slots' }}</p>
-                </a>
-            @endif
-        </section>
-    @endif
+    <section class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        @if(Route::has('public.pricing'))
+            <a href="{{ route('public.pricing') }}" class="rounded-2xl border border-[#E8EEF8] bg-white px-4 py-4 no-underline text-inherit hover:border-[#C9952A]/50 transition">
+                <p class="text-xs font-black text-[#C9952A]">{{ $isRtl ? 'الباقات' : 'Packages' }}</p>
+                <p class="mt-1 text-sm font-bold text-[#6B7A99]">{{ $isRtl ? 'اشترِ رصيد حصص واستخدمه مع أي معلم مناسب' : 'Buy session credits and use with any matching teacher' }}</p>
+            </a>
+        @endif
+        @if(Route::has('public.curricula'))
+            <a href="{{ route('public.curricula') }}" class="rounded-2xl border border-[#E8EEF8] bg-white px-4 py-4 no-underline text-inherit hover:border-[#1E4E8C]/30 transition">
+                <p class="text-xs font-black text-[#1E4E8C]">{{ $isRtl ? 'المناهج' : 'Curricula' }}</p>
+                <p class="mt-1 text-sm font-bold text-[#6B7A99]">{{ $isRtl ? 'اختر المرحلة والمادة ونوع المنهج' : 'Pick stage, subject, and curriculum type' }}</p>
+            </a>
+        @endif
+    </section>
 </div>
 @endsection

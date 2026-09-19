@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'الفصل: '.$cohort->title.' - Glottical')
+@section('title', 'الفصل: '.$cohort->title.' - حصتك')
 @section('page_title', 'إدارة الفصل')
 
 @section('content')

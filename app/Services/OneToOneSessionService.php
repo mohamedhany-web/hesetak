@@ -348,6 +348,86 @@ class OneToOneSessionService
     }
 
     /**
+     * حصة مجانية لحامل باقة — تُجدول للطالب والمعلم دون خصم رصيد.
+     */
+    public static function bookComplimentaryWithInstructor(
+        User $student,
+        User $instructor,
+        Carbon $scheduledAt,
+        ?User $bookedBy = null,
+        ?string $notes = null,
+        ?int $durationMinutes = null,
+        bool $requireAvailability = true
+    ): OneToOneSession {
+        if (! $student->isStudent()) {
+            throw new \InvalidArgumentException('الحجز متاح للطلاب فقط.');
+        }
+        if (! $instructor->isInstructor() || ! $instructor->is_active) {
+            throw new \InvalidArgumentException('المعلم غير متاح حالياً.');
+        }
+
+        $scheduledAt = $scheduledAt->copy()->utc()->startOfMinute();
+        if ($scheduledAt->lte(now())) {
+            throw new \InvalidArgumentException('الموعد يجب أن يكون في المستقبل.');
+        }
+
+        $duration = max(15, min(180, $durationMinutes ?? OneToOneSession::defaultDurationMinutes()));
+        $endsAt = $scheduledAt->copy()->addMinutes($duration);
+
+        if (OneToOneAvailabilityService::hasConflict((int) $instructor->id, $scheduledAt, $endsAt)) {
+            throw new \InvalidArgumentException('هذا الموعد متعارض مع حصة أخرى عند هذا المعلم.');
+        }
+        if ($requireAvailability && ! OneToOneAvailabilityService::isSlotAvailable((int) $instructor->id, $scheduledAt, $duration)) {
+            throw new \InvalidArgumentException('هذا الموعد غير متاح عند هذا المعلم.');
+        }
+
+        return DB::transaction(function () use ($student, $instructor, $scheduledAt, $duration, $bookedBy, $notes, $requireAvailability) {
+            $courseId = AdvancedCourse::query()
+                ->where('instructor_id', $instructor->id)
+                ->where('is_active', true)
+                ->where('delivery_type', CourseSubscriptionService::DELIVERY_ONE_TO_ONE)
+                ->value('id');
+
+            $maxNumber = (int) OneToOneSession::query()
+                ->where('student_id', $student->id)
+                ->max('session_number');
+
+            $session = OneToOneSession::create([
+                'student_course_enrollment_id' => null,
+                'student_service_entitlement_id' => null,
+                'advanced_course_id' => $courseId,
+                'instructor_id' => $instructor->id,
+                'student_id' => $student->id,
+                'session_number' => $maxNumber + 1,
+                'duration_minutes' => $duration,
+                'status' => OneToOneSession::STATUS_PENDING,
+                'is_complimentary' => true,
+                'booked_by_user_id' => $bookedBy?->id ?? $student->id,
+                'notes' => $notes ?: 'حصة مجانية — لا تُخصم من رصيد الباقة',
+            ]);
+
+            self::scheduleSession(
+                $session,
+                $scheduledAt,
+                $duration,
+                $bookedBy ?? $student,
+                requireAvailability: $requireAvailability
+            );
+
+            if (PrivateCoursesCoreService::threadsReady()) {
+                PrivateCoursesCoreService::ensureThread(
+                    (int) $student->id,
+                    (int) $instructor->id,
+                    null,
+                    'تواصل مع المعلم'
+                );
+            }
+
+            return $session->fresh(['instructor', 'student', 'classroomMeeting']);
+        });
+    }
+
+    /**
      * @param  array<int, array{day_of_week:int,time:string}>  $weeklySlots
      * @return array<int, Carbon>
      */
@@ -417,24 +497,26 @@ class OneToOneSessionService
             throw new \InvalidArgumentException('لا يمكن جدولة هذه الحصة في حالتها الحالية.');
         }
 
-        // Require private-lessons (or global) credit unless session already linked to entitlement
-        $entitlement = $session->entitlement;
-        if (! $entitlement || ! $entitlement->hasUnitsLeft()) {
-            $entitlement = StudentEntitlementService::availableFor(
-                (int) $session->student_id,
-                ServicePackage::SCOPE_PRIVATE_LESSONS
-            );
-        }
-        // Soft-gate: if student has any entitlement system usage, enforce it
-        $hasAnyPrivatePackage = \App\Models\StudentServiceEntitlement::query()
-            ->forUser((int) $session->student_id)
-            ->whereIn('scope', [ServicePackage::SCOPE_PRIVATE_LESSONS, ServicePackage::SCOPE_GLOBAL])
-            ->exists();
-        if ($hasAnyPrivatePackage && (! $entitlement || ! $entitlement->hasUnitsLeft())) {
-            throw new \InvalidArgumentException('لا يوجد رصيد حصص خاصة. اشترِ باقة أو اشحن رصيدك.');
-        }
-        if ($entitlement && ! $session->student_service_entitlement_id) {
-            $session->student_service_entitlement_id = $entitlement->id;
+        // Require private-lessons (or global) credit unless complimentary or already linked
+        if (! $session->isComplimentary()) {
+            $entitlement = $session->entitlement;
+            if (! $entitlement || ! $entitlement->hasUnitsLeft()) {
+                $entitlement = StudentEntitlementService::availableFor(
+                    (int) $session->student_id,
+                    ServicePackage::SCOPE_PRIVATE_LESSONS
+                );
+            }
+            // Soft-gate: if student has any entitlement system usage, enforce it
+            $hasAnyPrivatePackage = \App\Models\StudentServiceEntitlement::query()
+                ->forUser((int) $session->student_id)
+                ->whereIn('scope', [ServicePackage::SCOPE_PRIVATE_LESSONS, ServicePackage::SCOPE_GLOBAL])
+                ->exists();
+            if ($hasAnyPrivatePackage && (! $entitlement || ! $entitlement->hasUnitsLeft())) {
+                throw new \InvalidArgumentException('لا يوجد رصيد حصص خاصة. اشترِ باقة أو اشحن رصيدك.');
+            }
+            if ($entitlement && ! $session->student_service_entitlement_id) {
+                $session->student_service_entitlement_id = $entitlement->id;
+            }
         }
 
         if ($scheduledAt->lte(now())) {
@@ -467,14 +549,16 @@ class OneToOneSessionService
             'one_to_one_session_id' => $session->id,
             'code' => ClassroomMeeting::generateCode(),
             'room_name' => 'one-to-one-'.$session->id.'-'.Str::lower(Str::random(6)),
-            // بدون اسم الطالب في عنوان الغرفة (يظهر للمعلم والطالب)
-            'title' => 'حصة 1:1: '.$courseTitle,
+            'title' => $session->isComplimentary()
+                ? 'حصة مجانية'
+                : ('حصة 1:1: '.$courseTitle),
             'scheduled_for' => $scheduledAt,
             'planned_duration_minutes' => $durationMinutes,
             'max_participants' => 4,
             'settings' => [
                 'allow_guest_join' => false,
                 'private_lesson' => true,
+                'complimentary' => $session->isComplimentary(),
             ],
         ]);
 
@@ -757,15 +841,17 @@ class OneToOneSessionService
                 }
             }
 
-            $entitlement = $session->entitlement ?: StudentEntitlementService::availableFor(
-                (int) $session->student_id,
-                ServicePackage::SCOPE_PRIVATE_LESSONS
-            );
+            if (! $session->isComplimentary()) {
+                $entitlement = $session->entitlement ?: StudentEntitlementService::availableFor(
+                    (int) $session->student_id,
+                    ServicePackage::SCOPE_PRIVATE_LESSONS
+                );
 
-            if ($entitlement) {
-                StudentEntitlementService::consume($entitlement, 1);
-                if (! $session->student_service_entitlement_id) {
-                    $session->student_service_entitlement_id = $entitlement->id;
+                if ($entitlement) {
+                    StudentEntitlementService::consume($entitlement, 1);
+                    if (! $session->student_service_entitlement_id) {
+                        $session->student_service_entitlement_id = $entitlement->id;
+                    }
                 }
             }
 

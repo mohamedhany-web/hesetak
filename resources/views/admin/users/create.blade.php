@@ -82,7 +82,7 @@
                         </div>
                         <div class="md:col-span-2">
                             <label for="email" class="{{ $labelClass }}">البريد الإلكتروني <span class="text-danger">*</span></label>
-                            <input type="email" name="email" id="email" value="{{ old('email', '') }}" required maxlength="255" placeholder="example@Glottical.com" class="{{ $fieldClass }}" />
+                            <input type="email" name="email" id="email" value="{{ old('email', '') }}" required maxlength="255" placeholder="example@hesetak.com" class="{{ $fieldClass }}" />
                             @error('email')<p class="mt-1.5 text-xs font-medium text-danger">{{ $message }}</p>@enderror
                             <p class="mt-1.5 text-xs text-muted">سيتم استخدام البريد الإلكتروني في إرسال الإشعارات والتنبيهات.</p>
                         </div>

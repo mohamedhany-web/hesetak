@@ -1,7 +1,7 @@
-﻿@php
+@php
     $locale = app()->getLocale();
     $isRtl = $locale === 'ar';
-    $brand = config('app.name', 'Glottical');
+    $brand = config('app.name', 'حصتك');
     $footer = \App\Services\PublicFooterSettings::payload();
     $waUrl = $footer['whatsapp_url'] ?? '#';
     $count = $testimonials->count();

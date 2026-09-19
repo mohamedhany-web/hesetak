@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'إنشاء سنة مدرسة - Glottical')
+@section('title', 'إنشاء سنة مدرسة - حصتك')
 @section('page_title', 'إنشاء سنة مدرسة')
 
 @section('content')
@@ -140,6 +140,13 @@
                             <label class="inline-flex h-11 w-full cursor-pointer items-center gap-2 rounded-xl border border-line bg-canvas px-4 sm:w-auto">
                                 <input type="checkbox" name="is_active" value="1" @checked((string) old('is_active', '1') !== '0') class="size-4 rounded border-line text-accent focus:ring-accent/20">
                                 <span class="text-sm font-medium text-ink">سنة نشطة — متاحة لربط المواد والكورسات</span>
+                            </label>
+                        </div>
+                        <div class="sm:col-span-2">
+                            <input type="hidden" name="is_public" value="0">
+                            <label class="inline-flex h-11 w-full cursor-pointer items-center gap-2 rounded-xl border border-amber-100 bg-amber-50 px-4 sm:w-auto">
+                                <input type="checkbox" name="is_public" value="1" @checked((string) old('is_public', '0') === '1') class="size-4 rounded border-line text-accent focus:ring-accent/20">
+                                <span class="text-sm font-medium text-ink">نشر في صفحة المناهج العامة (`/curricula`)</span>
                             </label>
                         </div>
                     </div>

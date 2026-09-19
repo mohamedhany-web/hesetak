@@ -135,7 +135,10 @@
     $progress = $progress ?? ['percent' => 0, 'attended' => 0, 'completed_sessions' => 0, 'label' => ''];
     $credits = $credits ?? ['total_left' => 0];
     $trialUrl = route('home').'?open_trial=1';
-    $groupsUrl = Route::has('public.groups') ? route('public.groups') : route('dashboard');
+    $exploreUrl = Route::has('public.instructors.index')
+        ? route('public.instructors.index')
+        : (Route::has('public.pricing') ? route('public.pricing') : route('dashboard'));
+    $groupsUrl = $exploreUrl;
     $eventMasks = [
         asset('img/student-timeline/event-mask-1.svg'),
         asset('img/student-timeline/event-mask-2.svg'),
@@ -165,10 +168,12 @@
         <div class="st-biz-banner__actions">
             @if(!empty($todayMission) && $todayMission->is_joinable)
                 <a href="{{ $todayMission->join_url }}" class="st-pill st-pill--light">{{ __('student_timeline.join_class_now') }}</a>
-            @elseif(Route::has('student.classes.index'))
+            @elseif(Route::has('student.private-lectures.index'))
+                <a href="{{ route('student.private-lectures.index') }}" class="st-pill st-pill--light">{{ __('student_timeline.my_classes') }}</a>
+            @elseif(Route::has('student.classes.index') && student_ui('show_classes'))
                 <a href="{{ route('student.classes.index') }}" class="st-pill st-pill--light">{{ __('student_timeline.my_classes') }}</a>
             @endif
-            <a href="{{ $groupsUrl }}" class="st-pill st-pill--ghost">{{ __('student_timeline.explore_school') }}</a>
+            <a href="{{ $exploreUrl }}" class="st-pill st-pill--ghost">{{ __('student_timeline.explore_school') }}</a>
         </div>
     </div>
 </section>
@@ -241,7 +246,9 @@
             <h2>{{ __('student_timeline.subjects') }}</h2>
             <p>{{ __('student_timeline.upcoming_classes') }}</p>
         </div>
-        @if(Route::has('student.classes.index'))
+        @if(Route::has('student.private-lectures.index'))
+            <a class="st-see" href="{{ route('student.private-lectures.index') }}">{{ __('student_timeline.see_all') }}</a>
+        @elseif(Route::has('student.classes.index') && student_ui('show_classes'))
             <a class="st-see" href="{{ route('student.classes.index') }}">{{ __('student_timeline.see_all') }}</a>
         @endif
     </div>
@@ -278,11 +285,13 @@
                 <h3 class="st-subject__name">{{ __('student_timeline.no_classes') }}</h3>
             </div>
             <div class="st-biz-banner__actions">
-                @if(!empty($recommendedYear) && Route::has('public.school.year'))
-                    <a href="{{ route('public.school.year', $recommendedYear->slug) }}" class="st-pill st-pill--solid">{{ $recommendedYear->name }}</a>
+                @if(Route::has('public.instructors.index'))
+                    <a href="{{ route('public.instructors.index') }}" class="st-pill st-pill--solid">{{ __('student_timeline.browse_teachers') }}</a>
                 @endif
                 <a href="{{ $trialUrl }}" class="st-pill st-pill--solid">{{ __('student_timeline.placement_test') }}</a>
-                <a href="{{ $groupsUrl }}" class="st-pill st-pill--outline">{{ __('student_timeline.browse_school') }}</a>
+                @if(Route::has('public.pricing'))
+                    <a href="{{ route('public.pricing') }}" class="st-pill st-pill--outline">{{ __('student_timeline.browse_school') }}</a>
+                @endif
             </div>
         </div>
     @endif
@@ -387,7 +396,9 @@
                 @if($recommendedYear->tagline)
                     <p class="st-event-card__sub st-text-auto">{{ $recommendedYear->tagline }}</p>
                 @endif
-                @if(Route::has('public.school.year'))
+                @if(Route::has('public.curricula'))
+                    <a href="{{ route('public.curricula') }}" class="st-pill st-pill--light">{{ __('student_timeline.open_year_path') }}</a>
+                @elseif(Route::has('public.school.year'))
                     <a href="{{ route('public.school.year', $recommendedYear->slug) }}" class="st-pill st-pill--light">{{ __('student_timeline.open_year_path') }}</a>
                 @endif
             @endif
@@ -425,19 +436,22 @@
         ]);
     }
     foreach ($upcoming->take(3) as $session) {
-        if (!empty($todayMission) && isset($todayMission->session_id) && (int) $todayMission->session_id === (int) $session->id) {
+        if (!empty($todayMission) && isset($todayMission->session_id) && (int) $todayMission->session_id === (int) ($session->id ?? 0)) {
             continue;
         }
         $eventCards->push((object) [
-            'title' => method_exists($session, 'displayTitle') ? $session->displayTitle() : ($session->title ?? __('student_timeline.events')),
-            'subtitle' => $session->cohort?->title ?: ($session->tutoringGroup?->title ?: ''),
-            'meta' => $session->starts_at
+            'title' => $session->title
+                ?? (method_exists($session, 'displayTitle') ? $session->displayTitle() : __('student_timeline.events')),
+            'subtitle' => $session->subtitle
+                ?? ($session->cohort?->title ?: ($session->tutoringGroup?->title ?: '')),
+            'meta' => ($session->starts_at ?? null)
                 ? \App\Support\AppTimezone::formatFor($session->starts_at, $viewerTz, $isRtl ? 'l · g:i A' : 'D · g:i A', $locale)
                 : null,
-            'url' => \Illuminate\Support\Facades\Route::has('student.schedule.join')
-                ? route('student.schedule.join', ['type' => 'class', 'id' => $session->id])
-                : '#',
-            'person' => null,
+            'url' => $session->join_url
+                ?? (\Illuminate\Support\Facades\Route::has('student.schedule.join')
+                    ? route('student.schedule.join', ['type' => ($session->kind ?? 'class') === 'private' ? 'private' : 'class', 'id' => $session->id])
+                    : '#'),
+            'person' => $session->instructor_name ?? null,
         ]);
         if ($eventCards->count() >= 3) {
             break;
@@ -451,7 +465,9 @@
             'title' => $mission->title,
             'subtitle' => $mission->description,
             'meta' => '+'.$mission->xp_reward.' XP',
-            'url' => Route::has('student.classes.index') ? route('student.classes.index') : route('dashboard'),
+            'url' => Route::has('student.private-lectures.index')
+                ? route('student.private-lectures.index')
+                : route('dashboard'),
             'person' => null,
         ]);
     }
@@ -510,7 +526,7 @@
 
 <div data-tab-panel="reminders" hidden>
     @forelse(($game['daily_missions'] ?? collect()) as $mission)
-        <a href="{{ Route::has('student.classes.index') ? route('student.classes.index') : route('dashboard') }}" class="st-event-card st-event-card--orange">
+        <a href="{{ Route::has('student.private-lectures.index') ? route('student.private-lectures.index') : route('dashboard') }}" class="st-event-card st-event-card--orange">
             <img class="st-event-card__mask" src="{{ $eventMasks[2] }}" alt="" width="160" height="160">
             <h3>{{ $mission->title }}</h3>
             <p class="st-event-card__sub">{{ $mission->description }}</p>

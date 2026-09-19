@@ -62,7 +62,7 @@ class CouponController extends Controller
         if ($coupon->minimum_amount && $coursePrice < $coupon->minimum_amount) {
             return response()->json([
                 'valid' => false,
-                'message' => 'الحد الأدنى لاستخدام هذا الكوبون هو '.number_format($coupon->minimum_amount, 2).' $',
+                'message' => 'الحد الأدنى لاستخدام هذا الكوبون هو '.number_format($coupon->minimum_amount, 2) . ' ' . currency_symbol(),
             ], 400);
         }
 

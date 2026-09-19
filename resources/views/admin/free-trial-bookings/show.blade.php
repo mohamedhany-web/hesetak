@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'تفاصيل حجز الحصة المجانية - Glottical')
+@section('title', 'تفاصيل حجز الحصة المجانية - حصتك')
 @section('page_title', 'تفاصيل الحجز')
 
 @section('content')
@@ -8,12 +8,14 @@
     $fieldClass = 'h-11 w-full rounded-xl border border-line bg-surface px-4 text-sm text-ink transition placeholder:text-muted focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20';
     $labelClass = 'mb-1.5 block text-xs font-medium text-muted';
     $statusLabel = match ($booking->status) {
+        'pending' => 'طلب / بانتظار',
         'confirmed' => 'مؤكد',
         'completed' => 'مكتمل',
         'cancelled' => 'ملغي',
         default => $booking->status,
     };
     $statusTone = match ($booking->status) {
+        'pending' => 'bg-amber-100 text-amber-800',
         'confirmed' => 'bg-accent-soft text-accent',
         'completed' => 'bg-canvas-muted text-muted',
         'cancelled' => 'bg-danger/10 text-danger',
@@ -24,7 +26,7 @@
 <div class="space-y-5">
     <section class="flex flex-wrap items-end justify-between gap-4">
         <div class="min-w-0">
-            <p class="text-xs font-medium text-muted">حجوزات الحصة المجانية · تقييم المستوى</p>
+            <p class="text-xs font-medium text-muted">حصة مجانية · بدون خصم من رصيد الباقة</p>
             <h2 class="mt-1 text-2xl font-semibold tracking-tight text-ink md:text-[28px]">{{ $booking->name }}</h2>
             <p class="mt-1 text-sm text-muted">حجز #{{ $booking->id }} · {{ $booking->created_at?->diffForHumans() }}</p>
         </div>
@@ -33,9 +35,15 @@
                 <i class="fas fa-arrow-right text-xs"></i>
                 رجوع للقائمة
             </a>
-            <a href="{{ route('admin.free-trial-bookings.availability') }}" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl bg-accent px-4 text-sm font-medium text-white">
-                <i class="fas fa-clock text-xs"></i>
-                أوقات الأسبوع
+            @if($booking->oneToOneSession && Route::has('admin.one-to-one-sessions.show'))
+                <a href="{{ route('admin.one-to-one-sessions.show', $booking->oneToOneSession) }}" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl border border-accent/30 bg-surface px-4 text-sm font-medium text-accent transition hover:bg-accent/5">
+                    <i class="fas fa-chalkboard-teacher text-xs"></i>
+                    فتح الحصة في الجدول
+                </a>
+            @endif
+            <a href="{{ route('admin.free-trial-bookings.create') }}" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl bg-accent px-4 text-sm font-medium text-white">
+                <i class="fas fa-plus text-xs"></i>
+                توصيف جديد
             </a>
         </div>
     </section>
@@ -135,6 +143,14 @@
                     <p class="mt-1 text-sm leading-7 text-ink">{{ $booking->goalLabel('ar') }}</p>
                 </div>
 
+                @if($booking->instructor)
+                    <div class="rounded-xl border border-line bg-canvas/60 p-4">
+                        <p class="text-xs font-medium text-muted">المعلم المختار</p>
+                        <p class="mt-1 text-sm font-semibold text-ink">{{ $booking->instructor->name }}</p>
+                        <p class="mt-0.5 text-sm text-muted">{{ $booking->instructor->email }}</p>
+                    </div>
+                @endif
+
                 @if($booking->user)
                     <div class="rounded-xl border border-line bg-canvas/60 p-4">
                         <p class="text-xs font-medium text-muted">حساب مسجّل على المنصة</p>
@@ -157,9 +173,21 @@
                     <div>
                         <label class="{{ $labelClass }}" for="status">الحالة</label>
                         <select id="status" name="status" class="{{ $fieldClass }}">
+                            <option value="pending" @selected($booking->status === 'pending')>طلب / بانتظار</option>
                             <option value="confirmed" @selected($booking->status === 'confirmed')>مؤكد</option>
                             <option value="completed" @selected($booking->status === 'completed')>مكتمل</option>
                             <option value="cancelled" @selected($booking->status === 'cancelled')>ملغي</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="{{ $labelClass }}" for="instructor_id">المعلم المعيّن</label>
+                        <select id="instructor_id" name="instructor_id" class="{{ $fieldClass }}">
+                            <option value="">— بدون تعيين —</option>
+                            @foreach(($instructors ?? []) as $ins)
+                                <option value="{{ $ins->id }}" @selected((string) old('instructor_id', $booking->instructor_id) === (string) $ins->id)>
+                                    {{ $ins->name }}
+                                </option>
+                            @endforeach
                         </select>
                     </div>
                     <div>

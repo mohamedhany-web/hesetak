@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'إدارة الطلاب والحسابات - Glottical')
+@section('title', 'إدارة الطلاب والحسابات - حصتك')
 @section('page_title', 'إدارة الطلاب والحسابات')
 
 @section('content')
@@ -90,7 +90,7 @@
     <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
         <div class="border-b border-line px-4 py-4 sm:px-5">
             <h3 class="text-base font-semibold text-ink">اختصارات سريعة</h3>
-            <p class="mt-0.5 text-xs text-muted">خدمات Glottical الحالية للطالب: كورسات ومجموعات</p>
+            <p class="mt-0.5 text-xs text-muted">خدمات حصتك الحالية للطالب: كورسات ومجموعات</p>
         </div>
         <div class="grid grid-cols-1 gap-3 p-4 sm:grid-cols-3 sm:p-5">
             @if(Route::has('admin.tutoring-groups.index'))

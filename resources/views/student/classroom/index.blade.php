@@ -1,6 +1,6 @@
 @extends(!empty($useInstructorRoutes) ? 'layouts.app' : 'layouts.student-timeline')
 
-@section('title', 'Glottical Classroom — إدارة الاجتماعات')
+@section('title', 'فصول حصتك — إدارة الاجتماعات')
 @section('header', 'إدارة اجتماعات Classroom')
 
 @section('content')
@@ -15,7 +15,7 @@
     <div class="rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-lg p-6">
         <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <div>
-                <h1 class="text-2xl font-black text-slate-800 dark:text-white">Glottical Classroom</h1>
+                <h1 class="text-2xl font-black text-slate-800 dark:text-white">فصول حصتك</h1>
                 <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">صفحة منظمة لإدارة كل اجتماعاتك وصلاحياتها وإعداداتها.</p>
             </div>
             <a href="{{ route('student.classroom.create') }}" class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-red-500 hover:bg-red-600 text-white text-sm font-bold shadow-lg shadow-red-500/30">

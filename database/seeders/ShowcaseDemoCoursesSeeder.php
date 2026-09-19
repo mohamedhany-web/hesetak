@@ -313,7 +313,7 @@ class ShowcaseDemoCoursesSeeder extends Seeder
             $response = Http::timeout(120)
                 ->withHeaders([
                     'Accept' => 'image/jpeg,image/webp,*/*',
-                    'User-Agent' => 'GlotticalShowcaseSeeder/1.1',
+                    'User-Agent' => 'حصتكShowcaseSeeder/1.1',
                 ])
                 ->get($url);
 

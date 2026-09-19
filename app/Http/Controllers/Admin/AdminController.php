@@ -326,7 +326,7 @@ class AdminController extends Controller
             [
                 'title' => 'فواتير معلقة',
                 'count' => (int) ($pendingInvoicesSummary->count ?? 0),
-                'meta' => 'إجمالي ' . number_format($pendingInvoicesSummary->amount ?? 0, 2) . ' $',
+                'meta' => 'إجمالي ' . number_format($pendingInvoicesSummary->amount ?? 0, 2) . ' ' . currency_symbol(),
                 'icon' => 'fas fa-file-invoice-dollar',
                 'background' => 'from-amber-100 to-orange-50',
                 'icon_background' => 'from-amber-500 to-orange-600',
@@ -339,7 +339,7 @@ class AdminController extends Controller
             [
                 'title' => 'فواتير متأخرة',
                 'count' => (int) ($overdueInvoicesSummary->count ?? 0),
-                'meta' => 'قيمة ' . number_format($overdueInvoicesSummary->amount ?? 0, 2) . ' $',
+                'meta' => 'قيمة ' . number_format($overdueInvoicesSummary->amount ?? 0, 2) . ' ' . currency_symbol(),
                 'icon' => 'fas fa-exclamation-triangle',
                 'background' => 'from-rose-100 to-red-50',
                 'icon_background' => 'from-rose-500 to-red-600',
@@ -352,7 +352,7 @@ class AdminController extends Controller
             [
                 'title' => 'طلبات في الانتظار',
                 'count' => (int) ($pendingOrdersSummary->count ?? 0),
-                'meta' => 'قيمة ' . number_format($pendingOrdersSummary->amount ?? 0, 2) . ' $',
+                'meta' => 'قيمة ' . number_format($pendingOrdersSummary->amount ?? 0, 2) . ' ' . currency_symbol(),
                 'icon' => 'fas fa-shopping-bag',
                 'background' => 'from-sky-100 to-slate-50',
                 'icon_background' => 'from-sky-500 to-slate-600',
@@ -380,7 +380,7 @@ class AdminController extends Controller
             [
                 'title' => 'اتفاقيات تقسيط معلقة',
                 'count' => (int) ($pendingInstallmentsSummary->count ?? 0),
-                'meta' => 'قيمة ' . number_format($pendingInstallmentsSummary->amount ?? 0, 2) . ' $',
+                'meta' => 'قيمة ' . number_format($pendingInstallmentsSummary->amount ?? 0, 2) . ' ' . currency_symbol(),
                 'icon' => 'fas fa-hand-holding-usd',
                 'background' => 'from-emerald-100 to-green-50',
                 'icon_background' => 'from-emerald-500 to-green-600',

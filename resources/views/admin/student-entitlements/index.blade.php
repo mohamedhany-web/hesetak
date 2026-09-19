@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'أرصدة الطلاب - Glottical')
+@section('title', 'أرصدة الطلاب - حصتك')
 @section('page_title', 'أرصدة الحصص')
 
 @section('content')

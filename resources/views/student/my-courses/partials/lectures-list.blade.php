@@ -3,7 +3,7 @@
         <!-- إحصائيات المحاضرات -->
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 mb-6">
             <div class="bg-sky-50 rounded-lg p-3 sm:p-4 border border-sky-100">
-                <div class="text-xl sm:text-2xl font-bold text-sky-600">{{ $course->lectures->where('status', 'scheduled')->count() }}</div>
+                <div class="text-xl sm:text-2xl font-bold text-[#1E4E8C]">{{ $course->lectures->where('status', 'scheduled')->count() }}</div>
                 <div class="text-xs font-medium text-gray-600">مجدولة</div>
             </div>
             <div class="bg-amber-50 rounded-lg p-3 sm:p-4 border border-amber-100">
@@ -28,15 +28,15 @@
                 <div class="mb-6 w-full max-w-full">
                     @if($lesson)
                         <h4 class="text-base sm:text-lg font-bold text-gray-900 mb-3 flex flex-wrap items-center gap-2 bg-sky-50 px-4 py-3 rounded-lg border border-sky-100">
-                            <i class="fas fa-book text-sky-500"></i>
+                            <i class="fas fa-book text-[#1E4E8C]"></i>
                             <span>{{ $lesson->title }}</span>
-                            <span class="mr-auto bg-sky-500 text-white text-xs px-2.5 py-1 rounded-full font-semibold">{{ $lectures->count() }} محاضرة</span>
+                            <span class="mr-auto bg-[#1E4E8C] text-white text-xs px-2.5 py-1 rounded-full font-semibold">{{ $lectures->count() }} محاضرة</span>
                         </h4>
                     @else
                         <h4 class="text-base sm:text-lg font-bold text-gray-900 mb-3 flex flex-wrap items-center gap-2 bg-gray-50 px-4 py-3 rounded-lg border border-gray-200">
-                            <i class="fas fa-chalkboard-teacher text-sky-500"></i>
+                            <i class="fas fa-chalkboard-teacher text-[#1E4E8C]"></i>
                             <span>محاضرات عامة</span>
-                            <span class="mr-auto bg-sky-500 text-white text-xs px-2.5 py-1 rounded-full font-semibold">{{ $lectures->count() }} محاضرة</span>
+                            <span class="mr-auto bg-[#1E4E8C] text-white text-xs px-2.5 py-1 rounded-full font-semibold">{{ $lectures->count() }} محاضرة</span>
                         </h4>
                     @endif
 
@@ -56,7 +56,7 @@
                                     'cancelled' => 'bg-gray-100 text-gray-600 border-gray-200',
                                 ][$lecture->status] ?? 'bg-gray-50 text-gray-700 border-gray-200';
                                 $iconBg = [
-                                    'scheduled' => 'bg-sky-500',
+                                    'scheduled' => 'bg-[#1E4E8C]',
                                     'in_progress' => 'bg-amber-500',
                                     'completed' => 'bg-emerald-500',
                                     'cancelled' => 'bg-gray-400',
@@ -133,7 +133,7 @@
                             'cancelled' => 'bg-gray-100 text-gray-600 border-gray-200',
                         ][$lecture->status] ?? 'bg-gray-50 text-gray-700 border-gray-200';
                         $iconBg = [
-                            'scheduled' => 'bg-sky-500',
+                            'scheduled' => 'bg-[#1E4E8C]',
                             'in_progress' => 'bg-amber-500',
                             'completed' => 'bg-emerald-500',
                             'cancelled' => 'bg-gray-400',
@@ -194,7 +194,7 @@
         @endif
     @else
         <div class="w-full max-w-full text-center py-10 sm:py-12 rounded-xl bg-gray-50 border border-dashed border-gray-200">
-            <div class="w-14 h-14 bg-sky-100 rounded-xl flex items-center justify-center mx-auto mb-4 text-sky-600">
+            <div class="w-14 h-14 bg-[#E8F0FA] rounded-xl flex items-center justify-center mx-auto mb-4 text-[#1E4E8C]">
                 <i class="fas fa-chalkboard-teacher text-xl"></i>
             </div>
             <h3 class="text-lg font-bold text-gray-900 mb-2">لا توجد محاضرات</h3>

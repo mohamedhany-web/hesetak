@@ -15,8 +15,9 @@ return new class extends Migration
         Schema::create('portfolio_projects', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete(); // الطالب
-            $table->foreignId('academic_year_id')->nullable()->constrained('academic_years')->nullOnDelete(); // المسار التعليمي
-            $table->foreignId('advanced_course_id')->nullable()->constrained('advanced_courses')->nullOnDelete(); // الكورس (اختياري)
+            // FKs deferred: academic_years / advanced_courses are created in later migrations
+            $table->unsignedBigInteger('academic_year_id')->nullable()->index();
+            $table->unsignedBigInteger('advanced_course_id')->nullable()->index();
             $table->string('title');
             $table->text('description')->nullable();
             $table->string('project_url')->nullable(); // رابط المشروع أو الريبو

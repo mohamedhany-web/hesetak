@@ -1,13 +1,15 @@
 @php
     $locale = app()->getLocale();
     $isRtl = $locale === 'ar';
-    $brand = config('app.name', 'Glottical');
+    $brand = config('app.name', 'حصتك');
     $name = $profile->user->name ?? __('public.instructor_fallback');
     $headline = $profile->headline_clean ?: __('public.instructor_fallback');
     $bioClean = $profile->bio_clean;
     $skills = $profile->skills_list ?? [];
     $experiences = $profile->experience_list ?? [];
-    $instrPageTitle = $name.' — '.$headline.' | '.$brand;
+    $instrPageTitle = $headline !== '' && $headline !== $name
+        ? $name.' | '.$headline.' | '.$brand
+        : $name.' | '.$brand;
     $instrPageDesc = \Illuminate\Support\Str::limit($bioClean ?: $headline, 160);
     $instrPageImg = ($profile->photo_url ?? null) ?: asset('images/og-image.jpg');
     $instrPageUrl = route('public.instructors.show', $profile->user);
@@ -15,13 +17,17 @@
     $canBook = (bool) ($canBook ?? false);
     $unitsLeft = (int) ($unitsLeft ?? 0);
     $bookableSlots = $bookableSlots ?? collect();
-    $packagesUrl = $packagesUrl ?? route('public.service-packages.index');
+    $packagesUrl = $packagesUrl ?? route('public.pricing');
     $introEmbedUrl = $introEmbedUrl ?? null;
     $introDirectVideo = $introDirectVideo ?? null;
     $hasIntroVideo = filled($introEmbedUrl) || filled($introDirectVideo);
     $oneToOneCourses = $oneToOneCourses ?? collect();
     $privateGroups = $privateGroups ?? collect();
     $groupCourses = $groupCourses ?? collect();
+    $allOfferings = collect()
+        ->merge($privateGroups)
+        ->merge($oneToOneCourses)
+        ->merge($groupCourses);
     $skillChips = [];
     $skillNotes = [];
     foreach ($skills as $skill) {
@@ -35,6 +41,43 @@
             $skillChips[] = $skill;
         }
     }
+    $experienceSummary = count($experiences) > 0
+        ? $experiences[0]
+        : trim((string) ($profile->experience ?? ''));
+    $heroPills = array_values(array_filter(array_unique(array_merge(
+        ['1:1'],
+        array_slice($skillChips, 0, 5)
+    ))));
+    $teachingYears = $teachingYears ?? collect();
+    $curriculumTypeLabels = $curriculumTypeLabels ?? [];
+    $trustItems = array_values(array_filter([
+        [
+            'num' => '1:1',
+            'label' => $isRtl ? 'حصة فردية' : 'Private session',
+        ],
+        filled($experienceSummary) ? [
+            'num' => $isRtl ? 'خبرة' : 'Exp.',
+            'label' => \Illuminate\Support\Str::limit($experienceSummary, 42),
+        ] : null,
+        count($skillChips) > 0 ? [
+            'num' => (string) count($skillChips),
+            'label' => $isRtl ? 'تخصصات' : 'specialties',
+        ] : null,
+        count($curriculumTypeLabels) > 0 ? [
+            'num' => (string) count($curriculumTypeLabels),
+            'label' => $isRtl ? 'أنواع منهج' : 'curricula',
+        ] : null,
+        [
+            'num' => '✓',
+            'label' => __('public.instructors_verified'),
+        ],
+    ]));
+    $mcCss = public_path('css/landing/mycourses.css');
+    $mcVer = is_file($mcCss) ? (string) filemtime($mcCss) : (string) time();
+    $tpCss = public_path('css/landing/instructor-profile.css');
+    $tpVer = is_file($tpCss) ? (string) filemtime($tpCss) : (string) time();
+    $mcActive = 'instructors';
+    $langSwitch = fn (string $lang) => request()->fullUrlWithQuery(array_merge(request()->query(), ['lang' => $lang]));
 @endphp
 <!DOCTYPE html>
 <html lang="{{ $locale }}" dir="{{ $isRtl ? 'rtl' : 'ltr' }}">
@@ -44,7 +87,7 @@
   <meta name="csrf-token" content="{{ csrf_token() }}">
   <title>{{ $instrPageTitle }}</title>
   <meta name="description" content="{{ $instrPageDesc }}">
-  <meta name="theme-color" content="#0B3D91">
+  <meta name="theme-color" content="#1E4E8C">
   <link rel="canonical" href="{{ $instrPageUrl }}">
   <meta property="og:type" content="profile">
   <meta property="og:url" content="{{ $instrPageUrl }}">
@@ -54,195 +97,209 @@
   <meta property="og:site_name" content="{{ $brand }}">
   @include('partials.favicon-links')
   @include('partials.seo-jsonld', ['jsonldType' => 'instructor', 'profile' => $profile])
-  @include('partials.landing.head', ['landingCss' => ['theme', 'courses-catalog', 'instructors-catalog', 'instructor-profile']])
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Lato:wght@400;700;900&family=Rubik:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="{{ route('assets.landing.css', ['sheet' => 'mycourses']) }}?v={{ $mcVer }}">
+  <link rel="stylesheet" href="{{ route('assets.landing.css', ['sheet' => 'instructor-profile']) }}?v={{ $tpVer }}">
+  @include('partials.figma-capture-head')
 </head>
-<body class="sana-home sana-courses-page sana-instructors-page gl-tp">
-<div id="sana-scroll-progress"></div>
-@include('partials.landing.navbar', ['navActive' => 'instructors', 'navSolid' => true, 'navHero' => false])
+<body class="mc-body">
+@include('partials.landing.mycourses.nav')
 
-<main class="sana-cat-page">
-  <section class="sana-cat-hero gl-tp-hero" id="cat-hero">
-    <div class="sana-cat-hero__dots"></div>
-    <div class="sana-container sana-cat-hero__inner">
-      <nav class="sana-cat-hero__breadcrumb" aria-label="{{ $isRtl ? 'مسار التنقل' : 'Breadcrumb' }}">
+<main>
+  {{-- Hero — same language as homepage --}}
+  <section class="mc-hero" aria-labelledby="mc-tp-title">
+    <div class="mc-container">
+      <nav class="mc-tp-crumb" aria-label="{{ $isRtl ? 'مسار التنقل' : 'Breadcrumb' }}">
         <a href="{{ url('/') }}">{{ $isRtl ? 'الرئيسية' : 'Home' }}</a>
-        <i class="fas fa-chevron-{{ $isRtl ? 'left' : 'right' }}"></i>
+        <span aria-hidden="true">/</span>
         <a href="{{ route('public.instructors.index') }}">{{ __('landing.nav.instructors') }}</a>
-        <i class="fas fa-chevron-{{ $isRtl ? 'left' : 'right' }}"></i>
+        <span aria-hidden="true">/</span>
         <span>{{ $name }}</span>
       </nav>
+    </div>
+    <div class="mc-container mc-hero__grid">
+      <div class="mc-hero__copy">
+        <p class="mc-eyebrow">{{ __('public.instructors_verified') }} <strong class="mc-brand-word">{{ $brand }}</strong></p>
+        <h1 class="mc-hero__title" id="mc-tp-title">{{ $name }}</h1>
+        @if($headline !== '' && $headline !== $name)
+          <p class="mc-hero__lead">{{ $headline }}</p>
+        @else
+          <p class="mc-hero__lead">{{ $isRtl ? 'احجز حصة فردية أونلاين مع معلم معتمد على حصتك.' : 'Book a private online session with an approved Hesetak teacher.' }}</p>
+        @endif
 
-      <div class="gl-tp-hero__row">
-        <div class="gl-tp-hero__ring">
-          @if($profile->photo_url)
-            <img src="{{ $profile->photo_url }}" alt="{{ $name }}">
-          @else
-            <span class="av" aria-hidden="true">{{ mb_substr($name, 0, 1) }}</span>
-          @endif
-        </div>
-        <div class="gl-tp-hero__copy">
-          <span class="sana-inst-hero__eyebrow"><i class="fas fa-circle-check"></i> {{ __('public.instructors_verified') }}</span>
-          <h1 class="sana-cat-hero__title">{{ $name }}</h1>
-          @if($headline !== '' && $headline !== $name)
-            <p class="gl-tp-hero__headline">{{ $headline }}</p>
-          @endif
+        @if(count($heroPills) > 0)
+          <div class="mc-cats" style="margin:0 0 1rem">
+            @foreach($heroPills as $pill)
+              <span class="mc-cat"><span class="mc-cat__dot" aria-hidden="true"></span>{{ $pill }}</span>
+            @endforeach
+          </div>
+        @endif
+
+        <div class="mc-hero__actions">
+          <a href="#mc-tp-book" class="mc-btn mc-btn--lg mc-btn--secondary">{{ $isRtl ? 'احجز حصة مع هذا المعلم' : 'Book with this teacher' }}</a>
+          <a href="{{ $packagesUrl }}" class="mc-btn mc-btn--lg mc-btn--soft">{{ $isRtl ? 'اشترك في باقة' : 'Get a package' }}</a>
           @if($hasIntroVideo)
-            <div class="sana-inst-hero__actions">
-              <button type="button" class="sana-btn sana-btn--yellow sana-btn--sm" id="glTpIntroOpen" aria-haspopup="dialog" aria-controls="glTpIntroModal">
-                <i class="fas fa-play"></i>
-                {{ $isRtl ? 'فيديو تعريفي' : 'Intro video' }}
-              </button>
-            </div>
+            <button type="button" class="mc-btn mc-btn--lg mc-btn--outline" id="mcTpIntroOpen" aria-haspopup="dialog" aria-controls="mcTpIntroModal">
+              <i class="fas fa-play" aria-hidden="true"></i>
+              {{ $isRtl ? 'فيديو تعريفي' : 'Intro video' }}
+            </button>
           @endif
         </div>
       </div>
+
+      <figure class="mc-hero__media">
+        @if($profile->photo_url)
+          <img src="{{ $profile->photo_url }}" width="1152" height="864" alt="{{ $name }}" loading="eager" decoding="async">
+        @else
+          <div class="mc-tp-photo-fallback" aria-hidden="true">{{ mb_substr($name, 0, 1) }}</div>
+        @endif
+      </figure>
     </div>
   </section>
 
-  <div class="sana-container gl-tp-wrap">
-    @if($errors->any())
-      <div class="gl-tp-note is-err">{{ $errors->first() }}</div>
-    @endif
-    @if(session('success'))
-      <div class="gl-tp-note is-ok">{{ session('success') }}</div>
-    @endif
+  {{-- Trust strip — same component as homepage stats --}}
+  <section class="mc-trust" aria-label="{{ $isRtl ? 'لمحة سريعة' : 'Quick facts' }}">
+    <div class="mc-container">
+      <ul class="mc-trust__list">
+        @foreach($trustItems as $stat)
+          <li class="mc-trust__item">
+            <span class="mc-trust__num">{{ $stat['num'] }}</span>
+            <span class="mc-trust__label">{{ $stat['label'] }}</span>
+          </li>
+        @endforeach
+      </ul>
+    </div>
+  </section>
 
-    <div class="gl-tp-layout">
-      <div class="gl-tp-stack">
-        <article class="gl-tp-card gl-tp-about">
-          <h2>{{ __('public.instructor_bio_title') }}</h2>
-          @if($bioClean)
-            <p class="gl-tp-bio">{{ $bioClean }}</p>
-          @else
-            <p class="gl-tp-bio">{{ $isRtl ? 'لا توجد نبذة منشورة بعد.' : 'No published bio yet.' }}</p>
-          @endif
-        </article>
+  @if($errors->any())
+    <div class="mc-container" style="padding-top:1rem">
+      <div class="mc-tp-alert is-err" role="alert">{{ $errors->first() }}</div>
+    </div>
+  @endif
+  @if(session('success'))
+    <div class="mc-container" style="padding-top:1rem">
+      <div class="mc-tp-alert is-ok" role="status">{{ session('success') }}</div>
+    </div>
+  @endif
 
-        @if($oneToOneCourses->isNotEmpty() || $privateGroups->isNotEmpty())
-          <section class="gl-tp-private" id="private-lessons" aria-labelledby="glTpPrivateTitle">
-            <div class="gl-tp-private__head">
-              <h2 id="glTpPrivateTitle">{{ $isRtl ? 'مع هذا المعلم' : 'With this teacher' }}</h2>
-              <p>{{ $isRtl ? 'كورسات وعروض مرتبطة بهذا المعلم' : 'Courses and offerings linked to this teacher' }}</p>
-            </div>
-            <div class="gl-tp-private__rail" tabindex="0">
-              @foreach($privateGroups as $group)
-                <a href="{{ route('public.groups.show', $group->slug) }}" class="gl-tp-private__card">
-                  <span class="gl-tp-private__badge">1:1</span>
-                  <strong>{{ $group->title }}</strong>
-                  <span class="gl-tp-private__meta">
-                    <i class="fas fa-clock"></i> {{ (int) $group->duration_minutes }} {{ $isRtl ? 'دقيقة' : 'min' }}
-                  </span>
-                  <span class="gl-tp-private__price">{{ $group->formattedPrice() }}</span>
-                </a>
-              @endforeach
-              @foreach($oneToOneCourses as $course)
-                <a href="{{ route('public.course.show', $course->id) }}" class="gl-tp-private__card">
-                  <span class="gl-tp-private__badge">{{ $isRtl ? 'كورس فردي' : '1:1 course' }}</span>
-                  <strong>{{ $course->title }}</strong>
-                  <span class="gl-tp-private__meta">
-                    <i class="fas fa-book-open"></i> {{ (int) ($course->lessons_count ?? 0) }} {{ $isRtl ? 'درس' : 'lessons' }}
-                  </span>
-                  @if(!empty($course->price))
-                    <span class="gl-tp-private__price">{{ number_format((float) $course->price) }} {{ $isRtl ? '$' : 'USD' }}</span>
-                  @endif
-                </a>
-              @endforeach
-            </div>
-          </section>
-        @endif
+  {{-- About + booking — homepage section rhythm --}}
+  <section class="mc-section mc-section--compact" id="about">
+    <div class="mc-container mc-tp-layout">
+      <div class="mc-tp-main">
+        <div class="mc-section-head">
+          <div>
+            <p class="mc-eyebrow">{{ __('public.instructor_bio_title') }}</p>
+            <h2 class="mc-title">{{ $isRtl ? 'تعرّف على أسلوب المعلم' : 'About this teacher' }}</h2>
+            <p class="mc-lead">{{ $isRtl ? 'نبذة واضحة لولي الأمر قبل الحجز.' : 'A clear intro for parents before booking.' }}</p>
+          </div>
+        </div>
+        <p class="mc-tp-text">{{ $bioClean ?: ($isRtl ? 'لا توجد نبذة منشورة بعد.' : 'No published bio yet.') }}</p>
 
-        @if(count($experiences) > 0 || $profile->experience)
-          <article class="gl-tp-card">
-            <h2>{{ __('public.experience') }}</h2>
-            @if(count($experiences) > 0)
-              <ul class="gl-tp-exp">
-                @foreach($experiences as $item)
-                  <li>{{ $item }}</li>
-                @endforeach
-              </ul>
-            @else
-              <p class="gl-tp-bio">{{ $profile->sanitizedText($profile->experience) }}</p>
-            @endif
-          </article>
-        @endif
-
-        @if(count($skillChips) > 0 || count($skillNotes) > 0)
-          <article class="gl-tp-card">
-            <h2>{{ __('public.skills') }}</h2>
-            @if(count($skillChips) > 0)
-              <div class="gl-tp-skills">
-                @foreach($skillChips as $skill)
-                  <span class="gl-tp-skill">{{ $skill }}</span>
+        @if(count($curriculumTypeLabels) > 0 || $teachingYears->isNotEmpty())
+          <div class="mc-tp-block">
+            <p class="mc-eyebrow">{{ $isRtl ? 'المناهج والمراحل' : 'Curricula & stages' }}</p>
+            <h3 class="mc-tp-sub">{{ $isRtl ? 'ماذا يغطّي هذا المعلم؟' : 'What this teacher covers' }}</h3>
+            @if(count($curriculumTypeLabels) > 0)
+              <div class="mc-cats" style="margin-top:0.75rem">
+                @foreach($curriculumTypeLabels as $label)
+                  <span class="mc-cat"><span class="mc-cat__dot" aria-hidden="true"></span>{{ $label }}</span>
                 @endforeach
               </div>
             @endif
+            @if($teachingYears->isNotEmpty())
+              <div class="mc-dir-chips" style="margin-top:0.85rem">
+                @foreach($teachingYears as $year)
+                  <a class="mc-dir-chip" href="{{ route('public.curricula.show', $year) }}"><em>{{ $year->name }}</em></a>
+                @endforeach
+              </div>
+            @endif
+          </div>
+        @endif
+
+        @if($hasIntroVideo)
+          <div class="mc-tp-block">
+            <p class="mc-eyebrow">{{ $isRtl ? 'فيديو تعريفي' : 'Intro video' }}</p>
+            <h3 class="mc-tp-sub">{{ $isRtl ? 'تعرّف على أسلوب الشرح قبل الحجز' : 'See their teaching style before booking' }}</h3>
+            <button type="button" class="mc-btn mc-btn--md mc-btn--outline" id="mcTpIntroOpenInline" aria-haspopup="dialog" aria-controls="mcTpIntroModal">
+              <i class="fas fa-play" aria-hidden="true"></i>
+              {{ $isRtl ? 'تشغيل الفيديو التعريفي' : 'Play intro video' }}
+            </button>
+          </div>
+        @endif
+
+        @if(count($experiences) > 0 || filled($profile->experience) || count($skillChips) > 0 || count($skillNotes) > 0)
+          <div class="mc-tp-block">
+            <p class="mc-eyebrow">{{ $isRtl ? 'المؤهلات والمهارات' : 'Qualifications & skills' }}</p>
+            <h3 class="mc-tp-sub">{{ $isRtl ? 'ماذا يقدّم للطالب؟' : 'What they bring to the student' }}</h3>
+
+            @if(count($experiences) > 0 || filled($profile->experience))
+              <ul class="mc-tp-list">
+                @if(count($experiences) > 0)
+                  @foreach($experiences as $item)
+                    <li>{{ $item }}</li>
+                  @endforeach
+                @else
+                  <li>{{ $profile->sanitizedText($profile->experience) }}</li>
+                @endif
+              </ul>
+            @endif
+
+            @if(count($skillChips) > 0)
+              <div class="mc-cats" style="margin-top:1rem">
+                @foreach($skillChips as $skill)
+                  <a class="mc-cat" href="{{ route('public.instructors.index', ['skill' => $skill]) }}"><span class="mc-cat__dot" aria-hidden="true"></span>{{ $skill }}</a>
+                @endforeach
+              </div>
+            @endif
+
             @if(count($skillNotes) > 0)
-              <ul class="gl-tp-exp {{ count($skillChips) > 0 ? 'gl-tp-exp--after-skills' : '' }}">
+              <ul class="mc-tp-list" style="margin-top:1rem">
                 @foreach($skillNotes as $note)
                   <li>{{ $note }}</li>
                 @endforeach
               </ul>
             @endif
-          </article>
-        @endif
-
-        @if($groupCourses->isNotEmpty())
-          <article class="gl-tp-card">
-            <h2>{{ $isRtl ? 'كورسات جماعية' : 'Group courses' }}</h2>
-            <div class="gl-tp-private__rail">
-              @foreach($groupCourses as $course)
-                <a href="{{ route('public.course.show', $course->id) }}" class="gl-tp-private__card">
-                  <strong>{{ $course->title }}</strong>
-                  <span class="gl-tp-private__meta">
-                    <i class="fas fa-users"></i> {{ (int) ($course->lessons_count ?? 0) }} {{ $isRtl ? 'درس' : 'lessons' }}
-                  </span>
-                </a>
-              @endforeach
-            </div>
-          </article>
+          </div>
         @endif
       </div>
 
-      <aside class="gl-tp-aside">
-        <div class="gl-tp-card gl-tp-book-card">
+      <aside class="mc-tp-aside" id="mc-tp-book">
+        <article class="mc-package mc-package--recommended mc-tp-book">
+          <span class="mc-package__badge">{{ $isRtl ? 'الخطوة التالية' : 'Next step' }}</span>
           <h3>{{ __('public.instructor_availability_title') }}</h3>
+          <p class="mc-package__why">{{ $isRtl ? 'احجز حصة فردية بعد الاشتراك في باقة ساعات.' : 'Book a 1:1 session after you subscribe to an hour package.' }}</p>
+
           @if(!empty($weeklyCalendar))
-            <div class="gl-tp-cal">
+            <div class="mc-tp-cal">
               @foreach($weeklyCalendar as $col)
-                <div class="gl-tp-cal__day">
-                  <span class="gl-tp-cal__label">{{ $col['label'] }}</span>
-                  <div class="gl-tp-cal__times">
+                <div class="mc-tp-cal__day">
+                  <span class="mc-tp-cal__label">{{ $col['label'] }}</span>
+                  <div class="mc-tp-cal__times">
                     @foreach($col['times'] as $t)
-                      <span class="gl-tp-cal__t">{{ $t }}</span>
+                      <span>{{ $t }}</span>
                     @endforeach
                   </div>
                 </div>
               @endforeach
             </div>
           @else
-            <p class="gl-tp-bio">{{ $isRtl ? 'لم يُحدَّد جدول توافر بعد.' : 'No weekly availability published yet.' }}</p>
+            <p class="mc-tp-text mc-tp-text--muted">{{ $isRtl ? 'لم يُحدَّد جدول توافر بعد.' : 'No weekly availability published yet.' }}</p>
           @endif
 
           @unless($canBook)
-            <p class="gl-tp-note">
-              {{ $isRtl
-                ? 'يمكنك مشاهدة الملف والجدول. حجز الموعد يتاح بعد الاشتراك في باقة.'
-                : 'You can browse the profile and schedule. Booking unlocks after you subscribe to a package.' }}
-            </p>
-            <div class="gl-tp-actions">
-              <a href="{{ $packagesUrl }}" class="sana-btn sana-btn--yellow">
-                {{ $isRtl ? 'اشترك في باقة للحجز' : 'Subscribe to book' }}
-              </a>
+            <p class="mc-tp-alert">{{ $isRtl ? 'الحجز يتاح بعد الاشتراك في باقة.' : 'Booking unlocks after you subscribe to a package.' }}</p>
+            <div class="mc-tp-actions">
+              <a href="{{ $packagesUrl }}" class="mc-btn mc-btn--md mc-btn--secondary">{{ $isRtl ? 'اشترك في باقة للحجز' : 'Subscribe to book' }}</a>
               @guest
-                <a href="{{ route('login', ['redirect' => $instrPageUrl]) }}" class="sana-btn sana-btn--purple-outline">
-                  {{ $isRtl ? 'تسجيل الدخول' : 'Log in' }}
-                </a>
+                <a href="{{ route('login', ['redirect' => $instrPageUrl]) }}" class="mc-btn mc-btn--md mc-btn--soft">{{ $isRtl ? 'تسجيل الدخول' : 'Log in' }}</a>
               @endguest
+              <a href="{{ route('public.instructors.index') }}" class="mc-btn mc-btn--md mc-btn--outline">{{ __('public.all_instructors_link') }}</a>
             </div>
           @else
-            <p class="gl-tp-note is-ok">
-              {{ $isRtl ? ('رصيدك المتاح: '.$unitsLeft.' حصة — اختر المواعيد المناسبة.') : ('Available credits: '.$unitsLeft.' — pick the times that work for you.') }}
-            </p>
+            <p class="mc-tp-alert is-ok">{{ $isRtl ? ('رصيدك المتاح: '.$unitsLeft.' حصة') : ('Available credits: '.$unitsLeft) }}</p>
             @if($bookableSlots->isNotEmpty())
               @php
                 $clockTz = \App\Support\AppTimezone::forUser($profile->user);
@@ -255,208 +312,101 @@
                         }
                         $clock = $starts->copy()->timezone($clockTz);
                         $viewer = $starts->copy()->timezone($viewerTz);
+
                         return [
                             'day' => (int) $clock->dayOfWeekIso,
                             'time' => $clock->format('H:i'),
-                            'label' => $viewer->locale(app()->getLocale())->translatedFormat('l — g:i A'),
+                            'label' => $viewer->locale(app()->getLocale())->translatedFormat('l، g:i A'),
                         ];
                     })
                     ->filter()
                     ->unique(fn ($r) => $r['day'].'|'.$r['time'])
                     ->values();
               @endphp
-              <form method="POST" action="{{ route('student.one-to-one-sessions.book-instructor', $profile->user) }}" class="gl-tp-book" id="glTpBookForm">
-                @csrf
-                <div class="gl-tp-style">
-                  <label class="gl-tp-choice">
-                    <input type="radio" name="booking_style" value="monthly" checked>
-                    <span>
-                      <strong>{{ $isRtl ? 'تثبيت شهري (موصى به)' : 'Monthly lock (recommended)' }}</strong>
-                      <small>{{ $isRtl ? 'اختر حتى 7 مواعيد أسبوعياً لمدة تصل إلى 8 أسابيع' : 'Pick up to 7 weekly times for up to 8 weeks' }}</small>
-                    </span>
-                  </label>
-                  <label class="gl-tp-choice">
-                    <input type="radio" name="booking_style" value="multi">
-                    <span>
-                      <strong>{{ $isRtl ? 'عدة مواعيد' : 'Multiple slots' }}</strong>
-                      <small>{{ $isRtl ? 'اختر أكثر من حصة مرة واحدة' : 'Select several sessions at once' }}</small>
-                    </span>
-                  </label>
-                  <label class="gl-tp-choice">
-                    <input type="radio" name="booking_style" value="single">
-                    <span>
-                      <strong>{{ $isRtl ? 'حصة واحدة' : 'Single session' }}</strong>
-                    </span>
-                  </label>
-                </div>
-
-                <div id="glTpMonthly" class="gl-tp-fields">
-                  <label class="gl-tp-field">{{ $isRtl ? 'الموعد الأسبوعي 1' : 'Weekly slot 1' }}
-                    <select id="glTpW0" required>
-                      <option value="">{{ $isRtl ? 'اختر…' : 'Choose…' }}</option>
-                      @foreach($weeklyOpts as $opt)
-                        <option value="{{ $opt['day'] }}|{{ $opt['time'] }}">{{ $opt['label'] }}</option>
-                      @endforeach
-                    </select>
-                    <input type="hidden" name="weekly_slots[0][day_of_week]" id="glTpW0Day">
-                    <input type="hidden" name="weekly_slots[0][time]" id="glTpW0Time">
-                  </label>
-                  <label class="gl-tp-field">{{ $isRtl ? 'الموعد الأسبوعي 2' : 'Weekly slot 2' }}
-                    <select id="glTpW1">
-                      <option value="">{{ $isRtl ? 'اختياري…' : 'Optional…' }}</option>
-                      @foreach($weeklyOpts as $opt)
-                        <option value="{{ $opt['day'] }}|{{ $opt['time'] }}">{{ $opt['label'] }}</option>
-                      @endforeach
-                    </select>
-                    <input type="hidden" name="weekly_slots[1][day_of_week]" id="glTpW1Day">
-                    <input type="hidden" name="weekly_slots[1][time]" id="glTpW1Time">
-                  </label>
-                  <label class="gl-tp-field">{{ $isRtl ? 'الموعد الأسبوعي 3' : 'Weekly slot 3' }}
-                    <select id="glTpW2">
-                      <option value="">{{ $isRtl ? 'اختياري…' : 'Optional…' }}</option>
-                      @foreach($weeklyOpts as $opt)
-                        <option value="{{ $opt['day'] }}|{{ $opt['time'] }}">{{ $opt['label'] }}</option>
-                      @endforeach
-                    </select>
-                    <input type="hidden" name="weekly_slots[2][day_of_week]" id="glTpW2Day">
-                    <input type="hidden" name="weekly_slots[2][time]" id="glTpW2Time">
-                  </label>
-                  <label class="gl-tp-field">{{ $isRtl ? 'الموعد الأسبوعي 4' : 'Weekly slot 4' }}
-                    <select id="glTpW3">
-                      <option value="">{{ $isRtl ? 'اختياري…' : 'Optional…' }}</option>
-                      @foreach($weeklyOpts as $opt)
-                        <option value="{{ $opt['day'] }}|{{ $opt['time'] }}">{{ $opt['label'] }}</option>
-                      @endforeach
-                    </select>
-                    <input type="hidden" name="weekly_slots[3][day_of_week]" id="glTpW3Day">
-                    <input type="hidden" name="weekly_slots[3][time]" id="glTpW3Time">
-                  </label>
-                  <label class="gl-tp-field">{{ $isRtl ? 'عدد الأسابيع' : 'Weeks' }}
-                    <select name="weeks">
-                      <option value="4" selected>4</option>
-                      <option value="3">3</option>
-                      <option value="2">2</option>
-                      <option value="6">6</option>
-                      <option value="8">8</option>
-                    </select>
-                  </label>
-                  <button type="submit" class="sana-btn sana-btn--yellow">
-                    {{ $isRtl ? 'تثبيت الجدول الشهري' : 'Lock monthly schedule' }}
-                  </button>
-                </div>
-
-                <div id="glTpMulti" class="gl-tp-book-pane" hidden>
-                  <div class="gl-tp-slots">
-                    @foreach($bookableSlots as $slot)
-                      @php
-                        $starts = is_array($slot) ? ($slot['starts_at'] ?? null) : ($slot->starts_at ?? null);
-                        $label = is_array($slot) ? ($slot['label'] ?? null) : ($slot->label ?? null);
-                        if ($starts instanceof \Carbon\Carbon) {
-                          $value = $starts->copy()->utc()->toIso8601String();
-                          $label = $label ?: $starts->copy()->timezone($viewerTz)->locale(app()->getLocale())->translatedFormat('D j M — g:i A');
-                        } else {
-                          continue;
-                        }
-                      @endphp
-                      <label class="gl-tp-slot">
-                        <input type="checkbox" name="scheduled_ats[]" value="{{ $value }}">
-                        <span>{{ $label }}</span>
-                      </label>
-                    @endforeach
-                  </div>
-                  <button type="submit" class="sana-btn sana-btn--yellow">
-                    {{ $isRtl ? 'حجز المواعيد المحددة' : 'Book selected slots' }}
-                  </button>
-                </div>
-
-                <div id="glTpSingle" class="gl-tp-book-pane" hidden>
-                  <div class="gl-tp-slots">
-                    @foreach($bookableSlots as $slot)
-                      @php
-                        $starts = is_array($slot) ? ($slot['starts_at'] ?? null) : ($slot->starts_at ?? null);
-                        $label = is_array($slot) ? ($slot['label'] ?? null) : ($slot->label ?? null);
-                        if ($starts instanceof \Carbon\Carbon) {
-                          $value = $starts->copy()->utc()->toIso8601String();
-                          $label = $label ?: $starts->copy()->timezone($viewerTz)->locale(app()->getLocale())->translatedFormat('D j M — g:i A');
-                        } else {
-                          continue;
-                        }
-                      @endphp
-                      <button type="submit" name="scheduled_at" value="{{ $value }}" class="gl-tp-slot" formnovalidate>
-                        <span>{{ $label }}</span>
-                        <i class="fas fa-calendar-plus"></i>
-                      </button>
-                    @endforeach
-                  </div>
-                </div>
-              </form>
-              <script>
-              (function () {
-                var form = document.getElementById('glTpBookForm');
-                if (!form) return;
-                var monthly = document.getElementById('glTpMonthly');
-                var multi = document.getElementById('glTpMulti');
-                var single = document.getElementById('glTpSingle');
-                var w0 = document.getElementById('glTpW0');
-                var w0Day = document.getElementById('glTpW0Day');
-                var w0Time = document.getElementById('glTpW0Time');
-                var weeklyCombos = [0, 1, 2, 3].map(function (i) {
-                  return {
-                    sel: document.getElementById('glTpW' + i),
-                    day: document.getElementById('glTpW' + i + 'Day'),
-                    time: document.getElementById('glTpW' + i + 'Time')
-                  };
-                });
-                function syncCombo(sel, dayEl, timeEl) {
-                  if (!sel || !dayEl || !timeEl) return;
-                  var v = sel.value || '';
-                  var p = v.split('|');
-                  dayEl.value = p[0] || '';
-                  timeEl.value = p[1] || '';
-                }
-                function sync() {
-                  var style = (form.querySelector('input[name="booking_style"]:checked') || {}).value || 'monthly';
-                  monthly.hidden = style !== 'monthly';
-                  multi.hidden = style !== 'multi';
-                  single.hidden = style !== 'single';
-                  if (w0) w0.required = style === 'monthly';
-                }
-                form.querySelectorAll('input[name="booking_style"]').forEach(function (el) {
-                  el.addEventListener('change', sync);
-                });
-                weeklyCombos.forEach(function (row) {
-                  if (row.sel) row.sel.addEventListener('change', function () { syncCombo(row.sel, row.day, row.time); });
-                });
-                form.addEventListener('submit', function () {
-                  weeklyCombos.forEach(function (row) { syncCombo(row.sel, row.day, row.time); });
-                });
-                sync();
-              })();
-              </script>
+              @include('partials.landing.mycourses.instructor-booking-form', [
+                  'profile' => $profile,
+                  'bookableSlots' => $bookableSlots,
+                  'weeklyOpts' => $weeklyOpts,
+                  'viewerTz' => $viewerTz,
+                  'isRtl' => $isRtl,
+              ])
             @else
-              <p class="gl-tp-bio">{{ $isRtl ? 'لا توجد مواعيد مفتوحة خلال الأسابيع القادمة.' : 'No open slots in the coming weeks.' }}</p>
+              <p class="mc-tp-text mc-tp-text--muted">{{ $isRtl ? 'لا توجد مواعيد مفتوحة خلال الأسابيع القادمة.' : 'No open slots in the coming weeks.' }}</p>
             @endif
           @endunless
-        </div>
-
-        <div class="gl-tp-card">
-          <h3>{{ $isRtl ? 'روابط سريعة' : 'Quick links' }}</h3>
-          <div class="gl-tp-actions">
-            <a href="{{ route('public.instructors.index') }}" class="sana-btn sana-btn--purple-outline">{{ __('public.all_instructors_link') }}</a>
-            <a href="{{ $packagesUrl }}" class="sana-btn sana-btn--purple">{{ $isRtl ? 'باقات الحصص الخاصة' : 'Private lesson packages' }}</a>
-          </div>
-        </div>
+        </article>
       </aside>
     </div>
-  </div>
+  </section>
+
+  @if($allOfferings->isNotEmpty())
+    <section class="mc-section mc-section--muted mc-section--compact" id="offerings">
+      <div class="mc-container">
+        <div class="mc-section-head">
+          <div>
+            <p class="mc-eyebrow">{{ $isRtl ? 'مع هذا المعلم' : 'With this teacher' }}</p>
+            <h2 class="mc-title">{{ $isRtl ? 'كورسات وعروض مرتبطة' : 'Linked courses & offers' }}</h2>
+            <p class="mc-lead">{{ $isRtl ? 'اختر المسار المناسب بعد الحجز أو معه.' : 'Pick a related path alongside your booking.' }}</p>
+          </div>
+        </div>
+        <div class="mc-tracks">
+          @foreach($privateGroups as $group)
+            <a href="{{ route('public.groups.show', $group->slug) }}" class="mc-track mc-track--featured">
+              <span class="mc-track__badge">1:1</span>
+              <span class="mc-track__icon" aria-hidden="true"><i class="fas fa-user"></i></span>
+              <h3>{{ $group->title }}</h3>
+              <p>{{ (int) $group->duration_minutes }} {{ $isRtl ? 'دقيقة' : 'min' }}، {{ $group->formattedPrice() }}</p>
+              <span class="mc-track__cta">{{ $isRtl ? 'عرض التفاصيل' : 'View details' }} →</span>
+            </a>
+          @endforeach
+          @foreach($oneToOneCourses as $course)
+            <a href="{{ route('public.course.show', $course->id) }}" class="mc-track">
+              <span class="mc-track__icon" aria-hidden="true"><i class="fas fa-chalkboard"></i></span>
+              <h3>{{ $course->title }}</h3>
+              <p>
+                {{ (int) ($course->lessons_count ?? 0) }} {{ $isRtl ? 'درس' : 'lessons' }}
+                    @if(!empty($course->price))
+                      ، {{ number_format((float) $course->price) }} {{ currency_symbol() }}
+                    @endif
+              </p>
+              <span class="mc-track__cta">{{ $isRtl ? 'عرض الكورس' : 'View course' }} →</span>
+            </a>
+          @endforeach
+          @foreach($groupCourses as $course)
+            <a href="{{ route('public.course.show', $course->id) }}" class="mc-track">
+              <span class="mc-track__icon" aria-hidden="true"><i class="fas fa-book-open"></i></span>
+              <h3>{{ $course->title }}</h3>
+              <p>{{ (int) ($course->lessons_count ?? 0) }} {{ $isRtl ? 'درس' : 'lessons' }}</p>
+              <span class="mc-track__cta">{{ $isRtl ? 'عرض الكورس' : 'View course' }} →</span>
+            </a>
+          @endforeach
+        </div>
+      </div>
+    </section>
+  @endif
+
+  <section class="mc-section mc-section--compact">
+    <div class="mc-container">
+      <div class="mc-cta">
+        <div>
+          <h2>{{ $isRtl ? 'جاهز تبدأ مع '.$name.'؟' : 'Ready to start with '.$name.'?' }}</h2>
+          <p>{{ $isRtl ? 'اشترك في باقة ثم احجز موعدك، أو تصفّح معلمين آخرين.' : 'Subscribe to a package then book, or browse more teachers.' }}</p>
+        </div>
+        <div class="mc-cta__actions">
+          <a href="#mc-tp-book" class="mc-btn mc-btn--lg mc-btn--secondary">{{ $isRtl ? 'احجز الآن' : 'Book now' }}</a>
+          <a href="{{ route('public.instructors.index') }}" class="mc-btn mc-btn--lg mc-btn--ghost-on-dark">{{ __('public.all_instructors_link') }}</a>
+        </div>
+      </div>
+    </div>
+  </section>
 </main>
 
 @if($hasIntroVideo)
-  <div class="gl-tp-modal" id="glTpIntroModal" hidden>
-    <div class="gl-tp-modal__backdrop" data-close-intro></div>
-    <div class="gl-tp-modal__dialog" role="dialog" aria-modal="true" aria-label="{{ $isRtl ? 'فيديو تعريفي' : 'Intro video' }}">
-      <button type="button" class="gl-tp-modal__close" data-close-intro aria-label="{{ $isRtl ? 'إغلاق' : 'Close' }}"><i class="fas fa-times"></i></button>
-      <div class="gl-tp-video">
+  <div class="mc-tp-modal" id="mcTpIntroModal" hidden>
+    <div class="mc-tp-modal__backdrop" data-close-intro></div>
+    <div class="mc-tp-modal__dialog" role="dialog" aria-modal="true" aria-label="{{ $isRtl ? 'فيديو تعريفي' : 'Intro video' }}">
+      <button type="button" class="mc-tp-modal__close" data-close-intro aria-label="{{ $isRtl ? 'إغلاق' : 'Close' }}"><i class="fas fa-times"></i></button>
+      <div class="mc-tp-video">
         @if($introEmbedUrl)
           <iframe src="{{ $introEmbedUrl }}" title="{{ $name }}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy"></iframe>
         @elseif($introDirectVideo)
@@ -469,8 +419,8 @@
   </div>
   <script>
   (function () {
-    var openBtn = document.getElementById('glTpIntroOpen');
-    var modal = document.getElementById('glTpIntroModal');
+    var openBtn = document.getElementById('mcTpIntroOpen');
+    var modal = document.getElementById('mcTpIntroModal');
     if (!openBtn || !modal) return;
     function open() { modal.hidden = false; document.body.style.overflow = 'hidden'; }
     function close() {
@@ -480,9 +430,8 @@
       if (v) { try { v.pause(); } catch (e) {} }
     }
     openBtn.addEventListener('click', open);
-    modal.querySelectorAll('[data-close-intro]').forEach(function (el) {
-      el.addEventListener('click', close);
-    });
+    document.getElementById('mcTpIntroOpenInline')?.addEventListener('click', open);
+    modal.querySelectorAll('[data-close-intro]').forEach(function (el) { el.addEventListener('click', close); });
     document.addEventListener('keydown', function (e) {
       if (e.key === 'Escape' && !modal.hidden) close();
     });
@@ -490,6 +439,6 @@
   </script>
 @endif
 
-@include('partials.landing.footer')
+@include('partials.landing.mycourses.footer')
 </body>
 </html>

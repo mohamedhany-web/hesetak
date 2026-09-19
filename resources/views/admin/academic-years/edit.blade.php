@@ -164,6 +164,12 @@
                                    class="w-5 h-5 text-sky-600 border-gray-300 rounded focus:ring-sky-500">
                             <span class="text-sm text-gray-700">السنة متاحة للاستخدام الداخلي</span>
                         </div>
+                        <div class="flex items-center gap-2 px-4 py-3 rounded-2xl bg-amber-50 border border-amber-100">
+                            <input type="hidden" name="is_public" value="0">
+                            <input type="checkbox" name="is_public" value="1" {{ old('is_public', $academicYear->is_public) ? 'checked' : '' }}
+                                   class="w-5 h-5 text-amber-600 border-gray-300 rounded focus:ring-amber-500">
+                            <span class="text-sm text-gray-700">نشر في صفحة المناهج العامة (`/curricula`)</span>
+                        </div>
                     </div>
                 </div>
 
@@ -410,7 +416,7 @@
                                         </span>
                                         <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full {{ $course->price > 0 ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700' }}">
                                             <i class="fas fa-money-bill"></i>
-                                            {{ $course->price > 0 ? number_format($course->price) . ' $' : 'مجاني' }}
+                                            {{ $course->price > 0 ? number_format($course->price) . ' ' . currency_symbol() : 'مجاني' }}
                                         </span>
                                     </div>
                                 </div>

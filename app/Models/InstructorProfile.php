@@ -22,6 +22,7 @@ class InstructorProfile extends Model
         'photo_path',
         'experience',
         'skills',
+        'curriculum_types',
         'social_links',
         'status',
         'rejection_reason',
@@ -34,11 +35,25 @@ class InstructorProfile extends Model
 
     protected $casts = [
         'social_links' => 'array',
+        'curriculum_types' => 'array',
         'reviewed_at' => 'datetime',
         'submitted_at' => 'datetime',
         'consultation_price_egp' => 'decimal:2',
         'consultation_duration_minutes' => 'integer',
     ];
+
+    /**
+     * @return list<string>
+     */
+    public function curriculumTypeKeys(): array
+    {
+        $raw = $this->curriculum_types;
+        if (! is_array($raw)) {
+            return [];
+        }
+
+        return array_values(array_filter(array_map('strval', $raw)));
+    }
 
     public function user(): BelongsTo
     {
@@ -61,7 +76,7 @@ class InstructorProfile extends Model
     }
 
     /**
-     * سعر الاستشارة بالجنيه المصري: خاص بالمدرب إن وُجد، وإلا السعر الافتراضي من إعدادات المنصة.
+     * سعر الاستشارة بالريال السعودي: خاص بالمدرب إن وُجد، وإلا السعر الافتراضي من إعدادات المنصة.
      */
     public function effectiveConsultationPriceEgp(): float
     {

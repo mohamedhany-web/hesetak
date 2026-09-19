@@ -52,7 +52,7 @@
 
         <a class="btn" href="{{ route('admin.support-tickets.show', $ticket) }}" target="_blank" rel="noopener">فتح التذكرة في لوحة الإدارة</a>
 
-        <p class="note">هذا البريد أُرسل تلقائياً من Glottical عند إنشاء تذكرة دعم. تأكد من ضبط SMTP (مثل Gmail) في إعدادات الموقع.</p>
+        <p class="note">هذا البريد أُرسل تلقائياً من حصتك عند إنشاء تذكرة دعم. تأكد من ضبط SMTP (مثل Gmail) في إعدادات الموقع.</p>
     </div>
 </body>
 </html>

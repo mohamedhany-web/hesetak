@@ -1,13 +1,9 @@
 @extends('layouts.auth-landing')
 
 @section('title', __('auth.register'))
-@section('main_class', 'gl-auth-main--top')
+@section('main_class', 'lasles-auth-main--top')
 
 @section('body_attrs', 'x-data="{ showPassword: false, showPasswordConfirm: false }"')
-
-@section('nav_action')
-  <a href="{{ route('login') }}" class="gl-auth-nav-link">{{ __('auth.login') }}</a>
-@endsection
 
 @section('content')
 @php
@@ -27,32 +23,32 @@
       'placeholder' => $c['placeholder'] ?? '',
   ])->values()->all();
 @endphp
-<div class="gl-auth-card gl-auth-card--wide">
-  <div class="gl-auth-brand">{{ config('app.name', 'Glottical') }}</div>
-  <h1 class="gl-auth-title">{{ __('auth.create_account_btn') }}<br><em>{{ $isRtl ? 'مع Glottical' : 'with Glottical' }}</em></h1>
-  <p class="gl-auth-lead">{{ __('auth.register_subtitle') }}</p>
+<div class="lasles-auth-card lasles-auth-card--wide">
+  <p class="lasles-auth-eyebrow">{{ __('auth.register_eyebrow') }}</p>
+  <h1 class="lasles-auth-title">{!! __('auth.register_title_html') !!}</h1>
+  <p class="lasles-auth-lead">{{ __('auth.register_subtitle') }}</p>
 
-  <div class="gl-auth-alert gl-auth-alert--info">{{ __('auth.register_portal_note') }}</div>
+  <div class="lasles-auth-alert lasles-auth-alert--info">{{ __('auth.register_portal_note') }}</div>
 
   @if (! empty($pendingReferralCode))
-    <div class="gl-auth-alert gl-auth-alert--ok">
+    <div class="lasles-auth-alert lasles-auth-alert--ok">
       <strong>{{ __('auth.referral_invite_title') }}</strong><br>
       {{ __('auth.referral_invite_body', ['code' => $pendingReferralCode]) }}
     </div>
   @endif
 
   @if ($errors->any())
-    <div class="gl-auth-alert gl-auth-alert--err">{{ $errors->first() }}</div>
+    <div class="lasles-auth-alert lasles-auth-alert--err">{{ $errors->first() }}</div>
   @endif
 
   <form action="{{ route('register') }}" method="POST" novalidate>
     @csrf
     <input type="hidden" name="referral_code" value="{{ old('referral_code', $pendingReferralCode ?? '') }}">
 
-    <div class="gl-auth-field">
+    <div class="lasles-auth-field">
       <label for="name">{{ __('auth.full_name') }}</label>
-      <div class="gl-auth-input-wrap">
-        <span class="gl-auth-icon" aria-hidden="true"><i class="fas fa-user"></i></span>
+      <div class="lasles-auth-input-wrap">
+        <span class="lasles-auth-icon" aria-hidden="true"><i class="fas fa-user"></i></span>
         <input
           type="text"
           name="name"
@@ -61,16 +57,16 @@
           required
           autocomplete="name"
           placeholder="{{ __('auth.enter_full_name') }}"
-          class="gl-auth-input has-icon @error('name') has-error @enderror"
+          class="lasles-auth-input has-icon @error('name') has-error @enderror"
         >
       </div>
-      @error('name')<p class="gl-auth-error">{{ $message }}</p>@enderror
+      @error('name')<p class="lasles-auth-error">{{ $message }}</p>@enderror
     </div>
 
-    <div class="gl-auth-field">
+    <div class="lasles-auth-field">
       <label>{{ __('auth.phone_number') }}</label>
       <div
-        class="gl-auth-phone @error('phone') has-error @enderror"
+        class="lasles-auth-phone @error('phone') has-error @enderror"
         x-data="{
           open: false,
           q: '',
@@ -110,22 +106,22 @@
       >
         <input type="hidden" name="country_code" :value="dial" required>
         <input type="hidden" name="country_iso" :value="iso">
-        <div class="gl-auth-cc" @click.outside="open = false">
+        <div class="lasles-auth-cc" @click.outside="open = false">
           <button
             type="button"
-            class="gl-auth-cc-btn"
+            class="lasles-auth-cc-btn"
             dir="ltr"
             @click="toggle()"
             :aria-expanded="open.toString()"
             aria-haspopup="listbox"
             aria-label="{{ __('auth.country_code_aria') }}"
           >
-            <span class="gl-auth-cc-dial" x-text="dial"></span>
-            <span class="gl-auth-cc-name" x-text="name"></span>
+            <span class="lasles-auth-cc-dial" x-text="dial"></span>
+            <span class="lasles-auth-cc-name" x-text="name"></span>
             <i class="fas fa-chevron-down" aria-hidden="true"></i>
           </button>
-          <div class="gl-auth-cc-panel" x-show="open" x-cloak x-transition.opacity.duration.150ms role="listbox">
-            <div class="gl-auth-cc-search">
+          <div class="lasles-auth-cc-panel" x-show="open" x-cloak x-transition.opacity.duration.150ms role="listbox">
+            <div class="lasles-auth-cc-search">
               <i class="fas fa-search" aria-hidden="true"></i>
               <input
                 type="search"
@@ -137,22 +133,22 @@
                 dir="{{ $isRtl ? 'rtl' : 'ltr' }}"
               >
             </div>
-            <ul class="gl-auth-cc-list">
+            <ul class="lasles-auth-cc-list">
               <template x-for="c in filtered" :key="c.code">
                 <li>
                   <button
                     type="button"
-                    class="gl-auth-cc-option"
+                    class="lasles-auth-cc-option"
                     :class="{ 'is-active': c.code === iso }"
                     @click="select(c)"
                     dir="ltr"
                   >
-                    <span class="gl-auth-cc-option-dial" x-text="c.dial_code"></span>
-                    <span class="gl-auth-cc-option-name" x-text="labelOf(c)" :dir="localeRtl ? 'rtl' : 'ltr'"></span>
+                    <span class="lasles-auth-cc-option-dial" x-text="c.dial_code"></span>
+                    <span class="lasles-auth-cc-option-name" x-text="labelOf(c)" :dir="localeRtl ? 'rtl' : 'ltr'"></span>
                   </button>
                 </li>
               </template>
-              <li x-show="filtered.length === 0" class="gl-auth-cc-empty" x-cloak>
+              <li x-show="filtered.length === 0" class="lasles-auth-cc-empty" x-cloak>
                 {{ __('auth.no_country_found') }}
               </li>
             </ul>
@@ -169,13 +165,13 @@
           aria-label="{{ __('auth.phone_aria') }}"
         >
       </div>
-      @error('phone')<p class="gl-auth-error">{{ $message }}</p>@enderror
+      @error('phone')<p class="lasles-auth-error">{{ $message }}</p>@enderror
     </div>
 
-    <div class="gl-auth-field">
+    <div class="lasles-auth-field">
       <label for="email">{{ __('auth.email') }}</label>
-      <div class="gl-auth-input-wrap">
-        <span class="gl-auth-icon" aria-hidden="true"><i class="fas fa-envelope"></i></span>
+      <div class="lasles-auth-input-wrap">
+        <span class="lasles-auth-icon" aria-hidden="true"><i class="fas fa-envelope"></i></span>
         <input
           type="email"
           name="email"
@@ -184,17 +180,17 @@
           required
           autocomplete="email"
           dir="ltr"
-          placeholder="you@example.com"
-          class="gl-auth-input has-icon @error('email') has-error @enderror"
+          placeholder="{{ __('auth.email_placeholder') }}"
+          class="lasles-auth-input has-icon @error('email') has-error @enderror"
         >
       </div>
-      @error('email')<p class="gl-auth-error">{{ $message }}</p>@enderror
+      @error('email')<p class="lasles-auth-error">{{ $message }}</p>@enderror
     </div>
 
-    <div class="gl-auth-field">
+    <div class="lasles-auth-field">
       <label for="password">{{ __('auth.password') }}</label>
-      <div class="gl-auth-input-wrap">
-        <span class="gl-auth-icon" aria-hidden="true"><i class="fas fa-lock"></i></span>
+      <div class="lasles-auth-input-wrap">
+        <span class="lasles-auth-icon" aria-hidden="true"><i class="fas fa-lock"></i></span>
         <input
           :type="showPassword ? 'text' : 'password'"
           name="password"
@@ -202,20 +198,20 @@
           required
           autocomplete="new-password"
           placeholder="{{ __('auth.enter_strong_password') }}"
-          class="gl-auth-input has-icon @error('password') has-error @enderror"
+          class="lasles-auth-input has-icon @error('password') has-error @enderror"
           style="padding-inline-end:3rem"
         >
-        <button type="button" class="gl-auth-pw-btn" @click="showPassword = !showPassword">
-          <span x-text="showPassword ? '{{ $isRtl ? 'إخفاء' : 'Hide' }}' : '{{ $isRtl ? 'إظهار' : 'Show' }}'"></span>
+        <button type="button" class="lasles-auth-pw-btn" @click="showPassword = !showPassword">
+          <span x-text="showPassword ? '{{ __('auth.hide') }}' : '{{ __('auth.show') }}'"></span>
         </button>
       </div>
-      @error('password')<p class="gl-auth-error">{{ $message }}</p>@enderror
+      @error('password')<p class="lasles-auth-error">{{ $message }}</p>@enderror
     </div>
 
-    <div class="gl-auth-field">
+    <div class="lasles-auth-field">
       <label for="password_confirmation">{{ __('auth.password_confirmation') }}</label>
-      <div class="gl-auth-input-wrap">
-        <span class="gl-auth-icon" aria-hidden="true"><i class="fas fa-lock"></i></span>
+      <div class="lasles-auth-input-wrap">
+        <span class="lasles-auth-icon" aria-hidden="true"><i class="fas fa-lock"></i></span>
         <input
           :type="showPasswordConfirm ? 'text' : 'password'"
           name="password_confirmation"
@@ -223,66 +219,58 @@
           required
           autocomplete="new-password"
           placeholder="{{ __('auth.reenter_password') }}"
-          class="gl-auth-input has-icon"
+          class="lasles-auth-input has-icon"
           style="padding-inline-end:3rem"
         >
-        <button type="button" class="gl-auth-pw-btn" @click="showPasswordConfirm = !showPasswordConfirm">
-          <span x-text="showPasswordConfirm ? '{{ $isRtl ? 'إخفاء' : 'Hide' }}' : '{{ $isRtl ? 'إظهار' : 'Show' }}'"></span>
+        <button type="button" class="lasles-auth-pw-btn" @click="showPasswordConfirm = !showPasswordConfirm">
+          <span x-text="showPasswordConfirm ? '{{ __('auth.hide') }}' : '{{ __('auth.show') }}'"></span>
         </button>
       </div>
     </div>
 
-    <div class="gl-auth-field">
-      <label for="timezone">{{ $isRtl ? 'المنطقة الزمنية' : 'Timezone' }}</label>
+    <div class="lasles-auth-field">
+      <label for="timezone">{{ __('auth.timezone') }}</label>
       @php
         $tzOptions = \App\Support\AppTimezone::commonZones();
         $tzValue = old('timezone', session('pending_timezone', ''));
       @endphp
-      <select id="timezone" name="timezone" data-timezone-select class="gl-auth-input">
-        <option value="">{{ $isRtl ? 'تلقائي من جهازك' : 'Detect from your device' }}</option>
+      <select id="timezone" name="timezone" data-timezone-select class="lasles-auth-input">
+        <option value="">{{ __('auth.timezone_auto') }}</option>
         @foreach ($tzOptions as $tzId => $tzLabel)
           <option value="{{ $tzId }}" @selected($tzValue === $tzId)>{{ $tzLabel }}</option>
         @endforeach
       </select>
       <input type="hidden" name="timezone_auto" id="timezone_auto" value="">
-      <p class="gl-auth-hint" style="margin-top:.35rem;font-size:.75rem;opacity:.75">
-        {{ $isRtl ? 'تُعرض مواعيد الحصص بتوقيتك المحلي مع إشارة لتوقيت مصر.' : 'Class times appear in your local timezone with an Egypt reference.' }}
-      </p>
+      <p class="lasles-auth-hint">{{ __('auth.timezone_hint') }}</p>
     </div>
 
-    <label class="gl-auth-terms">
+    <label class="lasles-auth-terms">
       <input type="checkbox" id="terms" required>
       <span>
         {{ __('auth.agree_terms') }}
-        <a href="{{ route('public.terms') }}" class="gl-auth-link">{{ __('auth.terms_of_use') }}</a>
+        <a href="{{ route('public.terms') }}" class="lasles-auth-link">{{ __('auth.terms_of_use') }}</a>
         {{ __('auth.and') }}
-        <a href="{{ route('public.privacy') }}" class="gl-auth-link">{{ __('auth.privacy_policy') }}</a>
+        <a href="{{ route('public.privacy') }}" class="lasles-auth-link">{{ __('auth.privacy_policy') }}</a>
       </span>
     </label>
 
-    <button type="submit" class="gl-auth-submit">
+    <button type="submit" class="lasles-auth-submit">
       <i class="fas fa-user-plus" aria-hidden="true"></i>
-      <span>{{ __('auth.create_account_btn') }}</span>
+      <span>{{ __('auth.register_cta') }}</span>
     </button>
   </form>
 
   @if(config('services.google.client_id') && config('services.google.client_secret'))
-    <div class="gl-auth-or" aria-hidden="true"><span>{{ $isRtl ? 'أو' : 'or' }}</span></div>
-    <a href="{{ route('auth.google.redirect') }}" class="gl-auth-google">
+    <div class="lasles-auth-or" aria-hidden="true"><span>{{ __('auth.or') }}</span></div>
+    <a href="{{ route('auth.google.redirect') }}" class="lasles-auth-google">
       <i class="fab fa-google" aria-hidden="true"></i>
-      <span>{{ $isRtl ? 'التسجيل عبر Gmail / Google' : 'Sign up with Gmail / Google' }}</span>
+      <span>{{ __('auth.signup_with_google') }}</span>
     </a>
   @endif
 
-  <div class="gl-auth-foot">
+  <div class="lasles-auth-foot">
     {{ __('auth.already_have_account') }}
-    <a href="{{ route('login') }}" class="gl-auth-link">{{ __('auth.login') }}</a>
-  </div>
-
-  <div class="gl-auth-trust">
-    <span><i class="fas fa-clipboard-check"></i> {{ $isRtl ? 'تقييم مستوى مجاني' : 'Free level assessment' }}</span>
-    <span><i class="fas fa-users"></i> {{ $isRtl ? 'جماعي وفردي' : 'Group & 1:1' }}</span>
-    <span><i class="fas fa-user-group"></i> {{ $isRtl ? 'متابعة لولي الأمر' : 'Parent follow-up' }}</span>
+    <a href="{{ route('login') }}" class="lasles-auth-link">{{ __('auth.login') }}</a>
   </div>
 </div>
 @endsection

@@ -76,6 +76,7 @@ class AcademicYearController extends Controller
             'color' => 'nullable|string|max:7',
             'order' => 'nullable|integer|min:0',
             'is_active' => 'boolean',
+            'is_public' => 'boolean',
         ], [
             'name.required' => 'اسم سنة المدرسة مطلوب',
             'name.unique' => 'اسم سنة المدرسة موجود مسبقاً',
@@ -90,6 +91,7 @@ class AcademicYearController extends Controller
             'name', 'code', 'slug', 'tagline', 'level_number', 'description', 'video_url', 'price', 'icon', 'color', 'order',
         ]);
         $data['is_active'] = $request->boolean('is_active');
+        $data['is_public'] = $request->boolean('is_public');
         $data['order'] = (int) ($data['order'] ?? 0);
         $data['price'] = $request->input('price', 0) ?: 0;
         $data['icon'] = $data['icon'] ?? 'fas fa-graduation-cap';
@@ -231,6 +233,7 @@ class AcademicYearController extends Controller
             'color' => 'nullable|string|max:7',
             'order' => 'nullable|integer|min:0',
             'is_active' => 'boolean',
+            'is_public' => 'boolean',
         ], [
             'name.required' => 'اسم سنة المدرسة مطلوب',
             'name.unique' => 'اسم سنة المدرسة موجود مسبقاً',
@@ -245,6 +248,7 @@ class AcademicYearController extends Controller
             'name', 'code', 'slug', 'tagline', 'level_number', 'description', 'video_url', 'price', 'icon', 'color', 'order',
         ]);
         $data['is_active'] = $request->has('is_active');
+        $data['is_public'] = $request->boolean('is_public');
         $data['order'] = $data['order'] ?? 0;
         $data['price'] = $request->input('price', $academicYear->price ?? 0);
         $data['slug'] = ! empty($data['slug'])

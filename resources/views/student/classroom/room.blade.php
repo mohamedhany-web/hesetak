@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Glottical Classroom — {{ $meeting->roomChromeTitle() }}</title>
+    <title>فصول حصتك — {{ $meeting->roomChromeTitle() }}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -101,7 +101,7 @@
         .classroom-excalidraw-host .excalidraw {
             --color-surface-lowest: #0f172a;
         }
-        /* Glottical Whiteboard: مكتبة + روابط وخدمات خارجية داخل واجهة اللوحة */
+        /* حصتك Whiteboard: مكتبة + روابط وخدمات خارجية داخل واجهة اللوحة */
         .mx-muallimx-whiteboard .excalidraw .layer-ui__library,
         .mx-muallimx-whiteboard .excalidraw .layer-ui__library-message,
         .mx-muallimx-whiteboard .excalidraw .library-menu,
@@ -198,7 +198,7 @@
         $roomExitUrl = $roomExitUrl ?? route('dashboard');
     }
 @endphp
-    {{-- شريط Glottical العلوي — على الهاتف: صف علوي + زر سايدبار؛ من md: شريط أدوات أفقي --}}
+    {{-- شريط حصتك العلوي — على الهاتف: صف علوي + زر سايدبار؛ من md: شريط أدوات أفقي --}}
     <header class="min-h-14 shrink-0 bg-gradient-to-l from-slate-900 to-slate-800 border-b border-slate-700/50 flex flex-col gap-2 px-3 sm:px-4 pt-[max(0.5rem,env(safe-area-inset-top))] pb-2 md:py-0 md:flex-row md:items-center md:justify-between md:gap-2 shadow-lg">
         <div class="flex items-center justify-between gap-2 w-full min-w-0 md:w-auto md:flex-1 md:justify-start">
             <div class="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
@@ -206,7 +206,7 @@
                 <span class="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-cyan-500/20 text-cyan-400 flex items-center justify-center">
                     <i class="fas fa-video text-sm sm:text-[15px]"></i>
                 </span>
-                <span class="font-bold text-white text-[11px] sm:text-sm truncate max-w-[6.5rem] sm:max-w-[8rem] md:max-w-none">Glottical</span>
+                <span class="font-bold text-white text-[11px] sm:text-sm truncate max-w-[6.5rem] sm:max-w-[8rem] md:max-w-none">حصتك</span>
             </a>
             <span class="w-px h-5 bg-slate-600 hidden sm:block shrink-0"></span>
             <div class="flex items-center gap-1.5 min-w-0">
@@ -436,7 +436,7 @@
             </div>
             <div id="wb-popup-stage" class="relative flex-1 min-h-0 bg-[#121212]">
                 <div id="classroom-excalidraw-root" class="classroom-excalidraw-host mx-muallimx-whiteboard" data-view-only="0" data-lang="ar"></div>
-                <div id="classroom-excalidraw-loading" class="classroom-excalidraw-loading">جاري تحميل Glottical Whiteboard…</div>
+                <div id="classroom-excalidraw-loading" class="classroom-excalidraw-loading">جاري تحميل حصتك Whiteboard…</div>
             </div>
             <div id="wb-popup-toolbar" class="flex flex-wrap items-center justify-center gap-2 px-4 py-2.5 border-t border-slate-700 bg-slate-800/95 shrink-0">
                 <span class="text-slate-400 text-[11px] leading-relaxed text-center max-w-3xl">
@@ -503,7 +503,7 @@
             });
         };
     </script>
-    {{-- Glottical Whiteboard: تحميل ديناميكي + أكثر من مسار (Laravel ثم ملفات public المباشرة) --}}
+    {{-- حصتك Whiteboard: تحميل ديناميكي + أكثر من مسار (Laravel ثم ملفات public المباشرة) --}}
     <script>
         (function() {
             var meetingEndsAt = {!! json_encode(optional($meetingEndsAt)->toIso8601String()) !!};
@@ -725,7 +725,7 @@
                         .then(function() { return loadScriptSequential(prefix + 'dist/excalidraw.production.min.js'); })
                         .then(function() {
                             if (!window.React || !window.ReactDOM || !getExcalidrawLib()) {
-                                throw new Error('تعذّر تعريف مكوّنات Glottical Whiteboard بعد التحميل');
+                                throw new Error('تعذّر تعريف مكوّنات حصتك Whiteboard بعد التحميل');
                             }
                         });
                 }
@@ -751,13 +751,13 @@
                 excShowLoading(true);
 
                 function failMount(err) {
-                    console.error('[Glottical Whiteboard]', err);
+                    console.error('[حصتك Whiteboard]', err);
                     excMountPromise = null;
                     excShowLoading(false);
                     if (excLoading) {
                         var detail = (err && err.message) ? String(err.message) : '';
                         if (detail.length > 240) detail = detail.slice(0, 237) + '…';
-                        excLoading.textContent = 'تعذّر تهيئة Glottical Whiteboard.' + (detail ? (' ' + detail) : '') + ' — Network: جرّب ‎/mx-vendor/excalidraw/react.production.min.js‎ أو ‎/vendor/excalidraw/…‎ برمز 200.';
+                        excLoading.textContent = 'تعذّر تهيئة حصتك Whiteboard.' + (detail ? (' ' + detail) : '') + ' — Network: جرّب ‎/mx-vendor/excalidraw/react.production.min.js‎ أو ‎/vendor/excalidraw/…‎ برمز 200.';
                         excLoading.style.display = 'flex';
                     }
                 }
@@ -798,7 +798,7 @@
                                     var createRoot = ReactDOM.createRoot;
                                     // مكوّن اللوحة مُصدَّر كـ React.memo — typeof يكون "object" وليس "function"
                                     if (Excalidraw == null || (typeof Excalidraw !== 'function' && typeof Excalidraw !== 'object')) {
-                                        throw new Error('حزمة Glottical Whiteboard غير صالحة (مكوّن اللوحة).');
+                                        throw new Error('حزمة حصتك Whiteboard غير صالحة (مكوّن اللوحة).');
                                     }
                                     if (typeof createRoot !== 'function') {
                                         throw new Error('ReactDOM.createRoot غير متاح (تحقق من react-dom 18).');
@@ -942,7 +942,7 @@
                             }
                         } catch (eReq) {}
                     }).catch(function (err) {
-                        console.error('[Glottical Whiteboard]', err);
+                        console.error('[حصتك Whiteboard]', err);
                     });
                 });
             }

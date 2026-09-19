@@ -20,7 +20,7 @@ class ManualInstructorHiredMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'تم تعيينك معلماً في '.config('app.name', 'Glottical'),
+            subject: 'تم تعيينك معلماً في '.config('app.name', 'حصتك'),
         );
     }
 

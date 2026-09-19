@@ -43,7 +43,7 @@
             @if(Route::has('instructor.courses.pricing.edit'))
                 <a href="{{ route('instructor.courses.pricing.edit', $course) }}" class="su-btn su-btn--primary">
                     <i class="fas fa-tags" aria-hidden="true"></i>
-                    {{ $isRtl ? 'تسعير EGP/USD' : 'EGP/USD pricing' }}
+                    {{ $isRtl ? 'تسعير بالريال' : 'SAR pricing' }}
                 </a>
             @endif
             <a href="{{ route('instructor.courses.index') }}" class="su-btn">

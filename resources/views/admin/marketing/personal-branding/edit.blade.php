@@ -124,6 +124,49 @@
                     <textarea name="skills" rows="5" class="{{ $areaClass }}">{{ old('skills', $personal_branding->skills) }}</textarea>
                     @error('skills')<p class="mt-1 text-xs font-medium text-danger">{{ $message }}</p>@enderror
                 </div>
+
+                @php
+                    $typeOptions = \App\Support\HesetakMatchCatalog::curriculumTypes('ar');
+                    $selectedTypes = old('curriculum_types', $personal_branding->curriculumTypeKeys());
+                    if (! is_array($selectedTypes)) { $selectedTypes = []; }
+                    $publicYears = \Illuminate\Support\Facades\Schema::hasTable('academic_years')
+                        ? \App\Models\AcademicYear::query()->publicCatalog()->ordered()->get(['id','name'])
+                        : collect();
+                    $selectedYearIds = old('teaching_year_ids', $personal_branding->user?->teachingLearningPaths()->pluck('academic_years.id')->all() ?? []);
+                    if (! is_array($selectedYearIds)) { $selectedYearIds = []; }
+                @endphp
+
+                <div>
+                    <label class="{{ $labelClass }}">أنواع المنهج المعتمدة (للمطابقة العامة)</label>
+                    <p class="mb-2 text-xs text-muted">تظهر في دليل المعلمين وملف المعلم. ليست ادّعاء فروع.</p>
+                    <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                        @foreach($typeOptions as $type)
+                            <label class="flex items-center gap-2 rounded-xl border border-line bg-canvas px-3 py-2 text-sm text-ink">
+                                <input type="checkbox" name="curriculum_types[]" value="{{ $type['key'] }}"
+                                       @checked(in_array($type['key'], $selectedTypes, true))>
+                                <span>{{ $type['label'] }}</span>
+                            </label>
+                        @endforeach
+                    </div>
+                    @error('curriculum_types')<p class="mt-1 text-xs font-medium text-danger">{{ $message }}</p>@enderror
+                    @error('curriculum_types.*')<p class="mt-1 text-xs font-medium text-danger">{{ $message }}</p>@enderror
+                </div>
+
+                @if($publicYears->isNotEmpty())
+                <div>
+                    <label class="{{ $labelClass }}">المراحل العامة المرتبطة</label>
+                    <p class="mb-2 text-xs text-muted">من كتالوج المناهج المنشور للعامة.</p>
+                    <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                        @foreach($publicYears as $year)
+                            <label class="flex items-center gap-2 rounded-xl border border-line bg-canvas px-3 py-2 text-sm text-ink">
+                                <input type="checkbox" name="teaching_year_ids[]" value="{{ $year->id }}"
+                                       @checked(in_array((int) $year->id, array_map('intval', $selectedYearIds), true))>
+                                <span>{{ $year->name }}</span>
+                            </label>
+                        @endforeach
+                    </div>
+                </div>
+                @endif
             </div>
         </article>
 

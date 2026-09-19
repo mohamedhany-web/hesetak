@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'رسائل التواصل - Glottical')
+@section('title', 'رسائل التواصل - حصتك')
 @section('page_title', 'رسائل التواصل')
 
 @section('content')

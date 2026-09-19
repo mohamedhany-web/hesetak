@@ -4,15 +4,23 @@
     <!-- Logo -->
     <div class="flex h-[72px] items-center gap-3 border-b border-white/10 px-5 flex-shrink-0">
         <div class="sidebar-logo flex items-center gap-3 min-w-0">
-            @if(! empty($adminPanelLogoUrl))
-            <div class="size-10 rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden bg-white/10 border border-white/10">
-                <img src="{{ $adminPanelLogoUrl }}" alt="" width="40" height="40" class="w-full h-full object-contain p-0.5" onerror="this.onerror=null;this.src='{{ \App\Services\AdminPanelBranding::inlineFallbackDataUri() }}';">
+            @php
+                $sidebarLogoUrl = $adminPanelLogoUrl
+                    ?: \App\Services\AdminPanelBranding::defaultPublicMarkUrl();
+                $sidebarLogoVer = @filemtime(public_path(\App\Services\AdminPanelBranding::PUBLIC_MARK_PATH)) ?: time();
+                if (is_string($sidebarLogoUrl) && ! str_contains($sidebarLogoUrl, '?') && str_contains($sidebarLogoUrl, 'hesetak-mark')) {
+                    $sidebarLogoUrl .= '?v='.$sidebarLogoVer;
+                }
+            @endphp
+            <div class="sidebar-brand-mark">
+                <img
+                    src="{{ $sidebarLogoUrl }}"
+                    alt="{{ config('app.name') }}"
+                    width="44"
+                    height="44"
+                    onerror="this.onerror=null;this.src='{{ \App\Services\AdminPanelBranding::inlineFallbackDataUri() }}';"
+                >
             </div>
-            @else
-            <div class="size-10 rounded-xl bg-accent flex items-center justify-center flex-shrink-0">
-                <span class="text-lg font-bold text-white">G</span>
-            </div>
-            @endif
             <div class="sidebar-logo-text min-w-0">
                 <h2 class="text-base font-bold tracking-tight text-white leading-tight truncate">{{ config('app.name') }}</h2>
                 <p class="text-[11px] text-white/50 font-medium">{{ __('admin.admin_panel') }}</p>
@@ -109,7 +117,10 @@
             @php
                 try {
                     $sidebarFreeTrialUpcoming = \App\Models\FreeTrialBooking::query()
-                        ->where('status', \App\Models\FreeTrialBooking::STATUS_CONFIRMED)
+                        ->whereIn('status', [
+                            \App\Models\FreeTrialBooking::STATUS_PENDING,
+                            \App\Models\FreeTrialBooking::STATUS_CONFIRMED,
+                        ])
                         ->where('starts_at', '>=', now())
                         ->count();
                 } catch (\Exception $e) {

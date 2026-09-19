@@ -3,11 +3,12 @@
 namespace App\Services;
 
 use App\Models\FreeTrialBooking;
-use App\Models\FreeTrialWeeklyAvailability;
+use App\Models\OneToOneSession;
+use App\Models\User;
 use App\Support\AppTimezone;
-use App\Support\WeeklyScheduleTime;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use InvalidArgumentException;
 
@@ -16,7 +17,7 @@ class FreeTrialBookingService
     public const DURATION_MINUTES = 30;
 
     /**
-     * نوافذ التوفر تُفسَّر بتوقيت الأكاديمية (مصر)، وتُعرض للزائر بتوقيته.
+     * مواعيد المعلم الفاضية من جدوله الخاص (ليس نوافذ إدارة عامة).
      *
      * @return Collection<int, array{
      *     starts_at: Carbon,
@@ -36,89 +37,50 @@ class FreeTrialBookingService
         ?Carbon $from = null,
         ?Carbon $to = null,
         ?string $viewerTimezone = null,
+        ?int $instructorId = null,
     ): Collection {
-        if (! Schema::hasTable('free_trial_weekly_availability')) {
+        if (! $instructorId) {
             return collect();
         }
 
         $from = ($from ?? now())->copy();
         $to = ($to ?? now()->addDays(14))->copy()->endOfDay();
-        $clockTz = AppTimezone::academy();
-        $viewerTz = AppTimezone::normalize($viewerTimezone) ?? $clockTz;
-
-        $rules = FreeTrialWeeklyAvailability::query()
-            ->where('is_active', true)
-            ->orderBy('day_of_week')
-            ->orderBy('start_time')
-            ->get();
-
-        if ($rules->isEmpty()) {
-            return collect();
-        }
-
-        $bookedStarts = FreeTrialBooking::query()
-            ->where('status', FreeTrialBooking::STATUS_CONFIRMED)
-            ->whereBetween('starts_at', [$from->copy()->utc(), $to->copy()->utc()])
-            ->pluck('starts_at')
-            ->map(fn ($d) => Carbon::parse($d)->utc()->format('Y-m-d H:i'))
-            ->flip();
-
-        $slots = collect();
-        $cursor = $from->copy()->timezone($clockTz)->startOfDay();
-        $endDay = $to->copy()->timezone($clockTz)->endOfDay();
+        $duration = OneToOneSession::defaultDurationMinutes();
+        $clockTz = AppTimezone::forInstructorId($instructorId);
+        $viewerTz = AppTimezone::normalize($viewerTimezone) ?? AppTimezone::forUser(auth()->user());
         $locale = app()->getLocale();
 
-        while ($cursor->lte($endDay)) {
-            $dayRules = $rules->where('day_of_week', $cursor->isoWeekday());
-            foreach ($dayRules as $rule) {
-                $startStr = is_string($rule->start_time) ? substr($rule->start_time, 0, 5) : $rule->start_time->format('H:i');
-                $endStr = is_string($rule->end_time) ? substr($rule->end_time, 0, 5) : $rule->end_time->format('H:i');
-                $duration = (int) ($rule->slot_duration_minutes ?: self::DURATION_MINUTES);
+        return OneToOneAvailabilityService::availableSlots($instructorId, $from, $to, $duration)
+            ->map(function (array $slot) use ($viewerTz, $clockTz, $locale, $duration) {
+                /** @var Carbon $starts */
+                $starts = $slot['starts_at']->copy()->utc();
+                $ends = ($slot['ends_at'] ?? $starts->copy()->addMinutes($duration))->copy()->utc();
+                $viewerLocal = $starts->copy()->timezone($viewerTz);
+                $academyLocal = $starts->copy()->timezone($clockTz);
+                $quality = AppTimezone::slotQuality($starts, $viewerTz);
+                $qualityLabel = AppTimezone::qualityLabels($quality)[$locale === 'ar' ? 'ar' : 'en'];
 
-                $windowStart = AppTimezone::wallClockToUtc($cursor->toDateString(), $startStr, $clockTz);
-                $windowEnd = WeeklyScheduleTime::windowEndUtc($cursor->toDateString(), $startStr, $endStr, $clockTz);
-                $slotStart = $windowStart->copy();
-
-                while ($slotStart->copy()->addMinutes($duration)->lte($windowEnd)) {
-                    $slotEnd = $slotStart->copy()->addMinutes($duration);
-                    $key = $slotStart->copy()->utc()->format('Y-m-d H:i');
-
-                    if (
-                        $slotStart->gte($from)
-                        && $slotStart->gt(now()->addMinutes(15))
-                        && $slotEnd->lte($to)
-                        && ! $bookedStarts->has($key)
-                    ) {
-                        $viewerLocal = $slotStart->copy()->timezone($viewerTz);
-                        $academyLocal = $slotStart->copy()->timezone($clockTz);
-                        $quality = AppTimezone::slotQuality($slotStart, $viewerTz);
-                        $qualityLabel = AppTimezone::qualityLabels($quality)[$locale === 'ar' ? 'ar' : 'en'];
-
-                        $slots->push([
-                            'starts_at' => $slotStart->copy()->utc(),
-                            'ends_at' => $slotEnd->copy()->utc(),
-                            'date' => $viewerLocal->toDateString(),
-                            'time' => $viewerLocal->format('H:i'),
-                            'time_academy' => $academyLocal->format('H:i'),
-                            'quality' => $quality,
-                            'quality_label' => $qualityLabel,
-                            'label' => $viewerLocal->locale($locale)->translatedFormat('D d M — H:i'),
-                            'duration' => $duration,
-                            'viewer_timezone' => $viewerTz,
-                            'academy_timezone' => $clockTz,
-                        ]);
-                    }
-                    $slotStart->addMinutes($duration);
-                }
-            }
-            $cursor->addDay();
-        }
-
-        return $slots->values();
+                return [
+                    'starts_at' => $starts,
+                    'ends_at' => $ends,
+                    'date' => $viewerLocal->toDateString(),
+                    'time' => $viewerLocal->format('H:i'),
+                    'time_academy' => $academyLocal->format('H:i'),
+                    'quality' => $quality,
+                    'quality_label' => $qualityLabel,
+                    'label' => $viewerLocal->locale($locale)->translatedFormat('D d M — H:i'),
+                    'duration' => $duration,
+                    'viewer_timezone' => $viewerTz,
+                    'academy_timezone' => $clockTz,
+                ];
+            })
+            ->values();
     }
 
     /**
-     * @param  array{name:string,email?:string,phone?:string,country_code?:string,goal?:string,starts_at:string,notes?:string,timezone?:string,us_state?:string}  $data
+     * طلب حصة (تجريبية/استشارة/…) بدون تثبيت جدول — الطرفان ينسّقان لاحقاً.
+     *
+     * @param  array{name:string,email?:string,phone?:string,country_code?:string,goal?:string,starts_at?:string,notes?:string,timezone?:string,us_state?:string,instructor_id?:int}  $data
      */
     public static function book(array $data, ?int $userId = null): FreeTrialBooking
     {
@@ -126,24 +88,22 @@ class FreeTrialBookingService
             ?? AppTimezone::timezoneForUsState($data['us_state'] ?? null)
             ?? AppTimezone::academy();
 
-        $starts = AppTimezone::parseAppointmentInput((string) $data['starts_at'], $viewerTz);
-        if (! $starts) {
-            throw new InvalidArgumentException('موعد غير صالح.');
-        }
-        $starts = $starts->utc();
-
         $duration = self::DURATION_MINUTES;
-        $ends = $starts->copy()->addMinutes($duration);
-
-        $allowed = self::availableSlots(
-            $starts->copy()->subHour(),
-            $starts->copy()->addHour(),
-            $viewerTz
-        )->contains(fn (array $s) => $s['starts_at']->equalTo($starts));
-
-        if (! $allowed) {
-            throw new InvalidArgumentException('هذا الموعد لم يعد متاحاً. اختر موعداً آخر.');
+        $starts = null;
+        if (! empty($data['starts_at'])) {
+            $starts = AppTimezone::parseAppointmentInput((string) $data['starts_at'], $viewerTz);
+            if (! $starts) {
+                throw new InvalidArgumentException('موعد غير صالح.');
+            }
+            $starts = $starts->utc();
+            if ($starts->lte(now())) {
+                throw new InvalidArgumentException('الموعد المقترح يجب أن يكون في المستقبل.');
+            }
+        } else {
+            // موعد مبدئي للطلب حتى يُعاد ضبطه عند التأكيد
+            $starts = now()->addDay()->startOfHour()->utc();
         }
+        $ends = $starts->copy()->addMinutes($duration);
 
         [$countryCode, $fullPhone] = self::normalizePhone(
             $data['phone'] ?? null,
@@ -172,8 +132,8 @@ class FreeTrialBookingService
             'starts_at' => $starts,
             'ends_at' => $ends,
             'duration_minutes' => $duration,
-            'status' => FreeTrialBooking::STATUS_CONFIRMED,
-            'notes' => $data['notes'] ?? null,
+            'status' => FreeTrialBooking::STATUS_PENDING,
+            'notes' => trim((string) (($data['notes'] ?? '')."\nطلب تنسيق موعد — بانتظار تأكيد المعلم/الإدارة")),
         ];
 
         if (Schema::hasColumn('free_trial_bookings', 'timezone')) {
@@ -183,7 +143,218 @@ class FreeTrialBookingService
             $payload['us_state'] = trim((string) $data['us_state']);
         }
 
-        return FreeTrialBooking::create($payload);
+        $instructorId = isset($data['instructor_id']) ? (int) $data['instructor_id'] : 0;
+        if ($instructorId > 0 && Schema::hasColumn('free_trial_bookings', 'instructor_id')) {
+            $instructorOk = User::query()
+                ->where('id', $instructorId)
+                ->where('is_active', true)
+                ->whereIn('role', ['instructor', 'teacher'])
+                ->whereHas('instructorProfile', fn ($q) => $q->approved())
+                ->exists();
+            if ($instructorOk) {
+                $payload['instructor_id'] = $instructorId;
+            }
+        }
+
+        $booking = FreeTrialBooking::create($payload);
+
+        if (! empty($booking->instructor_id) && class_exists(\App\Models\Notification::class)) {
+            try {
+                \App\Models\Notification::create([
+                    'user_id' => $booking->instructor_id,
+                    'type' => 'general',
+                    'title' => 'طلب حصة مجانية / تجريبية',
+                    'message' => 'طلب '.$booking->name.' تنسيق موعد'.(
+                        $booking->starts_at
+                            ? (' (مقترح: '.$booking->starts_at->timezone(AppTimezone::academy())->format('Y-m-d H:i').')')
+                            : ''
+                    ),
+                    'action_url' => route('instructor.free-trial-bookings.show', $booking),
+                    'action_text' => 'عرض الطلب',
+                    'priority' => 'high',
+                    'target_type' => 'individual',
+                    'target_id' => $booking->id,
+                    'audience' => 'instructor',
+                    'is_read' => false,
+                ]);
+            } catch (\Throwable $e) {
+                // لا نُفشل الحجز بسبب إشعار
+            }
+        }
+
+        return $booking;
+    }
+
+    /**
+     * حجز حصة مجانية لحامل باقة مع معلم — تُظهر في الإدارة والجداول دون خصم رصيد.
+     *
+     * @param  array{
+     *     starts_at: Carbon|string,
+     *     timezone?: string,
+     *     notes?: string,
+     *     duration_minutes?: int,
+     *     require_availability?: bool
+     * }  $data
+     */
+    public static function bookComplimentaryFreeSession(
+        User $student,
+        User $instructor,
+        array $data,
+        ?User $bookedBy = null,
+        bool $requirePackage = true
+    ): FreeTrialBooking {
+        if (! $student->isStudent()) {
+            throw new InvalidArgumentException('الحجز متاح للطلاب فقط.');
+        }
+        if ($requirePackage && ! StudentEntitlementService::hasActivePrivatePackage((int) $student->id)) {
+            throw new InvalidArgumentException('الحصة المجانية متاحة فقط للطلاب المشتركين في باقة.');
+        }
+
+        $viewerTz = AppTimezone::normalize($data['timezone'] ?? null)
+            ?? AppTimezone::forUser($student);
+
+        $starts = $data['starts_at'] instanceof Carbon
+            ? $data['starts_at']->copy()->utc()
+            : AppTimezone::parseAppointmentInput((string) $data['starts_at'], $viewerTz);
+
+        if (! $starts) {
+            throw new InvalidArgumentException('موعد غير صالح.');
+        }
+        $starts = $starts->utc()->startOfMinute();
+
+        $duration = isset($data['duration_minutes'])
+            ? max(15, min(180, (int) $data['duration_minutes']))
+            : OneToOneSession::defaultDurationMinutes();
+        $requireAvailability = array_key_exists('require_availability', $data)
+            ? (bool) $data['require_availability']
+            : true;
+
+        $notes = isset($data['notes']) ? trim((string) $data['notes']) : null;
+
+        return DB::transaction(function () use (
+            $student,
+            $instructor,
+            $starts,
+            $duration,
+            $requireAvailability,
+            $notes,
+            $bookedBy,
+            $viewerTz
+        ) {
+            $session = OneToOneSessionService::bookComplimentaryWithInstructor(
+                $student,
+                $instructor,
+                $starts,
+                $bookedBy,
+                $notes ?: 'حصة مجانية — لا تُخصم من رصيد الباقة',
+                $duration,
+                $requireAvailability
+            );
+
+            $payload = [
+                'name' => $student->name,
+                'email' => $student->email,
+                'phone' => $student->phone,
+                'goal' => FreeTrialBooking::GOAL_FREE_SESSION,
+                'user_id' => $student->id,
+                'instructor_id' => $instructor->id,
+                'starts_at' => $session->scheduled_at ?? $starts,
+                'ends_at' => ($session->scheduled_at ?? $starts)->copy()->addMinutes($duration),
+                'duration_minutes' => $duration,
+                'status' => FreeTrialBooking::STATUS_CONFIRMED,
+                'notes' => $notes,
+            ];
+
+            if (Schema::hasColumn('free_trial_bookings', 'timezone')) {
+                $payload['timezone'] = $viewerTz;
+            }
+            if (Schema::hasColumn('free_trial_bookings', 'one_to_one_session_id')) {
+                $payload['one_to_one_session_id'] = $session->id;
+            }
+
+            $booking = FreeTrialBooking::create($payload);
+
+            if (class_exists(\App\Models\Notification::class)) {
+                try {
+                    \App\Models\Notification::create([
+                        'user_id' => $instructor->id,
+                        'sender_id' => $bookedBy?->id,
+                        'type' => 'general',
+                        'title' => 'حصة مجانية مجدولة',
+                        'message' => 'الطالب '.$student->name.' — '.optional($booking->starts_at)->timezone(AppTimezone::academy())->format('Y-m-d H:i'),
+                        'action_url' => route('instructor.one-to-one-sessions.show', $session),
+                        'action_text' => 'عرض الحصة',
+                        'priority' => 'high',
+                        'audience' => 'instructor',
+                        'is_read' => false,
+                    ]);
+                } catch (\Throwable $e) {
+                    // لا نُفشل الحجز بسبب إشعار
+                }
+            }
+
+            return $booking->fresh(['user', 'instructor', 'oneToOneSession']);
+        });
+    }
+
+    /**
+     * توصيف يدوي من الإدارة: طالب + معلم + موعد → جداول الطرفين + سجل الحجوزات.
+     */
+    public static function assignManual(
+        User $student,
+        User $instructor,
+        Carbon|string $startsAt,
+        ?User $admin = null,
+        ?string $notes = null,
+        ?string $timezone = null,
+        ?int $durationMinutes = null,
+        bool $requireAvailability = false
+    ): FreeTrialBooking {
+        return self::bookComplimentaryFreeSession(
+            $student,
+            $instructor,
+            [
+                'starts_at' => $startsAt,
+                'timezone' => $timezone,
+                'notes' => $notes ?: 'تسكين يدوي لحصة مجانية من الإدارة',
+                'duration_minutes' => $durationMinutes,
+                'require_availability' => $requireAvailability,
+            ],
+            $admin,
+            requirePackage: false
+        );
+    }
+
+    /**
+     * مزامنة حالة الحجز مع الحصة المرتبطة (إلغاء / إكمال).
+     */
+    public static function syncLinkedSessionStatus(FreeTrialBooking $booking, string $status): void
+    {
+        if (! $booking->one_to_one_session_id) {
+            return;
+        }
+
+        $session = OneToOneSession::query()->find($booking->one_to_one_session_id);
+        if (! $session) {
+            return;
+        }
+
+        try {
+            if ($status === FreeTrialBooking::STATUS_CANCELLED
+                && in_array($session->status, [OneToOneSession::STATUS_PENDING, OneToOneSession::STATUS_SCHEDULED], true)
+            ) {
+                OneToOneSessionService::cancelSession($session, false, 'إلغاء حجز الحصة المجانية');
+            }
+
+            if ($status === FreeTrialBooking::STATUS_COMPLETED
+                && $session->status === OneToOneSession::STATUS_SCHEDULED
+            ) {
+                OneToOneSessionService::markCompleted($session, false);
+            }
+        } catch (\Throwable $e) {
+            // لا نكسر تحديث الحالة الإدارية إن فشلت مزامنة الحصة
+            report($e);
+        }
     }
 
     /**

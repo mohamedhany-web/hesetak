@@ -106,7 +106,7 @@ class CustomServicePackagePricingService
             'original_amount' => $originalAmount,
             'amount' => $amount,
             'final_price_per_session' => $sessions > 0 ? round($amount / $sessions, 2) : 0,
-            'currency' => 'USD',
+            'currency' => platform_currency(),
         ], $extra);
     }
 

@@ -1,273 +1,318 @@
 @php
   $locale = app()->getLocale();
   $isRtl = $locale === 'ar';
-  $brand = config('app.name', 'Glottical');
+  $brand = config('app.name', 'حصتك');
   $footer = \App\Services\PublicFooterSettings::payload();
   $waUrl = $footer['whatsapp_url'] ?? '#';
   $perMonth = $package->sessionsPerMonth();
-  $fawaterakActive = !empty($fawaterakUseGateway);
-  $fawaterakMis = !empty($fawaterakMisconfigured);
+  $fawaterakActive = ! empty($fawaterakUseGateway);
+  $fawaterakMis = ! empty($fawaterakMisconfigured);
   $fawaterakIntegration = $fawaterakIntegration ?? 'iframe';
-  $paypalActive = !empty($paypalUseGateway);
-  $paypalMis = !empty($paypalMisconfigured);
+  $paypalActive = ! empty($paypalUseGateway);
+  $paypalMis = ! empty($paypalMisconfigured);
+  $canPayOnline = ($fawaterakActive && ! $fawaterakMis) || $paypalActive;
+  $mcCss = public_path('css/landing/mycourses.css');
+  $mcVer = is_file($mcCss) ? (string) filemtime($mcCss) : (string) time();
+  $mcActive = 'pricing';
+  $langSwitch = fn (string $lang) => request()->fullUrlWithQuery(array_merge(request()->query(), ['lang' => $lang]));
+  $features = collect($package->featureList())->filter()->take(6)->values();
+  $gifts = collect($package->giftList())->filter()->take(4)->values();
+  $user = auth()->user();
 @endphp
 <!DOCTYPE html>
 <html lang="{{ $locale }}" dir="{{ $isRtl ? 'rtl' : 'ltr' }}">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes">
-  <title>{{ $package->name }} — {{ $brand }}</title>
+  <title>{{ $isRtl ? 'إتمام شراء' : 'Checkout' }} · {{ $package->name }} — {{ $brand }}</title>
   <meta name="robots" content="noindex">
-  <meta name="theme-color" content="#0B3D91">
+  <meta name="theme-color" content="#1E4E8C">
   <meta name="csrf-token" content="{{ csrf_token() }}">
   @include('partials.favicon-links')
-  @include('partials.landing.head', ['landingCss' => ['theme', 'courses-catalog', 'pricing']])
-  <style>
-    .gl-co-alert--sky { background:#EEF4FF; color:#0B3D91; border:1px solid #C9D8F5; }
-    .gl-co-alert--info { background:#F8FAFC; color:#334155; border:1px solid #E2E8F0; }
-    .hidden { display:none !important; }
-    /* .sana-cat-page already offsets the fixed navbar; drop the pricing-page offset. */
-    body.sana-pricing-page { padding-top: 0; }
-    .gl-co { padding: clamp(24px, 4vw, 40px) 0 72px; }
-    .gl-co-grid { display: grid; gap: 1.25rem; }
-    @media (min-width: 960px) { .gl-co-grid { grid-template-columns: 1fr .85fr; align-items: start; } }
-    .gl-co-card { background: #fff; border: 1.5px solid #D7DDE6; border-radius: 20px; box-shadow: 0 14px 34px -24px rgba(11,61,145,.4); overflow: hidden; }
-    .gl-co-card__head { padding: 1.15rem 1.25rem; border-bottom: 1px dashed #E4E9F2; }
-    .gl-co-card__head h1, .gl-co-card__head h2 { margin: 0; font-family: Cairo, Tajawal, sans-serif; font-weight: 900; color: #0B1220; font-size: 1.2rem; }
-    .gl-co-card__body { padding: 1.15rem 1.25rem 1.35rem; }
-
-    .gl-co-specs { list-style: none; margin: 0; padding: 0; display: grid; }
-    .gl-co-specs li { display: flex; align-items: center; justify-content: space-between; gap: .75rem; padding: .6rem 0; border-bottom: 1px solid #F1F4F9; font-size: .86rem; }
-    .gl-co-specs li:last-child { border-bottom: 0; }
-    .gl-co-specs__k { display: inline-flex; align-items: center; gap: .45rem; color: #5B6577; font-weight: 700; }
-    .gl-co-specs__k i { color: #0B3D91; width: 1rem; text-align: center; font-size: .78rem; }
-    .gl-co-specs__v { color: #0B1220; font-weight: 900; text-align: end; }
-    .gl-co-specs__v small { display: block; font-size: .72rem; font-weight: 700; color: #5B6577; }
-
-    .gl-co-total { margin-top: 1rem; padding: .9rem 1rem; border-radius: 14px; background: #F4F7FC; border: 1.5px solid #DCE5F5; display: flex; align-items: center; justify-content: space-between; gap: .75rem; }
-    .gl-co-total span { font-weight: 800; color: #5B6577; font-size: .85rem; }
-    .gl-co-total strong { font-family: Cairo, sans-serif; font-size: 1.6rem; font-weight: 900; color: #0B3D91; line-height: 1; }
-
-    .gl-co-label { display: block; margin-bottom: .35rem; font-size: .76rem; font-weight: 800; color: #5B6577; }
-    .gl-co-select { width: 100%; border: 1.5px solid #D7DDE6; border-radius: 12px; padding: .7rem .85rem; font-size: .9rem; background: #fff; color: #0B1220; margin-bottom: .95rem; font-weight: 700; }
-    .gl-co-hint { font-size: .76rem; color: #5B6577; line-height: 1.7; margin: 0 0 1rem; }
-    .gl-co-alert { padding: .75rem 1rem; border-radius: 12px; margin-bottom: 1rem; font-size: .85rem; font-weight: 700; }
-    .gl-co-alert--err { background: #FEF2F2; color: #991B1B; border: 1px solid #FECACA; }
-    .gl-co-steps { list-style: none; margin: 1rem 0 0; padding: 0; display: grid; gap: .5rem; }
-    .gl-co-steps li { display: flex; gap: .5rem; font-size: .8rem; color: #5B6577; line-height: 1.65; }
-    .gl-co-steps i { color: #0B3D91; margin-top: .25rem; }
-  </style>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700;800&family=Lato:wght@400;700;900&family=Rubik:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="{{ route('assets.landing.css', ['sheet' => 'mycourses']) }}?v={{ $mcVer }}">
 </head>
-<body class="sana-home sana-courses-page sana-pricing-page">
-<div id="sana-scroll-progress"></div>
-@include('partials.landing.navbar', ['navActive' => 'packages', 'navSolid' => true, 'navHero' => false])
+<body class="mc-body mc-body--checkout">
+@include('partials.landing.mycourses.nav')
 
-<main class="sana-cat-page">
-  <section class="sana-cat-hero" style="padding-bottom:.5rem">
-    <div class="sana-container sana-cat-hero__inner sana-reveal">
-      <nav class="sana-cat-hero__breadcrumb" aria-label="breadcrumb">
+<main class="mc-co">
+  <section class="mc-co-top">
+    <div class="mc-container">
+      <nav class="mc-co-crumb" aria-label="{{ $isRtl ? 'مسار التنقل' : 'Breadcrumb' }}">
         <a href="{{ route('home') }}">{{ $isRtl ? 'الرئيسية' : 'Home' }}</a>
         <span aria-hidden="true">/</span>
-        <a href="{{ route('public.service-packages.index') }}">{{ $isRtl ? 'باقات الحصص' : 'Packages' }}</a>
+        <a href="{{ route('public.pricing') }}">{{ $isRtl ? 'الباقات' : 'Packages' }}</a>
         <span aria-hidden="true">/</span>
         <span>{{ $package->name }}</span>
       </nav>
-      <h1 class="sana-cat-hero__title" style="margin-top:.6rem">{{ $isRtl ? 'تأكيد طلب' : 'Confirm' }} <span class="hl">{{ $package->name }}</span></h1>
-      <p class="sana-cat-hero__sub">{{ $isRtl ? 'راجع تفاصيل الباقة بالأرقام قبل الدفع.' : 'Review the pack details before paying.' }}</p>
+
+      <div class="mc-co-top__row">
+        <div>
+          <p class="mc-eyebrow">{{ $isRtl ? 'خطوة أخيرة' : 'Final step' }}</p>
+          <h1 class="mc-co-title">{{ $isRtl ? 'أكمل شراء باقتك' : 'Complete your package' }}</h1>
+          <p class="mc-co-lead">
+            {{ $isRtl
+              ? 'راجع الملخص، ادفع بأمان، ويُضاف رصيد الحصص لحسابك تلقائياً بعد نجاح الدفع.'
+              : 'Review the summary, pay securely, and session credits are added automatically after payment succeeds.' }}
+          </p>
+        </div>
+        <ol class="mc-co-steps" aria-label="{{ $isRtl ? 'خطوات الشراء' : 'Checkout steps' }}">
+          <li class="is-done"><span>1</span>{{ $isRtl ? 'اختيار الباقة' : 'Choose pack' }}</li>
+          <li class="is-on"><span>2</span>{{ $isRtl ? 'الدفع' : 'Pay' }}</li>
+          <li><span>3</span>{{ $isRtl ? 'تفعيل الرصيد' : 'Credits live' }}</li>
+        </ol>
+      </div>
     </div>
   </section>
 
-  <div class="sana-container gl-co">
-    @if(session('error'))
-      <div class="gl-co-alert gl-co-alert--err">{{ session('error') }}</div>
-    @endif
-    @if(session('info'))
-      <div class="gl-co-alert gl-co-alert--sky">{{ session('info') }}</div>
-    @endif
-    @if(isset($errors) && $errors->any())
-      <div class="gl-co-alert gl-co-alert--err">{{ $errors->first() }}</div>
-    @endif
-
-    <div class="gl-co-grid">
-      <article class="gl-co-card sana-reveal">
-        <div class="gl-co-card__head">
-          <h1>{{ $isRtl ? 'ماذا ستحصل عليه' : 'What you get' }}</h1>
-          @if($package->isCommercialPlan())
-            <p style="margin:.4rem 0 0;font-size:.82rem;color:#5B6577;font-weight:700">{{ $package->planLabel() }} · {{ $package->termLabel() }}</p>
+  <section class="mc-co-main">
+    <div class="mc-container mc-co-grid">
+      @if(session('error') || session('info') || (isset($errors) && $errors->any()))
+        <div class="mc-co-alerts">
+          @if(session('error'))
+            <div class="mc-co-alert is-err" role="alert">{{ session('error') }}</div>
+          @endif
+          @if(session('info'))
+            <div class="mc-co-alert is-info" role="status">{{ session('info') }}</div>
+          @endif
+          @if(isset($errors) && $errors->any())
+            <div class="mc-co-alert is-err" role="alert">{{ $errors->first() }}</div>
           @endif
         </div>
-        <div class="gl-co-card__body">
-          @if($package->tagline || $package->description)
-            <p class="gl-co-hint">{{ $package->tagline ?: $package->description }}</p>
-          @endif
+      @endif
 
-          <ul class="gl-co-specs">
+      {{-- Order summary --}}
+      <aside class="mc-co-summary" aria-labelledby="mc-co-summary-title">
+        <div class="mc-co-summary__card">
+          <header class="mc-co-summary__head">
+            <p class="mc-co-summary__kicker">{{ $isRtl ? 'ملخص الطلب' : 'Order summary' }}</p>
+            <h2 id="mc-co-summary-title">{{ $package->name }}</h2>
+            @if($package->isCommercialPlan())
+              <p class="mc-co-summary__plan">{{ $package->planLabel() }} · {{ $package->termLabel() }}</p>
+            @elseif($package->tagline)
+              <p class="mc-co-summary__plan">{{ $package->tagline }}</p>
+            @endif
+          </header>
+
+          <ul class="mc-co-facts">
             @if($package->isCommercialPlan())
               <li>
-                <span class="gl-co-specs__k"><i class="fas fa-calendar-week"></i> {{ $isRtl ? 'حصص أسبوعياً' : 'Weekly sessions' }}</span>
-                <span class="gl-co-specs__v">{{ $package->weeklySessionsTotal() }}</span>
+                <span>{{ $isRtl ? 'حصص أسبوعياً' : 'Weekly sessions' }}</span>
+                <strong>{{ $package->weeklySessionsTotal() }}</strong>
               </li>
             @endif
             <li>
-              <span class="gl-co-specs__k"><i class="fas fa-layer-group"></i> {{ $isRtl ? 'عدد الحصص' : 'Sessions' }}</span>
-              <span class="gl-co-specs__v">{{ $package->units_count }} {{ $isRtl ? 'حصة' : 'sessions' }}</span>
+              <span>{{ $isRtl ? 'عدد الحصص' : 'Sessions' }}</span>
+              <strong>{{ $package->units_count }}</strong>
             </li>
             <li>
-              <span class="gl-co-specs__k"><i class="fas fa-hourglass-half"></i> {{ $isRtl ? 'مدة الحصة' : 'Session length' }}</span>
-              <span class="gl-co-specs__v">{{ $package->sessionMinutes() }} {{ $isRtl ? 'دقيقة' : 'min' }}</span>
+              <span>{{ $isRtl ? 'مدة الحصة' : 'Session length' }}</span>
+              <strong>{{ $package->sessionMinutes() }} {{ $isRtl ? 'د' : 'min' }}</strong>
             </li>
             <li>
-              <span class="gl-co-specs__k"><i class="fas fa-clock"></i> {{ $isRtl ? 'إجمالي وقت التعلّم' : 'Total learning time' }}</span>
-              <span class="gl-co-specs__v">{{ $package->totalHoursLabel() }}</span>
+              <span>{{ $isRtl ? 'إجمالي التعلم' : 'Total learning' }}</span>
+              <strong>{{ $package->totalHoursLabel() }}</strong>
             </li>
             <li>
-              <span class="gl-co-specs__k"><i class="fas fa-coins"></i> {{ $isRtl ? 'سعر الحصة الواحدة' : 'Price per session' }}</span>
-              <span class="gl-co-specs__v">{{ $package->formattedPricePerUnit() }}</span>
+              <span>{{ $isRtl ? 'سعر الحصة' : 'Per session' }}</span>
+              <strong>{{ $package->formattedPricePerUnit() }}</strong>
             </li>
             <li>
-              <span class="gl-co-specs__k"><i class="fas fa-calendar-day"></i> {{ $isRtl ? 'صلاحية الرصيد' : 'Validity' }}</span>
-              <span class="gl-co-specs__v">
+              <span>{{ $isRtl ? 'صلاحية الرصيد' : 'Validity' }}</span>
+              <strong>
                 {{ $package->validityLabel() }}
                 @if($perMonth)
-                  <small>{{ $isRtl ? 'بمعدل' : 'about' }} {{ rtrim(rtrim(number_format($perMonth, 1), '0'), '.') }} {{ $isRtl ? 'حصة/شهر' : 'sessions/mo' }}</small>
+                  <small>{{ $isRtl ? '≈' : '~' }} {{ rtrim(rtrim(number_format($perMonth, 1), '0'), '.') }} {{ $isRtl ? 'حصة/شهر' : '/mo' }}</small>
                 @endif
-              </span>
+              </strong>
             </li>
             <li>
-              <span class="gl-co-specs__k"><i class="fas fa-chalkboard-user"></i> {{ $isRtl ? 'تُستخدم في' : 'Valid for' }}</span>
-              <span class="gl-co-specs__v">
-                {{ $package->label() }}
-                <small>{{ $package->scopeUsageHint() }}</small>
-              </span>
+              <span>{{ $isRtl ? 'تُستخدم في' : 'Valid for' }}</span>
+              <strong>{{ $package->label() }}</strong>
             </li>
-            @if($package->savingsVsMonthlyLabel())
-              <li>
-                <span class="gl-co-specs__k"><i class="fas fa-piggy-bank"></i> {{ $isRtl ? 'التوفير' : 'You save' }}</span>
-                <span class="gl-co-specs__v" style="color:#047857">{{ $package->savingsVsMonthlyLabel() }}</span>
-              </li>
-            @elseif($package->formattedOriginalPrice())
-              <li>
-                <span class="gl-co-specs__k"><i class="fas fa-tag"></i> {{ $isRtl ? 'السعر قبل الخصم' : 'Before discount' }}</span>
-                <span class="gl-co-specs__v" style="color:#94A3B8;text-decoration:line-through">{{ $package->formattedOriginalPrice() }}</span>
-              </li>
-              <li>
-                <span class="gl-co-specs__k"><i class="fas fa-piggy-bank"></i> {{ $isRtl ? 'التوفير' : 'You save' }}</span>
-                <span class="gl-co-specs__v" style="color:#047857">
-                  ${{ number_format($package->savingsAmount(), 2) }} USD ({{ $package->savingsPercent() }}%)
-                </span>
-              </li>
-            @endif
           </ul>
 
-          <div class="gl-co-total">
-            <span>{{ $isRtl ? 'الإجمالي المطلوب' : 'Total due' }}</span>
+          @if($features->isNotEmpty())
+            <ul class="mc-co-perks">
+              @foreach($features as $feature)
+                <li><i class="fas fa-check" aria-hidden="true"></i><span>{{ $feature }}</span></li>
+              @endforeach
+            </ul>
+          @endif
+
+          @if($gifts->isNotEmpty())
+            <div class="mc-co-gifts">
+              <p>{{ $isRtl ? 'هدايا مع الباقة' : 'Included extras' }}</p>
+              <ul>
+                @foreach($gifts as $gift)
+                  <li>{{ $gift }}</li>
+                @endforeach
+              </ul>
+            </div>
+          @endif
+
+          <div class="mc-co-total">
+            <div>
+              <span>{{ $isRtl ? 'الإجمالي' : 'Total' }}</span>
+              @if($package->formattedOriginalPrice())
+                <p class="mc-co-total__old">{{ $package->formattedOriginalPrice() }}</p>
+              @endif
+              @if($package->savingsVsMonthlyLabel())
+                <p class="mc-co-total__save">{{ $package->savingsVsMonthlyLabel() }}</p>
+              @elseif($package->savingsAmount() > 0)
+                <p class="mc-co-total__save">{{ $isRtl ? 'وفّرت' : 'You save' }} {{ format_money($package->savingsAmount()) }} ({{ $package->savingsPercent() }}%)</p>
+              @endif
+            </div>
             <strong>{{ $package->formattedPrice() }}</strong>
           </div>
 
-          <ul class="gl-co-steps">
-            <li><i class="fas fa-circle-check"></i><span>{{ $isRtl ? 'بعد إتمام الدفع عبر فواتيرك يُضاف الرصيد لحسابك تلقائياً.' : 'Credits are added automatically after Fawaterak payment succeeds.' }}</span></li>
-            <li><i class="fas fa-circle-check"></i><span>{{ $isRtl ? 'تُخصم حصة واحدة فقط عند اكتمال الدرس، وليس عند الحجز.' : 'One unit is deducted when the lesson completes, not at booking.' }}</span></li>
-            <li><i class="fas fa-circle-check"></i><span>{{ $isRtl ? 'يمكنك متابعة رصيدك من صفحة «رصيد الحصص».' : 'Track your balance from the credits page.' }}</span></li>
+          <ul class="mc-co-trust">
+            <li><i class="fas fa-shield-halved" aria-hidden="true"></i>{{ $isRtl ? 'دفع آمن عبر البوابة' : 'Secure gateway payment' }}</li>
+            <li><i class="fas fa-bolt" aria-hidden="true"></i>{{ $isRtl ? 'تفعيل الرصيد بعد نجاح الدفع' : 'Credits after successful pay' }}</li>
+            <li><i class="fas fa-chalkboard-user" aria-hidden="true"></i>{{ $isRtl ? 'احجز مع أي معلم معتمد مناسب' : 'Book with any matching teacher' }}</li>
           </ul>
         </div>
-      </article>
+      </aside>
 
-      <article class="gl-co-card sana-reveal">
-        <div class="gl-co-card__head">
-          <h2>{{ $isRtl ? 'بيانات الدفع' : 'Payment details' }}</h2>
-        </div>
-        <div class="gl-co-card__body">
-          @if($fawaterakMis && ! $paypalActive)
-            <div class="gl-co-alert gl-co-alert--err" style="display:flex;gap:.65rem;align-items:flex-start">
-              <i class="fas fa-exclamation-triangle" style="margin-top:.2rem"></i>
-              <div>
-                <strong>{{ $isRtl ? 'إعدادات الدفع غير مكتملة' : 'Payment settings incomplete' }}</strong>
-                <p class="gl-co-hint" style="margin:.35rem 0 0">{{ $isRtl ? 'تم تفعيل فواتيرك لكن الربط غير مكتمل على الخادم.' : 'Fawaterak is enabled but server credentials are incomplete.' }}</p>
-              </div>
-            </div>
-          @elseif($fawaterakActive && $fawaterakIntegration === 'api')
-            <div class="gl-co-alert gl-co-alert--sky" style="display:flex;gap:.65rem;align-items:flex-start;margin-bottom:1rem">
-              <i class="fas fa-lock" style="margin-top:.2rem"></i>
-              <div>
-                <strong>{{ $isRtl ? 'الدفع عبر فواتيرك' : 'Pay with Fawaterak' }}</strong>
-                <p class="gl-co-hint" style="margin:.25rem 0 0">{{ $isRtl ? 'اختر وسيلة الدفع ثم تابع. بعد النجاح يُفعَّل رصيد الحصص تلقائياً.' : 'Choose a method and continue. Credits activate automatically after success.' }}</p>
-              </div>
-            </div>
-            <div id="fawaterk-api-error" class="hidden gl-co-alert gl-co-alert--err"></div>
-            <div id="fawaterk-api-loading" style="margin-bottom:1rem;font:700 .85rem Tajawal,sans-serif;color:#5B6577"><i class="fas fa-spinner fa-spin" style="color:#0B3D91"></i> {{ $isRtl ? 'جاري تحميل وسائل الدفع...' : 'Loading payment methods…' }}</div>
-            <div id="fawaterk-api-methods" class="hidden" style="display:grid;gap:.55rem;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));margin-bottom:1rem"></div>
-            <div id="fawaterk-api-wallet-wrap" class="hidden" style="margin-bottom:.95rem">
-              <label class="gl-co-label" for="fawaterk-api-wallet">{{ $isRtl ? 'رقم المحفظة (إن لزم لوسيلة فواتيرك)' : 'Wallet number (if required by Fawaterak)' }}</label>
-              <input type="text" id="fawaterk-api-wallet" dir="ltr" class="gl-co-select" placeholder="01xxxxxxxxx" autocomplete="tel">
-            </div>
-            <div id="fawaterk-api-result" class="hidden gl-co-alert gl-co-alert--info" style="font:600 .85rem Tajawal,sans-serif;margin-bottom:1rem"></div>
-            <button type="button" id="fawaterk-api-pay-btn" disabled class="sana-btn sana-btn--yellow" style="width:100%;justify-content:center">
-              <i class="fas fa-lock"></i> {{ $isRtl ? 'متابعة الدفع' : 'Continue payment' }} · {{ $package->formattedPrice() }}
-            </button>
-          @elseif($fawaterakActive)
-            <div class="gl-co-alert gl-co-alert--sky" style="display:flex;gap:.65rem;align-items:flex-start;margin-bottom:1rem">
-              <i class="fas fa-lock" style="margin-top:.2rem"></i>
-              <div>
-                <strong>{{ $isRtl ? 'الدفع عبر فواتيرك' : 'Pay with Fawaterak' }}</strong>
-                <p class="gl-co-hint" style="margin:.25rem 0 0">{{ $isRtl ? 'اختر وسيلة الدفع داخل الإطار. بعد النجاح يُفعَّل رصيد الحصص تلقائياً.' : 'Choose a method below. Credits activate automatically after success.' }}</p>
-              </div>
-            </div>
-            <div id="fawaterk-checkout-error" class="hidden gl-co-alert gl-co-alert--err"></div>
-            <div id="fawaterkDivId"></div>
-          @endif
-
-          @if($paypalActive)
-            @if($fawaterakActive)
-              <p style="margin:1rem 0 .65rem;text-align:center;font:800 .8rem Tajawal,sans-serif;color:#5B6577">{{ $isRtl ? 'أو' : 'or' }}</p>
+      {{-- Payment --}}
+      <section class="mc-co-pay" aria-labelledby="mc-co-pay-title">
+        <div class="mc-co-pay__card">
+          <header class="mc-co-pay__head">
+            <h2 id="mc-co-pay-title">{{ $isRtl ? 'ادفع الآن' : 'Pay now' }}</h2>
+            @if($user)
+              <p class="mc-co-pay__account">
+                {{ $isRtl ? 'مسجّل كـ' : 'Signed in as' }}
+                <strong>{{ $user->name }}</strong>
+              </p>
             @endif
-            <form method="POST" action="{{ route('public.service-packages.paypal', $package) }}">
-              @csrf
-              <button type="submit" class="sana-btn sana-btn--yellow" style="width:100%;justify-content:center;background:#003087;color:#fff;border:0">
-                <i class="fab fa-paypal"></i>
-                {{ $isRtl ? 'الدفع عبر PayPal' : 'Pay with PayPal' }} · {{ $package->formattedPrice() }}
-              </button>
-            </form>
-          @elseif(! $fawaterakActive && $paypalMis)
-            <div class="gl-co-alert gl-co-alert--err" style="display:flex;gap:.65rem;align-items:flex-start">
-              <i class="fas fa-exclamation-triangle" style="margin-top:.2rem"></i>
-              <div>
-                <strong>{{ $isRtl ? 'إعدادات PayPal غير مكتملة' : 'PayPal settings incomplete' }}</strong>
-                <p class="gl-co-hint" style="margin:.35rem 0 0">{{ $isRtl ? 'تم تفعيل PayPal لكن بيانات الاتصال ناقصة في إعدادات النظام.' : 'PayPal is enabled but connection data is missing in system settings.' }}</p>
-              </div>
-            </div>
-          @elseif(! $fawaterakActive && ! $fawaterakMis)
-            <div class="gl-co-alert gl-co-alert--info" style="display:flex;gap:.65rem;align-items:flex-start">
-              <i class="fas fa-circle-info" style="margin-top:.2rem"></i>
-              <div>
-                <strong>{{ $isRtl ? 'الدفع الإلكتروني غير متاح' : 'Online payment unavailable' }}</strong>
-                <p class="gl-co-hint" style="margin:.35rem 0 0">{{ $isRtl ? 'بوابة فواتيرك غير مفعّلة حالياً. تواصل معنا عبر واتساب لإتمام الشراء.' : 'Fawaterak is not enabled right now. Contact us on WhatsApp to complete your purchase.' }}</p>
-              </div>
-            </div>
-          @endif
+          </header>
 
-          <div style="margin-top:1rem;display:flex;gap:.5rem;flex-wrap:wrap">
-            <a href="{{ route('public.service-packages.index') }}" class="sana-btn sana-btn--white-outline" style="flex:1;justify-content:center;min-width:9rem">
-              {{ $isRtl ? 'باقة أخرى' : 'Other packages' }}
-            </a>
-            <a href="{{ $waUrl }}" class="sana-btn sana-btn--wa" style="flex:1;justify-content:center;min-width:9rem" target="_blank" rel="noopener">
-              <i class="fab fa-whatsapp"></i> {{ $isRtl ? 'استفسار' : 'Ask us' }}
-            </a>
+          <div class="mc-co-pay__body">
+            @if($fawaterakMis && ! $paypalActive)
+              <div class="mc-co-alert is-err">
+                <strong>{{ $isRtl ? 'إعدادات الدفع غير مكتملة' : 'Payment settings incomplete' }}</strong>
+                <p>{{ $isRtl ? 'تم تفعيل فواتيرك لكن الربط غير مكتمل على الخادم.' : 'Fawaterak is enabled but server credentials are incomplete.' }}</p>
+              </div>
+            @elseif($fawaterakActive && $fawaterakIntegration === 'api')
+              <div class="mc-co-callout">
+                <i class="fas fa-lock" aria-hidden="true"></i>
+                <div>
+                  <strong>{{ $isRtl ? 'الدفع عبر فواتيرك' : 'Pay with Fawaterak' }}</strong>
+                  <p>{{ $isRtl ? 'اختر وسيلة الدفع ثم تابع. بعد النجاح يُفعَّل رصيد الحصص تلقائياً.' : 'Choose a method and continue. Credits activate automatically after success.' }}</p>
+                </div>
+              </div>
+              <div id="fawaterk-api-error" class="mc-co-alert is-err" hidden></div>
+              <div id="fawaterk-api-loading" class="mc-co-loading"><i class="fas fa-spinner fa-spin" aria-hidden="true"></i> {{ $isRtl ? 'جاري تحميل وسائل الدفع…' : 'Loading payment methods…' }}</div>
+              <div id="fawaterk-api-methods" class="mc-co-methods" hidden></div>
+              <div id="fawaterk-api-wallet-wrap" class="mc-co-field" hidden>
+                <label for="fawaterk-api-wallet">{{ $isRtl ? 'رقم المحفظة (إن لزم)' : 'Wallet number (if required)' }}</label>
+                <input type="text" id="fawaterk-api-wallet" dir="ltr" placeholder="01xxxxxxxxx" autocomplete="tel">
+              </div>
+              <div id="fawaterk-api-result" class="mc-co-alert is-info" hidden></div>
+              <button type="button" id="fawaterk-api-pay-btn" class="mc-btn mc-btn--lg mc-btn--secondary mc-co-pay-btn" disabled>
+                <i class="fas fa-lock" aria-hidden="true"></i>
+                {{ $isRtl ? 'متابعة الدفع' : 'Continue payment' }} · {{ $package->formattedPrice() }}
+              </button>
+            @elseif($fawaterakActive)
+              <div class="mc-co-callout">
+                <i class="fas fa-lock" aria-hidden="true"></i>
+                <div>
+                  <strong>{{ $isRtl ? 'الدفع عبر فواتيرك' : 'Pay with Fawaterak' }}</strong>
+                  <p>{{ $isRtl ? 'اختر وسيلة الدفع داخل الإطار. بعد النجاح يُفعَّل رصيد الحصص تلقائياً.' : 'Choose a method below. Credits activate automatically after success.' }}</p>
+                </div>
+              </div>
+              <div id="fawaterk-checkout-error" class="mc-co-alert is-err" hidden></div>
+              <div id="fawaterkDivId" class="mc-co-gateway"></div>
+            @endif
+
+            @if($paypalActive)
+              @if($fawaterakActive)
+                <p class="mc-co-or">{{ $isRtl ? 'أو' : 'or' }}</p>
+              @endif
+              <form method="POST" action="{{ route('public.service-packages.paypal', $package) }}">
+                @csrf
+                <button type="submit" class="mc-btn mc-btn--lg mc-btn--outline mc-co-paypal">
+                  <i class="fab fa-paypal" aria-hidden="true"></i>
+                  {{ $isRtl ? 'الدفع عبر PayPal' : 'Pay with PayPal' }} · {{ $package->formattedPrice() }}
+                </button>
+              </form>
+            @elseif(! $fawaterakActive && $paypalMis)
+              <div class="mc-co-alert is-err">
+                <strong>{{ $isRtl ? 'إعدادات PayPal غير مكتملة' : 'PayPal settings incomplete' }}</strong>
+                <p>{{ $isRtl ? 'تم تفعيل PayPal لكن بيانات الاتصال ناقصة.' : 'PayPal is enabled but connection data is missing.' }}</p>
+              </div>
+            @elseif(! $canPayOnline)
+              <div class="mc-co-offline">
+                <div class="mc-co-offline__icon" aria-hidden="true"><i class="fab fa-whatsapp"></i></div>
+                <h3>{{ $isRtl ? 'أكمل الشراء عبر واتساب' : 'Finish via WhatsApp' }}</h3>
+                <p>
+                  {{ $isRtl
+                    ? 'الدفع الإلكتروني غير مفعّل الآن. راسلنا باسم الباقة وسنُفعّل رصيد الحصص بعد التأكيد.'
+                    : 'Online payment is off for now. Message us with the package name and we will activate credits after confirmation.' }}
+                </p>
+                <p class="mc-co-offline__pkg">{{ $package->name }} · {{ $package->formattedPrice() }}</p>
+                <a href="{{ $waUrl }}" class="mc-btn mc-btn--lg mc-btn--secondary mc-co-pay-btn" target="_blank" rel="noopener">
+                  <i class="fab fa-whatsapp" aria-hidden="true"></i>
+                  {{ $isRtl ? 'إتمام الشراء واتساب' : 'Complete on WhatsApp' }}
+                </a>
+              </div>
+            @endif
+
+            <div class="mc-co-secondary">
+              <a href="{{ route('public.pricing') }}" class="mc-btn mc-btn--md mc-btn--soft">{{ $isRtl ? 'باقة أخرى' : 'Other packages' }}</a>
+              @if($canPayOnline)
+                <a href="{{ $waUrl }}" class="mc-btn mc-btn--md mc-btn--outline" target="_blank" rel="noopener">
+                  <i class="fab fa-whatsapp" aria-hidden="true"></i> {{ $isRtl ? 'استفسار واتساب' : 'WhatsApp help' }}
+                </a>
+              @endif
+            </div>
+
+            <p class="mc-co-note">
+              {{ $isRtl
+                ? 'تُخصم حصة واحدة عند اكتمال الدرس، وليس عند الحجز. يمكنك متابعة الرصيد من لوحة الطالب.'
+                : 'One credit is deducted when the lesson completes, not at booking. Track balance from your student dashboard.' }}
+            </p>
           </div>
         </div>
-      </article>
+      </section>
     </div>
-  </div>
+  </section>
 </main>
 
-@include('partials.landing.footer')
-@php
-  $landingJsFile = resource_path('js/landing/site.js');
-  if (! is_file($landingJsFile)) {
-      $landingJsFile = public_path('js/landing/site.js');
-  }
-  $landingJsVer = is_file($landingJsFile) ? (string) filemtime($landingJsFile) : (string) time();
-@endphp
-<script src="{{ route('assets.landing.js', ['file' => 'site']) }}?v={{ $landingJsVer }}" defer></script>
+<div class="mc-co-dock" id="mc-co-dock">
+  <div class="mc-co-dock__inner">
+    <div>
+      <span>{{ $package->name }}</span>
+      <strong>{{ $package->formattedPrice() }}</strong>
+    </div>
+    @if($canPayOnline)
+      <a href="#mc-co-pay-title" class="mc-btn mc-btn--md mc-btn--secondary">{{ $isRtl ? 'إلى الدفع' : 'Go to pay' }}</a>
+    @else
+      <a href="{{ $waUrl }}" class="mc-btn mc-btn--md mc-btn--secondary" target="_blank" rel="noopener">
+        <i class="fab fa-whatsapp" aria-hidden="true"></i> {{ $isRtl ? 'واتساب' : 'WhatsApp' }}
+      </a>
+    @endif
+  </div>
+</div>
+<script>
+(function(){
+  var dock = document.getElementById('mc-co-dock');
+  var pay = document.getElementById('mc-co-pay-title');
+  if (!dock || !pay || !('IntersectionObserver' in window)) return;
+  var io = new IntersectionObserver(function(entries) {
+    entries.forEach(function(e) {
+      dock.classList.toggle('is-away', e.isIntersecting);
+    });
+  }, { rootMargin: '-20% 0px -35% 0px', threshold: 0.05 });
+  io.observe(pay);
+})();
+</script>
+
+@include('partials.landing.mycourses.footer')
+
 @if($fawaterakActive && ! $fawaterakMis && $fawaterakIntegration === 'iframe')
 <script>
 (function(){
@@ -278,7 +323,7 @@
     function showErr(msg) {
         if (!errEl) { alert(msg); return; }
         errEl.textContent = msg;
-        errEl.classList.remove('hidden');
+        errEl.hidden = false;
     }
     function waitForFawaterkFn(resolve, reject) {
         window.requestAnimationFrame(function() {
@@ -341,7 +386,7 @@
         })
         .then(function(res) {
             if (res.status === 401) { showErr(@json($isRtl ? 'انتهت الجلسة. سجّل الدخول ثم أعد فتح الصفحة.' : 'Session expired. Sign in and reopen this page.')); return; }
-            if (res.status === 419) { showErr(@json($isRtl ? 'انتهت صلاحية الجلسة. حدّث الصفحة (F5).' : 'Session expired. Refresh the page.')); return; }
+            if (res.status === 419) { showErr(@json($isRtl ? 'انتهت صلاحية الجلسة. حدّث الصفحة.' : 'Session expired. Refresh the page.')); return; }
             if (!res.data || !res.ok) {
                 showErr((res.data && res.data.message) || @json($isRtl ? 'تعذّر تجهيز الطلب.' : 'Could not prepare checkout.'));
                 return;
@@ -386,7 +431,7 @@
     function showErr(msg) {
         if (!errEl) { alert(msg); return; }
         errEl.textContent = msg;
-        errEl.classList.remove('hidden');
+        errEl.hidden = false;
     }
     function parseJsonSafe(text) { try { return JSON.parse(text); } catch (e) { return null; } }
     function renderMethods(list) {
@@ -397,36 +442,35 @@
             var name = (document.documentElement.getAttribute('dir') === 'rtl' && m.name_ar) ? m.name_ar : (m.name_en || m.name_ar || ('#' + id));
             var card = document.createElement('button');
             card.type = 'button';
-            card.style.cssText = 'display:flex;align-items:center;gap:.65rem;padding:.75rem;border-radius:12px;border:2px solid #D7DDE6;background:#fff;text-align:start;cursor:pointer;font:700 .82rem Tajawal,sans-serif;color:#0B1220';
+            card.className = 'mc-co-method';
             card.setAttribute('data-pid', String(id));
             if (m.logo && typeof m.logo === 'string') {
                 var img = document.createElement('img');
-                img.src = m.logo; img.alt = ''; img.style.cssText = 'height:2.25rem;width:auto;object-fit:contain;flex-shrink:0';
-                img.loading = 'lazy';
+                img.src = m.logo; img.alt = ''; img.loading = 'lazy';
                 card.appendChild(img);
             }
             var title = document.createElement('span');
             title.textContent = name;
             card.appendChild(title);
             card.addEventListener('click', function() {
-                methodsEl.querySelectorAll('button').forEach(function(b) { b.style.borderColor = '#D7DDE6'; });
-                card.style.borderColor = '#F5B800';
+                methodsEl.querySelectorAll('.mc-co-method').forEach(function(b) { b.classList.remove('is-on'); });
+                card.classList.add('is-on');
                 selectedId = id;
                 if (payBtn) payBtn.disabled = false;
             });
             methodsEl.appendChild(card);
         });
-        methodsEl.classList.remove('hidden');
-        if (walletWrap) walletWrap.classList.remove('hidden');
+        methodsEl.hidden = false;
+        if (walletWrap) walletWrap.hidden = false;
     }
     function showPaymentResult(pd) {
         if (!resultEl || !pd) return;
-        resultEl.classList.remove('hidden');
+        resultEl.hidden = false;
         if (pd.redirectTo) { window.location.href = pd.redirectTo; return; }
         var html = '';
         if (pd.fawryCode) html += '<p><strong>رمز فوري:</strong> <span dir="ltr">' + pd.fawryCode + '</span></p>';
         if (pd.expireDate) html += '<p>{{ $isRtl ? "ينتهي" : "Expires" }}: ' + pd.expireDate + '</p>';
-        if (!html) html = '<pre style="font-size:.72rem;white-space:pre-wrap;word-break:break-all" dir="ltr">' + JSON.stringify(pd, null, 2) + '</pre>';
+        if (!html) html = '<pre dir="ltr">' + JSON.stringify(pd, null, 2) + '</pre>';
         resultEl.innerHTML = html;
     }
     function run() {
@@ -455,7 +499,7 @@
         })
         .then(function(res) {
             if (!res) return;
-            if (loadEl) loadEl.classList.add('hidden');
+            if (loadEl) loadEl.hidden = true;
             if (!res.ok || !res.data || res.data.status !== 'success' || !Array.isArray(res.data.data)) {
                 showErr((res.data && res.data.message) || @json($isRtl ? 'تعذّر جلب وسائل الدفع.' : 'Could not load payment methods.'));
                 return;
@@ -463,14 +507,14 @@
             renderMethods(res.data.data);
         })
         .catch(function() {
-            if (loadEl) loadEl.classList.add('hidden');
+            if (loadEl) loadEl.hidden = true;
             showErr(@json($isRtl ? 'تعذّر الاتصال بالخادم.' : 'Could not reach the server.'));
         });
     }
     if (payBtn) {
         payBtn.addEventListener('click', function() {
             if (!selectedId) return;
-            if (errEl) errEl.classList.add('hidden');
+            if (errEl) errEl.hidden = true;
             payBtn.disabled = true;
             var body = { payment_method_id: selectedId };
             var w = walletInput && walletInput.value ? walletInput.value.trim() : '';

@@ -22,7 +22,7 @@ class PayPalSettings
 
     public const MODES = ['sandbox', 'live'];
 
-    public const CURRENCIES = ['USD', 'EUR', 'GBP', 'EGP'];
+    public const CURRENCIES = ['SAR', 'USD', 'EUR', 'GBP', 'EGP'];
 
     public static function isEnabled(): bool
     {
@@ -89,9 +89,9 @@ class PayPalSettings
 
     public static function currency(): string
     {
-        $currency = strtoupper(self::storedOrEnv(self::CURRENCY_KEY, (string) config('paypal.currency', 'USD')));
+        $currency = strtoupper(self::storedOrEnv(self::CURRENCY_KEY, (string) config('paypal.currency', config('currency.code', 'SAR'))));
 
-        return in_array($currency, self::CURRENCIES, true) ? $currency : 'USD';
+        return in_array($currency, self::CURRENCIES, true) ? $currency : platform_currency();
     }
 
     public static function apiBaseUrl(): string
@@ -129,8 +129,8 @@ class PayPalSettings
         $webhookId = trim((string) ($data['webhook_id'] ?? ''));
         Setting::setValue(self::WEBHOOK_ID_KEY, $webhookId !== '' ? $webhookId : null);
 
-        $currency = strtoupper(trim((string) ($data['currency'] ?? 'USD')));
-        Setting::setValue(self::CURRENCY_KEY, in_array($currency, self::CURRENCIES, true) ? $currency : 'USD');
+        $currency = strtoupper(trim((string) ($data['currency'] ?? platform_currency())));
+        Setting::setValue(self::CURRENCY_KEY, in_array($currency, self::CURRENCIES, true) ? $currency : platform_currency());
     }
 
     private static function storedOrEnv(string $key, string $fallback): string

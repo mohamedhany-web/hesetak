@@ -20,8 +20,12 @@ use InvalidArgumentException;
 
 class ClassController extends Controller
 {
-    public function index(Request $request, StudentSchoolHomeService $home): View
+    public function index(Request $request, StudentSchoolHomeService $home): View|RedirectResponse
     {
+        if (! student_ui('show_classes')) {
+            return redirect()->route('dashboard');
+        }
+
         $data = $home->build($request->user(), [
             'q' => trim((string) $request->query('q', '')),
             'sort' => (string) $request->query('sort', 'classes'),
@@ -53,8 +57,12 @@ class ClassController extends Controller
         ]));
     }
 
-    public function show(Request $request, TutoringGroupCohort $cohort): View
+    public function show(Request $request, TutoringGroupCohort $cohort): View|RedirectResponse
     {
+        if (! student_ui('show_classes')) {
+            return redirect()->route('dashboard');
+        }
+
         abort_unless(TutoringClassService::userCanAccessCohort($request->user(), $cohort), 403);
 
         $cohort->load([
@@ -88,6 +96,10 @@ class ClassController extends Controller
 
     public function joinSession(Request $request, TutoringClassSession $session): RedirectResponse
     {
+        if (! student_ui('show_classes')) {
+            return redirect()->route('dashboard');
+        }
+
         $session->loadMissing(['cohort.tutoringGroup', 'classroomMeeting']);
         abort_unless($session->cohort, 404);
         abort_unless(TutoringClassService::userCanAccessCohort($request->user(), $session->cohort), 403);
@@ -115,6 +127,10 @@ class ClassController extends Controller
      */
     public function enroll(Request $request, TutoringGroupCohort $cohort): RedirectResponse
     {
+        if (! student_ui('show_classes')) {
+            return redirect()->route('dashboard');
+        }
+
         if (! $cohort->isEnrollmentOpen()) {
             return back()->with('error', 'الانضمام مغلق لهذه الدفعة.');
         }

@@ -1,6 +1,6 @@
-﻿@extends('layouts.admin')
+@extends('layouts.admin')
 
-@section('title', 'إرسال رسالة جديدة - Glottical')
+@section('title', 'إرسال رسالة جديدة - حصتك')
 @section('header', 'إرسال رسالة جديدة')
 
 @section('content')
@@ -189,7 +189,7 @@
                         </div>
                         <div class="flex-1">
                             <div class="text-xs text-green-700 mb-1">
-                                {{ __('منصة Glottical') }}
+                                {{ __('منصة حصتك') }}
                                 @isset($prefillTitle)
                                     - {{ $prefillTitle }}
                                 @endisset

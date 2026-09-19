@@ -24,7 +24,7 @@ class KashierSettings
 
     public const MODES = ['test', 'live'];
 
-    public const CURRENCIES = ['EGP', 'USD', 'EUR', 'GBP'];
+    public const CURRENCIES = ['SAR', 'EGP', 'USD', 'EUR', 'GBP'];
 
     public static function isEnabled(): bool
     {
@@ -107,9 +107,9 @@ class KashierSettings
 
     public static function currency(): string
     {
-        $currency = strtoupper(self::storedOrEnv(self::CURRENCY_KEY, (string) config('currency.code', 'USD')));
+        $currency = strtoupper(self::storedOrEnv(self::CURRENCY_KEY, (string) config('currency.code', 'SAR')));
 
-        return in_array($currency, self::CURRENCIES, true) ? $currency : 'USD';
+        return in_array($currency, self::CURRENCIES, true) ? $currency : platform_currency();
     }
 
     public static function merchantRedirectUrl(): string
@@ -160,8 +160,8 @@ class KashierSettings
             Setting::setValue(self::SECRET_KEY, Crypt::encryptString(trim($secret)));
         }
 
-        $currency = strtoupper(trim((string) ($data['currency'] ?? 'USD')));
-        Setting::setValue(self::CURRENCY_KEY, in_array($currency, self::CURRENCIES, true) ? $currency : 'USD');
+        $currency = strtoupper(trim((string) ($data['currency'] ?? platform_currency())));
+        Setting::setValue(self::CURRENCY_KEY, in_array($currency, self::CURRENCIES, true) ? $currency : platform_currency());
 
         $redirect = trim((string) ($data['merchant_redirect_url'] ?? ''));
         Setting::setValue(self::REDIRECT_KEY, $redirect !== '' ? $redirect : null);

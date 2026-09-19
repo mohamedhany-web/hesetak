@@ -11,9 +11,9 @@
     $unitsLeft = (int) ($units_left ?? 0);
     $bookableSlots = $bookable_slots ?? collect();
     $weeklyCalendar = $weekly_calendar ?? [];
-    $groupCourses = $group_courses ?? collect();
+    $groupCourses = collect();
     $oneToOneCourses = $one_to_one_courses ?? collect();
-    $packagesUrl = $packages_url ?? route('public.service-packages.index');
+    $packagesUrl = $packages_url ?? (Route::has('public.pricing') ? route('public.pricing') : route('dashboard'));
     $photoUrl = $photo_url ?: asset('img/student-timeline/avatar.png');
     $headline = $profile?->headline_clean ?: '';
     $bio = $profile?->bio_clean ?: '';
@@ -26,8 +26,8 @@
     $introThumb = $intro_video_thumb ?? $photoUrl;
     $consultationPrice = $consultation_price ?? null;
     $consultationDuration = $consultation_duration ?? null;
-    $coursesCount = (int) ($courses_count ?? ($groupCourses->count() + $oneToOneCourses->count()));
-    $allCourses = $oneToOneCourses->concat($groupCourses)->values();
+    $coursesCount = (int) ($courses_count ?? $oneToOneCourses->count());
+    $allCourses = $oneToOneCourses->values();
 @endphp
 
 @include('partials.student-timeline-top', [
@@ -250,13 +250,6 @@
                             <small>{{ (int) ($course->lessons_count ?? 0) }} {{ __('student_timeline.learn_lessons') }}</small>
                         </article>
                     @endforeach
-                    @foreach($groupCourses as $course)
-                        <article class="st-teacher-course">
-                            <span class="st-learn-badge">{{ __('student_timeline.learn_tab_groups') }}</span>
-                            <strong>{{ $course->title }}</strong>
-                            <small>{{ (int) ($course->lessons_count ?? 0) }} {{ __('student_timeline.learn_lessons') }}</small>
-                        </article>
-                    @endforeach
                 </div>
             </section>
         @endif
@@ -315,9 +308,9 @@
             <p class="st-event-card__sub">{{ __('student_timeline.learn_teachers_hint') }}</p>
         </a>
 
-        <a href="{{ route('student.learn.index', ['tab' => 'groups']) }}" class="st-event-card st-event-card--purple" style="display:block;text-decoration:none">
-            <h3>{{ __('student_timeline.learn_tab_groups') }}</h3>
-            <p class="st-event-card__sub">{{ __('student_timeline.learn_groups_hint') }}</p>
+        <a href="{{ $packagesUrl }}" class="st-event-card st-event-card--orange" style="display:block;text-decoration:none">
+            <h3>{{ __('student_timeline.session_credits') }}</h3>
+            <p class="st-event-card__sub">{{ __('student_timeline.browse_school') }}</p>
         </a>
     </aside>
 </div>

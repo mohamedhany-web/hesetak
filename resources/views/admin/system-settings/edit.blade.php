@@ -38,7 +38,7 @@
                 <i class="fas fa-image text-sm"></i>
             </div>
             <p class="mt-3 text-xs text-muted">شعار اللوحة</p>
-            <p class="mt-1 text-sm font-semibold text-ink">{{ $adminPanelLogoUrl ? 'مرفوع' : 'افتراضي (G)' }}</p>
+            <p class="mt-1 text-sm font-semibold text-ink">{{ $adminPanelLogoUrl ? 'مرفوع' : 'افتراضي (حصتك)' }}</p>
         </article>
         <article class="rounded-2xl border border-line bg-surface p-4 shadow-soft">
             <div class="inline-flex size-9 items-center justify-center rounded-xl {{ $onlineGatewaysEnabledCount > 0 ? 'bg-accent-soft text-accent' : 'bg-canvas-muted text-muted' }}">
@@ -173,7 +173,7 @@
                 <section class="space-y-4">
                     <h4 class="border-b border-line pb-2 text-sm font-semibold text-ink">الهوية والنص التعريفي</h4>
                     <div>
-                        <label class="{{ $label }}">السطر تحت اسم Glottical</label>
+                        <label class="{{ $label }}">السطر تحت اسم حصتك</label>
                         <input type="text" name="footer_brand_tagline" value="{{ old('footer_brand_tagline', $values['footer_brand_tagline']) }}"
                                class="{{ $input }}" placeholder="{{ $defaults['footer_brand_tagline'] }}">
                     </div>

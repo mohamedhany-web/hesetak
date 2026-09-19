@@ -1,4 +1,4 @@
-﻿@extends('layouts.admin')
+@extends('layouts.admin')
 
 @section('title', 'تفاصيل خطة التقسيط')
 @section('page_title', 'تفاصيل خطة التقسيط')
@@ -16,8 +16,8 @@
         ? ['label' => 'خطة نشطة', 'classes' => 'bg-accent-soft text-accent']
         : ['label' => 'خطة معطلة', 'classes' => 'bg-canvas-muted text-muted'];
     $kpis = [
-        ['label' => 'إجمالي المبلغ', 'value' => number_format($plan->total_amount ?? 0, 2) . ' $', 'icon' => 'fa-coins', 'tone' => 'accent', 'note' => 'القيمة الكاملة للخطة قبل الدفعات المقدمة'],
-        ['label' => 'الدفعة المقدمة', 'value' => number_format($plan->deposit_amount ?? 0, 2) . ' $', 'icon' => 'fa-hand-holding-usd', 'tone' => 'metal', 'note' => 'المبلغ المطلوب دفعه مقدماً قبل بدء التقسيط'],
+        ['label' => 'إجمالي المبلغ', 'value' => number_format($plan->total_amount ?? 0, 2) . ' ' . currency_symbol(), 'icon' => 'fa-coins', 'tone' => 'accent', 'note' => 'القيمة الكاملة للخطة قبل الدفعات المقدمة'],
+        ['label' => 'الدفعة المقدمة', 'value' => number_format($plan->deposit_amount ?? 0, 2) . ' ' . currency_symbol(), 'icon' => 'fa-hand-holding-usd', 'tone' => 'metal', 'note' => 'المبلغ المطلوب دفعه مقدماً قبل بدء التقسيط'],
         ['label' => 'عدد الاتفاقيات', 'value' => number_format($agreementsCount), 'icon' => 'fa-users', 'tone' => 'accent', 'note' => number_format($activeAgreements) . ' اتفاقيات نشطة مرتبطة بالخطة'],
         ['label' => 'متوسط الأقساط', 'value' => number_format($averageInstallments, 1), 'icon' => 'fa-chart-line', 'tone' => 'muted', 'note' => 'متوسط عدد الدفعات للاتفاقيات المرتبطة'],
     ];

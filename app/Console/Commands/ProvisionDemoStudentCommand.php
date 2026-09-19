@@ -254,7 +254,7 @@ class ProvisionDemoStudentCommand extends Command
                     'is_featured' => true,
                     'sort_order' => $i + 1,
                     'learning_path' => TutoringGroup::PATH_ARABIC,
-                    'currency' => 'USD',
+                    'currency' => platform_currency(),
                 ]);
                 $this->line("Created group {$group->slug}");
             } else {

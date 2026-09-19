@@ -90,7 +90,7 @@ class CouponCommissionService
                 'description' => $desc,
                 'category' => 'marketing',
                 'amount' => $accrual->commission_amount_egp,
-                'currency' => 'USD',
+                'currency' => platform_currency(),
                 'expense_date' => now()->toDateString(),
                 'payment_method' => 'other',
                 'wallet_id' => null,

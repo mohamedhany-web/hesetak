@@ -114,9 +114,44 @@ class ServicePackage extends Model
         return $query->active()->whereNull('tutoring_group_id');
     }
 
+    /**
+     * كتالوج الواجهة الموحّد: باقات نشطة من الإدارة للحجز الفردي/العام.
+     * يستبعد باقات نظام المدرسة (plan school / tutoring_collective).
+     * يُستخدم في الصفحة الرئيسية وصفحة الطالب وصفحة التسعير.
+     */
+    public function scopeStorefront(Builder $query): Builder
+    {
+        return $query->publicCatalog()
+            ->where(function (Builder $q) {
+                $q->whereNull('plan_type')
+                    ->orWhere('plan_type', '!=', self::PLAN_SCHOOL);
+            })
+            ->where('scope', '!=', self::SCOPE_TUTORING_COLLECTIVE)
+            ->orderByDesc('is_featured')
+            ->ordered();
+    }
+
+    /**
+     * @return \Illuminate\Support\Collection<int, static>
+     */
+    public static function storefrontCatalog(?int $limit = null): \Illuminate\Support\Collection
+    {
+        $query = static::query()->storefront();
+
+        if ($limit !== null && $limit > 0) {
+            $query->limit($limit);
+        }
+
+        return $query->get();
+    }
+
     public function scopeCommercial(Builder $query): Builder
     {
-        return $query->publicCatalog()->whereNotNull('plan_type')->whereNotNull('term_months');
+        return $query->publicCatalog()
+            ->whereNotNull('plan_type')
+            ->whereNotNull('term_months')
+            ->where('plan_type', '!=', self::PLAN_SCHOOL)
+            ->where('scope', '!=', self::SCOPE_TUTORING_COLLECTIVE);
     }
 
     public function scopePlanType(Builder $query, string $planType): Builder
@@ -204,7 +239,7 @@ class ServicePackage extends Model
 
     public function currencyCode(): string
     {
-        return $this->currency ?: 'USD';
+        return strtoupper((string) ($this->currency ?: platform_currency()));
     }
 
     public function formattedPrice(): string
@@ -213,11 +248,7 @@ class ServicePackage extends Model
             return app()->getLocale() === 'ar' ? 'مجاناً' : 'Free';
         }
 
-        if ($this->currencyCode() === 'USD') {
-            return '$'.number_format((float) $this->price, 2).' USD';
-        }
-
-        return number_format((float) $this->price, 2).' '.$this->currencyCode();
+        return format_money((float) $this->price);
     }
 
     public function formattedOriginalPrice(): ?string
@@ -226,11 +257,7 @@ class ServicePackage extends Model
             return null;
         }
 
-        if ($this->currencyCode() === 'USD') {
-            return '$'.number_format((float) $this->original_price, 2).' USD';
-        }
-
-        return number_format((float) $this->original_price, 2).' '.$this->currencyCode();
+        return format_money((float) $this->original_price);
     }
 
     public function savingsAmount(): float
@@ -285,11 +312,7 @@ class ServicePackage extends Model
             return app()->getLocale() === 'ar' ? 'مجاناً' : 'Free';
         }
 
-        if ($this->currencyCode() === 'USD') {
-            return '$'.number_format($this->pricePerUnit(), 2).' USD';
-        }
-
-        return number_format($this->pricePerUnit(), 2).' '.$this->currencyCode();
+        return format_money($this->pricePerUnit());
     }
 
     /**
@@ -416,7 +439,7 @@ class ServicePackage extends Model
         }
 
         $isRtl = app()->getLocale() === 'ar';
-        $money = '$'.number_format($amount, 0);
+        $money = number_format($amount, 0).' '.currency_symbol();
 
         return $isRtl
             ? 'وفر '.$money.' مقارنة بالدفع الشهري لمدة '.$this->term_months.' أشهر'

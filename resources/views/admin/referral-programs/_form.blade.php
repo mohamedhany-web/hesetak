@@ -88,7 +88,7 @@
         </div>
         <div class="sm:col-span-2">
             <label for="share_message_ar" class="{{ $labelClass }}">رسالة واتساب (عربي)</label>
-            <textarea name="share_message_ar" id="share_message_ar" rows="2" class="{{ $areaClass }}" placeholder="سجّل من رابطي في Glottical واحصل على رصيد حصص: {link}">{{ $v('share_message_ar') }}</textarea>
+            <textarea name="share_message_ar" id="share_message_ar" rows="2" class="{{ $areaClass }}" placeholder="سجّل من رابطي في حصتك واحصل على رصيد حصص: {link}">{{ $v('share_message_ar') }}</textarea>
             <p class="mt-1 text-xs text-muted">المتغيّرات: {link} · {code} · {units}</p>
         </div>
         <div class="sm:col-span-2">

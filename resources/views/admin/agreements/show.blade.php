@@ -21,8 +21,8 @@
     };
 
     $kpiCards = [
-        ['label' => 'إجمالي المدفوعات', 'value' => number_format($stats['total_earned'], 2) . ' $', 'icon' => 'fa-money-bill-wave', 'tone' => 'ink'],
-        ['label' => 'معلق', 'value' => number_format($stats['pending_amount'], 2) . ' $', 'icon' => 'fa-clock', 'tone' => 'amber'],
+        ['label' => 'إجمالي المدفوعات', 'value' => number_format($stats['total_earned'], 2) . ' ' . currency_symbol(), 'icon' => 'fa-money-bill-wave', 'tone' => 'ink'],
+        ['label' => 'معلق', 'value' => number_format($stats['pending_amount'], 2) . ' ' . currency_symbol(), 'icon' => 'fa-clock', 'tone' => 'amber'],
         ['label' => 'إجمالي الدفعات', 'value' => number_format($stats['total_payments']), 'icon' => 'fa-receipt', 'tone' => 'ink'],
         ['label' => 'مدفوع', 'value' => number_format($stats['paid_payments']), 'icon' => 'fa-check-circle', 'tone' => 'emerald'],
     ];

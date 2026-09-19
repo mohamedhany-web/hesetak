@@ -1,7 +1,7 @@
 @php
   $locale = app()->getLocale();
   $isRtl = $locale === 'ar';
-  $brand = config('app.name', 'Glottical');
+  $brand = config('app.name', 'حصتك');
   $planMatrix = $planMatrix ?? [];
   $years = $years ?? collect();
   $selectedYear = $selectedYear ?? null;
@@ -19,7 +19,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes">
   <title>{{ $isRtl ? 'خطط الاشتراك' : 'Subscription plans' }} — {{ $brand }}</title>
-  <meta name="description" content="{{ $isRtl ? 'School و Private و Premier — اختر المدة 1 أو 3 أو 6 أشهر بالدولار مع إبراز الوفر.' : 'School, Private and Premier plans — choose 1, 3 or 6 months in USD with clear savings.' }}">
+  <meta name="description" content="{{ $isRtl ? 'School و Private و Premier — اختر المدة 1 أو 3 أو 6 أشهر بالريال السعودي مع إبراز الوفر.' : 'School, Private and Premier plans — choose 1, 3 or 6 months in SAR with clear savings.' }}">
   <meta name="theme-color" content="#0B3D91">
   <link rel="canonical" href="{{ route('public.service-packages.index') }}">
   @include('partials.favicon-links')
@@ -258,17 +258,17 @@
                         data-weekly="{{ $termPkg->weeklySessionsTotal() }}"
                       >
                         {{ $months === 1 ? ($isRtl ? 'شهر' : '1 mo') : ($isRtl ? $months.' أشهر' : $months.' mo') }}
-                        <small>${{ number_format((float)$termPkg->price, 0) }}</small>
+                        <small>{{ currency_symbol() }}{{ number_format((float)$termPkg->price, 0) }}</small>
                       </button>
                     @endif
                   @endforeach
                 </div>
 
                 <div class="gl-pl-price">
-                  <span class="gl-pl-price__now">$<span data-el="price">{{ number_format((float)$defaultTerm->price, 0) }}</span></span>
-                  <span class="gl-pl-price__cur">USD</span>
+                  <span class="gl-pl-price__now"><span data-el="price">{{ number_format((float)$defaultTerm->price, 0) }}</span></span>
+                  <span class="gl-pl-price__cur">{{ currency_symbol() }}</span>
                   <span class="gl-pl-price__old" data-el="original" @style(['display:none' => ! $defaultTerm->original_price || (float)$defaultTerm->original_price <= (float)$defaultTerm->price])>
-                    $<span data-el="original-val">{{ $defaultTerm->original_price ? number_format((float)$defaultTerm->original_price, 0) : '' }}</span>
+                    <span data-el="original-val">{{ $defaultTerm->original_price ? number_format((float)$defaultTerm->original_price, 0) : '' }}</span>
                   </span>
                 </div>
                 <div class="gl-pl-save {{ $defaultTerm->savingsVsMonthlyLabel() ? 'is-on' : '' }}" data-el="save">
@@ -402,8 +402,8 @@
           <span class="sana-head__line"></span>
           <p class="sana-head__sub">
             {{ $isRtl
-              ? 'اختر مدة الاشتراك (شهر أو 3 أشهر) وعدد الحصص الأسبوعية الثابت. السعر يُحسب فوراً من قواعد الإدارة بالدولار.'
-              : 'Choose 1 or 3 months and a fixed weekly session count. Price is calculated instantly from admin USD rules.' }}
+              ? 'اختر مدة الاشتراك (شهر أو 3 أشهر) وعدد الحصص الأسبوعية الثابت. السعر يُحسب فوراً من قواعد الإدارة بالريال السعودي.'
+              : 'Choose 1 or 3 months and a fixed weekly session count. Price is calculated instantly from admin SAR rules.' }}
           </p>
         </div>
 
@@ -458,7 +458,7 @@
               </div>
               <p style="margin:.7rem 0 0;font-size:.74rem;color:#5B6577;font-weight:700">
                 {{ $isRtl ? 'سعر الحصة الأساسي:' : 'Base session price:' }}
-                <span style="direction:ltr;display:inline-block">${{ number_format((float) $privateRule->price_per_session, 2) }} USD</span>
+                <span style="direction:ltr;display:inline-block">{{ number_format((float) $privateRule->price_per_session, 2) }} {{ currency_symbol() }}</span>
                 · {{ $privateRule->session_minutes }} {{ $isRtl ? 'دقيقة' : 'min' }}
               </p>
             </div>
@@ -466,9 +466,9 @@
 
           <aside class="gl-pv-panel">
             <p style="margin:0;font-size:.75rem;font-weight:800;color:#5B6577">{{ $isRtl ? 'ملخص باقتك' : 'Your pack summary' }}</p>
-            <div style="margin-top:.55rem" class="gl-pv-summary__price">$<span id="pv-total">0.00</span> <small style="font-size:.85rem;color:#5B6577">USD</small></div>
+            <div style="margin-top:.55rem" class="gl-pv-summary__price"><span id="pv-total">0.00</span> <small style="font-size:.85rem;color:#5B6577">{{ currency_symbol() }}</small></div>
             <div id="pv-old-wrap" style="display:none;margin-top:.25rem">
-              <span class="gl-pv-summary__old">$<span id="pv-old">0.00</span></span>
+              <span class="gl-pv-summary__old"><span id="pv-old">0.00</span></span>
             </div>
             <div class="gl-pv-summary__save" id="pv-save"><i class="fas fa-tag"></i> <span id="pv-save-text"></span></div>
 
@@ -514,7 +514,7 @@
       <div class="gl-pl-steps">
         @foreach([
           [$isRtl ? 'اختر الخطة والمدة' : 'Pick plan & term', $isRtl ? 'School أو Private أو Premier ثم شهر / 3 / 6.' : 'School, Private or Premier, then 1 / 3 / 6 months.'],
-          [$isRtl ? 'ادفع بالدولار' : 'Pay in USD', $isRtl ? 'يُراجع الدفع وتُفعَّل أرصدة الحصص.' : 'Payment is reviewed and session credits activate.'],
+          [$isRtl ? 'ادفع بالريال السعودي' : 'Pay in SAR', $isRtl ? 'يُراجع الدفع وتُفعَّل أرصدة الحصص.' : 'Payment is reviewed and session credits activate.'],
           [$isRtl ? 'اختر الفصل أو المعلم' : 'Pick class or teacher', $isRtl ? 'المدرسة: فصل حسب المواعيد. الخاص: معلم ومواعيد.' : 'School: class by schedule. Private: teacher & slots.'],
           [$isRtl ? 'احضر Live وجدّد' : 'Attend Live & renew', $isRtl ? 'الحصة عبر البث المباشر، والتجديد بنفس الخطة.' : 'Join live sessions, renew with the same plan.'],
         ] as $i => $step)
@@ -533,6 +533,8 @@
 
 <script>
 (() => {
+  const currencySymbol = @json(currency_symbol());
+  const isRtlJs = @json((bool) $isRtl);
   const weekLabel = @json($isRtl ? 'حصص أسبوعياً' : 'sessions / week');
   const termLabel = @json($isRtl ? 'حصة في المدة' : 'sessions in term');
 
@@ -632,8 +634,8 @@
           if (Number(data.discount_percent) > 0) {
             els.save.classList.add('is-on');
             els.saveText.textContent = isRtlJs
-              ? `وفر ${Number(data.discount_percent)}% ($${Number(data.discount_amount).toFixed(2)})`
-              : `Save ${Number(data.discount_percent)}% ($${Number(data.discount_amount).toFixed(2)})`;
+              ? `وفر ${Number(data.discount_percent)}% (${Number(data.discount_amount).toFixed(2)} ${currencySymbol})`
+              : `Save ${Number(data.discount_percent)}% (${Number(data.discount_amount).toFixed(2)} ${currencySymbol})`;
           } else {
             els.save.classList.remove('is-on');
           }
@@ -642,7 +644,7 @@
         if (els.weekly) els.weekly.textContent = `${weekly} ${isRtlJs ? 'حصة' : 'sessions'}`;
         if (els.sessions) els.sessions.textContent = String(data.sessions);
         if (els.days) els.days.textContent = `${data.duration_days} ${isRtlJs ? 'يوم' : 'days'}`;
-        if (els.unit) els.unit.textContent = `$${Number(data.final_price_per_session).toFixed(2)}`;
+        if (els.unit) els.unit.textContent = `${Number(data.final_price_per_session).toFixed(2)} ${currencySymbol}`;
       } catch (e) {
         if (els.total) els.total.textContent = '—';
       }

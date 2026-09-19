@@ -1,7 +1,7 @@
 @extends('layouts.employee')
 
-@section('title', 'Glottical CRM')
-@section('header', 'Glottical CRM')
+@section('title', 'CRM حصتك')
+@section('header', 'CRM حصتك')
 
 @section('content')
 <div class="space-y-6">

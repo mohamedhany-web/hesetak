@@ -1,0 +1,41 @@
+---
+description: Laravel/PHP layering — controllers thin, services own business rules
+globs: app/**/*.php
+alwaysApply: false
+---
+
+# PHP / Laravel layering
+
+## Controllers
+- Authorize, validate input, call a service/action, return view/JSON/redirect.
+- Do not embed pricing rules, matching rules, or payment confirmation logic in controllers.
+
+## Services / Support / Actions
+- Own business rules and orchestration.
+- Prefer extending an existing service over a parallel copy.
+- Keep methods small; early return on invalid state.
+
+## Models
+- Persistence, relations, scopes, simple accessors.
+- Avoid fat models that render HTML or call payment gateways directly (use services).
+
+## Constants
+- No scattered magic strings for statuses/roles when a class/enum/config already exists.
+- Prefer existing enums/config in this repo over new ad-hoc string compares.
+
+```php
+// ❌ BAD — business + HTTP mixed
+public function store(Request $request) {
+    $amount = $request->price * 0.15; // commission buried here
+    // ...
+}
+
+// ✅ GOOD — controller delegates
+public function store(Request $request, BookingService $bookings) {
+    $booking = $bookings->createFromRequest($request->validated());
+    return redirect()->route('...', $booking);
+}
+```
+
+## Reuse first
+Search `app/Services`, `app/Support`, `app/Actions` (if present) before adding a new class.

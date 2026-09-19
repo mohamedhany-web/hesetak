@@ -34,7 +34,7 @@ class ServiceEntitlementController extends Controller
             'global' => StudentEntitlementService::unitsLeft((int) $user->id, ServicePackage::SCOPE_GLOBAL),
         ];
 
-        $packages = ServicePackage::query()->publicCatalog()->ordered()->take(6)->get();
+        $packages = ServicePackage::storefrontCatalog(12);
 
         return view('student.service-entitlements.index', compact('entitlements', 'totals', 'packages'));
     }

@@ -1,3 +1,0 @@
-# Requirements for generate_deploy_docx.py (Word deployment guide)
-# Install: pip install -r requirements-docx.txt
-python-docx>=1.0.0

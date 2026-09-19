@@ -17,8 +17,15 @@ use Illuminate\Support\Facades\Validator;
 
 class AuthController extends Controller
 {
-    public function showLogin()
+    public function showLogin(Request $request)
     {
+        if ($request->has('redirect')) {
+            $redirectUrl = $request->input('redirect');
+            if (filter_var($redirectUrl, FILTER_VALIDATE_URL) || str_starts_with((string) $redirectUrl, '/')) {
+                session(['url.intended' => $redirectUrl]);
+            }
+        }
+
         $authBackgroundUrl = \App\Providers\AppServiceProvider::authBackgroundUrl();
         return view('auth.login', compact('authBackgroundUrl'));
     }

@@ -38,10 +38,10 @@ class PayPalCheckoutController extends Controller
         $request->validate([
             'coupon_code' => 'nullable|string|max:64',
             'wallet_credit' => 'nullable|numeric|min:0',
-            'currency' => 'nullable|in:EGP,USD,EUR,GBP,egp,usd,eur,gbp',
+            'currency' => 'nullable|in:SAR,EGP,USD,EUR,GBP,sar,egp,usd,eur,gbp',
         ]);
 
-        $pricingCurrency = 'USD';
+        $pricingCurrency = platform_currency();
 
         $pricing = CourseCheckoutPricingService::resolve(
             Auth::user(),

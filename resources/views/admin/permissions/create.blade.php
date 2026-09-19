@@ -1,4 +1,4 @@
-﻿@extends('layouts.admin')
+@extends('layouts.admin')
 
 @section('title', 'إضافة صلاحية جديدة')
 @section('header', 'إضافة صلاحية جديدة')

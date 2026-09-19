@@ -12,7 +12,7 @@
                 </div>
                 <div>
                     <h1 class="text-2xl font-bold text-slate-800 dark:text-white">
-                        إعداد تكامل n8n مع Glottical
+                        إعداد تكامل n8n مع حصتك
                     </h1>
                     <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">
                         القيم التي تحفظها في النموذج أدناه تُخزَّن في قاعدة البيانات وتُستخدم أولاً عند الاتصال بـ n8n؛ إن تركتها فارغة تُستخدم قيم <code>.env</code> (<code>N8N_WEBHOOK_TOKEN</code> و<code>N8N_LIVE_SESSION_REPORT_WEBHOOK</code>) كاحتياطي.
@@ -102,7 +102,7 @@
                 </div>
                 <div>
                     <h2 class="text-sm font-semibold text-slate-800 dark:text-slate-100">
-                        2) Webhook من Glottical إلى n8n (إنشاء التقرير)
+                        2) Webhook من حصتك إلى n8n (إنشاء التقرير)
                     </h2>
                     <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                         هذا هو الـ URL الذي يستدعيه Laravel داخل `generateAiReport` لتشغيل الـ Workflow في n8n.
@@ -174,7 +174,7 @@ Body (JSON):
                 </div>
                 <div>
                     <h2 class="text-sm font-semibold text-slate-800 dark:text-slate-100">
-                        2) Webhook من n8n إلى Glottical (تحديث التقرير)
+                        2) Webhook من n8n إلى حصتك (تحديث التقرير)
                     </h2>
                     <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                         هذا هو الـ Endpoint الذي تستدعيه n8n بعد انتهاء التحليل والذكاء الاصطناعي لتحديث التقرير في المنصة.
@@ -190,7 +190,7 @@ Body (JSON):
                     <p class="mt-1 text-[11px] text-slate-500 dark:text-slate-400">
                         استبدل <code>{report_id}</code> بـ <code>report_id</code> القادم من المنصة (القيمة التي أرسلناها لـ n8n في الخطوة الأولى).
                     </p>
-                    <p class="mt-3 text-xs font-semibold text-slate-600 dark:text-slate-300">تقارير اجتماعات Glottical Classroom (نفس الـ Webhook، callback مختلف):</p>
+                    <p class="mt-3 text-xs font-semibold text-slate-600 dark:text-slate-300">تقارير اجتماعات فصول حصتك (نفس الـ Webhook، callback مختلف):</p>
                     <div class="mt-1 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 px-3 py-2 font-mono text-xs break-all">
                         PATCH {{ $classroomPlatformCallback }}
                     </div>

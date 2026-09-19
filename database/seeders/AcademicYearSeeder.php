@@ -82,6 +82,6 @@ class AcademicYearSeeder extends Seeder
             }
         }
 
-        $this->command->info('تم إنشاء '.count($years).' مسارات تعليمية (Glottical) بنجاح');
+        $this->command->info('تم إنشاء '.count($years).' مسارات تعليمية (حصتك) بنجاح');
     }
 }

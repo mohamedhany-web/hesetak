@@ -173,15 +173,39 @@
         </div>
         <div class="st-pkg-grid">
             @foreach($packages as $package)
-                <a href="{{ route('public.service-packages.checkout', $package) }}" class="st-pkg-card">
+                @php
+                    $perks = is_array($package->features) ? $package->features : [];
+                    $hoursLabel = $package->units_count
+                        ? ($isRtl ? $package->units_count.' حصة' : $package->units_count.' sessions')
+                        : null;
+                @endphp
+                <a href="{{ route('public.service-packages.checkout', $package) }}" class="st-pkg-card {{ $package->is_featured ? 'is-featured' : '' }}">
+                    @if(!empty($package->badge))
+                        <span class="st-pkg-card__badge">{{ $package->badge }}</span>
+                    @endif
                     <h3>{{ $package->name }}</h3>
-                    <p class="st-pkg-card__meta">
-                        {{ $package->units_count }} {{ __('student_timeline.session_unit') }}
-                        × {{ $package->sessionMinutes() }} {{ __('student_timeline.minutes') }}
-                    </p>
-                    <p class="st-pkg-card__valid">{{ __('student_timeline.valid_for') }} {{ $package->validityLabel() }}</p>
+                    @if($hoursLabel)
+                        <p class="st-pkg-card__meta">{{ $hoursLabel }} · {{ $package->sessionMinutes() }} {{ __('student_timeline.minutes') }}</p>
+                    @else
+                        <p class="st-pkg-card__meta">{{ $package->sessionMinutes() }} {{ __('student_timeline.minutes') }}</p>
+                    @endif
+                    @if(!empty($package->tagline))
+                        <p class="st-pkg-card__valid">{{ $package->tagline }}</p>
+                    @else
+                        <p class="st-pkg-card__valid">{{ __('student_timeline.valid_for') }} {{ $package->validityLabel() }}</p>
+                    @endif
                     <p class="st-pkg-card__price">{{ $package->formattedPrice() }}</p>
+                    @if($package->formattedOriginalPrice())
+                        <p class="st-pkg-card__old">{{ $package->formattedOriginalPrice() }}</p>
+                    @endif
                     <p class="st-pkg-card__unit">{{ $package->formattedPricePerUnit() }} / {{ __('student_timeline.session_unit') }}</p>
+                    @if(count($perks) > 0)
+                        <ul class="st-pkg-card__perks">
+                            @foreach(array_slice($perks, 0, 4) as $perk)
+                                <li>{{ is_string($perk) ? $perk : (string) $perk }}</li>
+                            @endforeach
+                        </ul>
+                    @endif
                 </a>
             @endforeach
         </div>

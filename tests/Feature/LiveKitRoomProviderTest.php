@@ -89,7 +89,7 @@ class LiveKitRoomProviderTest extends TestCase
         ]);
 
         $server = LiveServer::create([
-            'name' => 'Glottical LiveKit',
+            'name' => 'حصتك LiveKit',
             'domain' => 'live.glottical.com',
             'provider' => 'livekit',
             'status' => 'active',
@@ -168,7 +168,7 @@ class LiveKitRoomProviderTest extends TestCase
             'password' => Hash::make('secret'),
         ]);
         $server = LiveServer::create([
-            'name' => 'Glottical LiveKit',
+            'name' => 'حصتك LiveKit',
             'domain' => 'live.glottical.com',
             'provider' => 'livekit',
             'status' => 'active',
@@ -215,7 +215,7 @@ class LiveKitRoomProviderTest extends TestCase
             'password' => Hash::make('secret'),
         ]);
         $server = LiveServer::create([
-            'name' => 'Glottical LiveKit',
+            'name' => 'حصتك LiveKit',
             'domain' => 'live.glottical.com',
             'provider' => 'livekit',
             'status' => 'active',
@@ -249,7 +249,7 @@ class LiveKitRoomProviderTest extends TestCase
             'password' => Hash::make('secret'),
         ]);
         LiveServer::create([
-            'name' => 'Glottical LiveKit',
+            'name' => 'حصتك LiveKit',
             'domain' => 'live.glottical.com',
             'provider' => 'livekit',
             'status' => 'active',

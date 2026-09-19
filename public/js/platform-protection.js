@@ -68,7 +68,7 @@
                 <!-- النصوص -->
                 <div style="display: flex; flex-direction: column; align-items: center; gap: 15px;">
                     <div style="font-size: 56px; font-weight: 900; color: #dc2626; text-shadow: 0 4px 20px rgba(220, 38, 38, 0.6), 0 2px 10px rgba(220, 38, 38, 0.4), 0 0 5px rgba(220, 38, 38, 0.3); letter-spacing: 2px;">
-                        Glottical
+                        حصتك
                     </div>
                     <div style="font-size: 28px; font-weight: 700; color: #dc2626; text-shadow: 0 2px 10px rgba(220, 38, 38, 0.5), 0 0 5px rgba(220, 38, 38, 0.3);">
                         تأهيل المعلّمين
@@ -113,7 +113,7 @@
             e.preventDefault();
             screenshotAttempts++;
             activateScreenshotProtection(3000);
-            showMessage('Glottical', 'info');
+            showMessage('حصتك', 'info');
             return false;
         }
         

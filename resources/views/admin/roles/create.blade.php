@@ -1,4 +1,4 @@
-﻿@extends('layouts.admin')
+@extends('layouts.admin')
 
 @section('title', 'إضافة دور جديد')
 @section('header', 'إضافة دور جديد')

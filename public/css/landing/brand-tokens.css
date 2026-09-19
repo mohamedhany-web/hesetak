@@ -1,0 +1,16 @@
+/* حصتك official brand colors (from logo + الدليل v3.0) */
+:root {
+  --brand-blue: #1E4E8C;
+  --brand-blue-deep: #184888;
+  --brand-blue-soft: #2A5FA0;
+  --brand-blue-tint: #E8EEF6;
+  --brand-gold: #A88050;
+  --brand-gold-soft: #B8956A;
+  --brand-gold-tint: #F7F1E8;
+  --brand-navy: #152A4A;
+  --brand-muted: #5A6472;
+  --brand-bg: #FFFFFF;
+
+  /* Warm gold for booking CTAs (readable on light with navy text) */
+  --brand-gold-cta: #C9952A;
+}

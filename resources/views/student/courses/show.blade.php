@@ -723,9 +723,9 @@ document.addEventListener('DOMContentLoaded', function() {
         const originalPriceSection = document.querySelector('.original-price');
 
         if (discountPriceSection && originalPriceDisplay && finalPriceDisplay && discountAmountText && discountPercentage) {
-            originalPriceDisplay.textContent = number_format(pricing.original_price) + ' $';
+            originalPriceDisplay.textContent = number_format(pricing.original_price) + ' ' + @json(currency_symbol());
             finalPriceDisplay.textContent = number_format(pricing.final_amount);
-            discountAmountText.textContent = 'وفرت: ' + number_format(pricing.discount_amount) + ' $';
+            discountAmountText.textContent = 'وفرت: ' + number_format(pricing.discount_amount) + ' ' + @json(currency_symbol());
             discountPercentage.textContent = '-' + pricing.discount_percentage + '%';
 
             // إخفاء السعر الأصلي وإظهار السعر بعد الخصم

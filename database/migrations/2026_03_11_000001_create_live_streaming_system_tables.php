@@ -12,7 +12,7 @@ return new class extends Migration
         Schema::create('live_servers', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->string('domain'); // e.g. live.Glottical.com
+            $table->string('domain'); // e.g. live.hesetak.com
             $table->enum('provider', ['jitsi', 'custom'])->default('jitsi');
             $table->enum('status', ['active', 'inactive', 'maintenance'])->default('active');
             $table->string('ip_address')->nullable();

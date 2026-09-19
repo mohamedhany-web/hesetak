@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'باقات الخدمات - Glottical')
+@section('title', 'باقات الخدمات - حصتك')
 @section('page_title', 'باقات الخدمات')
 
 @section('content')

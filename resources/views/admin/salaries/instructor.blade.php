@@ -22,8 +22,8 @@
         'paid' => ['label' => 'تم الدفع', 'classes' => 'bg-accent-soft text-accent'],
     ];
     $kpis = [
-        ['label' => 'مطلوب الدفع لهذا المدرب', 'value' => number_format($pendingTotal, 2), 'suffix' => '$', 'icon' => 'fa-hourglass-half', 'tone' => 'metal'],
-        ['label' => 'تم الدفع لهذا المدرب', 'value' => number_format($paidTotal, 2), 'suffix' => '$', 'icon' => 'fa-check-circle', 'tone' => 'accent'],
+        ['label' => 'مطلوب الدفع لهذا المدرب', 'value' => number_format($pendingTotal, 2), 'suffix' => currency_symbol(), 'icon' => 'fa-hourglass-half', 'tone' => 'metal'],
+        ['label' => 'تم الدفع لهذا المدرب', 'value' => number_format($paidTotal, 2), 'suffix' => currency_symbol(), 'icon' => 'fa-check-circle', 'tone' => 'accent'],
     ];
 @endphp
 

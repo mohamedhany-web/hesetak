@@ -84,7 +84,7 @@ class TutoringGroupController extends Controller
                 'type' => $type,
                 'capacity' => $type === TutoringGroup::TYPE_INDIVIDUAL ? 1 : 8,
                 'duration_minutes' => 60,
-                'currency' => 'USD',
+                'currency' => platform_currency(),
                 'is_active' => true,
                 'sort_order' => 0,
             ]),

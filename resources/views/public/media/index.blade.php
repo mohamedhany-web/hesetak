@@ -1,8 +1,8 @@
-﻿@extends('layouts.public')
+@extends('layouts.public')
 
 @section('title', __('public.media_page_title') . ' - ' . __('public.site_suffix'))
 @section('meta_description', 'المكتبة الإعلامية لـ ' . config('app.name') . ' — مقالات وفيديوهات عن تعليم اللغة والمهارات المهنية.')
-@section('meta_keywords', 'مكتبة إعلامية, Glottical, تعليم ألماني, كول سنتر')
+@section('meta_keywords', 'مكتبة إعلامية, حصتك, تعليم ألماني, كول سنتر')
 @section('canonical_url', url('/media'))
 
 @section('content')

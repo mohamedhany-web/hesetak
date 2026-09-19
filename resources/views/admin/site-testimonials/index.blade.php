@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'آراء الموقع - Glottical')
+@section('title', 'آراء الموقع - حصتك')
 @section('page_title', 'آراء الموقع')
 
 @section('content')

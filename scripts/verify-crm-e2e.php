@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Glottical CRM end-to-end verification.
+ * CRM حصتك end-to-end verification.
  * Usage: php scripts/verify-crm-e2e.php
  */
 require __DIR__.'/../vendor/autoload.php';

@@ -1,7 +1,7 @@
 @php
     $locale = app()->getLocale();
     $isRtl = $locale === 'ar';
-    $brand = config('app.name', 'Glottical');
+    $brand = config('app.name', 'حصتك');
     $found = is_array($result ?? null) && ($result['found'] ?? false);
     $student = $found ? ($result['student'] ?? null) : null;
     $report = $found ? ($result['report'] ?? []) : [];

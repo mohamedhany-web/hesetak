@@ -12,8 +12,8 @@
         ['label' => 'إجمالي الإحالات', 'value' => number_format($stats['total']), 'icon' => 'fa-users', 'note' => 'جميع الإحالات المسجلة'],
         ['label' => 'مكتملة', 'value' => number_format($stats['completed']), 'icon' => 'fa-check-circle', 'note' => 'تم الحصول على المكافأة', 'tone' => 'emerald'],
         ['label' => 'قيد الانتظار', 'value' => number_format($stats['pending']), 'icon' => 'fa-hourglass-half', 'note' => 'في انتظار الشراء', 'tone' => 'amber'],
-        ['label' => 'إجمالي المكافآت', 'value' => number_format($stats['total_rewards'], 2) . ' $', 'icon' => 'fa-gift', 'note' => 'مكافآت من الإحالات'],
-        ['label' => 'إجمالي الخصومات', 'value' => number_format($stats['total_discounts'], 2) . ' $', 'icon' => 'fa-tag', 'note' => 'خصومات مطبقة'],
+        ['label' => 'إجمالي المكافآت', 'value' => number_format($stats['total_rewards'], 2) . ' ' . currency_symbol(), 'icon' => 'fa-gift', 'note' => 'مكافآت من الإحالات'],
+        ['label' => 'إجمالي الخصومات', 'value' => number_format($stats['total_discounts'], 2) . ' ' . currency_symbol(), 'icon' => 'fa-tag', 'note' => 'خصومات مطبقة'],
     ];
 @endphp
 

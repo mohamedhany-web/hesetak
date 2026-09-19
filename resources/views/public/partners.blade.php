@@ -1,8 +1,8 @@
-﻿@extends('layouts.public')
+@extends('layouts.public')
 
 @section('title', __('public.partners_page_title') . ' - ' . __('public.site_suffix'))
 @section('meta_description', 'شركاء ' . config('app.name') . ' — مؤسسات وشركات تدعم ربط التعليم اللغوي بسوق العمل.')
-@section('meta_keywords', 'شركاء, Glottical, شراكات, تعليم ألماني, سوق العمل')
+@section('meta_keywords', 'شركاء, حصتك, شراكات, تعليم ألماني, سوق العمل')
 @section('canonical_url', url('/partners'))
 
 @section('content')

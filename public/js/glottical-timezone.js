@@ -1,5 +1,5 @@
 /**
- * Glottical timezone helpers — aligned with «برج التنسيق الزمني».
+ * حصتك timezone helpers — aligned with «برج التنسيق الزمني».
  * Storage is always UTC; display uses IANA zones + slot quality for the viewer.
  */
 (function (global) {
@@ -64,7 +64,7 @@
     }
   }
 
-  global.GlotticalTimezone = {
+  global.حصتكTimezone = {
     CAIRO_TZ: CAIRO_TZ,
     US_ZONES: US_ZONES,
     pad: pad,

@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'Glottical CRM - Glottical')
+@section('title', 'CRM حصتك - حصتك')
 @section('page_title', 'لوحة CRM')
 
 @section('content')
@@ -24,7 +24,7 @@
 
     <section class="flex flex-wrap items-end justify-between gap-4">
         <div class="min-w-0">
-            <p class="text-xs font-medium text-muted">المبيعات · Glottical CRM</p>
+            <p class="text-xs font-medium text-muted">المبيعات · CRM حصتك</p>
             <h2 class="mt-1 text-2xl font-semibold tracking-tight text-ink md:text-[28px]">لوحة CRM</h2>
             <p class="mt-1 text-sm text-muted">متابعة العملاء والعمولات ومسار البيع من مكان واحد</p>
         </div>

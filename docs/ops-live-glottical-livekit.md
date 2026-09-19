@@ -1,7 +1,7 @@
-# تشغيل LiveKit لـ Glottical على VPS 187.124.36.228
+# تشغيل LiveKit لـ حصتك على VPS 187.124.36.228
 
 ## الهدف
-- `live.glottical.com` هو نطاق LiveKit لمنصة Glottical.
+- `live.glottical.com` هو نطاق LiveKit لمنصة حصتك.
 - كل غرف البث وClassroom تعمل عبر LiveKit فقط.
 
 ## 1) DNS (Hostinger — dns.hostinger.com)
@@ -27,7 +27,7 @@ sudo bash scripts/setup-live-glottical-livekit.sh
 - يصدر شهادة Let's Encrypt
 - يضبط مفاتيح LiveKit في `livekit.yaml`
 
-## 3) منصة Glottical
+## 3) منصة حصتك
 في `.env` (محلياً وعلى الإنتاج):
 ```
 LIVEKIT_URL=wss://live.glottical.com

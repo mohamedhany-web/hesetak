@@ -1,7 +1,7 @@
 @php
     $locale = app()->getLocale();
     $isRtl = $locale === 'ar';
-    $brand = config('app.name', 'Glottical');
+    $brand = config('app.name', 'حصتك');
 @endphp
 <!DOCTYPE html>
 <html lang="{{ $locale }}" dir="{{ $isRtl ? 'rtl' : 'ltr' }}">

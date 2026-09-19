@@ -1,4 +1,4 @@
-# robots.txt — Glottical
+# robots.txt — حصتك
 # https://glottical.com
 
 User-agent: *

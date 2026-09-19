@@ -49,8 +49,8 @@ class DatabaseSeeder extends Seeder
             $this->command->newLine();
         }
 
-        // 4. إنشاء مستخدمي أكاديمية Glottical
-        $this->command->info('👥 4. إنشاء مستخدمي أكاديمية Glottical...');
+        // 4. إنشاء مستخدمي أكاديمية حصتك
+        $this->command->info('👥 4. إنشاء مستخدمي أكاديمية حصتك...');
         $this->call([
             GlotticalAcademyUserSeeder::class,
         ]);
@@ -100,17 +100,15 @@ class DatabaseSeeder extends Seeder
             $this->command->newLine();
         }
 
-        // 8. إنشاء كورسات تجريبية (اختياري)
-        if ($this->command->confirm('هل تريد إنشاء كورسات تجريبية؟', false)) {
-            $this->command->info('📖 8. إنشاء كورسات تجريبية...');
-            $this->call([
-                CoursesSeeder::class,
-            ]);
-            $this->command->info('✅ تم إنشاء كورسات تجريبية');
-            $this->command->newLine();
-        }
+        // 8. بيانات عرض عامة للواجهة (معلمون · مواد · كورسات · آراء · باقات)
+        $this->command->info('🏠 8. تعبئة محتوى الواجهة العامة (حصتك)...');
+        $this->call([
+            HesetakPublicDemoSeeder::class,
+        ]);
+        $this->command->info('✅ تم تعبئة محتوى الواجهة');
+        $this->command->newLine();
 
-        // 8b. دورات واجهة تجريبية بصور عالية الجودة (اختياري — يحتاج اتصالاً لتنزيل الصور)
+        // 8b. دورات واجهة بصور (اختياري — يحتاج اتصالاً لتنزيل الصور)
         if ($this->command->confirm('هل تريد إضافة/تحديث دورات الواجهة التجريبية مع الصور؟', false)) {
             $this->command->info('🖼️  تشغيل ShowcaseDemoCoursesSeeder...');
             $this->call([
@@ -125,10 +123,10 @@ class DatabaseSeeder extends Seeder
         $this->command->info('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
         $this->command->newLine();
         $this->command->info('📋 بيانات الدخول الافتراضية (كلمة المرور: password123):');
-        $this->command->info('   👨‍💼 مدير المنصة: admin@Glottical.com أو 0500000000');
-        $this->command->info('   👩‍💼 مديرة أكاديمية: academy@Glottical.com أو 0500000001');
-        $this->command->info('   👨‍🏫 مدرب: instructor1@Glottical.com أو 0500000010');
-        $this->command->info('   👩‍🎓 طالب: student1@Glottical.com أو 0500000020');
+        $this->command->info('   👨‍💼 مدير المنصة: admin@hesetak.com أو 0500000000');
+        $this->command->info('   👩‍💼 مديرة أكاديمية: academy@hesetak.com أو 0500000001');
+        $this->command->info('   👨‍🏫 مدرب: instructor1@hesetak.com أو 0500000010');
+        $this->command->info('   👩‍🎓 طالب: student1@hesetak.com أو 0500000020');
         $this->command->newLine();
     }
 }

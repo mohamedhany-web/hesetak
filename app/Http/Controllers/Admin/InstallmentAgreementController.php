@@ -204,7 +204,7 @@ class InstallmentAgreementController extends Controller
                         'user_id' => $agreement->user_id,
                         'payment_method' => $data['payment_method'] ?? 'cash',
                         'amount' => $payment->amount,
-                        'currency' => 'USD',
+                        'currency' => platform_currency(),
                         'status' => 'completed',
                         'paid_at' => $data['paid_at'] ? Carbon::parse($data['paid_at']) : now(),
                         'processed_by' => auth()->id(),
@@ -223,7 +223,7 @@ class InstallmentAgreementController extends Controller
                         'type' => 'credit', // دائن (إيراد)
                         'category' => 'course_payment',
                         'amount' => $payment->amount,
-                        'currency' => 'USD',
+                        'currency' => platform_currency(),
                         'description' => 'دفعة قسط تقسيط - ' . ($agreement->course->title ?? 'كورس') . ' - قسط رقم: ' . $payment->sequence_number,
                         'status' => 'completed',
                         'metadata' => [

@@ -15,6 +15,7 @@ use App\Models\TutoringGroupBooking;
 use App\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Route;
 
 class StudentLearnHubService
 {
@@ -24,29 +25,33 @@ class StudentLearnHubService
      */
     public function hub(User $student, string $tab = 'private', array $filters = []): array
     {
-        $tab = in_array($tab, ['private', 'groups', 'mine'], true) ? $tab : 'private';
+        // حصتك: فردي + رصيدي فقط — لا مجموعات ولا مدرسة
+        $tab = in_array($tab, ['private', 'mine'], true) ? $tab : 'private';
         $filters = $this->normalizeFilters($filters);
 
         $privateUnits = $this->unitsLeft($student->id, ServicePackage::SCOPE_PRIVATE_LESSONS);
-        $collectiveUnits = $this->unitsLeft($student->id, ServicePackage::SCOPE_TUTORING_COLLECTIVE);
-        $individualUnits = $this->unitsLeft($student->id, ServicePackage::SCOPE_TUTORING_INDIVIDUAL);
-        $globalUnits = $this->unitsLeft($student->id, ServicePackage::SCOPE_GLOBAL);
+
+        $packagesUrl = Route::has('public.pricing')
+            ? route('public.pricing')
+            : (Route::has('public.service-packages.index')
+                ? route('public.service-packages.index')
+                : route('dashboard'));
 
         return [
             'tab' => $tab,
             'filters' => $filters,
             'filter_subjects' => $this->filterSubjects(),
-            'filter_years' => $this->filterYears(),
-            'packages_url' => route('public.service-packages.index'),
+            'filter_years' => collect(),
+            'packages_url' => $packagesUrl,
             'private_units' => $privateUnits,
-            'collective_units' => $collectiveUnits,
-            'individual_units' => $individualUnits,
-            'global_units' => $globalUnits,
+            'collective_units' => 0,
+            'individual_units' => 0,
+            'global_units' => 0,
             'teachers' => $tab === 'private' ? $this->teachersCatalog($student, $filters) : collect(),
-            'groups' => $tab === 'groups' ? $this->groupsCatalog($student, $filters) : collect(),
+            'groups' => collect(),
             'entitlements' => $tab === 'mine' ? $this->activeEntitlements($student->id) : collect(),
-            'upcoming_private' => $tab === 'mine' ? $this->upcomingPrivateSessions($student->id) : collect(),
-            'upcoming_bookings' => $tab === 'mine' ? $this->upcomingGroupBookings($student->id) : collect(),
+            'upcoming_private' => $this->upcomingPrivateSessions($student->id),
+            'upcoming_bookings' => collect(),
         ];
     }
 
@@ -146,6 +151,9 @@ class StudentLearnHubService
             ->orderByDesc('created_at')
             ->get();
 
+        // حصتك: كورسات فردية فقط في ملف المعلم الداخلي
+        $oneToOneCourses = $courses->filter(fn ($c) => $c->isOneToOne())->values();
+
         $photo = $profile->photo_url
             ?: ($instructor->profile_image_url ?: asset('img/student-timeline/avatar.png'));
 
@@ -164,6 +172,12 @@ class StudentLearnHubService
             );
         }
 
+        $packagesUrl = Route::has('public.pricing')
+            ? route('public.pricing')
+            : (Route::has('public.service-packages.index')
+                ? route('public.service-packages.index')
+                : route('dashboard'));
+
         return [
             'profile' => $profile,
             'instructor' => $instructor,
@@ -171,9 +185,9 @@ class StudentLearnHubService
             'units_left' => $unitsLeft,
             'bookable_slots' => $bookableSlots,
             'weekly_calendar' => $this->buildWeeklyCalendar($instructor->id),
-            'group_courses' => $courses->filter(fn ($c) => ! $c->isOneToOne())->values(),
-            'one_to_one_courses' => $courses->filter(fn ($c) => $c->isOneToOne())->values(),
-            'packages_url' => route('public.service-packages.index'),
+            'group_courses' => collect(),
+            'one_to_one_courses' => $oneToOneCourses,
+            'packages_url' => $packagesUrl,
             'photo_url' => $photo,
             'intro_video_url' => $introVideoUrl !== '' ? $introVideoUrl : null,
             'intro_embed_url' => $introEmbedUrl,
@@ -187,7 +201,7 @@ class StudentLearnHubService
             'consultation_duration' => $profile->consultation_duration_minutes
                 ? (int) $profile->consultation_duration_minutes
                 : null,
-            'courses_count' => $courses->count(),
+            'courses_count' => $oneToOneCourses->count(),
         ];
     }
 
@@ -385,7 +399,13 @@ class StudentLearnHubService
             ->forUser($userId)
             ->active()
             ->whereColumn('units_used', '<', 'units_total')
-            ->with(['servicePackage:id,name', 'tutoringGroup:id,title'])
+            ->whereHas('servicePackage', function ($q) {
+                $q->whereIn('scope', [
+                    ServicePackage::SCOPE_PRIVATE_LESSONS,
+                    ServicePackage::SCOPE_GLOBAL,
+                ]);
+            })
+            ->with(['servicePackage:id,name,scope'])
             ->orderBy('expires_at')
             ->limit(20)
             ->get();

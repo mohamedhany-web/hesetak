@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'تسعير الباقات المخصصة - Glottical')
+@section('title', 'تسعير الباقات المخصصة - حصتك')
 @section('page_title', 'تسعير الباقات المخصصة')
 
 @section('content')
@@ -25,7 +25,7 @@
 <div class="space-y-5">
     <section class="flex flex-wrap items-end justify-between gap-4">
         <div>
-            <p class="text-xs font-medium text-muted">الباقات والأسعار · بالدولار</p>
+            <p class="text-xs font-medium text-muted">الباقات والأسعار · بالريال السعودي</p>
             <h2 class="mt-1 text-2xl font-semibold text-ink">مدخلات «خصص باقتك الخاصة»</h2>
             <p class="mt-1 text-sm text-muted">قاعدة الحصص الخاصة تُستخدم في مخصص الطالب: مدة شهر أو 3 أشهر × عدد حصص أسبوعي ثابت. الإجمالي = الحصص الأسبوعية × 4 × عدد الشهور.</p>
         </div>
@@ -67,7 +67,7 @@
                                     <div class="font-semibold text-ink">{{ $rule->name }}</div>
                                     <div class="text-xs text-muted">{{ $rule->scopeLabel() }} · {{ $rule->is_active ? 'نشطة' : 'موقوفة' }}</div>
                                 </td>
-                                <td class="px-4 py-3 font-semibold">${{ number_format((float) $rule->price_per_session, 2) }}</td>
+                                <td class="px-4 py-3 font-semibold">{{ number_format((float) $rule->price_per_session, 2) }} {{ currency_symbol() }}</td>
                                 <td class="px-4 py-3">{{ $rule->min_sessions }}–{{ $rule->max_sessions }} <span class="text-xs text-muted">/ خطوة {{ $rule->session_step }}</span></td>
                                 <td class="px-4 py-3">{{ $rule->session_minutes }} د <span class="block text-xs text-muted">{{ $rule->duration_days }} يوم</span></td>
                                 <td class="px-4 py-3 text-xs">
@@ -99,7 +99,7 @@
             <div class="mb-4 flex items-center justify-between gap-3">
                 <div>
                     <h3 class="font-semibold text-ink">{{ $editing ? 'تعديل قاعدة التسعير' : 'إضافة قاعدة تسعير' }}</h3>
-                    <p class="text-xs text-muted">جميع الأسعار بالدولار الأمريكي USD.</p>
+                    <p class="text-xs text-muted">جميع الأسعار بالريال السعودي (ر.س).</p>
                 </div>
                 @if($editing)
                     <a href="{{ route('admin.service-package-pricing-rules.index') }}" class="text-sm text-accent">إلغاء</a>
@@ -124,7 +124,7 @@
                         </select>
                     </div>
                     <div>
-                        <label class="{{ $label }}" for="price_per_session">سعر الحصة بالدولار *</label>
+                        <label class="{{ $label }}" for="price_per_session">سعر الحصة بالريال *</label>
                         <div class="relative">
                             <span class="absolute inset-y-0 left-3 flex items-center font-semibold text-muted">$</span>
                             <input id="price_per_session" type="number" step="0.01" min="0.01" name="price_per_session" required value="{{ old('price_per_session', $editRule->price_per_session) }}" class="{{ $field }} pl-8" dir="ltr">

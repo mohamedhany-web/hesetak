@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', ($mode === 'create' ? 'إضافة' : 'تعديل').' · '.$typeLabel.' - Glottical')
+@section('title', ($mode === 'create' ? 'إضافة' : 'تعديل').' · '.$typeLabel.' - حصتك')
 @section('page_title', $mode === 'create' ? 'مجموعة جديدة' : 'تعديل المجموعة')
 
 @section('content')
@@ -119,7 +119,7 @@
                 </div>
                 <div>
                     <label class="{{ $labelClass }}" for="currency">العملة</label>
-                    <input id="currency" type="text" name="currency" value="{{ old('currency', $group->currency ?: 'USD') }}" class="{{ $fieldClass }}">
+                    <input id="currency" type="text" name="currency" value="{{ old('currency', $group->currency ?: platform_currency()) }}" class="{{ $fieldClass }}">
                 </div>
                 <div>
                     <label class="{{ $labelClass }}" for="duration_minutes">مدة الجلسة (دقيقة)</label>

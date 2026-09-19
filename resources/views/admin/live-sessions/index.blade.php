@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'جلسات البث المباشر - Glottical')
+@section('title', 'جلسات البث المباشر - حصتك')
 @section('page_title', 'جلسات البث المباشر')
 
 @section('content')

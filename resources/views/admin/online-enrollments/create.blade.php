@@ -92,7 +92,7 @@
                 </div>
 
                 <div x-show="status === 'active'" x-cloak>
-                    <label class="{{ $labelClass }}" for="final_price">مبلغ التفعيل (USD) — اختياري</label>
+                    <label class="{{ $labelClass }}" for="final_price">مبلغ التفعيل (ر.س) — اختياري</label>
                     <input type="number" name="final_price" id="final_price" value="{{ old('final_price') }}" min="0" step="0.01"
                            class="{{ $fieldClass }}" placeholder="فارغ = سعر البرنامج">
                     <p class="mt-1 text-xs text-muted">لحساب نسبة المدرب من مبلغ التفعيل الفعلي.</p>

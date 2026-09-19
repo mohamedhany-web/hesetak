@@ -43,7 +43,7 @@ if (!function_exists('generateStudentMonthlyReport')) {
     /**
      * توليد وإرسال تقرير شهري لطالب
      */
-    function generateStudentMonthlyReport(\App\Models\User $student, string $month = null): array
+    function generateStudentMonthlyReport(\App\Models\User $student, ?string $month = null): array
     {
         try {
             $month = $month ?? now()->subMonth()->format('Y-m');

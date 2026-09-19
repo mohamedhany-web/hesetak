@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'جدولة جلسة بث - Glottical')
+@section('title', 'جدولة جلسة بث - حصتك')
 @section('page_title', 'جدولة جلسة بث')
 
 @section('content')

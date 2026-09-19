@@ -12,7 +12,7 @@
     ];
     $kpis = [
         ['label' => 'إجمالي المحافظ', 'value' => $stats['wallet_stats']['total_wallets'] ?? 0, 'icon' => 'fa-wallet', 'tone' => 'accent', 'note' => ($stats['wallet_stats']['active_wallets'] ?? 0) . ' نشطة'],
-        ['label' => 'إجمالي الأرصدة', 'value' => number_format($stats['wallet_stats']['total_balance'] ?? 0, 2) . ' $', 'icon' => 'fa-coins', 'tone' => 'metal', 'note' => 'مجموع أرصدة المحافظ', 'raw' => true],
+        ['label' => 'إجمالي الأرصدة', 'value' => number_format($stats['wallet_stats']['total_balance'] ?? 0, 2) . ' ' . currency_symbol(), 'icon' => 'fa-coins', 'tone' => 'metal', 'note' => 'مجموع أرصدة المحافظ', 'raw' => true],
     ];
 @endphp
 

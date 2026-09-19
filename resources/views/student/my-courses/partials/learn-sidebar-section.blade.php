@@ -15,7 +15,7 @@
             @if($isSectionLocked)
                 <i class="fas fa-lock text-amber-500 text-[10px]" title="أكمل القسم السابق لفتح هذا القسم"></i>
             @else
-                <i class="fas fa-folder text-sky-400/90 text-[10px]"></i>
+                <i class="fas fa-folder text-[#2A6BB5]/90 text-[10px]"></i>
             @endif
             <span>{{ $section->title }}</span>
             @if($sectionItemCount > 0)
@@ -124,7 +124,7 @@
                                     <i class="fas fa-check text-white text-[10px]"></i>
                                 </div>
                             @elseif($isCurrent)
-                                <div class="w-6 h-6 bg-sky-500 rounded-md flex items-center justify-center animate-pulse">
+                                <div class="w-6 h-6 bg-[#1E4E8C] rounded-md flex items-center justify-center animate-pulse">
                                     <i class="fas fa-play text-white text-[10px]"></i>
                                 </div>
                             @else
@@ -142,7 +142,7 @@
                                     <i class="fas fa-lock text-white text-[10px]"></i>
                                 </div>
                             @else
-                                <div class="w-6 h-6 bg-sky-500 rounded-md flex items-center justify-center">
+                                <div class="w-6 h-6 bg-[#1E4E8C] rounded-md flex items-center justify-center">
                                     <i class="fas fa-chalkboard-teacher text-white text-[10px]"></i>
                                 </div>
                             @endif

@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Public;
 
 use App\Helpers\VideoHelper;
 use App\Http\Controllers\Controller;
+use App\Models\AcademicSubject;
+use App\Models\AcademicYear;
 use App\Models\AdvancedCourse;
 use App\Models\ConsultationSetting;
 use App\Models\InstructorProfile;
@@ -13,23 +15,130 @@ use App\Models\TutoringGroup;
 use App\Models\User;
 use App\Services\OneToOneAvailabilityService;
 use App\Services\StudentEntitlementService;
+use App\Support\HesetakMatchCatalog;
+use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Schema;
 
 class InstructorController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $profiles = InstructorProfile::query()
+        $q = trim((string) $request->query('q', ''));
+        $skill = trim((string) $request->query('skill', ''));
+        $stage = trim((string) $request->query('stage', ''));
+        $curriculum = trim((string) $request->query('curriculum', ''));
+        $sort = (string) $request->query('sort', 'newest');
+        if (! in_array($sort, ['newest', 'name', 'courses'], true)) {
+            $sort = 'newest';
+        }
+
+        $allowedCurriculum = HesetakMatchCatalog::allowedCurriculumTypeKeys();
+        if ($curriculum !== '' && ! in_array($curriculum, $allowedCurriculum, true)) {
+            $curriculum = '';
+        }
+
+        $stages = collect();
+        if (Schema::hasTable('academic_years')) {
+            $stages = AcademicYear::query()
+                ->publicCatalog()
+                ->ordered()
+                ->get(['id', 'name', 'slug', 'tagline']);
+        }
+
+        $stageYear = null;
+        if ($stage !== '' && $stages->isNotEmpty()) {
+            $stageYear = $stages->first(fn (AcademicYear $y) => $y->slug === $stage || (string) $y->id === $stage);
+            if (! $stageYear) {
+                $stage = '';
+            } else {
+                $stage = (string) $stageYear->slug;
+            }
+        }
+
+        $subjectOptions = collect();
+        if (Schema::hasTable('academic_subjects')) {
+            $subjectQuery = AcademicSubject::query()->active()->ordered();
+            if ($stageYear) {
+                $subjectQuery->where('academic_year_id', $stageYear->id);
+            } else {
+                $subjectQuery->whereHas('academicYear', fn ($y) => $y->publicCatalog());
+            }
+            $subjectOptions = $subjectQuery
+                ->get(['id', 'name', 'slug', 'academic_year_id'])
+                ->unique(fn ($s) => mb_strtolower($s->name))
+                ->values();
+        }
+
+        $baseQuery = InstructorProfile::query()
             ->approved()
-            ->whereHas('user', function ($q) {
-                $q->whereIn('role', ['instructor', 'teacher'])
+            ->whereHas('user', function ($query) {
+                $query->whereIn('role', ['instructor', 'teacher'])
                     ->where('is_active', true);
             })
-            ->with(['user:id,name,role,is_active'])
-            ->orderByDesc('reviewed_at')
-            ->orderByDesc('id')
+            ->with(['user:id,name,role,is_active']);
+
+        $allForFacets = (clone $baseQuery)->get(['id', 'user_id', 'skills', 'headline', 'curriculum_types']);
+        $skillFacets = $this->buildSkillFacets($allForFacets);
+        $totalTeachers = $allForFacets->count();
+
+        $query = clone $baseQuery;
+
+        if ($q !== '') {
+            $like = '%'.$q.'%';
+            $query->where(function ($inner) use ($like) {
+                $inner->where('instructor_profiles.headline', 'like', $like)
+                    ->orWhere('instructor_profiles.bio', 'like', $like)
+                    ->orWhere('instructor_profiles.skills', 'like', $like)
+                    ->orWhere('instructor_profiles.experience', 'like', $like)
+                    ->orWhereHas('user', fn ($u) => $u->where('name', 'like', $like));
+            });
+        }
+
+        if ($skill !== '') {
+            $skillLike = '%'.$skill.'%';
+            $query->where(function ($inner) use ($skillLike) {
+                $inner->where('instructor_profiles.skills', 'like', $skillLike)
+                    ->orWhere('instructor_profiles.headline', 'like', $skillLike)
+                    ->orWhere('instructor_profiles.bio', 'like', $skillLike);
+            });
+        }
+
+        if ($stageYear) {
+            $yearId = (int) $stageYear->id;
+            $yearName = (string) $stageYear->name;
+            $likeYear = '%'.$yearName.'%';
+            $query->where(function ($inner) use ($yearId, $likeYear) {
+                $inner->whereHas('user', function ($u) use ($yearId) {
+                    $u->whereHas('teachingLearningPaths', fn ($y) => $y->where('academic_years.id', $yearId));
+                })->orWhere('instructor_profiles.headline', 'like', $likeYear)
+                    ->orWhere('instructor_profiles.skills', 'like', $likeYear)
+                    ->orWhere('instructor_profiles.bio', 'like', $likeYear)
+                    ->orWhere('instructor_profiles.experience', 'like', $likeYear);
+            });
+        }
+
+        $profiles = $query
+            ->orderByDesc('instructor_profiles.reviewed_at')
+            ->orderByDesc('instructor_profiles.id')
             ->get();
+
+        if ($curriculum !== '') {
+            $profiles = $profiles->filter(function (InstructorProfile $profile) use ($curriculum) {
+                $hay = implode(' ', [
+                    (string) $profile->headline,
+                    (string) $profile->skills,
+                    (string) $profile->bio,
+                    (string) $profile->experience,
+                ]);
+
+                return HesetakMatchCatalog::profileMatchesCurriculumType(
+                    $profile->curriculumTypeKeys(),
+                    $curriculum,
+                    $hay
+                );
+            })->values();
+        }
 
         $courseCounts = AdvancedCourse::query()
             ->where('is_active', true)
@@ -41,6 +150,12 @@ class InstructorController extends Controller
         $profiles->each(function (InstructorProfile $profile) use ($courseCounts) {
             $profile->setAttribute('courses_count', (int) ($courseCounts[$profile->user_id] ?? 0));
         });
+
+        if ($sort === 'name') {
+            $profiles = $profiles->sortBy(fn (InstructorProfile $p) => mb_strtolower((string) ($p->user->name ?? '')), SORT_NATURAL)->values();
+        } elseif ($sort === 'courses') {
+            $profiles = $profiles->sortByDesc(fn (InstructorProfile $p) => (int) ($p->courses_count ?? 0))->values();
+        }
 
         $consultationSetting = ConsultationSetting::current();
 
@@ -57,7 +172,53 @@ class InstructorController extends Controller
                 ->limit(8)
                 ->get();
 
-        return view('instructors.index', compact('profiles', 'consultationSetting', 'featuredCourses'));
+        $filters = [
+            'q' => $q,
+            'skill' => $skill,
+            'stage' => $stage,
+            'curriculum' => $curriculum,
+            'sort' => $sort,
+        ];
+
+        $curriculumTypes = HesetakMatchCatalog::curriculumTypes();
+
+        return view('instructors.index', compact(
+            'profiles',
+            'consultationSetting',
+            'featuredCourses',
+            'filters',
+            'skillFacets',
+            'totalTeachers',
+            'stages',
+            'subjectOptions',
+            'curriculumTypes'
+        ));
+    }
+
+    /**
+     * @param  Collection<int, InstructorProfile>  $profiles
+     * @return list<array{label:string,count:int}>
+     */
+    private function buildSkillFacets(Collection $profiles): array
+    {
+        $counts = [];
+        foreach ($profiles as $profile) {
+            foreach ($profile->skills_list as $item) {
+                $label = trim((string) $item);
+                if ($label === '' || mb_strlen($label) > 28) {
+                    continue;
+                }
+                $key = mb_strtolower($label);
+                if (! isset($counts[$key])) {
+                    $counts[$key] = ['label' => $label, 'count' => 0];
+                }
+                $counts[$key]['count']++;
+            }
+        }
+
+        uasort($counts, fn ($a, $b) => $b['count'] <=> $a['count'] ?: strcmp($a['label'], $b['label']));
+
+        return array_values(array_slice($counts, 0, 12));
     }
 
     public function show(User $instructor)
@@ -126,7 +287,32 @@ class InstructorController extends Controller
             )->take(24);
         }
 
-        $packagesUrl = route('public.service-packages.index');
+        $packagesUrl = route('public.pricing');
+
+        $teachingYears = collect();
+        if (Schema::hasTable('academic_year_instructors')) {
+            $teachingYears = AcademicYear::query()
+                ->publicCatalog()
+                ->whereHas('instructors', fn ($q) => $q->where('users.id', $instructor->id))
+                ->ordered()
+                ->get(['id', 'name', 'slug', 'tagline']);
+        }
+
+        $curriculumTypeKeys = $profile->curriculumTypeKeys();
+        $curriculumTypeLabels = collect($curriculumTypeKeys)
+            ->map(fn ($key) => HesetakMatchCatalog::curriculumTypeLabel($key))
+            ->filter()
+            ->values()
+            ->all();
+
+        if ($curriculumTypeLabels === []) {
+            $hay = implode(' ', [(string) $profile->headline, (string) $profile->skills, (string) $profile->bio]);
+            foreach (HesetakMatchCatalog::curriculumTypes() as $meta) {
+                if (HesetakMatchCatalog::profileMatchesCurriculumType(null, $meta['key'], $hay)) {
+                    $curriculumTypeLabels[] = $meta['label'];
+                }
+            }
+        }
 
         return view('instructors.show', compact(
             'profile',
@@ -142,7 +328,9 @@ class InstructorController extends Controller
             'canBook',
             'unitsLeft',
             'bookableSlots',
-            'packagesUrl'
+            'packagesUrl',
+            'teachingYears',
+            'curriculumTypeLabels'
         ));
     }
 

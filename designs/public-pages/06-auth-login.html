@@ -3,80 +3,83 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5">
-  <title>تسجيل الدخول — Sana</title>
-  <meta name="theme-color" content="#1D4EDB">
+  <title>تسجيل الدخول — حصتك (مرآة)</title>
+  <meta name="theme-color" content="#1E4E8C">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-  <!-- CSS مستخرج من auth/partials/geometric-styles.blade.php -->
-  <link rel="stylesheet" href="assets/sana-auth-geo.css">
+  <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="assets/lasles-auth-theme.css">
   <style>
-    .design-mirror-badge {
-      position: fixed; z-index: 99999; bottom: 12px; inset-inline-start: 12px;
-      background: #1e1b4b; color: #fff; font: 700 .72rem/1 Tajawal,sans-serif;
-      padding: .45rem .7rem; border-radius: 999px; opacity: .85; pointer-events: none;
+    .mirror-note {
+      margin: 0; padding: .65rem 1rem; text-align: center;
+      background: #FFF6F6; color: #4F5665; font: 500 .82rem/1.5 Rubik, sans-serif;
+      border-bottom: 1px solid #FFD6D6;
     }
-    [x-cloak]{display:none!important}
   </style>
 </head>
-<body class="geo-page">
-  <div class="design-mirror-badge">مرآة تصميم الإنتاج · auth/login.blade.php</div>
-  <canvas id="geo-canvas" aria-hidden="true"></canvas>
-
-  <div class="geo-layer">
-    <nav class="geo-nav">
-      <a href="01-home.html" class="geo-logo geo-logo--brand"><span>SANA</span></a>
-      <a href="07-auth-register.html" class="geo-nav-link">إنشاء حساب</a>
-    </nav>
-
-    <main class="geo-stage">
-      <div class="geo-panel geo-login-panel">
-        <div class="geo-brand-mark">
-          <span class="geo-logo" style="font-size:1.4rem">SANA</span>
+<body class="lasles-auth">
+  <p class="mirror-note">مرآة تصميم — Blade: <code>auth/login</code> · CSS: <code>public/css/landing/lasles-auth.css</code></p>
+  <div class="lasles-auth-shell">
+    <div class="lasles-auth-bg" aria-hidden="true"><span class="lasles-auth-bg__grid"></span></div>
+    <div class="lasles-auth-layer">
+      <nav class="lasles-auth-nav">
+        <a href="01-home.html" class="lasles-auth-logo">
+          <img src="../../public/img/lasles/logo-mark.svg" width="32" height="32" alt="">
+          <span><b>حصتك</b></span>
+        </a>
+        <div class="lasles-auth-nav__actions">
+          <a href="07-auth-register.html" class="lasles-auth-nav-link">إنشاء حساب</a>
         </div>
-
-        <h1 class="geo-headline">مرحباً<br><em>بعودتك</em></h1>
-        <p class="geo-lead">اختر نوع حسابك ثم أدخل بيانات الدخول</p>
-
-        <form onsubmit="event.preventDefault();">
-          <div class="geo-role-switch">
-            <button type="button" class="geo-role-btn is-active">طالب</button>
-            <button type="button" class="geo-role-btn">ولي أمر</button>
+      </nav>
+      <div class="lasles-auth-main">
+        <aside class="lasles-auth-aside">
+          <p class="lasles-auth-kicker">حصتك للمعلمين</p>
+          <h2 class="lasles-auth-aside__title">طوّر ممارستك<br><em>خطوة بخطوة</em></h2>
+          <p class="lasles-auth-aside__lead">منصّة تساعد المعلم على تشخيص التحديات الصفية، والوصول إلى ممارسات وأدوات وتحديات تطبيقية، وقياس التقدّم.</p>
+          <ol class="lasles-auth-loop">
+            <li><span class="lasles-auth-loop__num">1</span><div><p class="lasles-auth-loop__label">تشخيص</p><p class="lasles-auth-loop__desc">حدّد تحديات ممارستك الصفية بوضوح.</p></div></li>
+            <li><span class="lasles-auth-loop__num">2</span><div><p class="lasles-auth-loop__label">وصول</p><p class="lasles-auth-loop__desc">ممارسات وأدوات وتحديات جاهزة للتطبيق.</p></div></li>
+            <li><span class="lasles-auth-loop__num">3</span><div><p class="lasles-auth-loop__label">تطوير</p><p class="lasles-auth-loop__desc">ابنِ أداءك المهني بتطبيق مستمر.</p></div></li>
+            <li><span class="lasles-auth-loop__num">4</span><div><p class="lasles-auth-loop__label">قياس</p><p class="lasles-auth-loop__desc">تابع تقدّمك ببيانات واضحة.</p></div></li>
+          </ol>
+        </aside>
+        <div class="lasles-auth-panel">
+          <div class="lasles-auth-card">
+            <p class="lasles-auth-eyebrow">حساب المعلم</p>
+            <h1 class="lasles-auth-title">مرحباً<br><em>بعودتك</em></h1>
+            <p class="lasles-auth-lead">ادخل لمتابعة تشخيص ممارستك، والوصول إلى الأدوات، وقياس تقدّمك.</p>
+            <form onsubmit="event.preventDefault()">
+              <div class="lasles-auth-field">
+                <label>البريد الإلكتروني</label>
+                <div class="lasles-auth-input-wrap">
+                  <span class="lasles-auth-icon"><i class="fas fa-envelope"></i></span>
+                  <input class="lasles-auth-input has-icon" type="email" placeholder="you@school.edu" dir="ltr">
+                </div>
+              </div>
+              <div class="lasles-auth-field">
+                <label>كلمة المرور</label>
+                <div class="lasles-auth-input-wrap">
+                  <span class="lasles-auth-icon"><i class="fas fa-lock"></i></span>
+                  <input class="lasles-auth-input has-icon" type="password" placeholder="••••••••" style="padding-inline-end:3rem">
+                </div>
+              </div>
+              <div class="lasles-auth-row">
+                <label class="lasles-auth-check"><input type="checkbox"><span>تذكرني</span></label>
+                <a href="#" class="lasles-auth-link">نسيت كلمة المرور؟</a>
+              </div>
+              <button type="submit" class="lasles-auth-submit"><span>دخول إلى حسابي</span></button>
+            </form>
+            <div class="lasles-auth-foot">ليس لديك حساب؟ <a href="07-auth-register.html" class="lasles-auth-link">أنشئ حساب معلم</a></div>
+            <div class="lasles-auth-trust">
+              <span><i class="fas fa-shield-halved"></i> دخول آمن</span>
+              <span><i class="fas fa-clipboard-list"></i> تشخيص صفّي</span>
+              <span><i class="fas fa-chart-line"></i> قياس التقدّم</span>
+            </div>
           </div>
-          <p class="geo-hint geo-hint--role" style="margin-top:-1rem;margin-bottom:1.25rem">
-            الطالب يدخل بحسابه — بريده الإلكتروني وكلمة مروره الخاصة.
-          </p>
-
-          <div class="geo-field-wrap">
-            <input type="email" class="geo-field" placeholder="البريد الإلكتروني" dir="ltr">
-            <span class="geo-field-line"></span>
-          </div>
-
-          <div class="geo-field-wrap">
-            <input type="password" class="geo-field" placeholder="كلمة المرور">
-            <button type="button" class="geo-pw-toggle"><span style="font-size:.7rem;font-weight:600">إظهار</span></button>
-            <span class="geo-field-line"></span>
-          </div>
-
-          <div class="geo-row">
-            <label class="geo-check">
-              <input type="checkbox">
-              <span>تذكّرني</span>
-            </label>
-            <a href="#" class="geo-link">نسيت كلمة المرور؟</a>
-          </div>
-
-          <button type="submit" class="geo-cta">
-            <span>دخول</span>
-            <span>→</span>
-          </button>
-        </form>
-
-        <p style="margin-top:2rem;font-size:.85rem;color:var(--edu-muted)">
-          جديد؟ <a href="07-auth-register.html" class="geo-link">ابدأ رحلتك</a>
-        </p>
+        </div>
       </div>
-    </main>
+    </div>
   </div>
 </body>
 </html>

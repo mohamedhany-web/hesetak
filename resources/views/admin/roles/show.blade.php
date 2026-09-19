@@ -1,4 +1,4 @@
-﻿@extends('layouts.admin')
+@extends('layouts.admin')
 
 @section('title', 'صلاحيات الدور: ' . $role->display_name)
 @section('header', 'إدارة صلاحيات الدور')

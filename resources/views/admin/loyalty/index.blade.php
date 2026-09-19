@@ -1,4 +1,4 @@
-﻿@extends('layouts.admin')
+@extends('layouts.admin')
 
 @section('title', 'برامج الولاء - ' . config('app.name'))
 @section('page_title', 'برامج الولاء')

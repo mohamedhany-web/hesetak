@@ -7,10 +7,10 @@ return [
     |--------------------------------------------------------------------------
     */
     'homepage_stats' => [
-        /** الحد الأدنى لعرض عدد الطلاب (للمصداقية التسويقية) */
-        'learners_min' => (int) env('HOME_STATS_LEARNERS_MIN', 5000),
+        /** الحد الأدنى لعرض عدد الطلاب — 0 = عرض العدد الحقيقي فقط */
+        'learners_min' => (int) env('HOME_STATS_LEARNERS_MIN', 0),
         /** إظهار علامة + بجانب العدد عند الوصول للحد الأدنى */
-        'learners_show_plus' => env('HOME_STATS_LEARNERS_SHOW_PLUS', true),
+        'learners_show_plus' => env('HOME_STATS_LEARNERS_SHOW_PLUS', false),
     ],
 
     /*

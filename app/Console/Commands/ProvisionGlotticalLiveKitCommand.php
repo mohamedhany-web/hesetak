@@ -11,11 +11,11 @@ use Illuminate\Support\Facades\Http;
 class ProvisionGlotticalLiveKitCommand extends Command
 {
     protected $signature = 'livekit:provision-glottical
-                            {--domain=live.glottical.com : Public LiveKit host for Glottical}
+                            {--domain=live.glottical.com : Public LiveKit host for حصتك}
                             {--ip=187.124.36.228 : VPS IP}
                             {--set-default : Mark LiveKit server as default provider}';
 
-    protected $description = 'Register Glottical LiveKit live server and set platform defaults';
+    protected $description = 'Register حصتك LiveKit live server and set platform defaults';
 
     public function handle(LiveKitTokenService $tokens): int
     {
@@ -23,7 +23,7 @@ class ProvisionGlotticalLiveKitCommand extends Command
         $ip = (string) $this->option('ip');
 
         $this->info("VPS target: {$ip}");
-        $this->info("Glottical LiveKit host: {$domain}");
+        $this->info("حصتك LiveKit host: {$domain}");
 
         $health = null;
         try {
@@ -38,11 +38,11 @@ class ProvisionGlotticalLiveKitCommand extends Command
             'provider' => 'livekit',
         ]);
         $server->fill([
-            'name' => $server->exists ? $server->name : 'Glottical LiveKit',
+            'name' => $server->exists ? $server->name : 'حصتك LiveKit',
             'ip_address' => $ip,
             'status' => 'active',
             'max_participants' => $server->max_participants ?: 200,
-            'notes' => 'Glottical LiveKit on shared VPS',
+            'notes' => 'حصتك LiveKit on shared VPS',
         ]);
         $server->save();
 

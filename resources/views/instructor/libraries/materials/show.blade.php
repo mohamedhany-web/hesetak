@@ -4,81 +4,110 @@
 @section('page_title', $folder->displayName())
 
 @section('content')
-<div class="su-page">
-    <div class="su-page-head">
-        <div class="min-w-0">
-            <nav class="su-crumb-inline" aria-label="breadcrumb">
-                <a href="{{ route('instructor.libraries.materials.index') }}">{{ __('instructor.lib_materials_title') }}</a>
-                @if($folder->academicYear?->name)
-                    <span>/</span>
-                    <span>{{ $folder->academicYear->name }}</span>
-                @endif
-            </nav>
-            <h1 class="su-page-head__title">
-                <i class="fas fa-folder-open su-page-head__ico" aria-hidden="true"></i>
-                {{ $folder->displayName() }}
-            </h1>
+@php
+    $locale = app()->getLocale();
+    $themeLocale = $locale === 'ar' ? 'ar' : 'en';
+    $canManageFolder = $canManage ?? true;
+    $materialsCount = $folder->materials->count();
+    $visibleCount = $folder->materials->where('is_visible_to_student', true)->count();
+    $backHref = route('instructor.libraries.materials.index');
+@endphp
+
+<div class="id-page">
+    <section class="id-hero" aria-label="{{ $folder->displayName() }}">
+        <div class="id-hero__copy">
+            <p class="id-hero__kicker">{{ __('instructor.lib_materials_title') }}</p>
+            <h2 class="id-hero__title">{{ $folder->displayName() }}</h2>
+            <p class="id-hero__meta">
+                {{ $folder->academicYear?->name ?? __('instructor.lib_materials_general_year') }}
+                · {{ __('instructor.lib_materials_files_count', ['count' => $materialsCount]) }}
+            </p>
         </div>
-        <div class="su-page-head__actions">
-            <a href="{{ route('instructor.libraries.materials.index') }}" class="su-btn">
-                <i class="fas fa-arrow-{{ app()->getLocale() === 'ar' ? 'right' : 'left' }}" aria-hidden="true"></i>
+        <div class="id-hero__actions">
+            @unless($canManageFolder)
+                <span class="id-chip id-chip--warn">{{ __('instructor.lib_materials_admin_folder') }}</span>
+            @endunless
+            <a href="{{ $backHref }}" class="id-btn id-btn--ghost">
+                <i class="fas fa-arrow-{{ $locale === 'ar' ? 'right' : 'left' }}" aria-hidden="true"></i>
                 {{ __('instructor.back') }}
             </a>
         </div>
-    </div>
+    </section>
 
-    @if(session('success'))
-        <div class="su-card" style="margin-bottom:16px;padding:12px 16px;border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.08);color:#15803d;font-size:13px">
-            {{ session('success') }}
-        </div>
-    @endif
+    <section class="id-kpis" style="grid-template-columns:repeat(2,minmax(0,1fr))" aria-label="{{ __('instructor.lib_materials_col_file') }}">
+        <article class="id-kpi" style="cursor:default">
+            <span class="id-kpi__icon" aria-hidden="true"><i class="fas fa-file-alt"></i></span>
+            <span class="id-kpi__body">
+                <span class="id-kpi__label">{{ __('instructor.lib_materials_col_file') }}</span>
+                <span class="id-kpi__value">{{ number_format($materialsCount) }}</span>
+            </span>
+        </article>
+        <article class="id-kpi" style="cursor:default">
+            <span class="id-kpi__icon id-kpi__icon--teal" aria-hidden="true"><i class="fas fa-eye"></i></span>
+            <span class="id-kpi__body">
+                <span class="id-kpi__label">{{ __('instructor.lib_materials_visible') }}</span>
+                <span class="id-kpi__value">{{ number_format($visibleCount) }}</span>
+            </span>
+        </article>
+    </section>
+
     @if($errors->any())
-        <div class="su-card" style="margin-bottom:16px;padding:12px 16px;border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.08);color:#b91c1c;font-size:13px">
-            {{ $errors->first() }}
+        <div class="id-alert id-alert--err" role="alert">
+            <i class="fas fa-exclamation-circle" aria-hidden="true"></i>
+            <span>{{ $errors->first() }}</span>
         </div>
     @endif
 
-    @if($canManage ?? true)
-        <section class="su-card" style="margin-bottom:20px">
-            <h3 class="su-card__title" style="margin-bottom:14px">{{ __('instructor.lib_materials_upload_title') }}</h3>
-            <form method="POST" action="{{ route('instructor.libraries.materials.upload', $folder) }}" enctype="multipart/form-data" class="su-form-grid">
+    @if($canManageFolder)
+        <section class="id-panel" aria-label="{{ __('instructor.lib_materials_upload_title') }}">
+            <header class="id-panel__head">
+                <h2>{{ __('instructor.lib_materials_upload_title') }}</h2>
+            </header>
+
+            <form method="POST" action="{{ route('instructor.libraries.materials.upload', $folder) }}" enctype="multipart/form-data" class="id-form">
                 @csrf
-                <div class="su-field">
-                    <label for="title">{{ __('instructor.lib_materials_title_ph') }}</label>
-                    <input type="text" name="title" id="title" class="su-input" placeholder="{{ __('instructor.lib_materials_title_ph') }}">
+                <div class="id-form-grid">
+                    <div class="id-field">
+                        <label for="title">{{ __('instructor.lib_materials_title_ph') }}</label>
+                        <input type="text" name="title" id="title" class="id-input"
+                               placeholder="{{ __('instructor.lib_materials_title_ph') }}" value="{{ old('title') }}">
+                    </div>
+                    <div class="id-field">
+                        <label for="description">{{ __('instructor.lib_materials_desc_ph') }}</label>
+                        <input type="text" name="description" id="description" class="id-input"
+                               placeholder="{{ __('instructor.lib_materials_desc_ph') }}" value="{{ old('description') }}">
+                    </div>
+                    <div class="id-field">
+                        <label for="content_theme">{{ __('instructor.lib_videos_theme') }}</label>
+                        <select name="content_theme" id="content_theme" class="id-select">
+                            @foreach(\App\Support\FamilyLibraryThemes::labels($themeLocale) as $key => $themeLabel)
+                                <option value="{{ $key }}" @selected(old('content_theme', $folder->content_theme ?: 'general') === $key)>{{ $themeLabel }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="id-field">
+                        <label for="experience_mode">{{ __('instructor.lib_materials_col_theme') }}</label>
+                        <select name="experience_mode" id="experience_mode" class="id-select">
+                            <option value="download" @selected(old('experience_mode') === 'download')>{{ __('instructor.lib_materials_mode_download') }}</option>
+                            <option value="view" @selected(old('experience_mode') === 'view')>{{ __('instructor.lib_materials_mode_view') }}</option>
+                            <option value="play" @selected(old('experience_mode') === 'play')>{{ __('instructor.lib_materials_mode_play') }}</option>
+                        </select>
+                    </div>
+                    <div class="id-field id-field--span2">
+                        <label for="file">{{ __('instructor.lib_materials_col_file') }}</label>
+                        <input type="file" name="file" id="file" required
+                               accept="{{ \App\Support\FamilyLibraryThemes::materialAcceptAttr() }}"
+                               class="id-input" style="padding-top:10px;padding-bottom:10px">
+                    </div>
+                    <div class="id-field id-field--span2" style="justify-content:center">
+                        <label style="display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:700;color:#3A4A63;cursor:pointer">
+                            <input type="checkbox" name="is_visible_to_student" value="1" @checked(old('is_visible_to_student', true))>
+                            {{ __('instructor.lib_materials_visible_student') }}
+                        </label>
+                    </div>
                 </div>
-                <div class="su-field">
-                    <label for="description">{{ __('instructor.lib_materials_desc_ph') }}</label>
-                    <input type="text" name="description" id="description" class="su-input" placeholder="{{ __('instructor.lib_materials_desc_ph') }}">
-                </div>
-                <div class="su-field">
-                    <label for="content_theme">{{ __('instructor.lib_videos_theme') }}</label>
-                    <select name="content_theme" id="content_theme" class="su-select">
-                        @foreach(\App\Support\FamilyLibraryThemes::labels(app()->getLocale() === 'ar' ? 'ar' : 'en') as $key => $themeLabel)
-                            <option value="{{ $key }}" @selected(($folder->content_theme ?: 'general') === $key)>{{ $themeLabel }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="su-field">
-                    <label for="experience_mode">{{ __('instructor.lib_materials_col_theme') }}</label>
-                    <select name="experience_mode" id="experience_mode" class="su-select">
-                        <option value="download">{{ __('instructor.lib_materials_mode_download') }}</option>
-                        <option value="view">{{ __('instructor.lib_materials_mode_view') }}</option>
-                        <option value="play">{{ __('instructor.lib_materials_mode_play') }}</option>
-                    </select>
-                </div>
-                <div class="su-field">
-                    <label for="file">{{ __('instructor.lib_materials_col_file') }}</label>
-                    <input type="file" name="file" id="file" required accept="{{ \App\Support\FamilyLibraryThemes::materialAcceptAttr() }}" class="su-input">
-                </div>
-                <div class="su-field" style="display:flex;align-items:flex-end;padding-bottom:4px">
-                    <label class="su-check" style="display:inline-flex;align-items:center;gap:8px;font-size:13px;cursor:pointer">
-                        <input type="checkbox" name="is_visible_to_student" value="1" checked>
-                        {{ __('instructor.lib_materials_visible_student') }}
-                    </label>
-                </div>
-                <div class="su-form-actions">
-                    <button type="submit" class="su-btn su-btn--primary" style="height:40px;justify-content:center;flex:1">
+                <div>
+                    <button type="submit" class="id-btn id-btn--navy">
                         <i class="fas fa-upload" aria-hidden="true"></i>
                         {{ __('instructor.lib_materials_upload') }}
                     </button>
@@ -86,14 +115,22 @@
             </form>
         </section>
     @else
-        <div class="su-card" style="margin-bottom:16px;padding:12px 16px;border-color:rgba(245,158,11,.35);background:rgba(245,158,11,.08);color:#92400e;font-size:13px">
-            {{ __('instructor.lib_materials_admin_readonly') }}
+        <div class="id-alert id-alert--info" role="note">
+            <i class="fas fa-info-circle" aria-hidden="true"></i>
+            <span>{{ __('instructor.lib_materials_admin_readonly') }}</span>
         </div>
     @endif
 
-    <section class="su-card su-card--flush">
-        <div class="su-table-wrap" style="border:0;border-radius:0;background:transparent">
-            <table class="su-table">
+    <section class="id-panel id-panel--wide" aria-label="{{ __('instructor.lib_materials_col_file') }}">
+        <header class="id-panel__head">
+            <h2>{{ __('instructor.lib_materials_col_file') }}</h2>
+            @if($materialsCount > 0)
+                <span class="id-panel__badge">{{ number_format($materialsCount) }}</span>
+            @endif
+        </header>
+
+        <div class="id-table-wrap">
+            <table class="id-table">
                 <thead>
                     <tr>
                         <th>{{ __('instructor.lib_materials_col_file') }}</th>
@@ -106,18 +143,20 @@
                     @forelse($folder->materials as $m)
                         <tr>
                             <td>
-                                <strong style="font-weight:600">{{ $m->title ?: $m->file_name }}</strong>
-                                <div style="font-size:12px;color:var(--su-ink-40)">{{ $m->file_name }}</div>
-                            </td>
-                            <td style="color:var(--su-ink-40);font-size:12px">
-                                {{ $m->themeLabel(app()->getLocale() === 'ar' ? 'ar' : 'en') }} · {{ $m->experience_mode ?: 'download' }}
+                                <strong>{{ $m->title ?: $m->file_name }}</strong>
+                                <div class="muted" style="font-size:12px;margin-top:2px">{{ $m->file_name }}</div>
                             </td>
                             <td>
-                                <span class="su-chip {{ $m->is_visible_to_student ? 'su-chip--ok' : 'su-chip--off' }}">
+                                <span class="muted" style="font-size:12px">
+                                    {{ $m->themeLabel($themeLocale) }} · {{ $m->experience_mode ?: 'download' }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="id-chip {{ $m->is_visible_to_student ? 'id-chip--ok' : 'id-chip--muted' }}">
                                     {{ $m->is_visible_to_student ? __('instructor.lib_materials_visible') : __('instructor.lib_materials_hidden') }}
                                 </span>
                             </td>
-                            <td style="text-align:end">
+                            <td class="id-table__end">
                                 <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-end;gap:8px">
                                     @if($m->file_path)
                                         @php
@@ -125,15 +164,15 @@
                                             $canPlay = \App\Support\FamilyLibraryThemes::isPlayableInPlatform($m->file_name, $mode);
                                         @endphp
                                         @if($canPlay)
-                                            <a href="{{ route('instructor.libraries.materials.experience', [$folder, $m]) }}" class="su-btn" style="height:32px">{{ __('common.view') }}</a>
+                                            <a href="{{ route('instructor.libraries.materials.experience', [$folder, $m]) }}" class="id-btn id-btn--outline" style="min-height:34px;padding:0 12px;font-size:12px">{{ __('common.view') }}</a>
                                         @endif
-                                        <a href="{{ route('instructor.libraries.materials.download', [$folder, $m]) }}" class="su-btn" style="height:32px">{{ __('instructor.download') }}</a>
+                                        <a href="{{ route('instructor.libraries.materials.download', [$folder, $m]) }}" class="id-btn id-btn--outline" style="min-height:34px;padding:0 12px;font-size:12px">{{ __('instructor.download') }}</a>
                                     @endif
-                                    @if($canManage ?? true)
-                                        <form method="POST" action="{{ route('instructor.libraries.materials.destroy', [$folder, $m]) }}" onsubmit="return confirm(@json(__('instructor.lib_materials_confirm_delete')))">
+                                    @if($canManageFolder)
+                                        <form method="POST" action="{{ route('instructor.libraries.materials.destroy', [$folder, $m]) }}" onsubmit="return confirm(@json(__('instructor.lib_materials_confirm_delete')))" style="margin:0">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" class="su-btn su-btn--danger" style="height:32px">{{ __('common.delete') }}</button>
+                                            <button type="submit" class="id-btn id-btn--danger" style="min-height:34px;padding:0 12px;font-size:12px">{{ __('common.delete') }}</button>
                                         </form>
                                     @endif
                                 </div>
@@ -142,8 +181,8 @@
                     @empty
                         <tr>
                             <td colspan="4">
-                                <div class="su-empty">
-                                    <i class="fas fa-file" aria-hidden="true"></i>
+                                <div class="id-empty" style="border:0;background:transparent;padding:28px 8px">
+                                    <span class="id-empty__mark" aria-hidden="true"><i class="fas fa-file"></i></span>
                                     <p>{{ __('instructor.lib_materials_empty_files') }}</p>
                                 </div>
                             </td>

@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', ($mode === 'create' ? 'باقة جديدة' : 'تعديل باقة').' - Glottical')
+@section('title', ($mode === 'create' ? 'باقة جديدة' : 'تعديل باقة').' - حصتك')
 @section('page_title', $mode === 'create' ? 'باقة جديدة' : 'تعديل باقة')
 
 @section('content')
@@ -60,7 +60,7 @@
                 </div>
                 <div>
                     <label class="{{ $labelClass }}" for="currency">العملة</label>
-                    <input id="currency" name="currency" value="{{ old('currency', $package->currency ?: 'USD') }}" class="{{ $fieldClass }}" dir="ltr">
+                    <input id="currency" name="currency" value="{{ old('currency', $package->currency ?: platform_currency()) }}" class="{{ $fieldClass }}" dir="ltr">
                 </div>
                 <div>
                     <label class="{{ $labelClass }}" for="sort_order">الترتيب</label>

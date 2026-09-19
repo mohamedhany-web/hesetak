@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', __('admin.about_page') . ' - Glottical')
+@section('title', __('admin.about_page') . ' - حصتك')
 @section('page_title', __('admin.about_page'))
 
 @section('content')

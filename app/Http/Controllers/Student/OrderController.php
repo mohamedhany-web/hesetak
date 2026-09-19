@@ -163,11 +163,11 @@ class OrderController extends Controller
         if ($referralCoupon && isset($discountAmount)) {
             $referralDiscountAmount = $discountAmount - $couponDiscountAmount;
             if ($referralDiscountAmount > 0) {
-                $discountNotes[] = 'خصم الإحالة: '.number_format($referralDiscountAmount, 2).' $';
+                $discountNotes[] = 'خصم الإحالة: '.number_format($referralDiscountAmount, 2) . ' ' . currency_symbol();
             }
         }
         if ($couponDiscountAmount > 0) {
-            $discountNotes[] = 'خصم الكوبون ('.($appliedCoupon->code ?? '').'): '.number_format($couponDiscountAmount, 2).' $';
+            $discountNotes[] = 'خصم الكوبون ('.($appliedCoupon->code ?? '').'): '.number_format($couponDiscountAmount, 2) . ' ' . currency_symbol();
         }
         if (! empty($discountNotes)) {
             $orderData['notes'] .= (! empty($orderData['notes']) ? "\n" : '').implode("\n", $discountNotes);

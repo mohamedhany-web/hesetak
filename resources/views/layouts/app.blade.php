@@ -1,9 +1,9 @@
-﻿@php
+@php
     $appLocale = app()->getLocale();
     $appRtl = $appLocale === 'ar';
 @endphp
 <!DOCTYPE html>
-<html lang="{{ $appLocale }}" dir="{{ $appRtl ? 'rtl' : 'ltr' }}" class="light">
+<html lang="{{ $appLocale }}" dir="{{ $appRtl ? 'rtl' : 'ltr' }}" class="light {{ $appRtl ? 'st-rtl' : 'st-ltr' }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes">
@@ -40,25 +40,134 @@
         $useInstructorPanel = auth()->check() && (auth()->user()->isInstructor() || auth()->user()->isTeacher());
     @endphp
     @if($useInstructorPanel)
+        <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700;800&family=Cairo:wght@400;500;600;700;800;900&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+        <link rel="stylesheet" href="{{ route('assets.student-timeline.css') }}?v=st-hesetak-inst-2">
         @php
-            $ipCssRel = 'css/instructor-panel.css';
-            $ipCssFile = public_path($ipCssRel);
-            $ipCssVer = is_file($ipCssFile) ? (string) filemtime($ipCssFile) : (string) time();
-            $ipCssInline = '';
-            if (is_file($ipCssFile)) {
-                // حقن كامل للملف: على بعض السيرفرات /css/* لا يُخدم من document root فيظهر HTML بدون تنسيق
-                $ipCssInline = (string) file_get_contents($ipCssFile);
-                $ipCssInline = preg_replace('/@import\s+url\([^)]+\);\s*/i', '', $ipCssInline) ?? $ipCssInline;
-            }
+            $idCssRel = 'css/instructor-dashboard.css';
+            $idCssFile = public_path($idCssRel);
+            $idCssVer = is_file($idCssFile) ? (string) filemtime($idCssFile) : (string) time();
         @endphp
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-        @if($ipCssInline !== '')
-            <style id="instructor-panel-inline">{!! $ipCssInline !!}</style>
-        @endif
-        {{-- روابط احتياطية إن وُجد المسار العام --}}
-        <link rel="stylesheet" href="{{ url('/__glottical/instructor-panel.css') }}?v={{ $ipCssVer }}">
-        <link rel="stylesheet" href="{{ versioned_asset($ipCssRel) }}">
-        <link rel="stylesheet" href="{{ asset($ipCssRel) }}?v={{ $ipCssVer }}">
+        <link rel="stylesheet" href="{{ asset($idCssRel) }}?v={{ $idCssVer }}">
+        <script>
+            (function () {
+                try {
+                    var mobile = window.matchMedia('(max-width: 768px)').matches;
+                    if (!mobile && localStorage.getItem('st-rail-open') === '1') {
+                        document.documentElement.classList.add('st-rail-pref-open');
+                    }
+                } catch (e) {}
+            })();
+        </script>
+        <style id="instructor-st-compat">
+            /* Match student-timeline font stack (beats app-wide Cairo/Tajawal *) */
+            body.st-inst-body,
+            body.st-inst-body .st-shell,
+            body.st-inst-body .st-main,
+            body.st-inst-body .id-dash,
+            body.st-inst-body .id-page {
+                font-family: 'IBM Plex Sans Arabic', 'Cairo', 'Poppins', system-ui, sans-serif !important;
+            }
+            body.st-inst-body .st-shell *:not(i):not(.fa):not(.fas):not(.far):not(.fab):not(.fal):not(.fa-solid):not(.fa-regular):not(.fa-brands):not(.fc-icon),
+            body.st-inst-body .st-main *:not(i):not(.fa):not(.fas):not(.far):not(.fab):not(.fal):not(.fa-solid):not(.fa-regular):not(.fa-brands):not(.fc-icon),
+            body.st-inst-body .id-dash *:not(i):not(.fa):not(.fas):not(.far):not(.fab):not(.fal):not(.fa-solid):not(.fa-regular):not(.fa-brands):not(.fc-icon),
+            body.st-inst-body .id-page *:not(i):not(.fa):not(.fas):not(.far):not(.fab):not(.fal):not(.fa-solid):not(.fa-regular):not(.fa-brands):not(.fc-icon) {
+                font-family: 'IBM Plex Sans Arabic', 'Cairo', 'Poppins', system-ui, sans-serif !important;
+            }
+            html:not([lang="ar"]) body.st-inst-body,
+            html:not([lang="ar"]) body.st-inst-body .st-shell *:not(i):not(.fa):not(.fas):not(.far):not(.fab):not(.fal):not(.fa-solid):not(.fa-regular):not(.fa-brands):not(.fc-icon),
+            html:not([lang="ar"]) body.st-inst-body .st-main *:not(i):not(.fa):not(.fas):not(.far):not(.fab):not(.fal):not(.fa-solid):not(.fa-regular):not(.fa-brands):not(.fc-icon),
+            html:not([lang="ar"]) body.st-inst-body .id-dash *:not(i):not(.fa):not(.fas):not(.far):not(.fab):not(.fal):not(.fa-solid):not(.fa-regular):not(.fa-brands):not(.fc-icon),
+            html:not([lang="ar"]) body.st-inst-body .id-page *:not(i):not(.fa):not(.fas):not(.far):not(.fab):not(.fal):not(.fa-solid):not(.fa-regular):not(.fa-brands):not(.fc-icon) {
+                font-family: 'Poppins', 'Cairo', system-ui, sans-serif !important;
+            }
+            /* Restore Font Awesome (broken by font-family !important above) */
+            body.st-inst-body i.fa,
+            body.st-inst-body i.fas,
+            body.st-inst-body i.far,
+            body.st-inst-body i.fal,
+            body.st-inst-body i.fa-solid,
+            body.st-inst-body i.fa-regular,
+            body.st-inst-body .fa,
+            body.st-inst-body .fas,
+            body.st-inst-body .far,
+            body.st-inst-body .fal,
+            body.st-inst-body .fa-solid,
+            body.st-inst-body .fa-regular {
+                font-family: "Font Awesome 6 Free" !important;
+                font-style: normal;
+                font-variant: normal;
+                text-rendering: auto;
+                -webkit-font-smoothing: antialiased;
+                display: inline-block;
+                line-height: 1;
+            }
+            body.st-inst-body i.fas,
+            body.st-inst-body i.fa-solid,
+            body.st-inst-body .fas,
+            body.st-inst-body .fa-solid {
+                font-weight: 900 !important;
+            }
+            body.st-inst-body i.far,
+            body.st-inst-body i.fa-regular,
+            body.st-inst-body .far,
+            body.st-inst-body .fa-regular {
+                font-weight: 400 !important;
+            }
+            body.st-inst-body i.fab,
+            body.st-inst-body i.fa-brands,
+            body.st-inst-body .fab,
+            body.st-inst-body .fa-brands {
+                font-family: "Font Awesome 6 Brands" !important;
+                font-weight: 400 !important;
+            }
+            /* FullCalendar nav icons — unicode (more reliable than fcicons under font override) */
+            body.st-inst-body .fc-icon,
+            body.st-inst-body .fc-icon:before {
+                font-family: 'IBM Plex Sans Arabic', 'Cairo', system-ui, sans-serif !important;
+                font-style: normal !important;
+                font-weight: 900 !important;
+                speak: none;
+                display: inline-block;
+                line-height: 1;
+            }
+            body.st-inst-body .fc-icon-chevron-left:before { content: "‹" !important; font-size: 1.35em; }
+            body.st-inst-body .fc-icon-chevron-right:before { content: "›" !important; font-size: 1.35em; }
+            body.st-inst-body .fc-icon-chevrons-left:before { content: "«" !important; }
+            body.st-inst-body .fc-icon-chevrons-right:before { content: "»" !important; }
+            /* Sidebar icons: readable on navy rail */
+            body.st-inst-body .st-rail__icon-box i {
+                font-size: 16px !important;
+                line-height: 1 !important;
+                width: 1em;
+                text-align: center;
+                color: #fff !important;
+                opacity: .9;
+            }
+            body.st-inst-body .st-rail__link.is-active .st-rail__icon-box i,
+            body.st-inst-body .st-rail__link:hover .st-rail__icon-box i {
+                opacity: 1;
+                color: #C9952A !important;
+            }
+            /* Calendar page FA icons inside panels */
+            body.st-inst-body .id-page .id-kpi__icon i,
+            body.st-inst-body .id-page .id-list__ico i,
+            body.st-inst-body .id-page .id-empty__mark i,
+            body.st-inst-body .id-page .id-hero__meta i,
+            body.st-inst-body .id-page .id-act__chev {
+                font-family: "Font Awesome 6 Free" !important;
+                font-weight: 900 !important;
+            }
+            body.st-inst-body { background: var(--st-canvas, #F4F7FC); margin: 0; min-height: 100dvh; }
+            body.st-inst-body .st-main > .bg-white,
+            body.st-inst-body .st-main > .rounded-2xl,
+            body.st-inst-body .st-main > .rounded-xl { margin-bottom: 1rem; }
+            body.st-inst-body .st-main .su-page-title,
+            body.st-inst-body .st-main .ip-page-title { display: none; }
+            body.st-inst-body .st-main .bg-white {
+                border: 1px solid #E6EEF8;
+                box-shadow: 0 4px 14px rgba(22, 58, 104, .04);
+            }
+        </style>
     @endif
 
     @php
@@ -92,22 +201,8 @@
         html { scroll-behavior: smooth; }
         html.light { color-scheme: light; }
         html.dark { color-scheme: dark; }
-        html:has(body.ip-body) { scroll-behavior: auto; height: 100dvh; max-height: 100dvh; overflow: hidden !important; }
         body { background: #F4F7FC; overflow-x: hidden; }
-        body.ip-body { overflow: hidden !important; height: 100dvh; max-height: 100dvh; margin: 0; }
         .dark body { background: #0B1220; }
-        body.ip-body,
-        body.ip-body .ip-shell,
-        body.ip-body .ip-shell button,
-        body.ip-body .ip-shell input,
-        body.ip-body .ip-shell a,
-        body.ip-body .ip-shell span,
-        body.ip-body .ip-shell p,
-        body.ip-body .ip-shell h1,
-        body.ip-body .ip-shell h2,
-        body.ip-body .ip-shell h3 {
-            font-family: "Inter", "Cairo", "IBM Plex Sans Arabic", system-ui, sans-serif !important;
-        }
 
         /* ── Sidebar ── */
         .app-sidebar {
@@ -248,15 +343,15 @@
         .logo-area { border-bottom: 1px solid #E8EEF8; }
         .dark .logo-area { border-bottom-color: #1f2937; }
 
-        /* ── Student / instructor sidebar (Glottical academy) ── */
+        /* ── Student / instructor sidebar (حصتك) ── */
         .ins-sidebar-brand {
-            background: linear-gradient(160deg, #0B3D91 0%, #072A66 100%);
+            background: linear-gradient(160deg, #1E4E8C 0%, #152A4A 100%);
             border-bottom: 0;
             position: relative;
             color: #fff;
         }
         .dark .ins-sidebar-brand {
-            background: linear-gradient(160deg, #0B3D91 0%, #051E4A 100%);
+            background: linear-gradient(160deg, #1E4E8C 0%, #0F1C33 100%);
             border-bottom: 0;
         }
         .ins-stat-card {
@@ -265,7 +360,7 @@
             background: #fff;
             border: 1px solid #E8EEF8;
         }
-        .ins-stat-card:hover { transform: translateY(-1px); box-shadow: 0 10px 24px -12px rgba(11,61,145,.18); border-color: #C5D4EF !important; }
+        .ins-stat-card:hover { transform: translateY(-1px); box-shadow: 0 10px 24px -12px rgba(30,78,140,.18); border-color: #C5D4EF !important; }
         .dark .ins-stat-card { background: #1f2937; border-color: #374151; }
         .dark .ins-stat-card:hover { box-shadow: 0 8px 20px -8px rgba(0,0,0,.35); border-color: #475569 !important; }
         .ins-nav-group {
@@ -287,25 +382,25 @@
         .ins-nav::before {
             content: ''; position: absolute; right: 0; top: 50%; transform: translateY(-50%);
             width: 3px; height: 0; border-radius: 3px 0 0 3px;
-            background: #F5B800;
+            background: #C9952A;
             transition: height .2s ease;
         }
         .ins-nav:hover { background: #F4F7FC; color: #0B1220; }
-        .ins-nav.active { background: #EEF3FB; color: #072A66; border-color: #D6E2F5; font-weight: 700; }
+        .ins-nav.active { background: #EEF3FB; color: #152A4A; border-color: #D6E2F5; font-weight: 700; }
         .ins-nav.active::before { height: 22px; }
         .dark .ins-nav { color: #9ca3af; }
         .dark .ins-nav:hover { background: #1f2937; color: #f1f5f9; }
         .dark .ins-nav.active { background: #132445; color: #bfdbfe; border-color: #1e3a5f; font-weight: 700; }
-        .dark .ins-nav.active::before { background: #F5B800; }
+        .dark .ins-nav.active::before { background: #C9952A; }
         .ins-nav .ins-icon {
             width: 34px; height: 34px; border-radius: 10px;
             display: flex; align-items: center; justify-content: center;
             font-size: 13px; flex-shrink: 0;
-            background: #EEF3FB; color: #0B3D91;
+            background: #EEF3FB; color: #1E4E8C;
             transition: transform .2s, box-shadow .2s, background .2s;
         }
         .ins-nav:hover .ins-icon { transform: scale(1.04); }
-        .ins-nav.active .ins-icon { background: #0B3D91; color: #fff; box-shadow: 0 4px 12px -4px rgba(11,61,145,.45); }
+        .ins-nav.active .ins-icon { background: #1E4E8C; color: #fff; box-shadow: 0 4px 12px -4px rgba(30,78,140,.45); }
         .ins-nav-badge {
             min-width: 20px; height: 20px; padding: 0 6px;
             border-radius: 10px; font-size: 11px; font-weight: 800;
@@ -317,7 +412,7 @@
             border: 1px solid #E8EEF8; border-radius: 14px;
             padding: 12px 14px; transition: all .2s;
         }
-        .ins-user-card:hover { border-color: #C5D4EF; box-shadow: 0 4px 12px -4px rgba(11,61,145,.1); }
+        .ins-user-card:hover { border-color: #C5D4EF; box-shadow: 0 4px 12px -4px rgba(30,78,140,.1); }
         .dark .ins-user-card { background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border-color: #334155; }
         .dark .ins-user-card:hover { border-color: #475569; box-shadow: 0 4px 12px -4px rgba(0,0,0,.25); }
 
@@ -326,11 +421,11 @@
             align-items: center; gap: 6px;
             height: 34px; padding: 0 12px; border-radius: 999px;
             font-size: 12px; font-weight: 700;
-            color: #0B3D91; background: #EEF3FB; border: 1px solid #D6E2F5;
+            color: #1E4E8C; background: #EEF3FB; border: 1px solid #D6E2F5;
             text-decoration: none !important; white-space: nowrap;
             transition: background .15s, border-color .15s;
         }
-        .app-quick-link:hover { background: #E0EAF8; border-color: #0B3D91; }
+        .app-quick-link:hover { background: #E0EAF8; border-color: #1E4E8C; }
         .app-quick-link--gold {
             color: #072A66; background: #FFF6D6; border-color: #F5B800;
         }
@@ -407,8 +502,9 @@
     </style>
 
     @stack('styles')
+    <script>window.platformCurrencySymbol = @json(currency_symbol()); window.platformCurrency = @json(platform_currency());</script>
 </head>
-<body class="{{ !empty($useInstructorPanel) ? 'ip-body' : '' }}"
+<body class="{{ !empty($useInstructorPanel) ? 'st-inst-body st-dash' : '' }}"
       x-data="{
         sidebarOpen: false,
         railOpen: false,
@@ -455,49 +551,8 @@ function themeManager() {
 </script>
 
 @if(!empty($useInstructorPanel))
-    {{-- SnowUI instructor shell: nav | main | rail — only .ip-content scrolls --}}
-    <div class="ip-shell">
-        <aside class="ip-nav" :class="{ 'is-open': sidebarOpen && isNarrow }" @keydown.escape.window="if (isNarrow) sidebarOpen = false">
-            @include('layouts.instructor.sidebar')
-        </aside>
-
-        <div x-show="sidebarOpen && isNarrow"
-             x-cloak
-             @click="sidebarOpen = false"
-             class="ip-overlay lg:hidden"></div>
-
-        <div class="ip-main">
-            @include('layouts.instructor.topbar')
-            <main class="ip-content ip-scroll">
-                @if(session('success'))
-                    <div class="mb-4 rounded-[12px] border border-[color:var(--su-line)] bg-[color:var(--su-bg-2)] px-4 py-3 text-sm">{{ session('success') }}</div>
-                @endif
-                @if(session('error'))
-                    <div class="mb-4 rounded-[12px] border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">{{ session('error') }}</div>
-                @endif
-                @yield('content')
-            </main>
-        </div>
-
-        <aside class="ip-rail ip-rail--desk ip-scroll hidden xl:flex xl:flex-col">
-            @include('layouts.instructor.rail')
-        </aside>
-
-        <aside x-show="railOpen && isCompact"
-               x-cloak
-               x-transition
-               class="ip-rail ip-rail--drawer fixed inset-y-0 z-50 flex flex-col gap-2 xl:hidden"
-               style="inset-inline-end: 0; width: min(280px, 92vw); background:var(--su-bg); border-inline-start:0.5px solid var(--su-line); padding:16px;">
-            <div class="flex items-center justify-between" style="padding:4px 0 8px">
-                <span class="su-rail-h" style="padding:0">{{ __('instructor.activity_rail') }}</span>
-                <button type="button" class="su-icon-btn" @click="railOpen = false"><i class="fas fa-times text-xs"></i></button>
-            </div>
-            <div style="flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;display:flex;flex-direction:column;gap:16px;">
-                @include('layouts.instructor.rail')
-            </div>
-        </aside>
-        <div x-show="railOpen && isCompact" x-cloak @click="railOpen = false" class="ip-overlay xl:hidden"></div>
-    </div>
+    {{-- Same CX as student-timeline (st-*) --}}
+    @include('layouts.instructor.st-shell')
     @stack('scripts')
     @include('partials.timezone-sync')
 @else

@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\View\View;
 
 /**
- * تسعير الكورسات المسجّلة من المعلم بالدولار الأمريكي.
+ * تسعير الكورسات المسجّلة من المعلم بالريال السعودي.
  */
 class CoursePricingController extends Controller
 {
@@ -38,7 +38,7 @@ class CoursePricingController extends Controller
             'price_usd_after_discount' => $usdSale,
         ];
 
-        // مزامنة الحقول القديمة + توافق price_egp مع الدولار
+        // مزامنة الحقول القديمة + توافق price_egp مع الريال
         if ($usd !== null && $usd !== '') {
             $payload['price'] = $usd;
             $payload['price_after_discount'] = $usdSale;
@@ -55,7 +55,7 @@ class CoursePricingController extends Controller
             ]);
         }
 
-        return back()->with('success', 'تم تحديث أسعار الكورس بالدولار.');
+        return back()->with('success', 'تم تحديث أسعار الكورس بالريال السعودي.');
     }
 
     private function assertOwns(AdvancedCourse $course): void

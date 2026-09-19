@@ -1,0 +1,34 @@
+---
+description: حصتك public pages — homepage design system + per-target CX (mandatory)
+globs: resources/views/**/*.blade.php,resources/views/partials/landing/**/*,public/css/landing/**/*.css,designs/public-pages/**/*,lang/**/landing.php,lang/**/public.php,lang/**/site.php,lang/**/hesetak_pages.php
+alwaysApply: false
+---
+
+# حصتك — Public pages (design + CX)
+
+Follow skill: `.cursor/skills/hesetak-public-pages/SKILL.md`  
+Details: `visual-system.md` · `page-experience.md` · product: `hesetak-platform`.  
+**Brand voice / geography (client):** `docs/hesetak/00-brand-voice.md` — do not invent presence.
+
+## Must
+
+1. **Target first** — Before UI: who is this page for (ولي أمر / طالب / معلم) and one job + one primary CTA.
+2. **Same shell** — `topbar` + `nav` (brand partial + lang + hamburger at edge) + drawer + footer.
+3. **Visual** — `mc-*` navy `#1E4E8C` / ink `#152A4A` + gold `#C9952A` for book/buy only. Logo: `img/brand/hesetak-mark.png`.
+4. **RTL drawer** — Opens from the right in Arabic; lang toggle stays in the navbar beside the menu icon.
+5. **Brand i18n** — `__('landing.nav.brand')` only (حصتك / Hesetak). Never show raw keys.
+6. **Home as reference** — Composition language of `/` (hero shop → paths → teachers → packages → proof), not copy-paste every section onto every page.
+7. **Geography** — معلن: أمريكا · مصر · السعودية فقط. الرؤية (الخليج+مصر) ≠ حضور قائم. أنواع المناهج ≠ فروع.
+
+## Must not
+
+- Legacy brands (Glottical, Sana, MyCourse, تدريس لاب) as product identity
+- مرجعي UX (فروع، فصول جماعية كأساس، مخزون)
+- Invented countries/presence beyond `00-brand-voice.md`
+- New CSS framework; purple/cream AI-default looks
+- Em-dash `—` in Arabic marketing copy
+- Huge filter walls or hero clutter (stats, chips, overlays on media)
+
+## Per-page
+
+Load `page-experience.md` and match that page’s target/feeling/CTA before coding.

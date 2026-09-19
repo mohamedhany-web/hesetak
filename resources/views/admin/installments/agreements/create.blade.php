@@ -1,4 +1,4 @@
-﻿@extends('layouts.admin')
+@extends('layouts.admin')
 
 @section('title', 'إنشاء اتفاقية تقسيط')
 @section('page_title', 'إنشاء اتفاقية تقسيط')
