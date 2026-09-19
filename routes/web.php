@@ -391,38 +391,17 @@ Route::get('/js/landing/{file}.js', function (string $file) use ($serveAtheerAss
     );
 })->where('file', '[A-Za-z0-9\-]+')->name('assets.landing.js');
 
-Route::get('/img/{folder}/{file}', function (string $folder, string $file) {
-    $folder = basename($folder);
-    $file = basename($file);
-    // على Hostinger الملفات الثابتة تحت /img/* غالباً 404 — نخدمها عبر Laravel
-    $allowed = ['brand', 'mycourses', 'lasles', 'glottical', 'sanua', 'student-timeline'];
-    if (! in_array($folder, $allowed, true)) {
-        abort(404);
-    }
-    if (! preg_match('/^[A-Za-z0-9._\-]+$/', $file) || ! preg_match('/\.(png|jpe?g|webp|gif|svg)$/i', $file)) {
-        abort(404);
-    }
+Route::get('/img/{folder}/{file}', [\App\Http\Controllers\PublicImgController::class, 'show'])
+    ->where(['folder' => 'brand|mycourses|lasles|glottical|sanua|student-timeline', 'file' => '[A-Za-z0-9._\-]+'])
+    ->name('assets.landing.img');
 
-    $path = public_path("img/{$folder}/{$file}");
-    if (! is_file($path)) {
-        abort(404);
-    }
-
-    $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION));
-    $types = [
-        'png' => 'image/png',
-        'jpg' => 'image/jpeg',
-        'jpeg' => 'image/jpeg',
-        'webp' => 'image/webp',
-        'gif' => 'image/gif',
-        'svg' => 'image/svg+xml',
-    ];
-
-    return response((string) file_get_contents($path), 200, [
-        'Content-Type' => $types[$ext] ?? 'application/octet-stream',
-        'Cache-Control' => 'public, max-age=86400',
-    ]);
-})->where(['folder' => 'brand|mycourses|lasles|glottical|sanua|student-timeline', 'file' => '[A-Za-z0-9._\-]+'])->name('assets.landing.img');
+/*
+| مسار صور مضمون عبر Laravel فقط — على Hostinger /img/* غالباً يُعالج كملف ثابت من
+| document root خاطئ فيرجع 404 قبل الوصول لـ index.php (عكس /css/landing/*).
+*/
+Route::get('/__hesetak/img/{folder}/{file}', [\App\Http\Controllers\PublicImgController::class, 'show'])
+    ->where(['folder' => 'brand|mycourses|lasles|glottical|sanua|student-timeline', 'file' => '[A-Za-z0-9._\-]+'])
+    ->name('assets.hesetak.img');
 
 // صور لوحة المدرب وغيرها تحت /images/* (نفس مشكلة الاستضافة مع الملفات الثابتة)
 Route::get('/images/{path}', function (string $path) {
