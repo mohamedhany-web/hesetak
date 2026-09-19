@@ -16,7 +16,7 @@
     # CSS/JS أثير + لاندنج + صور الهيرو: على الاستضافة ملفات public لا تُقدَّم كملفات ثابتة (404)
     RewriteRule ^(css/atheer\.css|css/admin-atheer\.css|js/atheer-tailwind-config\.js)$ index.php [L]
     RewriteRule ^(css/landing/.*\.css|js/landing/.*\.js)$ index.php [L]
-    RewriteRule ^(img/(glottical|sanua)/.+)$ index.php [L]
+    RewriteRule ^(__hesetak/img/.+|img/(brand|mycourses|lasles|glottical|sanua)/.+)$ index.php [L]
 
     # Redirect Trailing Slashes If Not A Folder...
     RewriteCond %{REQUEST_FILENAME} !-d
