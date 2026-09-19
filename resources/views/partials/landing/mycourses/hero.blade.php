@@ -43,9 +43,7 @@
       @foreach($slides as $i => $slide)
         @php
           $imgFile = $slide['image'] ?? 'hero-tutor-student.png';
-          $imgPath = public_path('img/mycourses/'.$imgFile);
-          $imgVer = is_file($imgPath) ? (string) filemtime($imgPath) : (string) time();
-          $imgUrl = asset('img/mycourses/'.$imgFile).'?v='.$imgVer;
+          $imgUrl = public_img_url('mycourses/'.$imgFile);
           $primaryHref = $routeMap[$slide['cta_primary_route'] ?? 'instructors'] ?? route('public.instructors.index');
           $secondaryHref = $routeMap[$slide['cta_secondary_route'] ?? 'curricula'] ?? route('public.curricula');
         @endphp

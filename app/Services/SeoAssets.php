@@ -14,9 +14,12 @@ class SeoAssets
             return $configured;
         }
 
-        $local = public_path('images/og-image.jpg');
+        $local = public_path('img/brand/hesetak-logo.png');
+        if (is_file($local) && function_exists('public_img_url')) {
+            return public_img_url('brand/hesetak-logo.png');
+        }
         if (is_file($local)) {
-            return asset('images/og-image.jpg');
+            return asset('img/brand/hesetak-logo.png');
         }
 
         $logo = AdminPanelBranding::logoPublicUrl();
@@ -24,7 +27,9 @@ class SeoAssets
             return $logo;
         }
 
-        return asset('images/og-image.jpg');
+        return function_exists('public_img_url')
+            ? public_img_url('brand/hesetak-mark.png')
+            : asset('img/brand/hesetak-mark.png');
     }
 
     /**

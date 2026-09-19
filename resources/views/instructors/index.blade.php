@@ -172,10 +172,10 @@
               $headline = $p->headline_clean ?: '';
               $skills = array_slice($p->skills_list ?? [], 0, 2);
               $photoFallbacks = [
-                  asset('img/lasles/avatar-1.png'),
-                  asset('img/lasles/avatar-2.png'),
-                  asset('img/lasles/avatar-3.png'),
-                  asset('img/mycourses/hero-saudi-student.png'),
+                  public_img_url('lasles/avatar-1.png'),
+                  public_img_url('lasles/avatar-2.png'),
+                  public_img_url('lasles/avatar-3.png'),
+                  public_img_url('mycourses/hero-saudi-student.png'),
               ];
               $photo = $p->photo_url ?: $photoFallbacks[$loop->index % count($photoFallbacks)];
               $coursesCount = (int) ($p->courses_count ?? 0);

@@ -42,7 +42,7 @@
 
     <main class="mc-auth-stage">
       <div class="mc-auth-stage__mark" aria-hidden="true">
-        <img src="{{ asset('img/brand/hesetak-mark.png') }}" alt="" width="280" height="280" decoding="async">
+        <img src="{{ public_img_url('brand/hesetak-mark.png') }}" alt="" width="280" height="280" decoding="async" onerror="this.onerror=null;this.src={{ \Illuminate\Support\Js::from(\App\Services\AdminPanelBranding::inlineFallbackDataUri()) }};">
       </div>
       <div class="mc-auth-sheet @yield('main_class')">
         @yield('content')

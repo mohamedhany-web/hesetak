@@ -1,8 +1,8 @@
 {{-- أيقونة التبويب: شعار لوحة التحكم إن وُجد، وإلا شعار حصتك --}}
 @php
     $brandIcon = \App\Services\AdminPanelBranding::logoPublicUrl();
-    $defaultIcon = asset('img/brand/hesetak-favicon-32.png');
-    $appleIcon = asset('img/brand/hesetak-apple-touch.png');
+    $defaultIcon = public_img_url('brand/hesetak-favicon-32.png');
+    $appleIcon = public_img_url('brand/hesetak-apple-touch.png');
 @endphp
 @if($brandIcon && ! str_starts_with((string) $brandIcon, 'data:'))
     <link rel="icon" href="{{ $brandIcon }}" sizes="any">

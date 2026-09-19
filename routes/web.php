@@ -391,10 +391,12 @@ Route::get('/js/landing/{file}.js', function (string $file) use ($serveAtheerAss
     );
 })->where('file', '[A-Za-z0-9\-]+')->name('assets.landing.js');
 
-Route::get('/img/{folder}/{file}', function (string $folder, string $file) use ($serveAtheerAsset) {
+Route::get('/img/{folder}/{file}', function (string $folder, string $file) {
     $folder = basename($folder);
     $file = basename($file);
-    if (! in_array($folder, ['glottical', 'sanua'], true)) {
+    // على Hostinger الملفات الثابتة تحت /img/* غالباً 404 — نخدمها عبر Laravel
+    $allowed = ['brand', 'mycourses', 'lasles', 'glottical', 'sanua', 'student-timeline'];
+    if (! in_array($folder, $allowed, true)) {
         abort(404);
     }
     if (! preg_match('/^[A-Za-z0-9._\-]+$/', $file) || ! preg_match('/\.(png|jpe?g|webp|gif|svg)$/i', $file)) {
@@ -420,7 +422,40 @@ Route::get('/img/{folder}/{file}', function (string $folder, string $file) use (
         'Content-Type' => $types[$ext] ?? 'application/octet-stream',
         'Cache-Control' => 'public, max-age=86400',
     ]);
-})->where(['folder' => 'glottical|sanua', 'file' => '[A-Za-z0-9._\-]+'])->name('assets.landing.img');
+})->where(['folder' => 'brand|mycourses|lasles|glottical|sanua|student-timeline', 'file' => '[A-Za-z0-9._\-]+'])->name('assets.landing.img');
+
+// صور لوحة المدرب وغيرها تحت /images/* (نفس مشكلة الاستضافة مع الملفات الثابتة)
+Route::get('/images/{path}', function (string $path) {
+    $path = str_replace('\\', '/', $path);
+    if (str_contains($path, '..') || ! preg_match('/^[A-Za-z0-9._\-\/]+$/', $path)) {
+        abort(404);
+    }
+    if (! preg_match('/\.(png|jpe?g|webp|gif|svg)$/i', $path)) {
+        abort(404);
+    }
+
+    $full = public_path('images/'.$path);
+    $realPublic = realpath(public_path('images'));
+    $realFile = realpath($full);
+    if ($realPublic === false || $realFile === false || ! str_starts_with($realFile, $realPublic) || ! is_file($realFile)) {
+        abort(404);
+    }
+
+    $ext = strtolower(pathinfo($realFile, PATHINFO_EXTENSION));
+    $types = [
+        'png' => 'image/png',
+        'jpg' => 'image/jpeg',
+        'jpeg' => 'image/jpeg',
+        'webp' => 'image/webp',
+        'gif' => 'image/gif',
+        'svg' => 'image/svg+xml',
+    ];
+
+    return response((string) file_get_contents($realFile), 200, [
+        'Content-Type' => $types[$ext] ?? 'application/octet-stream',
+        'Cache-Control' => 'public, max-age=86400',
+    ]);
+})->where('path', '.*')->name('assets.public.images');
 
 Route::get('/free-trial/slots', [\App\Http\Controllers\Public\FreeTrialBookingController::class, 'slots'])->name('public.free-trial.slots');
 Route::post('/free-trial/book', [\App\Http\Controllers\Public\FreeTrialBookingController::class, 'store'])

@@ -6,7 +6,7 @@
     <div class="mc-footer__grid">
       <div class="mc-footer__brand-block">
         <a href="{{ route('home') }}" class="mc-footer__brand">
-          <img src="{{ asset('img/brand/hesetak-mark.png') }}" alt="" class="mc-brand__mark" width="36" height="36" decoding="async">
+          <img src="{{ public_img_url('brand/hesetak-mark.png') }}" alt="" class="mc-brand__mark" width="36" height="36" decoding="async" onerror="this.onerror=null;this.src={{ \Illuminate\Support\Js::from(\App\Services\AdminPanelBranding::inlineFallbackDataUri()) }};">
           {{ __('landing.nav.brand') }}
         </a>
         <p class="mc-footer__tagline">{{ __('landing.mc.footer.tagline') }}</p>

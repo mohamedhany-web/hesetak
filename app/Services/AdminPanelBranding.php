@@ -12,7 +12,7 @@ class AdminPanelBranding
 {
     public const SETTING_KEY = 'admin_panel_logo_path';
 
-    private const LOGO_URL_CACHE_KEY = 'branding.admin_panel_logo_url_v3';
+    private const LOGO_URL_CACHE_KEY = 'branding.admin_panel_logo_url_v4';
 
     /** ملف العلامة الثابت في public/ (حصتك). */
     public const PUBLIC_MARK_PATH = 'img/brand/hesetak-mark.png';
@@ -59,6 +59,10 @@ class AdminPanelBranding
      */
     public static function defaultPublicMarkUrl(): string
     {
+        if (function_exists('public_img_url')) {
+            return public_img_url(self::PUBLIC_MARK_PATH);
+        }
+
         return asset(self::PUBLIC_MARK_PATH);
     }
 

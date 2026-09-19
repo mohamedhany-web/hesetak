@@ -18,10 +18,10 @@
             $user = $profile->user;
             $name = $user?->name ?? __('public.instructor_fallback');
             $photoFallbacks = [
-                asset('img/lasles/avatar-1.png'),
-                asset('img/lasles/avatar-2.png'),
-                asset('img/lasles/avatar-3.png'),
-                asset('img/mycourses/hero-saudi-student.png'),
+                public_img_url('lasles/avatar-1.png'),
+                public_img_url('lasles/avatar-2.png'),
+                public_img_url('lasles/avatar-3.png'),
+                public_img_url('mycourses/hero-saudi-student.png'),
             ];
             $photo = $profile->photo_url ?: $photoFallbacks[$loop->index % count($photoFallbacks)];
             $headline = trim((string) ($profile->headline ?: ''));

@@ -1,8 +1,6 @@
 @php
     $isRtl = $isRtl ?? (app()->getLocale() === 'ar');
-    $heroPath = public_path('img/mycourses/hero-tutor-student.png');
-    $heroVer = is_file($heroPath) ? (string) filemtime($heroPath) : (string) time();
-    $heroImage = asset('img/mycourses/hero-tutor-student.png').'?v='.$heroVer;
+    $heroImage = public_img_url('mycourses/hero-tutor-student.png');
 @endphp
 <section class="dp-hero" aria-labelledby="dp-hero-title">
   <figure class="dp-hero__media" aria-hidden="true">

@@ -1,7 +1,7 @@
 @php
     use App\Support\TadrisPublicNav;
     $isRtl = $isRtl ?? (app()->getLocale() === 'ar');
-    $img = $img ?? fn (string $file) => asset('img/lasles/'.$file);
+    $img = $img ?? fn (string $file) => public_img_url('lasles/'.$file);
     $langSwitch = $langSwitch ?? fn (string $lang) => request()->fullUrlWithQuery(array_merge(request()->query(), ['lang' => $lang]));
     $navItems = TadrisPublicNav::primary();
     $short = fn (string $key, ?string $fallback = null) =>

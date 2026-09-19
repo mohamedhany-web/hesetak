@@ -3,7 +3,7 @@
     $isRtl = $isRtl ?? (app()->getLocale() === 'ar');
     $brand = 'حصتك';
     $brandAr = 'حصتك';
-    $img = $img ?? fn (string $file) => asset('img/lasles/'.$file);
+    $img = $img ?? fn (string $file) => public_img_url('lasles/'.$file);
     $items = TadrisPublicNav::primary();
 @endphp
 <footer class="lasles-footer">

@@ -34,7 +34,7 @@
             <i class="fas fa-times text-xs"></i>
         </button>
         <div class="w-11 h-11 rounded-xl bg-[#C9952A] text-[#152A4A] flex items-center justify-center flex-shrink-0 shadow-lg shadow-black/20 overflow-hidden">
-            <img src="{{ asset('img/brand/hesetak-mark.png') }}" alt="" class="w-9 h-9 object-contain" width="36" height="36" onerror="this.style.display='none';this.nextElementSibling.style.display='inline-flex'">
+            <img src="{{ public_img_url('brand/hesetak-mark.png') }}" alt="" class="w-9 h-9 object-contain" width="36" height="36" onerror="this.style.display='none';this.nextElementSibling.style.display='inline-flex'">
             <i class="fas fa-graduation-cap text-lg" style="display:none"></i>
         </div>
         <div class="flex-1 min-w-0 relative z-10">
