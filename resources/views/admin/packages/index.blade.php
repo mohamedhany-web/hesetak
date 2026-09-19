@@ -500,7 +500,7 @@
                                     </td>
                                     <td class="px-4 py-3 tabular-nums">{{ $tp->duration_months }}</td>
                                     <td class="px-4 py-3 tabular-nums">{{ $tp->sessions_per_month }}</td>
-                                    <td class="px-4 py-3 tabular-nums">{{ number_format((float) $tp->hourly_rate, 2) }} {{ $tp->currency ?: '{{ currency_label() }}' }}</td>
+                                    <td class="px-4 py-3 tabular-nums">{{ number_format((float) $tp->hourly_rate, 2) }} {{ $tp->currency ?: currency_label() }}</td>
                                     <td class="px-4 py-3">
                                         <div class="tabular-nums text-muted line-through text-xs">{{ number_format((float) ($tp->original_price ?? 0), 0) }}</div>
                                         <div class="font-semibold tabular-nums text-ink">{{ $tp->formattedPrice() }}</div>
