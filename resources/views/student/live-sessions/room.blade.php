@@ -4,13 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>{{ $liveSession->title }} — بث مباشر</title>
+    <title>{{ $liveSession->title }} — حصة مباشرة | حصتك</title>
     @include('partials.favicon-links')
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Poppins:wght@400;500;600;700&family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Lato:wght@400;700;900&family=Rubik:wght@400;500;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ asset('css/hesetak-live-meeting.css') }}?v=hstk-live-1">
     <link rel="stylesheet" href="{{ route('assets.student-timeline.css') }}?v=st-live-1">
     <style>
         :root {
@@ -18,16 +19,16 @@
             --st-ink: #4f4f4f;
             --st-ink-strong: #212523;
             --st-muted: #979797;
-            --st-blue: #0997d9;
-            --st-brand: #0B3D91;
-            --st-gold: #F5B800;
+            --st-blue: #1E4E8C;
+            --st-brand: #1E4E8C;
+            --st-gold: #C9952A;
             --st-line: #ebebeb;
-            --st-nav: #071226;
+            --st-nav: #152A4A;
         }
         * { box-sizing: border-box; }
         html, body {
             margin: 0; padding: 0; height: 100%;
-            font-family: 'Cairo', 'Tajawal', 'Poppins', system-ui, sans-serif;
+            font-family: 'IBM Plex Sans Arabic', 'Lato', 'Rubik', system-ui, sans-serif;
             background: var(--st-bg);
             color: var(--st-ink);
             overflow: hidden;
@@ -243,7 +244,7 @@
         <div class="st-live-body">
             <div id="mx-video-stack" class="st-live-stage">
                 @if(!empty($livekitConfigured) && !empty($livekitToken) && !empty($livekitUrl))
-                    @include('partials.livekit-room', [
+                    @include('partials.hesetak-live-room', [
                         'livekitUrl' => $livekitUrl,
                         'livekitToken' => $livekitToken,
                         'user' => $user,
@@ -262,7 +263,7 @@
                         <a href="{{ route('student.live-sessions.index') }}" class="st-live-pill st-live-pill--gold mt-2">العودة للجلسات</a>
                     </div>
                 @endif
-                @include('partials.mx-share-annotation-overlay', [
+                @include('partials.hesetak-live-share-annotation', [
                     'mxAnnRole' => 'student_emit',
                     'mxAnnPostUrl' => route('student.live-sessions.share-annotation', $liveSession),
                 ])

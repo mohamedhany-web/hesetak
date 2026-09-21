@@ -28,63 +28,63 @@
         height: 100% !important;
     }
     /* حصتك Whiteboard: مكتبة + روابط وخدمات خارجية */
-    .mx-muallimx-whiteboard .excalidraw .layer-ui__library,
-    .mx-muallimx-whiteboard .excalidraw .layer-ui__library-message,
-    .mx-muallimx-whiteboard .excalidraw .library-menu,
-    .mx-muallimx-whiteboard .excalidraw .library-menu-dropdown-container,
-    .mx-muallimx-whiteboard .excalidraw .library-menu-dropdown-container--in-heading,
-    .mx-muallimx-whiteboard .excalidraw .library-menu-items-container,
-    .mx-muallimx-whiteboard .excalidraw .library-menu-control-buttons,
-    .mx-muallimx-whiteboard .excalidraw .library-menu-control-buttons--at-bottom,
-    .mx-muallimx-whiteboard .excalidraw .library-menu-browse-button,
-    .mx-muallimx-whiteboard .excalidraw .library-menu-items-private-library-container,
-    .mx-muallimx-whiteboard .excalidraw .library-actions-counter,
-    .mx-muallimx-whiteboard .excalidraw .single-library-item,
-    .mx-muallimx-whiteboard .excalidraw .single-library-item-wrapper,
-    .mx-muallimx-whiteboard .excalidraw .library-unit,
-    .mx-muallimx-whiteboard .excalidraw .selected-library-items,
-    .mx-muallimx-whiteboard .excalidraw [class*="publish-library"] {
+    .hstk-wb .excalidraw .layer-ui__library,
+    .hstk-wb .excalidraw .layer-ui__library-message,
+    .hstk-wb .excalidraw .library-menu,
+    .hstk-wb .excalidraw .library-menu-dropdown-container,
+    .hstk-wb .excalidraw .library-menu-dropdown-container--in-heading,
+    .hstk-wb .excalidraw .library-menu-items-container,
+    .hstk-wb .excalidraw .library-menu-control-buttons,
+    .hstk-wb .excalidraw .library-menu-control-buttons--at-bottom,
+    .hstk-wb .excalidraw .library-menu-browse-button,
+    .hstk-wb .excalidraw .library-menu-items-private-library-container,
+    .hstk-wb .excalidraw .library-actions-counter,
+    .hstk-wb .excalidraw .single-library-item,
+    .hstk-wb .excalidraw .single-library-item-wrapper,
+    .hstk-wb .excalidraw .library-unit,
+    .hstk-wb .excalidraw .selected-library-items,
+    .hstk-wb .excalidraw [class*="publish-library"] {
         display: none !important;
         visibility: hidden !important;
         pointer-events: none !important;
     }
-    .mx-muallimx-whiteboard .excalidraw .dropdown-menu a.dropdown-menu-item[href^="http://"],
-    .mx-muallimx-whiteboard .excalidraw .dropdown-menu a.dropdown-menu-item[href^="https://"] {
+    .hstk-wb .excalidraw .dropdown-menu a.dropdown-menu-item[href^="http://"],
+    .hstk-wb .excalidraw .dropdown-menu a.dropdown-menu-item[href^="https://"] {
         display: none !important;
         visibility: hidden !important;
         pointer-events: none !important;
     }
-    .mx-muallimx-whiteboard .excalidraw .dropdown-menu .dropdown-menu-group:has(a.dropdown-menu-item[href^="http"]),
-    .mx-muallimx-whiteboard .excalidraw .dropdown-menu .dropdown-menu-group:has(a.dropdown-menu-item[href^="https"]) {
+    .hstk-wb .excalidraw .dropdown-menu .dropdown-menu-group:has(a.dropdown-menu-item[href^="http"]),
+    .hstk-wb .excalidraw .dropdown-menu .dropdown-menu-group:has(a.dropdown-menu-item[href^="https"]) {
         display: none !important;
     }
-    .mx-muallimx-whiteboard .excalidraw .HelpDialog__header {
+    .hstk-wb .excalidraw .HelpDialog__header {
         display: none !important;
     }
-    .mx-muallimx-whiteboard .excalidraw [data-testid="collab-button"] {
-        display: none !important;
-        pointer-events: none !important;
-    }
-    .mx-muallimx-whiteboard .excalidraw .ExcalidrawLogo,
-    .mx-muallimx-whiteboard .excalidraw .welcome-screen-center__logo {
+    .hstk-wb .excalidraw [data-testid="collab-button"] {
         display: none !important;
         pointer-events: none !important;
     }
-    .mx-muallimx-whiteboard .excalidraw a.welcome-screen-menu-item[href^="http://"],
-    .mx-muallimx-whiteboard .excalidraw a.welcome-screen-menu-item[href^="https://"] {
+    .hstk-wb .excalidraw .ExcalidrawLogo,
+    .hstk-wb .excalidraw .welcome-screen-center__logo {
         display: none !important;
         pointer-events: none !important;
     }
-    .mx-muallimx-whiteboard .excalidraw .ExportDialog a[href^="http://"],
-    .mx-muallimx-whiteboard .excalidraw .ExportDialog a[href^="https://"],
-    .mx-muallimx-whiteboard .excalidraw .ImageExportModal a[href^="http://"],
-    .mx-muallimx-whiteboard .excalidraw .ImageExportModal a[href^="https://"],
-    .mx-muallimx-whiteboard .excalidraw .OverwriteConfirm a[href^="http://"],
-    .mx-muallimx-whiteboard .excalidraw .OverwriteConfirm a[href^="https://"],
-    .mx-muallimx-whiteboard .excalidraw [class*="publish-library"] a[href^="http://"],
-    .mx-muallimx-whiteboard .excalidraw [class*="publish-library"] a[href^="https://"],
-    .mx-muallimx-whiteboard .excalidraw .HelpDialog a[href^="http://"],
-    .mx-muallimx-whiteboard .excalidraw .HelpDialog a[href^="https://"] {
+    .hstk-wb .excalidraw a.welcome-screen-menu-item[href^="http://"],
+    .hstk-wb .excalidraw a.welcome-screen-menu-item[href^="https://"] {
+        display: none !important;
+        pointer-events: none !important;
+    }
+    .hstk-wb .excalidraw .ExportDialog a[href^="http://"],
+    .hstk-wb .excalidraw .ExportDialog a[href^="https://"],
+    .hstk-wb .excalidraw .ImageExportModal a[href^="http://"],
+    .hstk-wb .excalidraw .ImageExportModal a[href^="https://"],
+    .hstk-wb .excalidraw .OverwriteConfirm a[href^="http://"],
+    .hstk-wb .excalidraw .OverwriteConfirm a[href^="https://"],
+    .hstk-wb .excalidraw [class*="publish-library"] a[href^="http://"],
+    .hstk-wb .excalidraw [class*="publish-library"] a[href^="https://"],
+    .hstk-wb .excalidraw .HelpDialog a[href^="http://"],
+    .hstk-wb .excalidraw .HelpDialog a[href^="https://"] {
         display: none !important;
         pointer-events: none !important;
         visibility: hidden !important;
@@ -109,7 +109,7 @@
 <div class="w-full px-4 sm:px-6 lg:px-8 py-6 space-y-4">
     <p class="text-sm text-slate-600 dark:text-slate-400">لوحة مستقلة خارج الاجتماع — يمكنك التصدير من قائمة حصتك Whiteboard (PNG/SVG).</p>
     <div class="mx-standalone-excalidraw-wrap bg-slate-900">
-        <div id="mx-standalone-excalidraw-root" class="mx-muallimx-whiteboard" data-lang="ar"></div>
+        <div id="mx-standalone-excalidraw-root" class="hstk-wb" data-lang="ar"></div>
         <div id="mx-standalone-loading">جاري تحميل حصتك Whiteboard…</div>
     </div>
 </div>

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # إعداد نطاق live.glottical.com → LiveKit على نفس VPS مع الإبقاء على live.muallimx.com (Jitsi)
-# التشغيل على السيرفر: sudo bash setup-live-glottical-livekit.sh
+# التشغيل على السيرفر: sudo bash setup-live-hesetak-livekit.sh
 set -euo pipefail
 
 DOMAIN="live.glottical.com"

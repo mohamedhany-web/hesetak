@@ -9,7 +9,7 @@
     $mxAnnSelfKey = $mxAnnSelfKey ?? (string) (auth()->id() ?? '');
 @endphp
 <style>
-    #mx-share-ann-layer {
+    #hstk-share-ann-layer {
         pointer-events: none;
         position: absolute;
         inset-inline: 0;
@@ -18,9 +18,9 @@
         bottom: var(--mx-ann-above-media, 5.35rem);
         z-index: 25;
     }
-    #mx-share-ann-layer.mx-share-ann-drawing { pointer-events: auto; }
-    #mx-share-ann-layer.mx-share-ann-drawing #mx-share-ann-canvas { touch-action: none; }
-    #mx-share-ann-toolbar {
+    #hstk-share-ann-layer.hstk-share-ann-drawing { pointer-events: auto; }
+    #hstk-share-ann-layer.hstk-share-ann-drawing #hstk-share-ann-canvas { touch-action: none; }
+    #hstk-share-ann-toolbar {
         pointer-events: auto;
         position: absolute;
         left: 50%;
@@ -40,30 +40,30 @@
         max-width: min(95vw, 42rem);
     }
     @media (max-width: 640px) {
-        #mx-share-ann-layer {
+        #hstk-share-ann-layer {
             bottom: var(--mx-ann-above-media-mobile, 6.75rem);
         }
-        #mx-share-ann-toolbar {
+        #hstk-share-ann-toolbar {
             gap: 0.35rem;
             padding: 0.4rem 0.55rem;
             max-width: 96vw;
         }
     }
     /* ثيم الطالب: شريط الوسائط أوضح وأطول أحياناً */
-    .lk-theme-student ~ #mx-share-ann-layer,
-    .st-live-stage #mx-share-ann-layer {
+    .lk-theme-student ~ #hstk-share-ann-layer,
+    .st-live-stage #hstk-share-ann-layer {
         --mx-ann-above-media: 5.6rem;
         --mx-ann-above-media-mobile: 7.1rem;
     }
 </style>
-<div id="mx-share-ann-layer" class="hidden"
+<div id="hstk-share-ann-layer" class="hidden"
      data-role="{{ $mxAnnRole }}"
      data-post-url="{{ e($mxAnnPostUrl) }}"
      data-poll-url="{{ e($mxAnnPollUrl) }}"
      data-self-key="{{ e($mxAnnSelfKey) }}"
      data-guest-token="">
-    <canvas id="mx-share-ann-canvas" class="absolute inset-0 w-full h-full block"></canvas>
-    <div id="mx-share-ann-toolbar">
+    <canvas id="hstk-share-ann-canvas" class="absolute inset-0 w-full h-full block"></canvas>
+    <div id="hstk-share-ann-toolbar">
         <span class="text-slate-400 text-[11px] px-1 hidden sm:inline">فوق عرض البث</span>
         <button type="button" data-mx-ann-tool="pen" class="mx-ann-tool-btn inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-amber-600/30 text-amber-100 text-xs font-semibold border border-amber-500/50 ring-2 ring-amber-400/60">
             <i class="fas fa-pen"></i> قلم
@@ -81,8 +81,8 @@
 </div>
 <script>
 (function () {
-    var layer = document.getElementById('mx-share-ann-layer');
-    var canvas = document.getElementById('mx-share-ann-canvas');
+    var layer = document.getElementById('hstk-share-ann-layer');
+    var canvas = document.getElementById('hstk-share-ann-canvas');
     if (!layer || !canvas) return;
 
     var role = layer.getAttribute('data-role') || '';
@@ -239,10 +239,10 @@
         drawEnabled = !!on;
         if (!isEmitter()) return;
         if (drawEnabled) {
-            layer.classList.add('mx-share-ann-drawing');
+            layer.classList.add('hstk-share-ann-drawing');
             layer.classList.remove('hidden');
         } else {
-            layer.classList.remove('mx-share-ann-drawing');
+            layer.classList.remove('hstk-share-ann-drawing');
             drawing = false;
             currentPts = null;
             if (!shouldPoll()) layer.classList.add('hidden');
@@ -375,7 +375,7 @@
     window.__mxShareAnnOpenToolbar = function () {
         if (!allowed || !isEmitter()) return;
         layer.classList.remove('hidden');
-        var toolbar = layer.querySelector('#mx-share-ann-toolbar');
+        var toolbar = layer.querySelector('#hstk-share-ann-toolbar');
         if (toolbar) toolbar.style.display = '';
         setDrawActive(true);
         resizeCanvas();
@@ -391,19 +391,19 @@
             // المعلم: أدوات الرسم جاهزة فوق منطقة الفيديو فقط (فوق شريط الوسائط)
             allowed = true;
             layer.classList.remove('hidden');
-            var hostTb = layer.querySelector('#mx-share-ann-toolbar');
+            var hostTb = layer.querySelector('#hstk-share-ann-toolbar');
             if (hostTb) hostTb.style.display = '';
             setDrawActive(true);
         } else if (role === 'emit_and_poll') {
             // الطالب: يرى رسوم المعلم؛ شريط القلم يظهر فقط عند ضغط «رسم فوق العرض»
             allowed = true;
             layer.classList.remove('hidden');
-            var studentTb = layer.querySelector('#mx-share-ann-toolbar');
+            var studentTb = layer.querySelector('#hstk-share-ann-toolbar');
             if (studentTb) studentTb.style.display = 'none';
             setDrawActive(false);
         }
     } else if (role === 'viewer_poll') {
-        var tb = layer.querySelector('#mx-share-ann-toolbar');
+        var tb = layer.querySelector('#hstk-share-ann-toolbar');
         if (tb) tb.style.display = 'none';
         layer.classList.remove('hidden');
     }

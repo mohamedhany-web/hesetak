@@ -170,7 +170,7 @@
     .mx-panel-title i { color: #38bdf8; }
 
     /* Toolbar */
-    .mx-wb-toolbar {
+    .hstk-wb-toolbar {
         display: flex;
         flex-wrap: wrap;
         gap: 4px;
@@ -188,7 +188,7 @@
         border-right: 1px solid rgba(148,163,184,0.15);
     }
     .mx-tool-group:last-child { border-right: none; }
-    .mx-tool-btn {
+    .hstk-tool-btn {
         width: 34px; height: 34px;
         border-radius: 8px;
         border: 1px solid rgba(148,163,184,0.15);
@@ -200,9 +200,9 @@
         transition: all 0.15s;
         position: relative;
     }
-    .mx-tool-btn:hover { background: rgba(51,65,85,0.9); color: #e2e8f0; border-color: rgba(148,163,184,0.3); }
-    .mx-tool-btn.is-active { background: rgba(14,165,233,0.25); border-color: rgba(56,189,248,0.5); color: #38bdf8; }
-    .mx-tool-btn[title]:hover::after {
+    .hstk-tool-btn:hover { background: rgba(51,65,85,0.9); color: #e2e8f0; border-color: rgba(148,163,184,0.3); }
+    .hstk-tool-btn.is-active { background: rgba(14,165,233,0.25); border-color: rgba(56,189,248,0.5); color: #38bdf8; }
+    .hstk-tool-btn[title]:hover::after {
         content: attr(title);
         position: absolute;
         bottom: -28px;
@@ -252,17 +252,17 @@
     .mx-bg-btn.is-active { border-color: #38bdf8; }
 
     /* Canvas area */
-    #mx-wb-canvas-wrap {
+    #hstk-wb-canvas-wrap {
         flex: 1;
         min-height: 200px;
         position: relative;
         background: #ffffff;
         overflow: hidden;
     }
-    #mx-wb-canvas-wrap canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+    #hstk-wb-canvas-wrap canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
 
     /* Resize handle */
-    #mx-wb-resize {
+    #hstk-wb-resize {
         position: absolute;
         right: 8px;
         top: 50%;
@@ -320,7 +320,7 @@
     .mx-bg-cream { background: #fffbeb; }
     .mx-bg-black { background: #0f172a; }
 
-    .mx-wb-toolbar-wrap {
+    .hstk-wb-toolbar-wrap {
         max-height: 168px;
         overflow-y: auto;
         overflow-x: hidden;
@@ -328,11 +328,11 @@
         border-bottom: 1px solid rgba(148,163,184,0.12);
         background: rgba(15,23,42,0.92);
     }
-    .mx-wb-toolbar-wrap::-webkit-scrollbar { height: 6px; width: 6px; }
-    .mx-wb-toolbar-wrap::-webkit-scrollbar-thumb { background: rgba(148,163,184,0.35); border-radius: 4px; }
+    .hstk-wb-toolbar-wrap::-webkit-scrollbar { height: 6px; width: 6px; }
+    .hstk-wb-toolbar-wrap::-webkit-scrollbar-thumb { background: rgba(148,163,184,0.35); border-radius: 4px; }
 
-    .mx-tool-btn-sm { width: 30px !important; height: 30px !important; font-size: 11px !important; }
-    .mx-wb-select {
+    .hstk-tool-btn-sm { width: 30px !important; height: 30px !important; font-size: 11px !important; }
+    .hstk-wb-select {
         background: rgba(30,41,59,0.95);
         border: 1px solid rgba(148,163,184,0.2);
         border-radius: 8px;
@@ -434,43 +434,43 @@
             <span>السبورة التفاعلية</span>
         </div>
         <div style="display:flex; gap:6px; align-items:center;">
-            <div id="mx-wb-resize" title="تغيير الحجم"><i class="fas fa-arrows-up-down"></i></div>
-            <button id="mx-wb-minimize" class="mx-tool-btn" title="تصغير" style="width:28px;height:28px;font-size:11px;"><i class="fas fa-minus"></i></button>
-            <button id="mx-wb-close" class="mx-tool-btn" title="إغلاق" style="width:28px;height:28px;font-size:11px;color:#f87171;"><i class="fas fa-xmark"></i></button>
+            <div id="hstk-wb-resize" title="تغيير الحجم"><i class="fas fa-arrows-up-down"></i></div>
+            <button id="hstk-wb-minimize" class="hstk-tool-btn" title="تصغير" style="width:28px;height:28px;font-size:11px;"><i class="fas fa-minus"></i></button>
+            <button id="hstk-wb-close" class="hstk-tool-btn" title="إغلاق" style="width:28px;height:28px;font-size:11px;color:#f87171;"><i class="fas fa-xmark"></i></button>
         </div>
     </div>
 
-    <div class="mx-wb-toolbar-wrap">
+    <div class="hstk-wb-toolbar-wrap">
         <div class="mx-row-label">الرسم والتحديد</div>
-        <div class="mx-wb-toolbar">
+        <div class="hstk-wb-toolbar">
             <div class="mx-tool-group">
-                <button class="mx-tool-btn is-active" data-tool="select" title="تحديد ونقل"><i class="fas fa-mouse-pointer"></i></button>
-                <button class="mx-tool-btn" data-tool="draw" title="قلم حر"><i class="fas fa-pen"></i></button>
-                <button class="mx-tool-btn" data-tool="highlight" title="تمييز شفاف (ماركر)"><i class="fas fa-highlighter"></i></button>
-                <button class="mx-tool-btn" data-tool="eraser" title="ممحاة"><i class="fas fa-eraser"></i></button>
+                <button class="hstk-tool-btn is-active" data-tool="select" title="تحديد ونقل"><i class="fas fa-mouse-pointer"></i></button>
+                <button class="hstk-tool-btn" data-tool="draw" title="قلم حر"><i class="fas fa-pen"></i></button>
+                <button class="hstk-tool-btn" data-tool="highlight" title="تمييز شفاف (ماركر)"><i class="fas fa-highlighter"></i></button>
+                <button class="hstk-tool-btn" data-tool="eraser" title="ممحاة"><i class="fas fa-eraser"></i></button>
             </div>
             <div class="mx-tool-group">
-                <button class="mx-tool-btn" data-tool="line" title="خط"><i class="fas fa-minus"></i></button>
-                <button class="mx-tool-btn" data-tool="arrow" title="سهم"><i class="fas fa-arrow-right"></i></button>
-                <button class="mx-tool-btn" data-tool="darrow" title="سهم مزدوج"><i class="fas fa-arrows-left-right"></i></button>
-                <button class="mx-tool-btn" data-tool="rect" title="مستطيل"><i class="far fa-square"></i></button>
-                <button class="mx-tool-btn" data-tool="roundrect" title="مستطيل مستدير"><i class="fas fa-square"></i></button>
-                <button class="mx-tool-btn" data-tool="circle" title="بيضاوي"><i class="far fa-circle"></i></button>
-                <button class="mx-tool-btn" data-tool="triangle" title="مثلث"><i class="fas fa-play fa-rotate-270"></i></button>
-                <button class="mx-tool-btn" data-tool="diamond" title="معين"><i class="fas fa-gem"></i></button>
-                <button class="mx-tool-btn" data-tool="hex" title="سداسي"><span style="font-size:14px;font-weight:800;line-height:1">⬡</span></button>
-                <button class="mx-tool-btn" data-tool="star" title="نجمة"><i class="fas fa-star"></i></button>
+                <button class="hstk-tool-btn" data-tool="line" title="خط"><i class="fas fa-minus"></i></button>
+                <button class="hstk-tool-btn" data-tool="arrow" title="سهم"><i class="fas fa-arrow-right"></i></button>
+                <button class="hstk-tool-btn" data-tool="darrow" title="سهم مزدوج"><i class="fas fa-arrows-left-right"></i></button>
+                <button class="hstk-tool-btn" data-tool="rect" title="مستطيل"><i class="far fa-square"></i></button>
+                <button class="hstk-tool-btn" data-tool="roundrect" title="مستطيل مستدير"><i class="fas fa-square"></i></button>
+                <button class="hstk-tool-btn" data-tool="circle" title="بيضاوي"><i class="far fa-circle"></i></button>
+                <button class="hstk-tool-btn" data-tool="triangle" title="مثلث"><i class="fas fa-play fa-rotate-270"></i></button>
+                <button class="hstk-tool-btn" data-tool="diamond" title="معين"><i class="fas fa-gem"></i></button>
+                <button class="hstk-tool-btn" data-tool="hex" title="سداسي"><span style="font-size:14px;font-weight:800;line-height:1">⬡</span></button>
+                <button class="hstk-tool-btn" data-tool="star" title="نجمة"><i class="fas fa-star"></i></button>
             </div>
             <div class="mx-tool-group">
-                <button class="mx-tool-btn" data-tool="text" title="نص حر"><i class="fas fa-font"></i></button>
-                <button class="mx-tool-btn mx-sym-btn" data-tool="stamp-check" title="صح ✓">✓</button>
-                <button class="mx-tool-btn mx-sym-btn" data-tool="stamp-x" title="خطأ ✗">✗</button>
-                <button class="mx-tool-btn mx-sym-btn" data-tool="stamp-q" title="سؤال ؟">?</button>
-                <button class="mx-tool-btn mx-sym-btn" data-tool="stamp-bang" title="تنبيه !">!</button>
+                <button class="hstk-tool-btn" data-tool="text" title="نص حر"><i class="fas fa-font"></i></button>
+                <button class="hstk-tool-btn mx-sym-btn" data-tool="stamp-check" title="صح ✓">✓</button>
+                <button class="hstk-tool-btn mx-sym-btn" data-tool="stamp-x" title="خطأ ✗">✗</button>
+                <button class="hstk-tool-btn mx-sym-btn" data-tool="stamp-q" title="سؤال ؟">?</button>
+                <button class="hstk-tool-btn mx-sym-btn" data-tool="stamp-bang" title="تنبيه !">!</button>
             </div>
         </div>
         <div class="mx-row-label">المظهر — الخط — الطبقات</div>
-        <div class="mx-wb-toolbar">
+        <div class="hstk-wb-toolbar">
             <div class="mx-tool-group">
                 <span style="font-size:10px;color:#64748b;white-space:nowrap;">ألوان جاهزة</span>
                 <div class="mx-color-presets" id="mx-stroke-presets"></div>
@@ -499,7 +499,7 @@
             </div>
             <div class="mx-tool-group">
                 <label style="font-size:10px;color:#64748b;">نمط الخط</label>
-                <select id="mx-line-dash" class="mx-wb-select" title="متقطع للأشكال الجديدة">
+                <select id="hstk-line-dash" class="hstk-wb-select" title="متقطع للأشكال الجديدة">
                     <option value="">متصل</option>
                     <option value="8,6">متقطع</option>
                     <option value="2,4">نقاط</option>
@@ -508,7 +508,7 @@
             </div>
             <div class="mx-tool-group">
                 <span style="font-size:10px;color:#64748b;">رموز</span>
-                <select id="mx-math-insert" class="mx-wb-select" title="إدراج رمز عند النقر على اللوحة">
+                <select id="hstk-math-insert" class="hstk-wb-select" title="إدراج رمز عند النقر على اللوحة">
                     <option value="">+ رياضيات</option>
                     <option value="×">×</option>
                     <option value="÷">÷</option>
@@ -534,9 +534,9 @@
                 </select>
             </div>
             <div class="mx-tool-group">
-                <button class="mx-tool-btn" id="mx-dup" title="نسخ العنصر المحدد"><i class="fas fa-copy"></i></button>
-                <button class="mx-tool-btn" id="mx-front" title="إحضار للأمام"><i class="fas fa-arrow-up"></i></button>
-                <button class="mx-tool-btn" id="mx-back" title="إرسال للخلف"><i class="fas fa-arrow-down"></i></button>
+                <button class="hstk-tool-btn" id="mx-dup" title="نسخ العنصر المحدد"><i class="fas fa-copy"></i></button>
+                <button class="hstk-tool-btn" id="mx-front" title="إحضار للأمام"><i class="fas fa-arrow-up"></i></button>
+                <button class="hstk-tool-btn" id="mx-back" title="إرسال للخلف"><i class="fas fa-arrow-down"></i></button>
             </div>
             <div class="mx-tool-group mx-bg-switcher">
                 <span style="font-size:10px;color:#64748b;">خلفية</span>
@@ -549,15 +549,15 @@
                 <button class="mx-bg-btn" data-bg="green" style="background:#166534;" title="سبورة خضراء"></button>
             </div>
             <div class="mx-tool-group">
-                <button class="mx-tool-btn" id="mx-undo" title="تراجع"><i class="fas fa-rotate-left"></i></button>
-                <button class="mx-tool-btn" id="mx-redo" title="إعادة"><i class="fas fa-rotate-right"></i></button>
-                <button class="mx-tool-btn" id="mx-clear" title="مسح الكل" style="color:#f87171;"><i class="fas fa-trash-alt"></i></button>
-                <button class="mx-tool-btn" id="mx-download" title="PNG"><i class="fas fa-download"></i></button>
+                <button class="hstk-tool-btn" id="mx-undo" title="تراجع"><i class="fas fa-rotate-left"></i></button>
+                <button class="hstk-tool-btn" id="mx-redo" title="إعادة"><i class="fas fa-rotate-right"></i></button>
+                <button class="hstk-tool-btn" id="mx-clear" title="مسح الكل" style="color:#f87171;"><i class="fas fa-trash-alt"></i></button>
+                <button class="hstk-tool-btn" id="mx-download" title="PNG"><i class="fas fa-download"></i></button>
             </div>
         </div>
     </div>
 
-    <div id="mx-wb-canvas-wrap">
+    <div id="hstk-wb-canvas-wrap">
         <canvas id="mx-whiteboard-canvas"></canvas>
         {{-- Text popup --}}
         <div id="mx-text-popup">
@@ -771,9 +771,9 @@
        FULL WHITEBOARD PANEL (fabric.js)
     ══════════════════════════════════════════════════════════ */
     var wbPanel   = document.getElementById('mx-whiteboard-panel');
-    var wbClose   = document.getElementById('mx-wb-close');
+    var wbClose   = document.getElementById('hstk-wb-close');
     var wbCanvasEl = document.getElementById('mx-whiteboard-canvas');
-    var wbWrap    = document.getElementById('mx-wb-canvas-wrap');
+    var wbWrap    = document.getElementById('hstk-wb-canvas-wrap');
     if (!wbCanvasEl || !wbWrap || typeof fabric === 'undefined') return;
 
     var wbCanvas  = new fabric.Canvas(wbCanvasEl, { selection: true, preserveObjectStacking: true });
@@ -809,7 +809,7 @@
     }
 
     function wbDashArray() {
-        var v = (document.getElementById('mx-line-dash') && document.getElementById('mx-line-dash').value) || '';
+        var v = (document.getElementById('hstk-line-dash') && document.getElementById('hstk-line-dash').value) || '';
         if (!v) return null;
         var a = v.split(',').map(function(s) { return parseFloat(s.trim()); }).filter(function(n) { return !isNaN(n); });
         return a.length ? a : null;
@@ -887,8 +887,8 @@
 
     function applyBg(bg) {
         wbBg = bg;
-        var wrap = document.getElementById('mx-wb-canvas-wrap');
-        wrap.className = 'mx-wb-canvas-wrap';
+        var wrap = document.getElementById('hstk-wb-canvas-wrap');
+        wrap.className = 'hstk-wb-canvas-wrap';
         if (bg === 'grid')  wrap.classList.add('mx-bg-grid');
         else if (bg === 'lined') wrap.classList.add('mx-bg-lined');
         else if (bg === 'dark')  wrap.classList.add('mx-bg-dark');
@@ -1068,7 +1068,7 @@
     wbCanvas.on('mouse:down', function(opt) {
         var p = wbCanvas.getPointer(opt.e);
         if (wbTool === 'text') { showTextPopup(p.x, p.y); return; }
-        var mathSel = document.getElementById('mx-math-insert');
+        var mathSel = document.getElementById('hstk-math-insert');
         if (wbTool === 'select' && mathSel && mathSel.value) {
             addWbMathSymbol(p, mathSel.value);
             mathSel.value = '';
@@ -1191,7 +1191,7 @@
         }
     });
 
-    var dashEl = document.getElementById('mx-line-dash');
+    var dashEl = document.getElementById('hstk-line-dash');
     if (dashEl) dashEl.addEventListener('change', function() {
         var obj = wbCanvas.getActiveObject();
         if (obj && wbTool === 'select') {
@@ -1280,13 +1280,13 @@
         else openWbPanel();
     });
     wbClose && wbClose.addEventListener('click', closeWbPanel);
-    document.getElementById('mx-wb-minimize') && document.getElementById('mx-wb-minimize').addEventListener('click', function() {
+    document.getElementById('hstk-wb-minimize') && document.getElementById('hstk-wb-minimize').addEventListener('click', function() {
         wbPanel.style.height = wbPanel.style.height === '42px' ? '' : '42px';
     });
 
     /* Resize panel by dragging the resize handle */
     (function() {
-        var resizeHandle = document.getElementById('mx-wb-resize');
+        var resizeHandle = document.getElementById('hstk-wb-resize');
         if (!resizeHandle) return;
         var dragging = false, startY = 0, startH = 0;
         resizeHandle.addEventListener('mousedown', function(e) {

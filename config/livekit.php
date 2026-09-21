@@ -9,9 +9,9 @@ return [
     'provider' => 'livekit',
 
     'livekit' => [
-        // عنوان WebSocket العام للمتصفح (بعد DNS + SSL على الـ VPS)
+        // عنوان WebSocket العام للمتصفح (نطاق خادم LiveKit لحصتك — عبر .env)
         'url' => env('LIVEKIT_URL', 'wss://live.glottical.com'),
-        // النطاق العام بدون بروتوكول (للوحة الإدارة واختبار الاتصال)
+        // النطاق العام بدون بروتوكول (لوحة الإدارة / فحص الاتصال)
         'host' => env('LIVEKIT_PUBLIC_HOST', 'live.glottical.com'),
         'api_key' => env('LIVEKIT_API_KEY'),
         'api_secret' => env('LIVEKIT_API_SECRET'),

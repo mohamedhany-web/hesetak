@@ -716,9 +716,9 @@
   });
   if (groupSelect) groupSelect.addEventListener('change', loadSlots);
   if (slotSelect) slotSelect.addEventListener('change', function () {
-    if (slotSelect.value && manualScheduledAt && window.glotticalDateTimeLocal) {
+    if (slotSelect.value && manualScheduledAt && window.hesetakDateTimeLocal) {
       var tz = timezoneSelect && timezoneSelect.value ? timezoneSelect.value : 'Africa/Cairo';
-      var local = window.glotticalDateTimeLocal(slotSelect.value, tz);
+      var local = window.hesetakDateTimeLocal(slotSelect.value, tz);
       if (local) manualScheduledAt.value = local;
     }
     refreshSubmit();

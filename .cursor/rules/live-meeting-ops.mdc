@@ -1,19 +1,20 @@
 ---
-description: Live meeting / VPS / Hostinger ops access for Glottical without re-asking
+description: Live meeting / VPS / Hostinger ops access for Hesetak without re-asking
 globs:
-  - resources/views/partials/livekit-room.blade.php
+  - resources/views/partials/hesetak-live-room.blade.php
   - app/Services/LiveMeetingProvider.php
   - app/Services/ClassroomMeetingAccessService.php
   - app/Http/Controllers/Student/ClassroomController.php
 alwaysApply: false
 ---
 
-# Glottical live meeting ops
+# Hesetak live meeting ops
 
 When debugging live meetings, classroom join, LiveKit audio, or deploy:
 
 1. Read credentials from `.env.ops.local` (gitignored). Do not ask the user for VPS password if already set there.
 2. LiveKit VPS: `LIVEKIT_VPS_HOST` / user/password — config at `/opt/livekit/livekit.yaml`, container `mx-livekit`.
 3. Hostinger app: SSH port `65002`, path `HOSTINGER_APP_PATH`. If `HOSTINGER_SSH_PASSWORD` empty, ask once and save into `.env.ops.local`.
-4. After code fixes: push to GitHub; deploy Hostinger with `git pull && php artisan view:clear`.
+4. After code fixes: push to GitHub `hesetak`; deploy Hostinger with `git fetch && git reset --hard hesetak/main && php artisan view:clear`.
 5. Teacher/student must share the same LiveKit `room` claim (`ClassroomMeeting::liveRoomName()` or `LiveSession.room_name`). UI must show participant presence even without camera.
+6. Public meeting chrome uses `partials.hesetak-live-room` + `public/css/hesetak-live-meeting.css` (navy `#1E4E8C` + gold `#C9952A`).

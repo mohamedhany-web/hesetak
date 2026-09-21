@@ -160,8 +160,8 @@ class ClassroomRoomRoleUiTest extends TestCase
         $response->assertSee('MxClassroomWhiteboardSync', false);
         $response->assertSee('__mxWbSyncOptions', false);
         $response->assertSee('z-index: 100120', false);
-        $response->assertDontSee('id="mx-classroom-toggle-guest-wb"', false);
-        $response->assertDontSee('id="mx-record-dd-wrap"', false);
+        $response->assertDontSee('id="hstk-classroom-toggle-guest-wb"', false);
+        $response->assertDontSee('id="hstk-record-dd-wrap"', false);
         $response->assertDontSee('id="btn-record-menu"', false);
         $response->assertDontSee('id="mx-end-meeting-form"', false);
         $response->assertDontSee('عرض منهج', false);
@@ -202,7 +202,7 @@ class ClassroomRoomRoleUiTest extends TestCase
         $response->assertSee('classroom-whiteboard-sync', false);
         $response->assertSee('__mxClassroomWbSync', false);
         $response->assertSee('z-index: 100120', false);
-        $response->assertSee('mx-wb-open', false);
+        $response->assertSee('hstk-wb-open', false);
         $response->assertSee('id="mx-end-meeting-form"', false);
         $response->assertSee('عرض منهج', false);
         $response->assertSee('btn-mx-host-share-draw', false);
@@ -224,7 +224,7 @@ class ClassroomRoomRoleUiTest extends TestCase
         $response->assertSee('mxBuildLectureAudioTrack', false);
         $response->assertSee('الكاميرات', false);
         $response->assertDontSee('id="btn-record-menu"', false);
-        $response->assertDontSee('id="mx-record-dd-wrap"', false);
+        $response->assertDontSee('id="hstk-record-dd-wrap"', false);
         $response->assertDontSee('العودة للوحة', false);
     }
 }

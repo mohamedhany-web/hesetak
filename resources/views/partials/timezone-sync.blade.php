@@ -1,6 +1,6 @@
 {{-- كشف وحفظ المنطقة الزمنية من المتصفح --}}
 <script>
-window.glotticalDateTimeLocal = function (iso, timeZone) {
+window.hesetakDateTimeLocal = function (iso, timeZone) {
     try {
         var d = new Date(iso);
         if (isNaN(d.getTime())) return '';
@@ -22,6 +22,7 @@ window.glotticalDateTimeLocal = function (iso, timeZone) {
         return '';
     }
 };
+window.glotticalDateTimeLocal = window.hesetakDateTimeLocal; // legacy alias
 (function () {
     try {
         var tz = (Intl.DateTimeFormat().resolvedOptions().timeZone || '').trim();

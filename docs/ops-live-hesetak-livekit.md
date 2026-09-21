@@ -20,7 +20,7 @@ nslookup live.glottical.com
 ## 2) VPS (SSH إلى 187.124.36.228)
 ارفع/انسخ ثم نفّذ:
 ```bash
-sudo bash scripts/setup-live-glottical-livekit.sh
+sudo bash scripts/setup-live-hesetak-livekit.sh
 ```
 السكربت:
 - يضيف nginx لـ `live.glottical.com` → `127.0.0.1:7880`
@@ -40,7 +40,7 @@ LIVEKIT_API_SECRET=your_livekit_api_secret
 ثم:
 ```bash
 php artisan config:clear
-php artisan livekit:provision-glottical --set-default
+php artisan livekit:provision-hesetak --set-default
 ```
 
 ## 4) تحقق

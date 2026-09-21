@@ -223,7 +223,7 @@ class ClassroomPrivateLessonSmokeTest extends TestCase
             'whiteboard state URL missing from instructor room'
         );
         $this->assertStringContainsString('z-index: 100120', $html);
-        $this->assertStringContainsString('mx-wb-open', $html);
+        $this->assertStringContainsString('hstk-wb-open', $html);
     }
 
     public function test_student_room_includes_synced_whiteboard_viewer(): void

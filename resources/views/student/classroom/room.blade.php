@@ -3,12 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>فصول حصتك — {{ $meeting->roomChromeTitle() }}</title>
+    <title>حصة مباشرة — {{ $meeting->roomChromeTitle() }} | حصتك</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ asset('css/hesetak-live-meeting.css') }}?v=hstk-live-1">
     <link rel="stylesheet" href="{{ asset('css/classroom-curriculum-presenter.css') }}">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <script src="{{ asset('js/classroom-curriculum-presenter.js') }}" defer></script>
@@ -19,7 +20,7 @@
         body {
             margin: 0;
             padding: 0;
-            background: #0c1222;
+            background: #152A4A;
             overflow: hidden;
             min-height: 100vh;
             min-height: 100dvh;
@@ -49,24 +50,24 @@
             align-items: center;
             justify-content: center;
         }
-        body.mx-wb-open .lk-pip,
-        body.mx-wb-open #lk-pip {
+        body.hstk-wb-open .lk-pip,
+        body.hstk-wb-open #lk-pip {
             visibility: hidden !important;
             pointer-events: none !important;
         }
         /* القوائم: fixed + فوق الدرج والـ iframe قدر الإمكان */
-        #mx-record-dd-panel {
+        #hstk-record-dd-panel {
             z-index: 220;
             will-change: auto;
         }
-        #mx-record-dd-panel.mx-dd-visible {
+        #hstk-record-dd-panel.hstk-dd-visible {
             will-change: opacity;
         }
-        #mx-record-dd-panel { box-shadow: 0 14px 36px rgba(0, 0, 0, 0.42), 0 0 0 1px rgba(148, 163, 184, 0.08); }
-        #mx-classroom-nav-drawer { z-index: 205; }
-        #mx-classroom-nav-drawer[data-open="1"] { visibility: visible !important; pointer-events: auto !important; }
-        #mx-classroom-nav-drawer[data-open="1"] #mx-nav-drawer-backdrop { opacity: 1; pointer-events: auto; }
-        #mx-classroom-nav-drawer[data-open="1"] #mx-nav-drawer-aside {
+        #hstk-record-dd-panel { box-shadow: 0 14px 36px rgba(0, 0, 0, 0.42), 0 0 0 1px rgba(148, 163, 184, 0.08); }
+        #hstk-classroom-nav-drawer { z-index: 205; }
+        #hstk-classroom-nav-drawer[data-open="1"] { visibility: visible !important; pointer-events: auto !important; }
+        #hstk-classroom-nav-drawer[data-open="1"] #hstk-nav-drawer-backdrop { opacity: 1; pointer-events: auto; }
+        #hstk-classroom-nav-drawer[data-open="1"] #hstk-nav-drawer-aside {
             transform: translateX(0) !important;
             pointer-events: auto;
         }
@@ -102,70 +103,70 @@
             --color-surface-lowest: #0f172a;
         }
         /* حصتك Whiteboard: مكتبة + روابط وخدمات خارجية داخل واجهة اللوحة */
-        .mx-muallimx-whiteboard .excalidraw .layer-ui__library,
-        .mx-muallimx-whiteboard .excalidraw .layer-ui__library-message,
-        .mx-muallimx-whiteboard .excalidraw .library-menu,
-        .mx-muallimx-whiteboard .excalidraw .library-menu-dropdown-container,
-        .mx-muallimx-whiteboard .excalidraw .library-menu-dropdown-container--in-heading,
-        .mx-muallimx-whiteboard .excalidraw .library-menu-items-container,
-        .mx-muallimx-whiteboard .excalidraw .library-menu-control-buttons,
-        .mx-muallimx-whiteboard .excalidraw .library-menu-control-buttons--at-bottom,
-        .mx-muallimx-whiteboard .excalidraw .library-menu-browse-button,
-        .mx-muallimx-whiteboard .excalidraw .library-menu-items-private-library-container,
-        .mx-muallimx-whiteboard .excalidraw .library-actions-counter,
-        .mx-muallimx-whiteboard .excalidraw .single-library-item,
-        .mx-muallimx-whiteboard .excalidraw .single-library-item-wrapper,
-        .mx-muallimx-whiteboard .excalidraw .library-unit,
-        .mx-muallimx-whiteboard .excalidraw .selected-library-items,
-        .mx-muallimx-whiteboard .excalidraw [class*="publish-library"] {
+        .hstk-wb .excalidraw .layer-ui__library,
+        .hstk-wb .excalidraw .layer-ui__library-message,
+        .hstk-wb .excalidraw .library-menu,
+        .hstk-wb .excalidraw .library-menu-dropdown-container,
+        .hstk-wb .excalidraw .library-menu-dropdown-container--in-heading,
+        .hstk-wb .excalidraw .library-menu-items-container,
+        .hstk-wb .excalidraw .library-menu-control-buttons,
+        .hstk-wb .excalidraw .library-menu-control-buttons--at-bottom,
+        .hstk-wb .excalidraw .library-menu-browse-button,
+        .hstk-wb .excalidraw .library-menu-items-private-library-container,
+        .hstk-wb .excalidraw .library-actions-counter,
+        .hstk-wb .excalidraw .single-library-item,
+        .hstk-wb .excalidraw .single-library-item-wrapper,
+        .hstk-wb .excalidraw .library-unit,
+        .hstk-wb .excalidraw .selected-library-items,
+        .hstk-wb .excalidraw [class*="publish-library"] {
             display: none !important;
             visibility: hidden !important;
             pointer-events: none !important;
         }
         /* قائمة البرغر: روابط خارجية (GitHub / Discord / Twitter …) + عنوان المجموعة */
-        .mx-muallimx-whiteboard .excalidraw .dropdown-menu a.dropdown-menu-item[href^="http://"],
-        .mx-muallimx-whiteboard .excalidraw .dropdown-menu a.dropdown-menu-item[href^="https://"] {
+        .hstk-wb .excalidraw .dropdown-menu a.dropdown-menu-item[href^="http://"],
+        .hstk-wb .excalidraw .dropdown-menu a.dropdown-menu-item[href^="https://"] {
             display: none !important;
             visibility: hidden !important;
             pointer-events: none !important;
         }
-        .mx-muallimx-whiteboard .excalidraw .dropdown-menu .dropdown-menu-group:has(a.dropdown-menu-item[href^="http"]) {
+        .hstk-wb .excalidraw .dropdown-menu .dropdown-menu-group:has(a.dropdown-menu-item[href^="http"]) {
             display: none !important;
         }
-        .mx-muallimx-whiteboard .excalidraw .dropdown-menu .dropdown-menu-group:has(a.dropdown-menu-item[href^="https"]) {
+        .hstk-wb .excalidraw .dropdown-menu .dropdown-menu-group:has(a.dropdown-menu-item[href^="https"]) {
             display: none !important;
         }
         /* مساعدة: شريط المدونة والتوثيق وGitHub */
-        .mx-muallimx-whiteboard .excalidraw .HelpDialog__header {
+        .hstk-wb .excalidraw .HelpDialog__header {
             display: none !important;
         }
         /* تعاون مباشر (خوادم خارجية) */
-        .mx-muallimx-whiteboard .excalidraw [data-testid="collab-button"] {
+        .hstk-wb .excalidraw [data-testid="collab-button"] {
             display: none !important;
             pointer-events: none !important;
         }
         /* شاشة الترحيب: شعار Excalidraw وروابط ترحيب خارجية */
-        .mx-muallimx-whiteboard .excalidraw .ExcalidrawLogo,
-        .mx-muallimx-whiteboard .excalidraw .welcome-screen-center__logo {
+        .hstk-wb .excalidraw .ExcalidrawLogo,
+        .hstk-wb .excalidraw .welcome-screen-center__logo {
             display: none !important;
             pointer-events: none !important;
         }
-        .mx-muallimx-whiteboard .excalidraw a.welcome-screen-menu-item[href^="http://"],
-        .mx-muallimx-whiteboard .excalidraw a.welcome-screen-menu-item[href^="https://"] {
+        .hstk-wb .excalidraw a.welcome-screen-menu-item[href^="http://"],
+        .hstk-wb .excalidraw a.welcome-screen-menu-item[href^="https://"] {
             display: none !important;
             pointer-events: none !important;
         }
         /* حوارات محددة: روابط خارجية (بدون لمس نوافذ رابط الشكل على العناصر) */
-        .mx-muallimx-whiteboard .excalidraw .ExportDialog a[href^="http://"],
-        .mx-muallimx-whiteboard .excalidraw .ExportDialog a[href^="https://"],
-        .mx-muallimx-whiteboard .excalidraw .ImageExportModal a[href^="http://"],
-        .mx-muallimx-whiteboard .excalidraw .ImageExportModal a[href^="https://"],
-        .mx-muallimx-whiteboard .excalidraw .OverwriteConfirm a[href^="http://"],
-        .mx-muallimx-whiteboard .excalidraw .OverwriteConfirm a[href^="https://"],
-        .mx-muallimx-whiteboard .excalidraw [class*="publish-library"] a[href^="http://"],
-        .mx-muallimx-whiteboard .excalidraw [class*="publish-library"] a[href^="https://"],
-        .mx-muallimx-whiteboard .excalidraw .HelpDialog a[href^="http://"],
-        .mx-muallimx-whiteboard .excalidraw .HelpDialog a[href^="https://"] {
+        .hstk-wb .excalidraw .ExportDialog a[href^="http://"],
+        .hstk-wb .excalidraw .ExportDialog a[href^="https://"],
+        .hstk-wb .excalidraw .ImageExportModal a[href^="http://"],
+        .hstk-wb .excalidraw .ImageExportModal a[href^="https://"],
+        .hstk-wb .excalidraw .OverwriteConfirm a[href^="http://"],
+        .hstk-wb .excalidraw .OverwriteConfirm a[href^="https://"],
+        .hstk-wb .excalidraw [class*="publish-library"] a[href^="http://"],
+        .hstk-wb .excalidraw [class*="publish-library"] a[href^="https://"],
+        .hstk-wb .excalidraw .HelpDialog a[href^="http://"],
+        .hstk-wb .excalidraw .HelpDialog a[href^="https://"] {
             display: none !important;
             pointer-events: none !important;
             visibility: hidden !important;
@@ -215,12 +216,12 @@
                 <span class="text-slate-400 text-[10px] sm:text-xs px-1.5 py-0.5 rounded bg-slate-700/80 font-mono shrink-0">{{ $meeting->code }}</span>
             </div>
             </div>
-            <button type="button" id="mx-nav-drawer-toggle" class="md:hidden shrink-0 inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-600 bg-slate-800 text-slate-100 hover:bg-slate-700 hover:border-cyan-500/30 transition-colors" aria-expanded="false" aria-controls="mx-classroom-nav-drawer" title="أدوات الغرفة">
+            <button type="button" id="hstk-nav-drawer-toggle" class="md:hidden shrink-0 inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-600 bg-slate-800 text-slate-100 hover:bg-slate-700 hover:border-cyan-500/30 transition-colors" aria-expanded="false" aria-controls="hstk-classroom-nav-drawer" title="أدوات الغرفة">
                 <i class="fas fa-bars text-lg" aria-hidden="true"></i>
             </button>
         </div>
         <div id="mx-toolbar-desktop-slot" class="hidden md:block w-full md:w-auto mx-mobile-toolbar-scroll overflow-x-auto overflow-y-visible pb-0.5 md:pb-0 touch-pan-x">
-        <div id="mx-classroom-toolbar-inner" class="flex w-full flex-col items-stretch gap-3 md:w-auto md:min-w-max md:flex-row md:flex-nowrap md:items-center md:justify-end md:gap-1 md:gap-2 md:max-w-[min(100%,42rem)] lg:max-w-none pe-1 ps-0.5">
+        <div id="hstk-classroom-toolbar-inner" class="flex w-full flex-col items-stretch gap-3 md:w-auto md:min-w-max md:flex-row md:flex-nowrap md:items-center md:justify-end md:gap-1 md:gap-2 md:max-w-[min(100%,42rem)] lg:max-w-none pe-1 ps-0.5">
             <div class="flex flex-wrap items-center gap-1.5 md:flex-nowrap">
             @if(!empty($canManageMeeting))
             <span class="hidden sm:inline-flex text-slate-300 text-[10px] sm:text-[11px] px-1.5 py-0.5 rounded-md bg-slate-700/80 whitespace-nowrap">
@@ -258,7 +259,7 @@
             </button>
             <label class="classroom-room-toolbar-btn w-full justify-between bg-slate-700/50 border border-slate-600 cursor-pointer select-none text-slate-200 md:w-auto md:max-w-[13rem]"
                    title="الضيف يرسم قلم/ممحاة فوق عرض الاجتماع؛ يظهر عندك فوق نفس الشاشة">
-                <input type="checkbox" id="mx-classroom-toggle-guest-wb" class="rounded border-slate-500 text-amber-500 focus:ring-amber-500 shrink-0 scale-90"
+                <input type="checkbox" id="hstk-classroom-toggle-guest-wb" class="rounded border-slate-500 text-amber-500 focus:ring-amber-500 shrink-0 scale-90"
                        {{ $meeting->allowsParticipantWhiteboard() ? 'checked' : '' }}>
                 <span class="font-medium truncate"><span class="hidden sm:inline">رسم الضيف فوق العرض</span><span class="sm:hidden">رسم ضيف</span></span>
             </label>
@@ -301,9 +302,9 @@
     </header>
 
     {{-- درج أدوات الغرفة (هاتف فقط): نفس عناصر الشريط تُنقل هنا عبر JS --}}
-    <div id="mx-classroom-nav-drawer" class="md:hidden fixed inset-0 invisible pointer-events-none" data-open="0" aria-hidden="true">
-        <div id="mx-nav-drawer-backdrop" class="absolute inset-0 bg-slate-950/65 opacity-0 transition-opacity duration-200 pointer-events-none" aria-hidden="true"></div>
-        <aside id="mx-nav-drawer-aside" class="absolute end-0 top-0 flex h-full min-h-0 w-[min(20rem,calc(100vw-2.5rem))] max-w-[100vw] flex-col border-s border-slate-600/80 bg-slate-900 shadow-2xl transition-transform duration-200 ease-out ltr:translate-x-full rtl:-translate-x-full pointer-events-none pt-[max(0.5rem,env(safe-area-inset-top))]" role="dialog" aria-modal="true" aria-labelledby="mx-nav-drawer-title">
+    <div id="hstk-classroom-nav-drawer" class="md:hidden fixed inset-0 invisible pointer-events-none" data-open="0" aria-hidden="true">
+        <div id="hstk-nav-drawer-backdrop" class="absolute inset-0 bg-slate-950/65 opacity-0 transition-opacity duration-200 pointer-events-none" aria-hidden="true"></div>
+        <aside id="hstk-nav-drawer-aside" class="absolute end-0 top-0 flex h-full min-h-0 w-[min(20rem,calc(100vw-2.5rem))] max-w-[100vw] flex-col border-s border-slate-600/80 bg-slate-900 shadow-2xl transition-transform duration-200 ease-out ltr:translate-x-full rtl:-translate-x-full pointer-events-none pt-[max(0.5rem,env(safe-area-inset-top))]" role="dialog" aria-modal="true" aria-labelledby="mx-nav-drawer-title">
             <div class="flex items-center justify-between gap-2 border-b border-slate-700/80 px-3 py-2.5 shrink-0">
                 <h2 id="mx-nav-drawer-title" class="text-sm font-bold text-white m-0 truncate">أدوات الغرفة</h2>
                 <button type="button" id="mx-nav-drawer-close" class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-600 bg-slate-800 text-slate-200 hover:bg-slate-700 hover:text-white" aria-label="إغلاق القائمة">
@@ -316,21 +317,21 @@
     <script>
         (function () {
             var mq = window.matchMedia('(max-width: 767px)');
-            var inner = document.getElementById('mx-classroom-toolbar-inner');
+            var inner = document.getElementById('hstk-classroom-toolbar-inner');
             var desk = document.getElementById('mx-toolbar-desktop-slot');
             var slot = document.getElementById('mx-toolbar-drawer-slot');
-            var drawer = document.getElementById('mx-classroom-nav-drawer');
-            var toggle = document.getElementById('mx-nav-drawer-toggle');
+            var drawer = document.getElementById('hstk-classroom-nav-drawer');
+            var toggle = document.getElementById('hstk-nav-drawer-toggle');
             var closeBtn = document.getElementById('mx-nav-drawer-close');
-            var backdrop = document.getElementById('mx-nav-drawer-backdrop');
-            var asideEl = document.getElementById('mx-nav-drawer-aside');
+            var backdrop = document.getElementById('hstk-nav-drawer-backdrop');
+            var asideEl = document.getElementById('hstk-nav-drawer-aside');
 
             function setDrawerOpen(open) {
                 if (!drawer || !toggle) return;
                 drawer.setAttribute('data-open', open ? '1' : '0');
                 drawer.setAttribute('aria-hidden', open ? 'false' : 'true');
                 toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
-                document.body.classList.toggle('mx-classroom-drawer-open', !!open);
+                document.body.classList.toggle('hstk-classroom-drawer-open', !!open);
                 if (open) {
                     try { window.dispatchEvent(new Event('resize')); } catch (e) {}
                 }
@@ -385,7 +386,7 @@
     {{-- منطقة الاجتماع --}}
     <div id="meeting-stage" class="flex-1 min-h-0 relative w-full">
         @if(!empty($livekitConfigured) && !empty($livekitToken) && !empty($livekitUrl))
-            @include('partials.livekit-room', [
+            @include('partials.hesetak-live-room', [
                 'livekitUrl' => $livekitUrl,
                 'livekitToken' => $livekitToken,
                 'user' => $user,
@@ -406,7 +407,7 @@
             </main>
         @endif
         @unless(!empty($academicObserverMode))
-        @include('partials.mx-share-annotation-overlay', [
+        @include('partials.hesetak-live-share-annotation', [
             'mxAnnRole' => !empty($canManageMeeting) ? 'host_emit' : 'viewer_poll',
             'mxAnnPostUrl' => !empty($canManageMeeting) ? $mxRoute($rp . 'classroom.share-annotation', $meeting) : '',
             'mxAnnPollUrl' => $mxRoute($rp . 'classroom.share-annotations', $meeting),
@@ -435,7 +436,7 @@
                 </div>
             </div>
             <div id="wb-popup-stage" class="relative flex-1 min-h-0 bg-[#121212]">
-                <div id="classroom-excalidraw-root" class="classroom-excalidraw-host mx-muallimx-whiteboard" data-view-only="0" data-lang="ar"></div>
+                <div id="classroom-excalidraw-root" class="classroom-excalidraw-host hstk-wb" data-view-only="0" data-lang="ar"></div>
                 <div id="classroom-excalidraw-loading" class="classroom-excalidraw-loading">جاري تحميل حصتك Whiteboard…</div>
             </div>
             <div id="wb-popup-toolbar" class="flex flex-wrap items-center justify-center gap-2 px-4 py-2.5 border-t border-slate-700 bg-slate-800/95 shrink-0">
@@ -497,7 +498,7 @@
         };
         window.mxClearClassroomDropdownPosition = function (panel) {
             if (!panel) return;
-            panel.classList.remove('mx-dd-visible');
+            panel.classList.remove('hstk-dd-visible');
             ['position', 'top', 'left', 'right', 'width', 'maxWidth', 'bottom', 'zIndex', 'opacity', 'transition', 'pointerEvents'].forEach(function (k) {
                 panel.style[k] = '';
             });
@@ -513,13 +514,13 @@
             var mxSilentAutoRecording = {{ !empty($canManageMeeting) ? 'true' : 'false' }};
             var mxAutoRecBadge = document.getElementById('mx-auto-rec-badge');
             var mxAutoRecordStarted = false;
-            var recordDdWrap = document.getElementById('mx-record-dd-wrap');
+            var recordDdWrap = document.getElementById('hstk-record-dd-wrap');
             var btnRecordMenu = document.getElementById('btn-record-menu');
             var btnRecordStop = document.getElementById('btn-record-stop');
             var endMeetingForm = document.getElementById('mx-end-meeting-form');
             var endMeetingBtn = document.getElementById('mx-end-meeting-btn');
-            var recordIdleWrap = document.getElementById('mx-record-idle-wrap');
-            var recordDdPanel = document.getElementById('mx-record-dd-panel');
+            var recordIdleWrap = document.getElementById('hstk-record-idle-wrap');
+            var recordDdPanel = document.getElementById('hstk-record-dd-panel');
             var recordDdChevron = document.getElementById('record-dd-chevron');
             var recordIconIdle = document.getElementById('record-icon-idle');
             var recordLabelIdle = document.getElementById('record-label-idle');
@@ -544,7 +545,7 @@
             var recordingUploadTabBaseUrl = @json($mxRoute($rp . 'classroom.recording.upload-tab', $meeting));
             var csrfToken = '{{ csrf_token() }}';
             var participantWbUrl = @json($mxRoute($rp . 'classroom.participant-whiteboard', $meeting));
-            var mxClassroomGuestWbToggle = document.getElementById('mx-classroom-toggle-guest-wb');
+            var mxClassroomGuestWbToggle = document.getElementById('hstk-classroom-toggle-guest-wb');
             var mxClassroomGuestWbSaving = false;
             if (mxClassroomGuestWbToggle) {
                 mxClassroomGuestWbToggle.addEventListener('change', function () {
@@ -928,7 +929,7 @@
                 wbPopup.classList.add('is-open');
                 wbPopup.setAttribute('aria-hidden', 'false');
                 document.body.style.overflow = 'hidden';
-                document.body.classList.add('mx-wb-open');
+                document.body.classList.add('hstk-wb-open');
                 requestAnimationFrame(function () {
                     mountClassroomExcalidrawOnce().then(function() {
                         setTimeout(nudgeClassroomExLayout, 80);
@@ -969,7 +970,7 @@
                     wbPopup.setAttribute('aria-hidden', 'true');
                     wbPopup.setAttribute('inert', '');
                     document.body.style.overflow = '';
-                    document.body.classList.remove('mx-wb-open');
+                    document.body.classList.remove('hstk-wb-open');
 
                     var reopenBtn = document.getElementById('btn-wb-popup-open');
                     if (reopenBtn && typeof reopenBtn.focus === 'function') {
@@ -1059,7 +1060,7 @@
                     recordDdPanel.style.opacity = '0';
                     recordDdPanel.style.pointerEvents = 'none';
                     recordDdPanel.classList.remove('hidden');
-                    recordDdPanel.classList.add('mx-dd-visible');
+                    recordDdPanel.classList.add('hstk-dd-visible');
                     window.mxPositionClassroomDropdown(recordDdPanel, recordDdWrap, btnRecordMenu);
                     requestAnimationFrame(function () {
                         requestAnimationFrame(function () {

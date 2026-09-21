@@ -8,15 +8,16 @@
     @include('partials.favicon-links')
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Lato:wght@400;700;900&family=Rubik:wght@400;500;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ asset('css/hesetak-live-meeting.css') }}?v=hstk-live-1">
     <link rel="stylesheet" href="{{ asset('css/classroom-curriculum-presenter.css') }}">
     <script src="{{ asset('js/classroom-curriculum-presenter.js') }}" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/livekit-client@2.9.1/dist/livekit-client.umd.min.js"></script>
     <style>
-        :root { --st-brand: #0B3D91; --st-blue: #0997d9; --st-gold: #F5B800; }
-        * { font-family: 'Cairo', 'Tajawal', system-ui, sans-serif; box-sizing: border-box; }
+        :root { --st-brand: #1E4E8C; --st-blue: #152A4A; --st-gold: #C9952A; }
+        * { font-family: 'IBM Plex Sans Arabic', 'Lato', 'Rubik', system-ui, sans-serif; box-sizing: border-box; }
         body { margin: 0; padding: 0; background: #f8f9fa; min-height: 100vh; color: #4f4f4f; }
         .room-body { position: relative; display: flex; flex-direction: column; height: calc(100vh - 72px); background: #0b1220; }
         #lk-guest-stage { flex: 1; min-height: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 8px; padding: 8px; overflow: auto; }
@@ -35,7 +36,7 @@
             box-shadow: 0 14px 36px rgba(7,18,38,.08);
         }
         .join-hero-bar {
-            background: linear-gradient(135deg, var(--st-brand), var(--st-blue));
+            background: linear-gradient(135deg, #1E4E8C, #152A4A);
             color: #fff;
         }
     </style>
@@ -47,8 +48,8 @@
                 <div class="w-14 h-14 rounded-2xl bg-white/15 text-[var(--st-gold)] flex items-center justify-center mx-auto mb-3">
                     <i class="fas fa-video text-2xl"></i>
                 </div>
-                <h1 class="text-xl font-black m-0">{{ config('app.name') }} Classroom</h1>
-                <p class="text-white/85 text-sm mt-1 mb-0 font-semibold">انضم عبر LiveKit</p>
+                <h1 class="text-xl font-black m-0">حصة مباشرة — {{ config('app.name') }}</h1>
+                <p class="text-white/85 text-sm mt-1 mb-0 font-semibold">انضم إلى غرفة حصتك الآمنة</p>
             </div>
             <div class="p-6">
             @if(!empty($meetingEnded))
@@ -136,7 +137,7 @@
                     <button type="button" id="lk-toggle-cam" class="lk-btn"><i class="fas fa-video"></i> كاميرا</button>
                     <button type="button" id="lk-toggle-screen" class="lk-btn"><i class="fas fa-desktop"></i> شاشة</button>
                 </div>
-                @include('partials.mx-share-annotation-overlay', [
+                @include('partials.hesetak-live-share-annotation', [
                     'mxAnnRole' => 'classroom_guest_emit',
                     'mxAnnPostUrl' => route('classroom.join.share-annotation', $code),
                 ])

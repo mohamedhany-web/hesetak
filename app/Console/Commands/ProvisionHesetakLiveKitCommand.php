@@ -8,9 +8,9 @@ use App\Services\LiveKitTokenService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Http;
 
-class ProvisionGlotticalLiveKitCommand extends Command
+class ProvisionHesetakLiveKitCommand extends Command
 {
-    protected $signature = 'livekit:provision-glottical
+    protected $signature = 'livekit:provision-hesetak
                             {--domain=live.glottical.com : Public LiveKit host for حصتك}
                             {--ip=187.124.36.228 : VPS IP}
                             {--set-default : Mark LiveKit server as default provider}';
@@ -69,7 +69,7 @@ class ProvisionGlotticalLiveKitCommand extends Command
         $this->newLine();
         $this->warn('DNS required at Hostinger for glottical.com:');
         $this->line("  A  live  ->  {$ip}   (= {$domain})");
-        $this->line('Then on VPS run: sudo bash scripts/setup-live-glottical-livekit.sh');
+        $this->line('Then on VPS run: sudo bash scripts/setup-live-hesetak-livekit.sh');
 
         return self::SUCCESS;
     }

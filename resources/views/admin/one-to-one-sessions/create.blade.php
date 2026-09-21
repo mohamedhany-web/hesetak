@@ -213,8 +213,8 @@
   function toLocalInput(value) {
     var tzEl = document.getElementById('timezoneSelect');
     var tz = tzEl && tzEl.value ? tzEl.value : 'UTC';
-    if (window.glotticalDateTimeLocal && /[zZ]|[+-]\d{2}:?\d{2}$/.test(String(value))) {
-      return window.glotticalDateTimeLocal(value, tz);
+    if (window.hesetakDateTimeLocal && /[zZ]|[+-]\d{2}:?\d{2}$/.test(String(value))) {
+      return window.hesetakDateTimeLocal(value, tz);
     }
     if (!value) return '';
     var s = String(value).replace(' ', 'T');

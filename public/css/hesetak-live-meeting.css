@@ -1,0 +1,95 @@
+/**
+ * حصتك — Live meeting chrome tokens
+ * Used by classroom / live-session room shells (alongside hesetak-live-room partial).
+ */
+:root {
+  --hstk-live-navy: #1E4E8C;
+  --hstk-live-navy-deep: #152A4A;
+  --hstk-live-ink: #0f172a;
+  --hstk-live-gold: #C9952A;
+  --hstk-live-gold-soft: rgba(201, 149, 42, 0.18);
+  --hstk-live-line: rgba(255, 255, 255, 0.12);
+  --hstk-live-muted: #a8b3c7;
+  --hstk-live-font: "IBM Plex Sans Arabic", "Lato", "Rubik", system-ui, sans-serif;
+}
+
+.hstk-live-shell,
+.hstk-live-body,
+body.hstk-live {
+  font-family: var(--hstk-live-font);
+}
+
+.hstk-live-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 56px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--hstk-live-line);
+  background: color-mix(in srgb, var(--hstk-live-navy-deep) 92%, #000);
+  color: #f8fafc;
+}
+
+.hstk-live-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: #f8fafc;
+  font-weight: 700;
+}
+
+.hstk-live-brand__mark {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  object-fit: contain;
+  background: #fff;
+  padding: 4px;
+}
+
+.hstk-live-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  background: var(--hstk-live-gold-soft);
+  color: var(--hstk-live-gold);
+  border: 1px solid color-mix(in srgb, var(--hstk-live-gold) 45%, transparent);
+}
+
+.hstk-live-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border-radius: 10px;
+  border: 1px solid var(--hstk-live-line);
+  background: color-mix(in srgb, var(--hstk-live-navy) 55%, #0f172a);
+  color: #f8fafc;
+  padding: 0.45rem 0.85rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.hstk-live-btn:hover {
+  border-color: var(--hstk-live-gold);
+  color: var(--hstk-live-gold);
+}
+
+.hstk-live-btn--gold {
+  background: linear-gradient(135deg, var(--hstk-live-navy), var(--hstk-live-gold));
+  border: 0;
+  color: #fff;
+}
+
+.hstk-live-btn--danger {
+  background: #7f1d1d;
+  border-color: #991b1b;
+  color: #fecaca;
+}

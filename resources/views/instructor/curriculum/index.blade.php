@@ -971,8 +971,8 @@ async function editLectureFromCurriculum(lectureId, sectionId) {
         if (lecture.scheduled_at) {
             var tzEl = document.querySelector('[data-timezone-select]');
             var tz = tzEl && tzEl.value ? tzEl.value : 'UTC';
-            if (window.glotticalDateTimeLocal) {
-                document.getElementById('lectureScheduledAt').value = window.glotticalDateTimeLocal(lecture.scheduled_at, tz);
+            if (window.hesetakDateTimeLocal) {
+                document.getElementById('lectureScheduledAt').value = window.hesetakDateTimeLocal(lecture.scheduled_at, tz);
             } else {
                 const scheduledDate = new Date(lecture.scheduled_at);
                 scheduledDate.setMinutes(scheduledDate.getMinutes() - scheduledDate.getTimezoneOffset());

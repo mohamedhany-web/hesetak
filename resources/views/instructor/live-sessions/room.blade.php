@@ -4,12 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>{{ $liveSession->title }} — بث مباشر</title>
+    <title>{{ $liveSession->title }} — حصة مباشرة | حصتك</title>
     @include('partials.favicon-links')
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Lato:wght@400;700;900&family=Rubik:wght@400;500;700&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ asset('css/hesetak-live-meeting.css') }}?v=hstk-live-1">
     <link rel="stylesheet" href="{{ route('assets.instructor-panel.css') }}?v=su-live-1">
     <style>
         html, body {
@@ -55,7 +56,7 @@
             display: inline-grid;
             place-items: center;
             background: var(--su-card-2);
-            color: var(--su-accent-lilac);
+            color: #C9952A;
         }
         .su-live-meta { min-width: 0; }
         .su-live-meta__kicker {
@@ -240,7 +241,7 @@
 
         <div class="su-live-body">
             <div id="mx-video-stack" class="su-live-stage">
-                @include('partials.livekit-room', [
+                @include('partials.hesetak-live-room', [
                     'livekitUrl' => $livekitUrl,
                     'livekitToken' => $livekitToken,
                     'user' => $user,
@@ -250,7 +251,7 @@
                     'lkHostEndFormId' => 'end-session-form',
                     'lkAllowScreenShare' => $allowScreenShare ?? true,
                 ])
-                @include('partials.mx-share-annotation-overlay', [
+                @include('partials.hesetak-live-share-annotation', [
                     'mxAnnRole' => 'viewer_poll',
                     'mxAnnPollUrl' => route('instructor.live-sessions.share-annotations', $liveSession),
                 ])
@@ -258,7 +259,7 @@
         </div>
     </div>
 
-    @include('partials.mx-muallimx-excalidraw-popup')
+    @include('partials.hesetak-live-whiteboard-popup')
     <style>.hidden-sm{display:inline}@media(max-width:640px){.hidden-sm{display:none}}</style>
     <script>
         const startTime = new Date('{{ $liveSession->started_at->toISOString() }}');
