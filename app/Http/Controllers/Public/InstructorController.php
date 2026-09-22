@@ -266,7 +266,9 @@ class InstructorController extends Controller
 
         $canBook = false;
         $unitsLeft = 0;
+        $hasActivePackage = false;
         if (auth()->check() && auth()->user()->isStudent()) {
+            $hasActivePackage = StudentEntitlementService::hasActivePrivatePackage((int) auth()->id());
             $entitlement = StudentEntitlementService::availableFor(
                 (int) auth()->id(),
                 ServicePackage::SCOPE_PRIVATE_LESSONS
@@ -278,7 +280,7 @@ class InstructorController extends Controller
         }
 
         $bookableSlots = collect();
-        if ($canBook) {
+        if ($canBook || $hasActivePackage) {
             $bookableSlots = OneToOneAvailabilityService::availableSlots(
                 (int) $instructor->id,
                 now()->addHour(),
@@ -326,6 +328,7 @@ class InstructorController extends Controller
             'introEmbedUrl',
             'introDirectVideo',
             'canBook',
+            'hasActivePackage',
             'unitsLeft',
             'bookableSlots',
             'packagesUrl',

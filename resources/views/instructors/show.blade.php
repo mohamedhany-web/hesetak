@@ -15,6 +15,7 @@
     $instrPageUrl = route('public.instructors.show', $profile->user);
     $weeklyCalendar = $weeklyCalendar ?? [];
     $canBook = (bool) ($canBook ?? false);
+    $hasActivePackage = (bool) ($hasActivePackage ?? false);
     $unitsLeft = (int) ($unitsLeft ?? 0);
     $bookableSlots = $bookableSlots ?? collect();
     $packagesUrl = $packagesUrl ?? route('public.pricing');
@@ -270,7 +271,7 @@
         <article class="mc-package mc-package--recommended mc-tp-book">
           <span class="mc-package__badge">{{ $isRtl ? 'الخطوة التالية' : 'Next step' }}</span>
           <h3>{{ __('public.instructor_availability_title') }}</h3>
-          <p class="mc-package__why">{{ $isRtl ? 'احجز حصة فردية بعد الاشتراك في باقة ساعات.' : 'Book a 1:1 session after you subscribe to an hour package.' }}</p>
+          <p class="mc-package__why">{{ $isRtl ? 'اشترك في باقة ثم احجز حصة تجريبية مجانية أو ثبّت جدولك من الرصيد.' : 'Subscribe to a package, then book a free trial or lock sessions from your credits.' }}</p>
 
           @if(!empty($weeklyCalendar))
             <div class="mc-tp-cal">
@@ -289,15 +290,34 @@
             <p class="mc-tp-text mc-tp-text--muted">{{ $isRtl ? 'لم يُحدَّد جدول توافر بعد.' : 'No weekly availability published yet.' }}</p>
           @endif
 
+          @if($hasActivePackage)
+            @php
+              $viewerTz = \App\Support\AppTimezone::forUser(auth()->user());
+            @endphp
+            @include('partials.landing.mycourses.instructor-free-session-form', [
+                'profile' => $profile,
+                'bookableSlots' => $bookableSlots,
+                'viewerTz' => $viewerTz,
+                'isRtl' => $isRtl,
+            ])
+          @endif
+
           @unless($canBook)
-            <p class="mc-tp-alert">{{ $isRtl ? 'الحجز يتاح بعد الاشتراك في باقة.' : 'Booking unlocks after you subscribe to a package.' }}</p>
-            <div class="mc-tp-actions">
-              <a href="{{ $packagesUrl }}" class="mc-btn mc-btn--md mc-btn--secondary">{{ $isRtl ? 'اشترك في باقة للحجز' : 'Subscribe to book' }}</a>
-              @guest
-                <a href="{{ route('login', ['redirect' => $instrPageUrl]) }}" class="mc-btn mc-btn--md mc-btn--soft">{{ $isRtl ? 'تسجيل الدخول' : 'Log in' }}</a>
-              @endguest
-              <a href="{{ route('public.instructors.index') }}" class="mc-btn mc-btn--md mc-btn--outline">{{ __('public.all_instructors_link') }}</a>
-            </div>
+            @unless($hasActivePackage)
+              <p class="mc-tp-alert">{{ $isRtl ? 'بعد الاشتراك في باقة: تحجز حصة تجريبية مجانية مع هذا المعلم، ثم تثبّت جدولك من الرصيد.' : 'After you subscribe: book a free trial with this teacher, then lock your schedule from credits.' }}</p>
+              <div class="mc-tp-actions">
+                <a href="{{ $packagesUrl }}" class="mc-btn mc-btn--md mc-btn--secondary">{{ $isRtl ? 'اشترك في باقة للحجز' : 'Subscribe to book' }}</a>
+                @guest
+                  <a href="{{ route('login', ['redirect' => $instrPageUrl]) }}" class="mc-btn mc-btn--md mc-btn--soft">{{ $isRtl ? 'تسجيل الدخول' : 'Log in' }}</a>
+                @endguest
+                <a href="{{ route('public.instructors.index') }}" class="mc-btn mc-btn--md mc-btn--outline">{{ __('public.all_instructors_link') }}</a>
+              </div>
+            @else
+              <p class="mc-tp-alert">{{ $isRtl ? 'رصيد الباقة مستهلك حالياً — يمكنك حجز الحصة التجريبية المجانية أعلاه، أو تجديد الباقة لتثبيت مواعيد إضافية.' : 'Package credits are used up — you can still book the free trial above, or renew to lock more sessions.' }}</p>
+              <div class="mc-tp-actions">
+                <a href="{{ $packagesUrl }}" class="mc-btn mc-btn--md mc-btn--soft">{{ $isRtl ? 'تجديد الباقة' : 'Renew package' }}</a>
+              </div>
+            @endunless
           @else
             <p class="mc-tp-alert is-ok">{{ $isRtl ? ('رصيدك المتاح: '.$unitsLeft.' حصة') : ('Available credits: '.$unitsLeft) }}</p>
             @if($bookableSlots->isNotEmpty())
@@ -323,13 +343,16 @@
                     ->unique(fn ($r) => $r['day'].'|'.$r['time'])
                     ->values();
               @endphp
-              @include('partials.landing.mycourses.instructor-booking-form', [
-                  'profile' => $profile,
-                  'bookableSlots' => $bookableSlots,
-                  'weeklyOpts' => $weeklyOpts,
-                  'viewerTz' => $viewerTz,
-                  'isRtl' => $isRtl,
-              ])
+              <div class="mc-tp-paid">
+                <h4 class="mc-tp-paid__title">{{ $isRtl ? 'تثبيت مواعيد من رصيد الباقة' : 'Lock sessions from package credits' }}</h4>
+                @include('partials.landing.mycourses.instructor-booking-form', [
+                    'profile' => $profile,
+                    'bookableSlots' => $bookableSlots,
+                    'weeklyOpts' => $weeklyOpts,
+                    'viewerTz' => $viewerTz,
+                    'isRtl' => $isRtl,
+                ])
+              </div>
             @else
               <p class="mc-tp-text mc-tp-text--muted">{{ $isRtl ? 'لا توجد مواعيد مفتوحة خلال الأسابيع القادمة.' : 'No open slots in the coming weeks.' }}</p>
             @endif

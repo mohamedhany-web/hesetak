@@ -131,6 +131,45 @@
   color: #991b1b;
 }
 
+.mc-tp-free {
+  display: grid;
+  gap: 0.7rem;
+  padding: 0.85rem;
+  border-radius: var(--mc-radius);
+  border: 1.5px solid color-mix(in srgb, var(--mc-secondary) 45%, white);
+  background: color-mix(in srgb, var(--mc-secondary-soft) 70%, white);
+}
+.mc-tp-free__head h4 {
+  margin: 0.35rem 0 0.25rem;
+  font-size: 0.98rem;
+  font-weight: 800;
+  color: var(--mc-ink);
+}
+.mc-tp-free__head p {
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.6;
+  color: var(--mc-black-60);
+  font-weight: 600;
+}
+.mc-tp-free__form {
+  display: grid;
+  gap: 0.65rem;
+}
+.mc-tp-free .mc-btn { width: 100%; justify-content: center; }
+.mc-tp-paid {
+  display: grid;
+  gap: 0.65rem;
+  padding-top: 0.35rem;
+  border-top: 1px dashed var(--mc-line);
+}
+.mc-tp-paid__title {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: var(--mc-primary-100);
+}
+
 .mc-tp-cal { display: grid; gap: 0.55rem; }
 .mc-tp-cal__day {
   display: grid;
