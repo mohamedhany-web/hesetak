@@ -41,18 +41,16 @@
     @endphp
     @if($useInstructorPanel)
         <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700;800&family=Cairo:wght@400;500;600;700;800;900&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
-        <link rel="stylesheet" href="{{ route('assets.student-timeline.css') }}?v=st-hesetak-inst-2">
+        <link rel="stylesheet" href="{{ route('assets.student-timeline.css') }}?v=st-hesetak-inst-3">
         @php
-            $idCssRel = 'css/instructor-dashboard.css';
-            $idCssFile = public_path($idCssRel);
+            $idCssFile = public_path('css/instructor-dashboard.css');
             $idCssVer = is_file($idCssFile) ? (string) filemtime($idCssFile) : (string) time();
-            $suCssRel = 'css/instructor-panel.css';
-            $suCssFile = public_path($suCssRel);
+            $suCssFile = public_path('css/instructor-panel.css');
             $suCssVer = is_file($suCssFile) ? (string) filemtime($suCssFile) : (string) time();
         @endphp
-        {{-- su-* components used by legacy instructor course tools (lectures/exams/…) --}}
-        <link rel="stylesheet" href="{{ asset($suCssRel) }}?v={{ $suCssVer }}">
-        <link rel="stylesheet" href="{{ asset($idCssRel) }}?v={{ $idCssVer }}">
+        {{-- عبر Laravel routes — على Hostinger /css/* الثابت غالباً 404 --}}
+        <link rel="stylesheet" href="{{ route('assets.instructor-panel.css.public') }}?v={{ $suCssVer }}">
+        <link rel="stylesheet" href="{{ route('assets.instructor-dashboard.css') }}?v={{ $idCssVer }}">
         <script>
             (function () {
                 try {
@@ -210,7 +208,7 @@
     <script>
         window.Laravel = { user: { name: '{{ auth()->check() ? auth()->user()->name : "زائر" }}' } };
     </script>
-    <script src="{{ versioned_asset('js/platform-protection.js') }}"></script>
+        <script src="{{ route('assets.platform-protection.js') }}?v={{ is_file(public_path('js/platform-protection.js')) ? filemtime(public_path('js/platform-protection.js')) : time() }}"></script>
     @endif
 
     {{-- نفس منطق الإدارة: الافتراضي فاتح؛ الوضع الداكن فقط عند theme=dark في localStorage --}}

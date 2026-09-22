@@ -290,6 +290,28 @@ Route::get('/css/student-timeline.css', function () use ($serveAtheerAsset) {
     return $serveAtheerAsset($candidates, 'text/css; charset=UTF-8');
 })->name('assets.student-timeline.css');
 
+// Instructor panel CSS — نفس مشكلة Hostinger: /css/* الثابت خارج document root
+Route::get('/css/instructor-dashboard.css', function () use ($serveAtheerAsset) {
+    return $serveAtheerAsset(
+        [public_path('css/instructor-dashboard.css'), resource_path('css/instructor-dashboard.css')],
+        'text/css; charset=UTF-8'
+    );
+})->name('assets.instructor-dashboard.css');
+
+Route::get('/css/instructor-panel.css', function () use ($serveAtheerAsset) {
+    return $serveAtheerAsset(
+        [public_path('css/instructor-panel.css'), resource_path('css/instructor-panel.css')],
+        'text/css; charset=UTF-8'
+    );
+})->name('assets.instructor-panel.css.public');
+
+Route::get('/js/platform-protection.js', function () use ($serveAtheerAsset) {
+    return $serveAtheerAsset(
+        [public_path('js/platform-protection.js'), resource_path('js/platform-protection.js')],
+        'application/javascript; charset=UTF-8'
+    );
+})->name('assets.platform-protection.js');
+
 Route::get('/img/student-timeline/{file}', function (string $file) {
     $file = basename($file);
     if (! preg_match('/^[A-Za-z0-9._\-]+$/', $file) || ! preg_match('/\.(png|jpe?g|webp|gif|svg)$/i', $file)) {

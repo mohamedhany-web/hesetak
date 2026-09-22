@@ -54,7 +54,7 @@
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700;800&family=Cairo:wght@400;500;600;700;800;900&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <link rel="stylesheet" href="{{ route('assets.student-timeline.css') }}?v=st-hesetak-6">
+    <link rel="stylesheet" href="{{ route('assets.student-timeline.css') }}?v=st-hesetak-7">
     <script>
         (function () {
             try {
@@ -72,7 +72,7 @@
         <script>
             window.Laravel = { user: { name: '{{ auth()->check() ? auth()->user()->name : "زائر" }}' } };
         </script>
-        <script src="{{ versioned_asset('js/platform-protection.js') }}"></script>
+        <script src="{{ route('assets.platform-protection.js') }}?v={{ is_file(public_path('js/platform-protection.js')) ? filemtime(public_path('js/platform-protection.js')) : time() }}"></script>
     @endif
     @stack('styles')
     <script>window.platformCurrencySymbol = @json(currency_symbol()); window.platformCurrency = @json(platform_currency());</script>
