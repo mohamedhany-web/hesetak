@@ -7,6 +7,8 @@
 @php
     $kpis = [
         ['label' => 'الإجمالي', 'value' => $stats['total'], 'icon' => 'fa-inbox', 'tone' => 'accent'],
+        ['label' => 'من صفحة المعلم', 'value' => $stats['from_instructor_page'] ?? 0, 'icon' => 'fa-chalkboard-teacher', 'tone' => 'metal'],
+        ['label' => 'حصة مجانية', 'value' => $stats['free_session'] ?? 0, 'icon' => 'fa-gift', 'tone' => 'accent'],
         ['label' => 'طلبات', 'value' => $stats['pending'] ?? 0, 'icon' => 'fa-paper-plane', 'tone' => 'metal'],
         ['label' => 'مؤكد', 'value' => $stats['confirmed'], 'icon' => 'fa-check-circle', 'tone' => 'accent'],
         ['label' => 'قادم', 'value' => $stats['upcoming'], 'icon' => 'fa-hourglass-half', 'tone' => 'metal'],
@@ -27,8 +29,8 @@
 <div class="space-y-5">
     <section class="flex flex-wrap items-end justify-between gap-4">
         <div class="min-w-0">
-            <p class="text-xs font-medium text-muted">حصة مجانية لحاملي الباقة · من جدول المعلم أو طلب تنسيق · بدون خصم من الرصيد</p>
-            <h2 class="mt-1 text-2xl font-semibold tracking-tight text-ink md:text-[28px]">حجوزات الحصة المجانية</h2>
+            <p class="text-xs font-medium text-muted">يشمل الحجوزات من صفحة المعلم (#mc-tp-book) · حصة مجانية لحاملي الباقة بدون خصم من الرصيد · وطلبات التنسيق</p>
+            <h2 class="mt-1 text-2xl font-semibold tracking-tight text-ink md:text-[28px]">حجوزات الحصة المجانية / التجريبية</h2>
         </div>
         <div class="admin-hero-actions flex flex-wrap gap-2">
             <a href="{{ route('admin.free-trial-bookings.create') }}" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl bg-accent px-4 text-sm font-medium text-white">
@@ -45,7 +47,7 @@
         </div>
     @endif
 
-    <section class="admin-kpi-grid grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7">
+    <section class="admin-kpi-grid grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 2xl:grid-cols-9">
         @foreach($kpis as $kpi)
             <article class="rounded-2xl border border-line bg-surface p-4 shadow-soft">
                 <div class="inline-flex size-9 items-center justify-center rounded-xl {{ $toneClass[$kpi['tone']] }}">
@@ -62,7 +64,7 @@
             <h3 class="text-base font-semibold text-ink">البحث والفلترة</h3>
             <p class="mt-0.5 text-xs text-muted">حدد الحالة أو نطاق التاريخ للوصول السريع للحجز</p>
         </div>
-        <form method="get" class="grid grid-cols-1 gap-4 p-4 sm:p-5 md:grid-cols-5 md:items-end">
+        <form method="get" class="grid grid-cols-1 gap-4 p-4 sm:p-5 md:grid-cols-6 md:items-end">
             <div class="md:col-span-2">
                 <label class="{{ $labelClass }}" for="search">بحث</label>
                 <input id="search" type="search" name="search" value="{{ request('search') }}" placeholder="اسم / بريد / هاتف / هدف" class="{{ $fieldClass }}">
@@ -78,6 +80,15 @@
                 </select>
             </div>
             <div>
+                <label class="{{ $labelClass }}" for="goal">النوع</label>
+                <select id="goal" name="goal" class="{{ $fieldClass }}">
+                    <option value="">الكل</option>
+                    @foreach(($goalOptions ?? \App\Models\FreeTrialBooking::goalOptions()) as $goalKey => $goalMeta)
+                        <option value="{{ $goalKey }}" @selected(request('goal') === $goalKey)>{{ $goalMeta['ar'] ?? $goalKey }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div>
                 <label class="{{ $labelClass }}" for="from">من تاريخ</label>
                 <input id="from" type="date" name="from" value="{{ request('from') }}" class="{{ $fieldClass }}">
             </div>
@@ -85,12 +96,12 @@
                 <label class="{{ $labelClass }}" for="to">إلى تاريخ</label>
                 <input id="to" type="date" name="to" value="{{ request('to') }}" class="{{ $fieldClass }}">
             </div>
-            <div class="flex flex-wrap gap-2 md:col-span-5">
+            <div class="flex flex-wrap gap-2 md:col-span-6">
                 <button type="submit" class="btn-press inline-flex h-10 items-center gap-2 rounded-xl bg-accent px-5 text-sm font-medium text-white">
                     <i class="fas fa-filter text-xs"></i>
                     تصفية
                 </button>
-                @if(request()->anyFilled(['search', 'status', 'from', 'to']))
+                @if(request()->anyFilled(['search', 'status', 'goal', 'from', 'to']))
                     <a href="{{ route('admin.free-trial-bookings.index') }}" class="btn-press inline-flex h-10 items-center gap-2 rounded-xl border border-line px-5 text-sm font-medium text-ink hover:bg-canvas">
                         <i class="fas fa-times text-xs"></i>
                         مسح الفلاتر
@@ -146,6 +157,12 @@
                                 @if($b->goal)
                                     <p class="mt-0.5 text-xs text-muted">{{ $b->goalLabel('ar') }}</p>
                                 @endif
+                                @if($b->goal === \App\Models\FreeTrialBooking::GOAL_FREE_SESSION && $b->instructor_id)
+                                    <p class="mt-1 inline-flex items-center gap-1 rounded-md bg-amber-50 px-1.5 py-0.5 text-[10px] font-bold text-amber-800">
+                                        <i class="fas fa-link text-[9px]"></i>
+                                        من صفحة المعلم
+                                    </p>
+                                @endif
                             </td>
                             <td class="px-3 py-3 text-xs text-muted">
                                 @if($b->email)<p><i class="fas fa-envelope ml-1 text-[10px]"></i>{{ $b->email }}</p>@endif
@@ -169,9 +186,15 @@
                                     <span class="inline-flex items-center gap-1 rounded-lg bg-accent-soft px-2 py-1 font-medium text-accent" title="لا تُخصم من الرصيد">
                                         <i class="fas fa-calendar-check text-[10px]"></i>
                                         في الجدول
+                                        @if($linked->is_complimentary)
+                                            · مجانية
+                                        @endif
                                     </span>
+                                    @if(Route::has('admin.one-to-one-sessions.show'))
+                                        <a href="{{ route('admin.one-to-one-sessions.show', $linked) }}" class="mt-1 block text-[11px] font-semibold text-accent hover:underline">فتح الحصة</a>
+                                    @endif
                                 @else
-                                    <span class="text-muted">—</span>
+                                    <span class="text-muted">طلب تنسيق</span>
                                 @endif
                             </td>
                             <td class="px-3 py-3 tabular-nums text-muted">{{ $b->duration_minutes }} د</td>
@@ -203,7 +226,7 @@
                                     <i class="fas fa-calendar-check"></i>
                                 </div>
                                 <p class="text-sm font-medium text-ink">لا توجد حجوزات</p>
-                                <p class="mt-1 text-xs text-muted">حجوزات الطلاب ذوي الباقة أو التوصيف اليدوي تظهر هنا.</p>
+                                <p class="mt-1 text-xs text-muted">أي حجز من صفحة المعلم أو التوصيف اليدوي يظهر هنا فوراً.</p>
                                 <a href="{{ route('admin.free-trial-bookings.create') }}" class="mt-3 inline-flex text-sm font-semibold text-accent hover:underline">توصيف حصة مجانية الآن</a>
                             </td>
                         </tr>

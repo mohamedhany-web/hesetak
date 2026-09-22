@@ -54,6 +54,11 @@ class FreeTrialBookingController extends Controller
             $query->where('status', $request->status);
         }
 
+        $goalFilter = (string) $request->input('goal', '');
+        if ($goalFilter !== '' && array_key_exists($goalFilter, FreeTrialBooking::goalOptions())) {
+            $query->where('goal', $goalFilter);
+        }
+
         if ($request->filled('from')) {
             $query->whereDate('starts_at', '>=', $request->input('from'));
         }
@@ -72,9 +77,17 @@ class FreeTrialBookingController extends Controller
             'today' => FreeTrialBooking::whereDate('starts_at', today())->count(),
             'cancelled' => FreeTrialBooking::where('status', FreeTrialBooking::STATUS_CANCELLED)->count(),
             'completed' => FreeTrialBooking::where('status', FreeTrialBooking::STATUS_COMPLETED)->count(),
+            'free_session' => FreeTrialBooking::where('goal', FreeTrialBooking::GOAL_FREE_SESSION)->count(),
+            'from_instructor_page' => FreeTrialBooking::where('goal', FreeTrialBooking::GOAL_FREE_SESSION)
+                ->whereNotNull('instructor_id')
+                ->count(),
         ];
 
-        return view('admin.free-trial-bookings.index', compact('bookings', 'stats'));
+        return view('admin.free-trial-bookings.index', [
+            'bookings' => $bookings,
+            'stats' => $stats,
+            'goalOptions' => FreeTrialBooking::goalOptions(),
+        ]);
     }
 
     public function create(): View
