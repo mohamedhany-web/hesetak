@@ -20,6 +20,12 @@ class RestrictRbacEmployeeAdminRoutes
             return $next($request);
         }
 
+        // المدير العام / سوبر أدمن يتجاوز قيود موظف RBAC بالكامل
+        if (in_array((string) $user->role, ['super_admin', 'admin'], true)
+            || (method_exists($user, 'isSuperAdmin') && $user->isSuperAdmin())) {
+            return $next($request);
+        }
+
         $routeName = $request->route()?->getName();
         if (! $routeName || ! str_starts_with($routeName, 'admin.')) {
             return $next($request);

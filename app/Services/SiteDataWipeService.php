@@ -148,6 +148,12 @@ final class SiteDataWipeService
             if ($permissionIds !== [] && method_exists($user, 'directPermissions')) {
                 $user->directPermissions()->syncWithoutDetaching($permissionIds);
             }
+
+            // سوبر أدمن ليس موظفاً مقيداً بـ RBAC map
+            if (in_array((string) $user->role, ['super_admin', 'admin'], true)) {
+                $user->is_employee = false;
+                $user->save();
+            }
         }
     }
 
