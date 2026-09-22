@@ -461,7 +461,7 @@
                 </form>
 
                 <div class="admin-topbar-actions ms-auto flex items-center gap-1 sm:gap-1.5 md:gap-2">
-                    <a href="{{ url('/?open_trial=1') }}" class="btn-press hidden rounded-xl bg-accent-soft px-3 py-2 text-sm text-accent sm:inline-flex">مساعد التشغيل</a>
+                    <a href="{{ route('admin.ops-guide.index') }}" class="btn-press hidden rounded-xl bg-accent-soft px-3 py-2 text-sm text-accent sm:inline-flex">مساعد التشغيل</a>
 
                     <div class="relative" x-data="adminNavNotifications({{ \Illuminate\Support\Js::from($adminNavBellConfig) }})" @click.outside="openNotif = false">
                         <button type="button" @click="openNotif = !openNotif" class="btn-press relative inline-flex size-10 items-center justify-center rounded-xl hover:bg-canvas" aria-label="الإشعارات">

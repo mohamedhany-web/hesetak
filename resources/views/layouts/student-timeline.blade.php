@@ -13,6 +13,9 @@
         ['route' => 'student.learn.index', 'match' => ['student.learn.*'], 'label' => __('student_timeline.nav_learn'), 'icon' => 'lessons.svg', 'ui' => 'show_private_lessons'],
         ['route' => 'student.service-entitlements.index', 'match' => ['student.service-entitlements.*'], 'label' => __('student_timeline.nav_progress'), 'icon' => 'credits.svg', 'ui' => 'show_entitlements'],
         ['route' => 'my-courses.index', 'match' => ['my-courses.*'], 'label' => __('student.my_courses'), 'fa' => 'fas fa-bookmark', 'ui' => 'show_courses'],
+        ['route' => 'student.lectures.index', 'match' => ['student.lectures.*'], 'label' => __('student_timeline.nav_lectures'), 'fa' => 'fas fa-chalkboard', 'ui' => 'show_courses', 'course_tools' => true],
+        ['route' => 'student.assignments.index', 'match' => ['student.assignments.*'], 'label' => __('student_timeline.nav_assignments'), 'fa' => 'fas fa-tasks', 'ui' => 'show_assignments', 'course_tools' => true],
+        ['route' => 'student.exams.index', 'match' => ['student.exams.*'], 'label' => __('student_timeline.nav_exams'), 'fa' => 'fas fa-file-alt', 'ui' => 'show_exams', 'course_tools' => true],
         ['route' => 'calendar', 'match' => ['calendar', 'calendar.events'], 'label' => __('student_timeline.calendar'), 'fa' => 'fas fa-calendar-alt'],
         ['route' => 'orders.index', 'match' => ['orders.*'], 'label' => __('student_timeline.nav_orders'), 'fa' => 'fas fa-receipt', 'ui' => 'show_orders'],
         ['route' => 'student.wallet.index', 'match' => ['student.wallet.*'], 'label' => __('student_timeline.nav_wallet'), 'fa' => 'fas fa-wallet', 'ui' => 'show_wallet'],
@@ -22,15 +25,10 @@
         ['route' => 'student.support.index', 'match' => ['student.support.*'], 'label' => __('student_timeline.nav_support'), 'fa' => 'fas fa-headset', 'ui' => 'show_support'],
         ['route' => 'notifications', 'match' => ['notifications*'], 'label' => __('student_timeline.nav_messages'), 'icon' => 'notifications.svg', 'ui' => 'show_notifications'],
         ['route' => 'settings', 'match' => ['settings'], 'label' => __('student_timeline.nav_settings'), 'icon' => 'settings.svg', 'ui' => 'show_settings'],
-        // موروث — يُظهر فقط إن فُعّل من config
-        ['route' => 'student.classes.index', 'match' => ['student.classes.*'], 'label' => __('student_timeline.nav_classes'), 'icon' => 'classes.svg', 'ui' => 'show_classes'],
         ['route' => 'student.live-sessions.index', 'match' => ['student.live-sessions.*', 'student.live-recordings.*'], 'label' => __('student_timeline.nav_live_sessions'), 'fa' => 'fas fa-broadcast-tower', 'ui' => 'show_live_broadcast'],
         ['route' => 'student.library.files', 'match' => ['student.library.home', 'student.library.files', 'student.library.materials'], 'label' => __('student_timeline.lib_files_title'), 'fa' => 'fas fa-folder-open', 'ui' => 'show_libraries'],
         ['route' => 'student.library.curriculum', 'match' => ['student.library.curriculum', 'curriculum-library.*'], 'label' => __('student_timeline.nav_library_curriculum'), 'fa' => 'fas fa-sitemap', 'ui' => 'show_libraries'],
         ['route' => 'student.library.videos', 'match' => ['student.library.videos'], 'label' => __('student_timeline.nav_library_videos'), 'fa' => 'fas fa-film', 'ui' => 'show_libraries'],
-        ['route' => 'student.assignments.index', 'match' => ['student.assignments.*'], 'label' => __('student_timeline.nav_assignments'), 'fa' => 'fas fa-tasks', 'ui' => 'show_assignments', 'needs_libraries' => true],
-        ['route' => 'student.lectures.index', 'match' => ['student.lectures.*'], 'label' => __('student_timeline.nav_lectures'), 'fa' => 'fas fa-chalkboard', 'ui' => 'show_libraries'],
-        ['route' => 'student.exams.index', 'match' => ['student.exams.*'], 'label' => __('student_timeline.nav_exams'), 'fa' => 'fas fa-file-alt', 'ui' => 'show_exams'],
         ['route' => 'student.private-messages.index', 'match' => ['student.private-messages.*'], 'label' => __('student_timeline.nav_feed'), 'icon' => 'community.svg', 'ui' => 'show_classes'],
     ];
 
@@ -56,7 +54,7 @@
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700;800&family=Cairo:wght@400;500;600;700;800;900&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <link rel="stylesheet" href="{{ route('assets.student-timeline.css') }}?v=st-hesetak-4">
+    <link rel="stylesheet" href="{{ route('assets.student-timeline.css') }}?v=st-hesetak-6">
     <script>
         (function () {
             try {
@@ -135,7 +133,8 @@
                     if (! empty($item['ui']) && ! student_ui($item['ui'], true)) {
                         continue;
                     }
-                    if (! empty($item['needs_libraries']) && ! student_ui('show_libraries', true)) {
+                    // الواجبات كانت مربوطة بالمكتبة؛ للكورسات المسجّلة يكفي تفعيل show_assignments
+                    if (! empty($item['needs_libraries']) && ! student_ui('show_libraries', true) && empty($item['course_tools'])) {
                         continue;
                     }
                     $href = route($item['route']);
@@ -274,6 +273,7 @@
 })();
 </script>
 @stack('scripts')
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.3/dist/cdn.min.js"></script>
 @include('partials.timezone-sync')
 </body>
 </html>

@@ -234,17 +234,19 @@
                             class="flex items-center justify-between w-full px-4 py-3 rounded-xl hover:bg-gradient-to-r hover:from-sky-50 hover:to-slate-50 dark:hover:from-gray-700 dark:hover:to-gray-800 transition-all duration-300 text-gray-700 dark:text-gray-300 group">
                         <div class="flex items-center gap-3">
                             <i class="fas fa-trophy w-5 text-sky-600 dark:text-sky-400 group-hover:text-sky-600 dark:group-hover:text-sky-400"></i>
-                            <span class="font-medium">الشهادات والإنجازات</span>
+                            <span class="font-medium">{{ config('admin_ui.show_certificates') ? 'الشهادات والإنجازات' : 'الإنجازات والتقييمات' }}</span>
                         </div>
                         <i class="fas fa-chevron-down transition-transform duration-300 text-gray-400 dark:text-gray-500" :class="{ 'rotate-180': open }"></i>
                     </button>
                     <ul x-show="open" x-transition class="mt-2 mr-4 space-y-1 border-r-2 border-sky-200 dark:border-sky-800 pr-2">
+                        @if(config('admin_ui.show_certificates'))
                         @hasPermission('manage.certificates')
                         <li><a href="{{ route('admin.certificates.index') }}" class="flex items-center gap-2 px-4 py-2 text-sm rounded-lg hover:bg-gradient-to-r hover:from-sky-50 hover:to-slate-50 dark:hover:from-gray-700 dark:hover:to-gray-800 transition-all duration-300 text-gray-600 dark:text-gray-400 hover:text-sky-700 dark:hover:text-sky-300 {{ request()->routeIs('admin.certificates.*') ? 'bg-gradient-to-r from-sky-100 to-slate-100 dark:from-sky-900/30 dark:to-slate-900/30 text-sky-700 dark:text-sky-300 font-semibold' : '' }}">
                             <i class="fas fa-certificate w-4"></i>
                             <span>الشهادات</span>
                         </a></li>
                         @endhasPermission
+                        @endif
                         @hasPermission('manage.achievements')
                         <li><a href="{{ route('admin.achievements.index') }}" class="flex items-center gap-2 px-4 py-2 text-sm rounded-lg hover:bg-gradient-to-r hover:from-sky-50 hover:to-slate-50 dark:hover:from-gray-700 dark:hover:to-gray-800 transition-all duration-300 text-gray-600 dark:text-gray-400 hover:text-sky-700 dark:hover:text-sky-300 {{ request()->routeIs('admin.achievements.*') ? 'bg-gradient-to-r from-sky-100 to-slate-100 dark:from-sky-900/30 dark:to-slate-900/30 text-sky-700 dark:text-sky-300 font-semibold' : '' }}">
                             <i class="fas fa-medal w-4"></i>
@@ -628,6 +630,7 @@
                 @endhasPermission
 
                 <!-- شهاداتي -->
+                @if(student_ui('show_certificates', false))
                 @hasPermission('student.view.certificates')
                 <li>
                     <a href="{{ route('student.certificates.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 relative overflow-hidden group {{ request()->routeIs('student.certificates.*') ? 'bg-gradient-to-r from-sky-500 to-sky-600 text-white shadow-lg shadow-sky-500/30' : 'text-gray-700 dark:text-gray-300 hover:bg-gradient-to-r hover:from-sky-50 hover:to-slate-50 dark:hover:from-gray-700 dark:hover:to-gray-800' }}">
@@ -640,6 +643,7 @@
                     </a>
                 </li>
                 @endhasPermission
+                @endif
 
                 <!-- إنجازاتي -->
                 @hasPermission('student.view.achievements')

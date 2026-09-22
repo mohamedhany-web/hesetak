@@ -8,7 +8,7 @@ return [
     // مسار الكورسات المستقلة
     'show_courses' => true,
     'show_course_progress' => true,
-    'show_certificates' => true,
+    'show_certificates' => false,
 
     // مالية الطالب
     'show_wallet' => true,
@@ -26,13 +26,14 @@ return [
     'show_settings' => true,
     'show_referrals' => true,
 
-    // موروث مدرسي/جماعي/بث — معطّل (مرجعي)
+    // موروث مدرسي/جماعي/بث — معطّل (مرجعي) ما لم يكن للطالب كورس مسجّل نشط
     'show_school' => false,
     'show_classes' => false,
     'show_live_broadcast' => false,
     'show_libraries' => false,
-    'show_assignments' => false,
-    'show_exams' => false,
+    // تُفتح تلقائياً عند hasActiveRecordedCourses() عبر student_ui()
+    'show_assignments' => true,
+    'show_exams' => true,
     'show_achievements' => false,
     'show_consultations' => false,
     'show_legacy_calendar' => false,

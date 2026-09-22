@@ -16,6 +16,10 @@ class AttendanceController extends Controller
      */
     public function index(Request $request)
     {
+        if (! instructor_ui('show_attendance', false)) {
+            abort(404);
+        }
+
         $instructor = Auth::user();
         
         // جلب الكورسات التي يدرسها المدرب
@@ -72,6 +76,10 @@ class AttendanceController extends Controller
      */
     public function showLecture(Lecture $lecture)
     {
+        if (! instructor_ui('show_attendance', false)) {
+            abort(404);
+        }
+
         $instructor = Auth::user();
         
         // التحقق من أن المحاضرة تخص هذا المدرب

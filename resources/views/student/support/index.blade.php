@@ -1,96 +1,148 @@
 @extends('layouts.student-timeline')
 
-@section('title', 'الدعم الفني')
-@section('header', 'الدعم الفني')
+@section('title', __('student_timeline.nav_support'))
 
 @section('content')
-<div class="w-full px-4 sm:px-6 lg:px-8 py-6 space-y-6">
-    @if(session('success'))
-        <div class="rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 px-4 py-3 text-sm font-medium">{{ session('success') }}</div>
-    @endif
+@php
+    $locale = app()->getLocale();
+    $tickets = $tickets ?? collect();
+    $inquiryCategories = $inquiryCategories ?? collect();
+    $openCount = $tickets->filter(fn ($t) => ! in_array($t->status, ['closed', 'resolved'], true))->count();
+    $priorityLabel = fn ($p) => match ($p) {
+        'low' => __('student_timeline.support_priority_low'),
+        'high' => __('student_timeline.support_priority_high'),
+        'urgent' => __('student_timeline.support_priority_urgent'),
+        default => __('student_timeline.support_priority_normal'),
+    };
+    $statusLabel = fn ($s) => match ($s) {
+        'open' => __('student_timeline.support_status_open'),
+        'in_progress', 'pending' => __('student_timeline.support_status_progress'),
+        'resolved' => __('student_timeline.support_status_resolved'),
+        'closed' => __('student_timeline.support_status_closed'),
+        default => $s,
+    };
+@endphp
 
-    <div class="rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm p-6">
-        <h1 class="text-2xl font-black text-slate-900 dark:text-white">خدمة الدعم الفني 24/7</h1>
-        <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">أنشئ تذكرة دعم وسيقوم الفريق بمتابعتها حتى الحل.</p>
+@include('partials.student-timeline-top', [
+    'locale' => $locale,
+    'pageTitle' => __('student_timeline.nav_support'),
+    'crumbs' => [
+        ['label' => __('student_timeline.school_gate'), 'url' => route('dashboard')],
+        ['label' => __('student_timeline.nav_support'), 'url' => null],
+    ],
+])
+
+@if(session('success'))
+    <div class="st-flash st-flash--ok">{{ session('success') }}</div>
+@endif
+@if(session('error'))
+    <div class="st-flash st-flash--err">{{ session('error') }}</div>
+@endif
+
+<section class="st-join-hero" aria-label="{{ __('student_timeline.nav_support') }}">
+    <div class="st-join-hero__copy">
+        <p class="st-join-hero__kicker">{{ __('student_timeline.support_kicker') }}</p>
+        <h2 class="st-join-hero__title">{{ __('student_timeline.support_title') }}</h2>
+        <p class="st-join-hero__meta">{{ __('student_timeline.support_lead') }}</p>
     </div>
+</section>
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <form action="{{ route('student.support.store') }}" method="POST" class="lg:col-span-1 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm p-5 space-y-4">
-            @csrf
-            <h2 class="font-bold text-slate-900 dark:text-white">إنشاء تذكرة جديدة</h2>
-            @if($inquiryCategories->isEmpty())
-                <div class="rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 text-amber-900 dark:text-amber-200 px-4 py-3 text-sm">
-                    لا توجد تصنيفات استفسار متاحة حالياً. يرجى التواصل مع الإدارة أو المحاولة لاحقاً.
-                </div>
-            @else
-            <div>
-                <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">تصنيف الاستفسار</label>
-                <select name="support_inquiry_category_id" required class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-800 dark:text-white">
-                    <option value="" disabled {{ old('support_inquiry_category_id') ? '' : 'selected' }}>— اختر التصنيف —</option>
-                    @foreach($inquiryCategories as $cat)
-                        <option value="{{ $cat->id }}" @selected((string) old('support_inquiry_category_id') === (string) $cat->id)>{{ $cat->name }}</option>
-                    @endforeach
-                </select>
-                @error('support_inquiry_category_id')<p class="text-xs text-rose-600 mt-1">{{ $message }}</p>@enderror
-            </div>
-            <div>
-                <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">عنوان المشكلة</label>
-                <input type="text" name="subject" value="{{ old('subject') }}" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-800 dark:text-white">
-                @error('subject')<p class="text-xs text-rose-600 mt-1">{{ $message }}</p>@enderror
-            </div>
-            <div>
-                <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">الأولوية</label>
-                <select name="priority" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-800 dark:text-white">
-                    <option value="normal">عادية</option>
-                    <option value="low">منخفضة</option>
-                    <option value="high">عالية</option>
-                    <option value="urgent">عاجلة</option>
-                </select>
-            </div>
-            <div>
-                <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">تفاصيل المشكلة</label>
-                <textarea name="message" rows="6" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-800 dark:text-white">{{ old('message') }}</textarea>
-                @error('message')<p class="text-xs text-rose-600 mt-1">{{ $message }}</p>@enderror
-            </div>
-            <button type="submit" class="w-full px-4 py-2.5 rounded-xl bg-sky-600 hover:bg-sky-700 text-white text-sm font-semibold">إرسال التذكرة</button>
-            @endif
-        </form>
+<section class="st-stats st-stats--classes" aria-label="{{ __('student_timeline.nav_support') }}">
+    <article class="st-stat-card">
+        <p class="st-stat-card__label">{{ __('student_timeline.support_tickets') }}</p>
+        <p class="st-stat-card__value">{{ method_exists($tickets, 'total') ? $tickets->total() : $tickets->count() }}</p>
+    </article>
+    <article class="st-stat-card">
+        <p class="st-stat-card__label">{{ __('student_timeline.support_open') }}</p>
+        <p class="st-stat-card__value">{{ $openCount }}</p>
+    </article>
+</section>
 
-        <div class="lg:col-span-2 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
-            <div class="px-5 py-4 bg-slate-50 dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-700">
-                <h2 class="font-bold text-slate-900 dark:text-white">تذاكري</h2>
-            </div>
-            <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
-                    <thead class="bg-slate-50 dark:bg-slate-800/60">
-                        <tr class="text-xs text-slate-600 dark:text-slate-300 uppercase">
-                            <th class="px-4 py-3 text-right">التصنيف</th>
-                            <th class="px-4 py-3 text-right">العنوان</th>
-                            <th class="px-4 py-3 text-right">الحالة</th>
-                            <th class="px-4 py-3 text-right">الأولوية</th>
-                            <th class="px-4 py-3 text-right">آخر تحديث</th>
-                            <th class="px-4 py-3 text-right">تفاصيل</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-100 dark:divide-slate-700/60">
-                        @forelse($tickets as $ticket)
-                            <tr class="hover:bg-slate-50/60 dark:hover:bg-slate-700/20">
-                                <td class="px-4 py-3 text-xs text-slate-600 dark:text-slate-300">{{ $ticket->inquiryCategory->name ?? '—' }}</td>
-                                <td class="px-4 py-3 text-sm font-semibold text-slate-900 dark:text-white">{{ $ticket->subject }}</td>
-                                <td class="px-4 py-3 text-xs text-slate-700 dark:text-slate-300">{{ $ticket->status }}</td>
-                                <td class="px-4 py-3 text-xs text-slate-700 dark:text-slate-300">{{ $ticket->priority }}</td>
-                                <td class="px-4 py-3 text-xs text-slate-500 dark:text-slate-400">{{ optional($ticket->last_reply_at ?? $ticket->updated_at)->format('Y-m-d H:i') }}</td>
-                                <td class="px-4 py-3 text-sm"><a href="{{ route('student.support.show', $ticket) }}" class="text-sky-600 hover:underline">فتح</a></td>
-                            </tr>
-                        @empty
-                            <tr><td colspan="6" class="px-4 py-8 text-center text-sm text-slate-500">لا توجد تذاكر بعد.</td></tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-            <div class="px-5 py-3 border-t border-slate-200 dark:border-slate-700">{{ $tickets->links() }}</div>
+<div class="st-support-grid">
+    <section class="st-order-panel" aria-label="{{ __('student_timeline.support_new') }}">
+        <div class="st-order-panel__head">
+            <h2>{{ __('student_timeline.support_new') }}</h2>
         </div>
-    </div>
+        <div class="st-order-panel__body">
+            @if($inquiryCategories->isEmpty())
+                <div class="st-flash st-flash--err" style="margin:0">{{ __('student_timeline.support_no_categories') }}</div>
+            @else
+                <form action="{{ route('student.support.store') }}" method="POST" class="st-support-form">
+                    @csrf
+                    <label class="st-field st-field--full">
+                        <span>{{ __('student_timeline.support_category') }}</span>
+                        <select name="support_inquiry_category_id" required>
+                            <option value="" disabled {{ old('support_inquiry_category_id') ? '' : 'selected' }}>{{ __('student_timeline.support_category_pick') }}</option>
+                            @foreach($inquiryCategories as $cat)
+                                <option value="{{ $cat->id }}" @selected((string) old('support_inquiry_category_id') === (string) $cat->id)>{{ $cat->name }}</option>
+                            @endforeach
+                        </select>
+                        @error('support_inquiry_category_id')<small class="st-field__err">{{ $message }}</small>@enderror
+                    </label>
+                    <label class="st-field st-field--full">
+                        <span>{{ __('student_timeline.support_subject') }}</span>
+                        <input type="text" name="subject" value="{{ old('subject') }}" required>
+                        @error('subject')<small class="st-field__err">{{ $message }}</small>@enderror
+                    </label>
+                    <label class="st-field st-field--full">
+                        <span>{{ __('student_timeline.support_priority') }}</span>
+                        <select name="priority">
+                            <option value="normal">{{ __('student_timeline.support_priority_normal') }}</option>
+                            <option value="low">{{ __('student_timeline.support_priority_low') }}</option>
+                            <option value="high">{{ __('student_timeline.support_priority_high') }}</option>
+                            <option value="urgent">{{ __('student_timeline.support_priority_urgent') }}</option>
+                        </select>
+                    </label>
+                    <label class="st-field st-field--full">
+                        <span>{{ __('student_timeline.support_message') }}</span>
+                        <textarea name="message" rows="6" required>{{ old('message') }}</textarea>
+                        @error('message')<small class="st-field__err">{{ $message }}</small>@enderror
+                    </label>
+                    <button type="submit" class="st-pill st-pill--solid st-pill--lg" style="width:100%;justify-content:center">
+                        {{ __('student_timeline.support_submit') }}
+                    </button>
+                </form>
+            @endif
+        </div>
+    </section>
+
+    <section class="st-order-panel" aria-label="{{ __('student_timeline.support_my_tickets') }}">
+        <div class="st-order-panel__head">
+            <h2>{{ __('student_timeline.support_my_tickets') }}</h2>
+        </div>
+        <div class="st-order-panel__body" style="padding:12px">
+            @forelse($tickets as $i => $ticket)
+                @php
+                    $tones = ['blue', 'pink', 'orange', 'purple'];
+                    $tone = $tones[$i % count($tones)];
+                @endphp
+                <article class="st-order-card st-order-card--{{ $tone }}" style="margin-bottom:10px">
+                    <div class="st-order-card__main">
+                        <div class="st-order-card__copy">
+                            <div class="st-order-card__badges">
+                                <span class="st-order-card__badge">{{ $statusLabel($ticket->status) }}</span>
+                                <span class="st-order-card__badge is-pending">{{ $priorityLabel($ticket->priority) }}</span>
+                                <span class="st-order-card__when">{{ optional($ticket->last_reply_at ?? $ticket->updated_at)->format('Y-m-d H:i') }}</span>
+                            </div>
+                            <h3>{{ $ticket->subject }}</h3>
+                            <p class="st-order-card__meta">{{ $ticket->inquiryCategory->name ?? '—' }}</p>
+                        </div>
+                    </div>
+                    <div class="st-order-card__foot">
+                        <a href="{{ route('student.support.show', $ticket) }}" class="st-pill st-pill--solid">{{ __('student_timeline.support_view') }}</a>
+                    </div>
+                </article>
+            @empty
+                <div class="st-empty-panel" style="box-shadow:none;border-style:dashed">
+                    <h3>{{ __('student_timeline.support_empty') }}</h3>
+                    <p>{{ __('student_timeline.support_empty_hint') }}</p>
+                </div>
+            @endforelse
+
+            @if(method_exists($tickets, 'hasPages') && $tickets->hasPages())
+                <div class="st-pager">{{ $tickets->links() }}</div>
+            @endif
+        </div>
+    </section>
 </div>
 @endsection
-

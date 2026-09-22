@@ -463,9 +463,6 @@
                                 <div class="font-semibold">{{ $group->title }}</div>
                                 <div class="text-xs text-muted">{{ $group->type }} · {{ $group->is_active ? 'نشط' : 'متوقف' }}</div>
                             </div>
-                            @if(Route::has('admin.tutoring-groups.edit'))
-                                <a href="{{ route('admin.tutoring-groups.edit', [$group->type, $group]) }}" class="text-xs font-bold text-accent">تعديل</a>
-                            @endif
                         </li>
                     @empty
                         <li class="text-muted">لا توجد مجموعات.</li>

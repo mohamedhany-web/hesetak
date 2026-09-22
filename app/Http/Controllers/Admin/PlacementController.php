@@ -37,10 +37,6 @@ class PlacementController extends Controller
             ->where('status', OneToOneSession::STATUS_SCHEDULED)
             ->where('scheduled_at', '>=', now())
             ->count();
-        $upcomingGroups = TutoringGroupBooking::query()
-            ->where('status', TutoringGroupBooking::STATUS_CONFIRMED)
-            ->where('starts_at', '>=', now())
-            ->count();
         $bookableCredits = StudentServiceEntitlement::query()
             ->active()
             ->get()
@@ -52,20 +48,12 @@ class PlacementController extends Controller
             ->orderByDesc('created_at')
             ->limit(8)
             ->get();
-        $recentGroups = TutoringGroupBooking::query()
-            ->with(['user:id,name', 'instructor:id,name,timezone', 'tutoringGroup:id,title,duration_minutes', 'classroomMeeting'])
-            ->where('status', '!=', TutoringGroupBooking::STATUS_CANCELLED)
-            ->orderByDesc('created_at')
-            ->limit(8)
-            ->get();
 
         return view('admin.placement.index', compact(
             'pendingOneToOne',
             'upcomingOneToOne',
-            'upcomingGroups',
             'bookableCredits',
-            'recentPrivate',
-            'recentGroups'
+            'recentPrivate'
         ));
     }
 
@@ -93,21 +81,13 @@ class PlacementController extends Controller
             ->orderBy('name')
             ->get(['id', 'name', 'email', 'timezone']);
 
-        $groups = TutoringGroup::query()
-            ->active()
-            ->with('instructor:id,name')
-            ->orderBy('title')
-            ->get(['id', 'title', 'type', 'instructor_id', 'duration_minutes', 'academic_year_id', 'academic_subject_id']);
-
         return view('admin.placement.create', [
             'students' => $students,
             'instructors' => $instructors,
-            'groups' => $groups,
+            'groups' => collect(),
             'selectedStudentId' => $selectedStudentId,
             'selectedEntitlementId' => $selectedEntitlementId,
-            'mode' => in_array($request->query('mode'), ['private', 'group'], true)
-                ? $request->query('mode')
-                : 'private',
+            'mode' => 'private',
             'grantUrl' => Route::has('admin.student-entitlements.create')
                 ? route('admin.student-entitlements.create')
                 : null,
@@ -282,12 +262,11 @@ class PlacementController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $data = $request->validate([
-            'mode' => ['required', 'in:private,group'],
+            'mode' => ['required', 'in:private'],
             'booking_style' => ['nullable', 'in:single,monthly,multi'],
             'student_id' => ['required', 'integer', 'exists:users,id'],
             'student_service_entitlement_id' => ['required', 'integer', 'exists:student_service_entitlements,id'],
             'instructor_id' => ['nullable', 'integer', 'exists:users,id'],
-            'tutoring_group_id' => ['nullable', 'integer', 'exists:tutoring_groups,id'],
             'scheduled_at' => ['nullable', 'date'],
             'manual_scheduled_at' => ['nullable', 'date'],
             'timezone' => AppTimezone::inputRules(),
@@ -318,11 +297,7 @@ class PlacementController extends Controller
             return back()->withInput()->with('error', 'الطالب ليس لديه باقة/رصيد قابل للحجز.');
         }
 
-        if ($data['mode'] === 'private') {
-            return $this->storePrivate($request, $data, $entitlement);
-        }
-
-        return $this->storeGroup($request, $data, $entitlement);
+        return $this->storePrivate($request, $data, $entitlement);
     }
 
     /**
@@ -707,6 +682,14 @@ class PlacementController extends Controller
     }
 
     public function destroyGroup(TutoringGroupBooking $tutoringGroupBooking): RedirectResponse
+    {
+        return redirect()
+            ->route('admin.placement.index')
+            ->with('error', 'التسكين الجماعي متوقف — المنصة تعمل بحصص 1:1 فقط.');
+    }
+
+    /** @deprecated Collective tutoring removed from Hesetak product surface. */
+    private function destroyGroupLegacy(TutoringGroupBooking $tutoringGroupBooking): RedirectResponse
     {
         if (! $tutoringGroupBooking->isOpenPlacement()) {
             return back()->with('error', 'لا يمكن حذف تسكين مكتمل أو ملغى.');

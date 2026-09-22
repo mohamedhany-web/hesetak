@@ -23,12 +23,6 @@
                 <i class="fas fa-plus text-xs"></i>
                 باقة برامج جديدة
             </a>
-            <a href="{{ route('admin.tutoring-groups.index', 'individual') }}"
-               x-show="activeTab === 'tutoring'"
-               class="btn-press inline-flex h-9 items-center gap-2 rounded-xl border border-line bg-surface px-4 text-sm font-medium text-ink transition hover:bg-accent-soft hover:text-accent">
-                <i class="fas fa-users text-xs"></i>
-                مجموعات الحصص
-            </a>
         </div>
     </section>
 
@@ -55,12 +49,6 @@
                 class="btn-press inline-flex h-10 items-center gap-2 rounded-xl px-4 text-sm font-medium transition">
             <i class="fas fa-tags text-xs"></i>
             أسعار البرامج ({{ $courseStats['total'] ?? 0 }})
-        </button>
-        <button type="button" @click="activeTab = 'tutoring'"
-                :class="activeTab === 'tutoring' ? 'bg-accent text-white' : 'text-ink-soft hover:bg-accent-soft hover:text-accent'"
-                class="btn-press inline-flex h-10 items-center gap-2 rounded-xl px-4 text-sm font-medium transition">
-            <i class="fas fa-chalkboard-teacher text-xs"></i>
-            باقات الحصص ({{ $tutoringStats['total'] ?? 0 }})
         </button>
     </nav>
 
@@ -393,150 +381,5 @@
     </div>
 
     {{-- ===== باقات الحصص المباشرة ===== --}}
-    <div x-show="activeTab === 'tutoring'" x-cloak class="space-y-5">
-        <div class="rounded-2xl border border-accent/20 bg-accent-soft/40 px-4 py-4 text-sm text-ink shadow-soft">
-            <p class="font-semibold text-ink">حساب الباقة تلقائيًا (مواصفات حصتك)</p>
-            <p class="mt-1 text-muted">السعر الأصلي = سعر الساعة × حصص/شهر × عدد الأشهر. يمكن خفض السعر النهائي لمنح خصم على طبقات الاشتراك.</p>
-            <div class="mt-3 flex flex-wrap items-center gap-2 text-xs font-medium">
-                <span class="rounded-xl border border-line bg-surface px-3 py-1.5">سعر الساعة 10$</span>
-                <span class="text-accent">×</span>
-                <span class="rounded-xl border border-line bg-surface px-3 py-1.5">8 حصص/شهر</span>
-                <span class="text-accent">×</span>
-                <span class="rounded-xl border border-line bg-surface px-3 py-1.5">3 أشهر</span>
-                <span class="text-accent">=</span>
-                <span class="rounded-xl bg-accent px-3 py-1.5 text-white">{{ number_format($exampleCalc['original_price'] ?? 240, 0) }}$ أصلي</span>
-                <span class="rounded-xl border border-line bg-surface px-3 py-1.5">عرض {{ number_format($exampleCalc['price'] ?? 200, 0) }}$ (وفر {{ number_format(($exampleCalc['original_price'] ?? 240) - ($exampleCalc['price'] ?? 200), 0) }}$)</span>
-            </div>
-            <div class="mt-3 flex flex-wrap gap-2">
-                @foreach($pricingTiers ?? [] as $tier)
-                    <span class="rounded-full bg-surface px-2.5 py-1 text-[11px] font-medium text-ink-soft border border-line">
-                        {{ $tier['months'] }} شهر · خصم مقترح {{ $tier['discount'] }}%
-                    </span>
-                @endforeach
-            </div>
-        </div>
 
-        <section class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            <article class="rounded-2xl border border-line bg-surface p-4 shadow-soft">
-                <div class="inline-flex size-9 items-center justify-center rounded-xl bg-[#f2f5f4] text-accent"><i class="fas fa-layer-group text-sm"></i></div>
-                <p class="mt-3 text-xs font-medium text-muted">باقات الحصص</p>
-                <p class="mt-1 text-2xl font-semibold tabular-nums text-ink">{{ $tutoringStats['total'] ?? 0 }}</p>
-            </article>
-            <article class="rounded-2xl border border-line bg-surface p-4 shadow-soft">
-                <div class="inline-flex size-9 items-center justify-center rounded-xl bg-[#f2f5f4] text-accent"><i class="fas fa-check text-sm"></i></div>
-                <p class="mt-3 text-xs font-medium text-muted">نشطة</p>
-                <p class="mt-1 text-2xl font-semibold tabular-nums text-emerald-700">{{ $tutoringStats['active'] ?? 0 }}</p>
-            </article>
-            <article class="rounded-2xl border border-line bg-surface p-4 shadow-soft">
-                <div class="inline-flex size-9 items-center justify-center rounded-xl bg-[#f2f5f4] text-accent"><i class="fas fa-star text-sm"></i></div>
-                <p class="mt-3 text-xs font-medium text-muted">مميزة</p>
-                <p class="mt-1 text-2xl font-semibold tabular-nums text-ink">{{ $tutoringStats['featured'] ?? 0 }}</p>
-            </article>
-            <article class="rounded-2xl border border-line bg-surface p-4 shadow-soft">
-                <div class="inline-flex size-9 items-center justify-center rounded-xl bg-[#f2f5f4] text-accent"><i class="fas fa-percent text-sm"></i></div>
-                <p class="mt-3 text-xs font-medium text-muted">متوسط التوفير</p>
-                <p class="mt-1 text-2xl font-semibold tabular-nums text-ink">{{ $tutoringStats['avg_savings'] ?? 0 }}%</p>
-            </article>
-        </section>
-
-        <form method="GET" action="{{ route('admin.packages.index') }}" class="rounded-2xl border border-line bg-surface p-4 shadow-soft">
-            <input type="hidden" name="tab" value="tutoring">
-            <div class="grid gap-3 md:grid-cols-3">
-                <div class="md:col-span-2">
-                    <label class="{{ $labelClass }}">بحث</label>
-                    <input type="text" name="tutoring_search" value="{{ request('tutoring_search') }}" placeholder="اسم الباقة أو المجموعة..." class="{{ $fieldClass }}">
-                </div>
-                <div>
-                    <label class="{{ $labelClass }}">الحالة</label>
-                    <select name="tutoring_status" class="{{ $fieldClass }}">
-                        <option value="">الكل</option>
-                        <option value="active" @selected(request('tutoring_status') === 'active')>نشطة</option>
-                        <option value="inactive" @selected(request('tutoring_status') === 'inactive')>معطّلة</option>
-                    </select>
-                </div>
-            </div>
-            <div class="mt-3 flex gap-2">
-                <button type="submit" class="btn-press inline-flex h-11 items-center gap-2 rounded-xl bg-accent px-4 text-sm font-medium text-white">تطبيق</button>
-                @if(request()->hasAny(['tutoring_search', 'tutoring_status']))
-                    <a href="{{ route('admin.packages.index', ['tab' => 'tutoring']) }}" class="inline-flex h-11 items-center rounded-xl border border-line px-4 text-sm text-muted">إعادة تعيين</a>
-                @endif
-            </div>
-        </form>
-
-        @if(isset($tutoringPackages) && $tutoringPackages->count() > 0)
-            <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
-                <div class="overflow-x-auto">
-                    <table class="w-full min-w-[900px] text-sm">
-                        <thead>
-                            <tr class="border-b border-line text-right text-xs font-medium text-muted">
-                                <th class="px-4 py-3">الباقة</th>
-                                <th class="px-4 py-3">المجموعة</th>
-                                <th class="px-4 py-3">الأشهر</th>
-                                <th class="px-4 py-3">حصص/شهر</th>
-                                <th class="px-4 py-3">سعر الساعة</th>
-                                <th class="px-4 py-3">الأصلي ← النهائي</th>
-                                <th class="px-4 py-3">توفير</th>
-                                <th class="px-4 py-3">إدارة</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-line">
-                            @foreach($tutoringPackages as $tp)
-                                @php $group = $tp->tutoringGroup; @endphp
-                                <tr class="hover:bg-[#f8faf9]">
-                                    <td class="px-4 py-3">
-                                        <div class="font-medium text-ink">{{ $tp->name }}</div>
-                                        <div class="mt-1 flex flex-wrap gap-1">
-                                            <span class="rounded-full px-2 py-0.5 text-[11px] font-medium {{ $tp->is_active ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700' }}">
-                                                {{ $tp->is_active ? 'نشط' : 'معطّل' }}
-                                            </span>
-                                            @if($tp->is_featured)
-                                                <span class="rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-800">مميز</span>
-                                            @endif
-                                        </div>
-                                    </td>
-                                    <td class="px-4 py-3">
-                                        <div class="text-ink">{{ $group?->title ?? '—' }}</div>
-                                        <div class="text-xs text-muted">{{ $group?->instructor?->name ?? '' }}</div>
-                                    </td>
-                                    <td class="px-4 py-3 tabular-nums">{{ $tp->duration_months }}</td>
-                                    <td class="px-4 py-3 tabular-nums">{{ $tp->sessions_per_month }}</td>
-                                    <td class="px-4 py-3 tabular-nums">{{ number_format((float) $tp->hourly_rate, 2) }} {{ $tp->currency ?: currency_label() }}</td>
-                                    <td class="px-4 py-3">
-                                        <div class="tabular-nums text-muted line-through text-xs">{{ number_format((float) ($tp->original_price ?? 0), 0) }}</div>
-                                        <div class="font-semibold tabular-nums text-ink">{{ $tp->formattedPrice() }}</div>
-                                    </td>
-                                    <td class="px-4 py-3">
-                                        @if($tp->savingsPercent() > 0)
-                                            <span class="font-medium text-emerald-700">{{ $tp->savingsPercent() }}%</span>
-                                        @else
-                                            <span class="text-muted">—</span>
-                                        @endif
-                                    </td>
-                                    <td class="px-4 py-3">
-                                        @if($group)
-                                            <div class="flex items-center gap-2">
-                                                <a href="{{ route('admin.tutoring-groups.packages.index', $group) }}" class="inline-flex h-8 items-center rounded-lg border border-line px-2.5 text-xs font-medium text-ink hover:bg-accent-soft hover:text-accent">باقات المجموعة</a>
-                                                <a href="{{ route('admin.tutoring-groups.packages.edit', [$group, $tp]) }}" class="inline-flex size-8 items-center justify-center rounded-lg border border-line text-muted hover:bg-accent-soft hover:text-accent" title="تعديل"><i class="fas fa-edit text-xs"></i></a>
-                                            </div>
-                                        @endif
-                                    </td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-                <div class="border-t border-line px-4 py-3">
-                    {{ $tutoringPackages->appends(request()->except('tutoring_page') + ['tab' => 'tutoring'])->links() }}
-                </div>
-            </article>
-        @else
-            <article class="rounded-2xl border border-dashed border-line bg-surface px-6 py-14 text-center shadow-soft">
-                <div class="mx-auto inline-flex size-14 items-center justify-center rounded-2xl bg-[#f2f5f4] text-accent"><i class="fas fa-chalkboard-teacher text-xl"></i></div>
-                <h3 class="mt-4 text-lg font-semibold text-ink">لا توجد باقات حصص بعد</h3>
-                <p class="mt-1 text-sm text-muted">أضف باقات من داخل كل مجموعة (فردية أو جماعية) بالحساب التلقائي.</p>
-                <a href="{{ route('admin.tutoring-groups.index', 'individual') }}" class="btn-press mt-5 inline-flex h-10 items-center gap-2 rounded-xl bg-accent px-4 text-sm font-medium text-white">فتح مجموعات الحصص</a>
-            </article>
-        @endif
-    </div>
-</div>
 @endsection

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Instructor;
 use App\Http\Controllers\Controller;
 use App\Models\WithdrawalRequest;
 use App\Models\AgreementPayment;
+use App\Support\OneToOneReportGate;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -48,6 +49,14 @@ class WithdrawalRequestController extends Controller
     {
         $instructor = auth()->user();
 
+        if (OneToOneReportGate::instructorHasOverdueReports((int) $instructor->id)) {
+            $count = OneToOneReportGate::overdueCountForInstructor((int) $instructor->id);
+
+            return redirect()
+                ->route('instructor.withdrawals.index')
+                ->with('error', 'الصرف موقوف حتى إكمال تقارير الحصص. لديك '.$count.' حصة بانتظار التقرير.');
+        }
+
         $totalEarned = AgreementPayment::where('instructor_id', $instructor->id)
             ->where('status', AgreementPayment::STATUS_PAID)
             ->sum('amount');
@@ -75,6 +84,14 @@ class WithdrawalRequestController extends Controller
     public function store(Request $request)
     {
         $instructor = auth()->user();
+
+        if (OneToOneReportGate::instructorHasOverdueReports((int) $instructor->id)) {
+            $count = OneToOneReportGate::overdueCountForInstructor((int) $instructor->id);
+
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'الصرف موقوف حتى التقرير. أكمل تقارير '.$count.' حصة أولاً.');
+        }
 
         $request->validate([
             'amount' => 'required|numeric|min:1',

@@ -83,20 +83,6 @@ class AcademyInstructorController extends Controller
     {
         abort_unless($instructor->isInstructor() || $instructor->isTeacher(), 404);
 
-        $collectiveGroups = TutoringGroup::query()
-            ->where('instructor_id', $instructor->id)
-            ->collective()
-            ->withCount('cohorts')
-            ->orderBy('title')
-            ->get();
-
-        $individualGroups = TutoringGroup::query()
-            ->where('instructor_id', $instructor->id)
-            ->individual()
-            ->withCount('packages')
-            ->orderBy('title')
-            ->get();
-
         $courses = AdvancedCourse::query()
             ->where('instructor_id', $instructor->id)
             ->with(['academicSubject:id,name', 'academicYear:id,name'])
@@ -111,15 +97,6 @@ class AcademyInstructorController extends Controller
                 ->get()
             : collect();
 
-        $upcomingBookings = TutoringGroupBooking::query()
-            ->where('instructor_id', $instructor->id)
-            ->where('status', TutoringGroupBooking::STATUS_CONFIRMED)
-            ->where('starts_at', '>=', now())
-            ->with(['tutoringGroup:id,title,type', 'user:id,name'])
-            ->orderBy('starts_at')
-            ->limit(10)
-            ->get();
-
         $students = User::query()
             ->where('role', 'student')
             ->where('is_active', true)
@@ -130,11 +107,8 @@ class AcademyInstructorController extends Controller
 
         return view('admin.academy-instructors.show', compact(
             'instructor',
-            'collectiveGroups',
-            'individualGroups',
             'courses',
             'assignments',
-            'upcomingBookings',
             'students',
             'years'
         ));
@@ -148,8 +122,6 @@ class AcademyInstructorController extends Controller
             'academic_year_id' => 'nullable|exists:academic_years,id',
             'scope' => ['required', Rule::in([
                 StudentInstructorAssignment::SCOPE_GENERAL,
-                StudentInstructorAssignment::SCOPE_COLLECTIVE,
-                StudentInstructorAssignment::SCOPE_INDIVIDUAL,
                 StudentInstructorAssignment::SCOPE_COURSES,
             ])],
             'notes' => 'nullable|string|max:2000',

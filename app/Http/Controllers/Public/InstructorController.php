@@ -11,7 +11,6 @@ use App\Models\ConsultationSetting;
 use App\Models\InstructorProfile;
 use App\Models\OneToOneWeeklyAvailability;
 use App\Models\ServicePackage;
-use App\Models\TutoringGroup;
 use App\Models\User;
 use App\Services\OneToOneAvailabilityService;
 use App\Services\StudentEntitlementService;
@@ -96,25 +95,54 @@ class InstructorController extends Controller
         }
 
         if ($skill !== '') {
-            $skillLike = '%'.$skill.'%';
-            $query->where(function ($inner) use ($skillLike) {
-                $inner->where('instructor_profiles.skills', 'like', $skillLike)
-                    ->orWhere('instructor_profiles.headline', 'like', $skillLike)
-                    ->orWhere('instructor_profiles.bio', 'like', $skillLike);
+            $matchedSubjectIds = collect();
+            if (Schema::hasTable('academic_subjects')) {
+                $subjectMatch = AcademicSubject::query()->active();
+                if ($stageYear) {
+                    $subjectMatch->where('academic_year_id', $stageYear->id);
+                } else {
+                    $subjectMatch->whereHas('academicYear', fn ($y) => $y->publicCatalog());
+                }
+                $matchedSubjectIds = $subjectMatch
+                    ->where(function ($s) use ($skill) {
+                        $s->where('slug', $skill)
+                            ->orWhere('id', ctype_digit($skill) ? (int) $skill : 0)
+                            ->orWhere('name', $skill);
+                    })
+                    ->pluck('id');
+            }
+
+            $query->where(function ($inner) use ($matchedSubjectIds, $skill) {
+                if ($matchedSubjectIds->isNotEmpty() && Schema::hasColumn('instructor_profiles', 'teaching_subject_ids')) {
+                    $inner->where(function ($structured) use ($matchedSubjectIds) {
+                        foreach ($matchedSubjectIds as $sid) {
+                            $structured->orWhereJsonContains('instructor_profiles.teaching_subject_ids', (int) $sid)
+                                ->orWhereJsonContains('instructor_profiles.teaching_subject_ids', (string) $sid);
+                        }
+
+                        $courseInstructorIds = AdvancedCourse::query()
+                            ->where('is_active', true)
+                            ->whereIn('academic_subject_id', $matchedSubjectIds)
+                            ->pluck('instructor_id')
+                            ->filter()
+                            ->unique()
+                            ->values();
+                        if ($courseInstructorIds->isNotEmpty()) {
+                            $structured->orWhereIn('instructor_profiles.user_id', $courseInstructorIds);
+                        }
+                    });
+                } else {
+                    // Strict: unknown subject slug / no structured column → empty result unless exact skill token in skills JSON list.
+                    $skillLike = '%'.$skill.'%';
+                    $inner->where('instructor_profiles.skills', 'like', $skillLike);
+                }
             });
         }
 
         if ($stageYear) {
             $yearId = (int) $stageYear->id;
-            $yearName = (string) $stageYear->name;
-            $likeYear = '%'.$yearName.'%';
-            $query->where(function ($inner) use ($yearId, $likeYear) {
-                $inner->whereHas('user', function ($u) use ($yearId) {
-                    $u->whereHas('teachingLearningPaths', fn ($y) => $y->where('academic_years.id', $yearId));
-                })->orWhere('instructor_profiles.headline', 'like', $likeYear)
-                    ->orWhere('instructor_profiles.skills', 'like', $likeYear)
-                    ->orWhere('instructor_profiles.bio', 'like', $likeYear)
-                    ->orWhere('instructor_profiles.experience', 'like', $likeYear);
+            $query->whereHas('user', function ($u) use ($yearId) {
+                $u->whereHas('teachingLearningPaths', fn ($y) => $y->where('academic_years.id', $yearId));
             });
         }
 
@@ -125,17 +153,11 @@ class InstructorController extends Controller
 
         if ($curriculum !== '') {
             $profiles = $profiles->filter(function (InstructorProfile $profile) use ($curriculum) {
-                $hay = implode(' ', [
-                    (string) $profile->headline,
-                    (string) $profile->skills,
-                    (string) $profile->bio,
-                    (string) $profile->experience,
-                ]);
+                $keys = $profile->curriculumTypeKeys();
 
-                return HesetakMatchCatalog::profileMatchesCurriculumType(
-                    $profile->curriculumTypeKeys(),
-                    $curriculum,
-                    $hay
+                return $keys !== [] && (
+                    in_array($curriculum, $keys, true)
+                    || HesetakMatchCatalog::profileMatchesCurriculumType($keys, $curriculum, '')
                 );
             })->values();
         }
@@ -237,17 +259,8 @@ class InstructorController extends Controller
         $groupCourses = $courses->filter(fn ($c) => ! $c->isOneToOne())->values();
         $oneToOneCourses = $courses->filter(fn ($c) => $c->isOneToOne())->values();
 
+        // Collective/group tutoring surface removed — keep empty for view compatibility
         $privateGroups = collect();
-        if (Schema::hasTable('tutoring_groups')) {
-            $privateGroups = TutoringGroup::query()
-                ->active()
-                ->individual()
-                ->where('instructor_id', $instructor->id)
-                ->orderByDesc('is_featured')
-                ->orderBy('sort_order')
-                ->orderBy('title')
-                ->get(['id', 'title', 'slug', 'price', 'currency', 'duration_minutes', 'image_path', 'instructor_id']);
-        }
 
         $consultationSetting = ConsultationSetting::current();
 

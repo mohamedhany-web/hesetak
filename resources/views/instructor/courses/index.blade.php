@@ -4,196 +4,225 @@
 @section('page_title', __('instructor.my_courses'))
 
 @section('content')
-<div class="su-page">
-    <div class="su-page-head">
-        <div class="min-w-0">
-            <h1 class="su-page-head__title">
-                <i class="fas fa-book-open su-page-head__ico" aria-hidden="true"></i>
-                {{ __('instructor.my_courses') }}
-            </h1>
-            <p class="su-page-head__sub">{{ __('instructor.courses_assigned_to_you') }}</p>
+@php
+    $hasFilters = request()->anyFilled(['search', 'status']);
+    $markTones = ['', 'id-course__mark--gold', 'id-course__mark--teal', 'id-course__mark--rose'];
+@endphp
+
+<div class="id-page">
+    <section class="id-hero" aria-label="{{ __('instructor.my_courses') }}">
+        <div class="id-hero__copy">
+            <p class="id-hero__kicker">{{ __('instructor.course_tools') }}</p>
+            <h2 class="id-hero__title">{{ __('instructor.my_courses') }}</h2>
+            <p class="id-hero__meta">{{ __('instructor.courses_assigned_to_you') }}</p>
         </div>
-        <div class="su-page-head__actions">
+        <div class="id-hero__actions">
             @if(Route::has('instructor.lectures.index'))
-                <a href="{{ route('instructor.lectures.index') }}" class="su-btn">
+                <a href="{{ route('instructor.lectures.index') }}" class="id-btn id-btn--ghost">
                     <i class="fas fa-chalkboard-teacher" aria-hidden="true"></i>
                     {{ __('instructor.lectures') }}
                 </a>
             @endif
             @if(Route::has('instructor.calendar'))
-                <a href="{{ route('instructor.calendar') }}" class="su-btn su-btn--primary">
+                <a href="{{ route('instructor.calendar') }}" class="id-btn id-btn--gold">
                     <i class="fas fa-calendar-alt" aria-hidden="true"></i>
                     {{ __('instructor.my_calendar') }}
                 </a>
             @endif
         </div>
-    </div>
+    </section>
 
-    {{-- Same pastel KPI colors as dashboard --}}
-    <section class="su-kpi-row" style="margin-bottom:20px">
-        <div class="su-kpi su-kpi--1">
-            <div class="su-kpi__l">{{ __('instructor.total_courses') }}</div>
-            <div class="su-kpi__row">
-                <div class="su-kpi__v">{{ number_format($stats['total'] ?? 0) }}</div>
-                <div class="su-kpi__d"><i class="fas fa-book" aria-hidden="true"></i></div>
-            </div>
+    <section class="id-kpis" aria-label="{{ __('instructor.my_courses') }}">
+        <div class="id-kpi">
+            <span class="id-kpi__icon" aria-hidden="true"><i class="fas fa-book-open"></i></span>
+            <span class="id-kpi__body">
+                <span class="id-kpi__label">{{ __('instructor.total_courses') }}</span>
+                <span class="id-kpi__value">{{ number_format($stats['total'] ?? 0) }}</span>
+            </span>
         </div>
-        <div class="su-kpi su-kpi--2">
-            <div class="su-kpi__l">{{ __('instructor.active') }}</div>
-            <div class="su-kpi__row">
-                <div class="su-kpi__v">{{ number_format($stats['active'] ?? 0) }}</div>
-                <div class="su-kpi__d"><i class="fas fa-check-circle" aria-hidden="true"></i></div>
-            </div>
+        <div class="id-kpi">
+            <span class="id-kpi__icon id-kpi__icon--teal" aria-hidden="true"><i class="fas fa-check-circle"></i></span>
+            <span class="id-kpi__body">
+                <span class="id-kpi__label">{{ __('instructor.active') }}</span>
+                <span class="id-kpi__value">{{ number_format($stats['active'] ?? 0) }}</span>
+            </span>
         </div>
-        <div class="su-kpi su-kpi--3">
-            <div class="su-kpi__l">{{ __('instructor.inactive') }}</div>
-            <div class="su-kpi__row">
-                <div class="su-kpi__v">{{ number_format($stats['inactive'] ?? 0) }}</div>
-                <div class="su-kpi__d"><i class="fas fa-ban" aria-hidden="true"></i></div>
-            </div>
+        <div class="id-kpi">
+            <span class="id-kpi__icon id-kpi__icon--rose" aria-hidden="true"><i class="fas fa-ban"></i></span>
+            <span class="id-kpi__body">
+                <span class="id-kpi__label">{{ __('instructor.inactive') }}</span>
+                <span class="id-kpi__value">{{ number_format($stats['inactive'] ?? 0) }}</span>
+            </span>
         </div>
-        <div class="su-kpi su-kpi--4">
-            <div class="su-kpi__l">{{ __('instructor.total_students') }}</div>
-            <div class="su-kpi__row">
-                <div class="su-kpi__v">{{ number_format($stats['total_students'] ?? 0) }}</div>
-                <div class="su-kpi__d"><i class="fas fa-user-graduate" aria-hidden="true"></i></div>
-            </div>
+        <div class="id-kpi">
+            <span class="id-kpi__icon id-kpi__icon--gold" aria-hidden="true"><i class="fas fa-user-graduate"></i></span>
+            <span class="id-kpi__body">
+                <span class="id-kpi__label">{{ __('instructor.total_students') }}</span>
+                <span class="id-kpi__value">{{ number_format($stats['total_students'] ?? 0) }}</span>
+            </span>
         </div>
     </section>
 
-    <section class="su-card" style="margin-bottom:20px">
-        <form method="GET" class="su-form-grid">
-            <div class="su-field">
-                <label for="search">{{ __('common.search') }}</label>
-                <input type="text" name="search" id="search" value="{{ request('search') }}"
-                       placeholder="{{ __('instructor.search_in_course_titles') }}"
-                       class="su-input">
+    @if(($stats['total'] ?? 0) > 0)
+        <section class="id-shortcuts" aria-label="{{ __('instructor.course_tools') }}">
+            @if(Route::has('instructor.lectures.index'))
+                <a href="{{ route('instructor.lectures.index') }}" class="id-shortcut">
+                    <i class="fas fa-chalkboard" aria-hidden="true"></i>
+                    {{ __('instructor.lectures') }}
+                </a>
+            @endif
+            @if(Route::has('instructor.assignments.index'))
+                <a href="{{ route('instructor.assignments.index') }}" class="id-shortcut">
+                    <i class="fas fa-tasks" aria-hidden="true"></i>
+                    {{ __('instructor.assignments') }}
+                </a>
+            @endif
+            @if(Route::has('instructor.exams.index'))
+                <a href="{{ route('instructor.exams.index') }}" class="id-shortcut">
+                    <i class="fas fa-clipboard-check" aria-hidden="true"></i>
+                    {{ __('instructor.exams') }}
+                </a>
+            @endif
+            @if(Route::has('instructor.question-banks.index'))
+                <a href="{{ route('instructor.question-banks.index') }}" class="id-shortcut">
+                    <i class="fas fa-database" aria-hidden="true"></i>
+                    {{ __('instructor.question_banks') }}
+                </a>
+            @endif
+            @if(Route::has('instructor.attendance.index'))
+                <a href="{{ route('instructor.attendance.index') }}" class="id-shortcut">
+                    <i class="fas fa-clipboard-list" aria-hidden="true"></i>
+                    {{ __('instructor.attendance') }}
+                </a>
+            @endif
+            @if(Route::has('instructor.lecture-recordings.index'))
+                <a href="{{ route('instructor.lecture-recordings.index') }}" class="id-shortcut">
+                    <i class="fas fa-video" aria-hidden="true"></i>
+                    {{ __('instructor.lecture_recordings') }}
+                </a>
+            @endif
+        </section>
+    @endif
+
+    <section class="id-panel" aria-label="{{ __('common.search') }}">
+        <form method="GET" class="id-form" style="gap:12px">
+            <div class="id-form-grid" style="align-items:end">
+                <div class="id-field id-field--span2">
+                    <label for="course-search">{{ __('common.search') }}</label>
+                    <input type="text" name="search" id="course-search" value="{{ request('search') }}"
+                           placeholder="{{ __('instructor.search_in_course_titles') }}" class="id-input">
+                </div>
+                <div class="id-field">
+                    <label for="course-status">{{ __('common.status') }}</label>
+                    <select name="status" id="course-status" class="id-select">
+                        <option value="">{{ __('instructor.all_statuses') }}</option>
+                        <option value="active" @selected(request('status') === 'active')>{{ __('instructor.active_status') }}</option>
+                        <option value="inactive" @selected(request('status') === 'inactive')>{{ __('instructor.inactive_status') }}</option>
+                    </select>
+                </div>
             </div>
-            <div class="su-field">
-                <label for="status">{{ __('common.status') }}</label>
-                <select name="status" id="status" class="su-select">
-                    <option value="">{{ __('instructor.all_statuses') }}</option>
-                    <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>{{ __('instructor.active_status') }}</option>
-                    <option value="inactive" {{ request('status') == 'inactive' ? 'selected' : '' }}>{{ __('instructor.inactive_status') }}</option>
-                </select>
-            </div>
-            <div class="su-form-actions">
-                <button type="submit" class="su-btn su-btn--primary" style="flex:1;justify-content:center;height:40px">
+            <div style="display:flex;flex-wrap:wrap;gap:8px">
+                <button type="submit" class="id-btn id-btn--navy">
                     <i class="fas fa-search" aria-hidden="true"></i>
                     {{ __('common.search') }}
                 </button>
-                @if(request()->anyFilled(['search', 'status']))
-                    <a href="{{ route('instructor.courses.index') }}" class="su-btn" style="height:40px;width:40px;padding:0;justify-content:center" title="{{ __('common.reset') ?? 'Reset' }}">
+                @if($hasFilters)
+                    <a href="{{ route('instructor.courses.index') }}" class="id-btn id-btn--outline">
                         <i class="fas fa-times" aria-hidden="true"></i>
+                        {{ __('common.cancel') }}
                     </a>
                 @endif
             </div>
         </form>
     </section>
 
-    @if($courses->count() > 0)
-        <div class="su-course-grid">
-            @foreach($courses as $course)
-                <article class="su-course-card">
-                    <div class="su-course-card__head">
-                        <h3 class="su-course-card__title">{{ $course->title }}</h3>
-                        <span class="su-chip {{ $course->is_active ? 'su-chip--ok' : 'su-chip--off' }}">
-                            <i class="fas {{ $course->is_active ? 'fa-check-circle' : 'fa-ban' }}" aria-hidden="true"></i>
-                            {{ $course->is_active ? __('instructor.active_status') : __('instructor.inactive_status') }}
-                        </span>
-                    </div>
+    <section class="id-panel id-panel--wide" aria-label="{{ __('instructor.my_courses') }}">
+        <header class="id-panel__head">
+            <h2>{{ __('instructor.my_courses') }}</h2>
+            @if($courses->total() > 0)
+                <span class="id-panel__badge">{{ number_format($courses->total()) }}</span>
+            @endif
+        </header>
 
-                    <div class="su-course-card__body">
+        @if($courses->count() > 0)
+            <div class="id-courses">
+                @foreach($courses as $i => $course)
+                    @php
+                        $markTone = $markTones[$i % count($markTones)];
+                        $levelLabel = match ($course->level) {
+                            'beginner' => __('instructor.beginner'),
+                            'intermediate' => __('instructor.intermediate'),
+                            'advanced' => __('instructor.advanced'),
+                            default => null,
+                        };
+                    @endphp
+                    <article class="id-course">
+                        <div class="id-course__top">
+                            <span class="id-course__mark {{ $markTone }}" aria-hidden="true"><i class="fas fa-book-open"></i></span>
+                            <span class="id-chip {{ $course->is_active ? 'id-chip--ok' : 'id-chip--rose' }}">
+                                <i class="fas {{ $course->is_active ? 'fa-check-circle' : 'fa-ban' }}" aria-hidden="true"></i>
+                                {{ $course->is_active ? __('instructor.active_status') : __('instructor.inactive_status') }}
+                            </span>
+                        </div>
+
+                        <h3 class="id-course__title">{{ $course->title }}</h3>
+
                         @if($course->description)
-                            <p class="su-course-card__desc">{{ Str::limit($course->description, 100) }}</p>
+                            <p class="id-course__desc">{{ Str::limit(strip_tags((string) $course->description), 110) }}</p>
                         @endif
 
-                        <div class="su-meta-list">
+                        <div class="id-course__tags">
                             @if($course->academicYear)
-                                <div class="su-meta-row">
-                                    <span class="su-meta-ico su-soft-1"><i class="fas fa-graduation-cap" aria-hidden="true"></i></span>
-                                    <span>{{ __('instructor.year') }}:</span>
-                                    <strong>{{ $course->academicYear->name }}</strong>
-                                </div>
+                                <span class="id-chip id-chip--muted">{{ $course->academicYear->name }}</span>
                             @endif
                             @if($course->academicSubject)
-                                <div class="su-meta-row">
-                                    <span class="su-meta-ico su-soft-2"><i class="fas fa-book" aria-hidden="true"></i></span>
-                                    <span>{{ __('instructor.subject') }}:</span>
-                                    <strong>{{ $course->academicSubject->name }}</strong>
-                                </div>
+                                <span class="id-chip">{{ $course->academicSubject->name }}</span>
                             @endif
-                            @if($course->programming_language)
-                                <div class="su-meta-row">
-                                    <span class="su-meta-ico su-soft-3"><i class="fas fa-code" aria-hidden="true"></i></span>
-                                    <span>{{ __('instructor.language_label') }}:</span>
-                                    <strong>{{ $course->programming_language }}</strong>
-                                </div>
+                            @if($levelLabel)
+                                <span class="id-chip id-chip--warn">{{ $levelLabel }}</span>
                             @endif
-                            @if($course->level)
-                                <div class="su-meta-row">
-                                    <span class="su-meta-ico su-soft-4"><i class="fas fa-signal" aria-hidden="true"></i></span>
-                                    <span>{{ __('instructor.level_label') }}:</span>
-                                    <strong>
-                                        @if($course->level == 'beginner') {{ __('instructor.beginner') }}
-                                        @elseif($course->level == 'intermediate') {{ __('instructor.intermediate') }}
-                                        @else {{ __('instructor.advanced') }}
-                                        @endif
-                                    </strong>
-                                </div>
-                            @endif
-                            @if(!$course->is_free && $course->effectivePurchasePrice() > 0)
-                                <div class="su-meta-row">
-                                    <span class="su-meta-ico su-soft-1"><i class="fas fa-money-bill-wave" aria-hidden="true"></i></span>
-                                    <span>{{ __('instructor.price') }}:</span>
-                                    <strong class="tabular-nums">
-                                        @if($course->hasPromotionalPrice())
-                                            <span style="text-decoration:line-through;color:var(--su-ink-40);font-size:11px;margin-inline-end:4px">{{ number_format($course->listPriceAmount(), 2) }}</span>
-                                        @endif
-                                        {{ number_format($course->effectivePurchasePrice(), 2) }} $
-                                    </strong>
-                                </div>
-                            @else
-                                <div class="su-meta-row">
-                                    <span class="su-meta-ico su-soft-3"><i class="fas fa-gift" aria-hidden="true"></i></span>
-                                    <strong style="color:#15803d">{{ __('instructor.free') }}</strong>
-                                </div>
+                            @if($course->is_free || $course->effectivePurchasePrice() <= 0)
+                                <span class="id-chip id-chip--ok">{{ __('instructor.free') }}</span>
                             @endif
                         </div>
-                    </div>
 
-                    <div class="su-course-card__stats">
-                        <div class="su-course-card__stat">
-                            <b>{{ $course->lectures_count ?? 0 }}</b>
-                            <span>{{ __('instructor.lecture_single') }}</span>
+                        <div class="id-course__stats">
+                            <div>
+                                <b>{{ number_format($course->lectures_count ?? 0) }}</b>
+                                <span>{{ __('instructor.lecture_single') }}</span>
+                            </div>
+                            <div>
+                                <b>{{ number_format($course->enrollments_count ?? 0) }}</b>
+                                <span>{{ __('instructor.student_single') }}</span>
+                            </div>
                         </div>
-                        <div class="su-course-card__stat">
-                            <b>{{ $course->enrollments_count ?? 0 }}</b>
-                            <span>{{ __('instructor.student_single') }}</span>
+
+                        <div class="id-course__foot">
+                            <a href="{{ route('instructor.courses.show', $course) }}" class="id-btn id-btn--navy">
+                                <i class="fas fa-eye" aria-hidden="true"></i>
+                                {{ __('instructor.view_details') }}
+                            </a>
+                            @if(Route::has('instructor.lectures.index'))
+                                <a href="{{ route('instructor.lectures.index') }}" class="id-btn id-btn--outline">
+                                    <i class="fas fa-chalkboard" aria-hidden="true"></i>
+                                    {{ __('instructor.lectures') }}
+                                </a>
+                            @endif
                         </div>
-                    </div>
-
-                    <div class="su-course-card__foot">
-                        <a href="{{ route('instructor.courses.show', $course) }}" class="su-btn su-btn--primary">
-                            <i class="fas fa-eye" aria-hidden="true"></i>
-                            {{ __('instructor.view_details') }}
-                        </a>
-                    </div>
-                </article>
-            @endforeach
-        </div>
-
-        <div class="su-pager">
-            {{ $courses->links() }}
-        </div>
-    @else
-        <div class="su-card">
-            <div class="su-empty" style="padding:48px 16px">
-                <i class="fas fa-book-open" aria-hidden="true"></i>
-                <h3 style="margin:0;font-size:16px;font-weight:600;color:var(--su-ink)">{{ __('instructor.no_courses') }}</h3>
-                <p>{{ __('instructor.courses_description_empty') }}</p>
+                    </article>
+                @endforeach
             </div>
-        </div>
-    @endif
+
+            <div class="id-pager">
+                {{ $courses->links() }}
+            </div>
+        @else
+            <div class="id-empty">
+                <div class="id-empty__mark" aria-hidden="true"><i class="fas fa-book-open"></i></div>
+                <p>{{ __('instructor.no_courses') }}</p>
+                <p class="id-list__meta">{{ __('instructor.courses_description_empty') }}</p>
+            </div>
+        @endif
+    </section>
 </div>
 @endsection

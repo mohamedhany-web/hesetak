@@ -62,6 +62,35 @@
     </section>
 @endif
 
+@if($activeCourses->count() > 0)
+<section class="st-stats st-stats--classes" aria-label="{{ __('student_timeline.course_tools_title') }}" style="margin-top:4px">
+    @if(Route::has('student.lectures.index'))
+    <a href="{{ route('student.lectures.index') }}" class="st-stat-card" style="text-decoration:none;color:inherit">
+        <p class="st-stat-card__label">{{ __('student_timeline.nav_lectures') }}</p>
+        <p class="st-stat-card__value"><i class="fas fa-chalkboard" aria-hidden="true"></i></p>
+    </a>
+    @endif
+    @if(student_ui('show_assignments') && Route::has('student.assignments.index'))
+    <a href="{{ route('student.assignments.index') }}" class="st-stat-card" style="text-decoration:none;color:inherit">
+        <p class="st-stat-card__label">{{ __('student_timeline.nav_assignments') }}</p>
+        <p class="st-stat-card__value"><i class="fas fa-tasks" aria-hidden="true"></i></p>
+    </a>
+    @endif
+    @if(student_ui('show_exams') && Route::has('student.exams.index'))
+    <a href="{{ route('student.exams.index') }}" class="st-stat-card" style="text-decoration:none;color:inherit">
+        <p class="st-stat-card__label">{{ __('student_timeline.nav_exams') }}</p>
+        <p class="st-stat-card__value"><i class="fas fa-file-alt" aria-hidden="true"></i></p>
+    </a>
+    @endif
+    @if(student_ui('show_certificates') && Route::has('student.certificates.index'))
+    <a href="{{ route('student.certificates.index') }}" class="st-stat-card" style="text-decoration:none;color:inherit">
+        <p class="st-stat-card__label">{{ __('student_timeline.nav_certificates') }}</p>
+        <p class="st-stat-card__value"><i class="fas fa-certificate" aria-hidden="true"></i></p>
+    </a>
+    @endif
+</section>
+@endif
+
 <section class="st-stats st-stats--classes" aria-label="{{ __('student_timeline.courses_stats') }}">
     <article class="st-stat-card">
         <p class="st-stat-card__label">{{ __('student.active_label') }}</p>

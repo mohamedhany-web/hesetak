@@ -134,11 +134,24 @@
                         : collect();
                     $selectedYearIds = old('teaching_year_ids', $personal_branding->user?->teachingLearningPaths()->pluck('academic_years.id')->all() ?? []);
                     if (! is_array($selectedYearIds)) { $selectedYearIds = []; }
+                    $subjects = \Illuminate\Support\Facades\Schema::hasTable('academic_subjects')
+                        ? \App\Models\AcademicSubject::query()->active()->ordered()
+                            ->where(function ($q) {
+                                $q->whereNull('academic_year_id')
+                                    ->orWhereHas('academicYear', fn ($y) => $y->publicCatalog());
+                            })
+                            ->get(['id','name','academic_year_id'])
+                            ->unique(fn ($s) => mb_strtolower($s->name))
+                            ->values()
+                        : collect();
+                    $selectedSubjectIds = old('teaching_subject_ids', $personal_branding->teachingSubjectIds());
+                    if (! is_array($selectedSubjectIds)) { $selectedSubjectIds = []; }
+                    $selectedSubjectIds = array_map('intval', $selectedSubjectIds);
                 @endphp
 
                 <div>
                     <label class="{{ $labelClass }}">أنواع المنهج المعتمدة (للمطابقة العامة)</label>
-                    <p class="mb-2 text-xs text-muted">تظهر في دليل المعلمين وملف المعلم. ليست ادّعاء فروع.</p>
+                    <p class="mb-2 text-xs text-muted">تُدار من <a href="{{ route('admin.curriculum-types.index') }}" class="font-semibold text-accent underline">أنواع المنهج</a> · تظهر في دليل المعلمين. ليست ادّعاء فروع.</p>
                     <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
                         @foreach($typeOptions as $type)
                             <label class="flex items-center gap-2 rounded-xl border border-line bg-canvas px-3 py-2 text-sm text-ink">
@@ -155,7 +168,7 @@
                 @if($publicYears->isNotEmpty())
                 <div>
                     <label class="{{ $labelClass }}">المراحل العامة المرتبطة</label>
-                    <p class="mb-2 text-xs text-muted">من كتالوج المناهج المنشور للعامة.</p>
+                    <p class="mb-2 text-xs text-muted">من كتالوج <a href="{{ route('admin.academic-years.index') }}" class="font-semibold text-accent underline">{{ __('admin.academic_years') }}</a> المنشور للعامة.</p>
                     <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
                         @foreach($publicYears as $year)
                             <label class="flex items-center gap-2 rounded-xl border border-line bg-canvas px-3 py-2 text-sm text-ink">
@@ -165,6 +178,23 @@
                             </label>
                         @endforeach
                     </div>
+                </div>
+                @endif
+
+                @if($subjects->isNotEmpty())
+                <div>
+                    <label class="{{ $labelClass }}">المواد التي يدرّسها</label>
+                    <p class="mb-2 text-xs text-muted">من <a href="{{ route('admin.academic-subjects.index') }}" class="font-semibold text-accent underline">{{ __('admin.skill_groups') }}</a> · تُستخدم في فلتر المادة بدليل المعلمين.</p>
+                    <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3 max-h-64 overflow-y-auto rounded-xl border border-line bg-canvas p-3">
+                        @foreach($subjects as $subject)
+                            <label class="flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm text-ink hover:bg-surface">
+                                <input type="checkbox" name="teaching_subject_ids[]" value="{{ $subject->id }}"
+                                       @checked(in_array((int) $subject->id, $selectedSubjectIds, true))>
+                                <span>{{ $subject->name }}</span>
+                            </label>
+                        @endforeach
+                    </div>
+                    @error('teaching_subject_ids')<p class="mt-1 text-xs font-medium text-danger">{{ $message }}</p>@enderror
                 </div>
                 @endif
             </div>

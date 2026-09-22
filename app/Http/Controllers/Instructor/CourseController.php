@@ -99,14 +99,14 @@ class CourseController extends Controller
             ->orderBy('created_at', 'desc')
             ->paginate(10, ['*'], 'assignments_page');
 
-        // الطلاب المسجلين
+        // الطلاب المسجلون (نشطون ولهم وصول)
         $enrollments = \App\Models\StudentCourseEnrollment::where('advanced_course_id', $course->id)
-            ->with('user')
-            ->where('status', 'active')
-            ->latest()
+            ->with('student')
+            ->grantingAccess()
+            ->latest('enrolled_at')
             ->paginate(20, ['*'], 'students_page');
 
-        // إحصائيات شاملة (محاضرات فقط — تم إلغاء الدروس)
+        // إحصائيات شاملة (محاضرات فقط — تم إلغاء الدروس؛ بدون حضور للكورسات المسجّلة)
         $stats = [
             'total_lectures' => \App\Models\Lecture::where('course_id', $course->id)->count(),
             'upcoming_lectures' => \App\Models\Lecture::where('course_id', $course->id)
@@ -130,9 +130,6 @@ class CourseController extends Controller
                 ->whereNull('graded_at')
                 ->count(),
             'total_students' => $enrollments->total(),
-            'total_attendance_records' => \App\Models\AttendanceRecord::whereHas('lecture', function($q) use ($course) {
-                    $q->where('course_id', $course->id);
-                })->count(),
         ];
 
         return view('instructor.courses.show', compact(

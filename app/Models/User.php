@@ -582,12 +582,23 @@ class User extends Authenticatable
     }
 
     /**
-     * التحقق من كون المستخدم ولي أمر (للتوافق مع الكود القديم - تم إزالة هذا الدور)
-     * هذا method للتوافق فقط - سيُعيد دائماً false
+     * ولي أمر: دور parent إن وُجد، أو لديه أبناء عبر parent_id، أو مستخدم كوصي.
      */
     public function isParent(): bool
     {
-        return false; // تم إزالة دور ولي الأمر
+        if ((string) $this->role === 'parent') {
+            return true;
+        }
+
+        if ($this->relationLoaded('children')) {
+            return $this->children->isNotEmpty();
+        }
+
+        try {
+            return $this->children()->exists();
+        } catch (\Throwable) {
+            return false;
+        }
     }
 
     /**
@@ -1246,6 +1257,20 @@ class User extends Authenticatable
     public function hasTeachingCourses(): bool
     {
         return $this->teachingAdvancedCourseIds()->isNotEmpty();
+    }
+
+    /**
+     * هل لدى الطالب تسجيل نشط في كورس مسجّل (يفتح أدوات الكورس في السايدبار).
+     */
+    public function hasActiveRecordedCourses(): bool
+    {
+        if (! \Illuminate\Support\Facades\Schema::hasTable('student_course_enrollments')) {
+            return false;
+        }
+
+        return $this->courseEnrollments()
+            ->where('status', 'active')
+            ->exists();
     }
 
     /**

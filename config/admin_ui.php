@@ -11,4 +11,7 @@ return [
 
     // تسكين الفصول وحجوزات المجموعات
     'show_group_bookings' => false,
+
+    // الشهادات — مخفية مؤقتاً من لوحة الإدارة (البيانات تبقى)
+    'show_certificates' => false,
 ];

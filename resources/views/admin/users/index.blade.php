@@ -154,16 +154,6 @@
         <section class="rounded-2xl border border-line bg-surface p-4 shadow-soft">
             <p class="mb-3 text-xs font-medium text-muted">اختصارات الخدمات</p>
             <div class="flex flex-wrap gap-2">
-                @if(Route::has('admin.tutoring-groups.index'))
-                    <a href="{{ route('admin.tutoring-groups.index', 'individual') }}"
-                       class="btn-press inline-flex h-9 items-center gap-2 rounded-xl bg-accent px-4 text-sm font-medium text-white">
-                        <i class="fas fa-user text-xs"></i> مجموعات فردية
-                    </a>
-                    <a href="{{ route('admin.tutoring-groups.index', 'collective') }}"
-                       class="inline-flex h-9 items-center gap-2 rounded-xl border border-line px-4 text-sm font-medium text-ink hover:bg-accent-soft hover:text-accent">
-                        <i class="fas fa-users text-xs"></i> مجموعات جماعية
-                    </a>
-                @endif
                 @if(Route::has('admin.advanced-courses.index'))
                     <a href="{{ route('admin.advanced-courses.index') }}"
                        class="inline-flex h-9 items-center gap-2 rounded-xl border border-line px-4 text-sm font-medium text-ink hover:bg-accent-soft hover:text-accent">

@@ -1,249 +1,235 @@
 @extends('layouts.student-timeline')
 
 @section('title', $exam->title)
-@section('header', $exam->title)
 
 @section('content')
-<div class="w-full px-4 sm:px-6 lg:px-8 py-6">
-    <!-- هيدر الصفحة -->
-    <div class="rounded-2xl bg-white border border-slate-200 shadow-sm p-5 sm:p-6 mb-6">
-        <nav class="text-sm text-slate-500 mb-2">
-            <a href="{{ route('dashboard') }}" class="hover:text-sky-600 transition-colors">لوحة التحكم</a>
-            <span class="mx-2">/</span>
-            <a href="{{ route('student.exams.index') }}" class="hover:text-sky-600 transition-colors">امتحاناتي</a>
-            <span class="mx-2">/</span>
-            <span class="text-slate-700 font-semibold">{{ Str::limit($exam->title, 40) }}</span>
-        </nav>
-        <div class="flex flex-wrap items-center justify-between gap-4">
-            <div class="flex flex-wrap items-center gap-4">
-                <div class="w-12 h-12 rounded-xl bg-sky-100 text-sky-600 flex items-center justify-center shrink-0">
-                    <i class="fas fa-clipboard-list text-lg"></i>
-                </div>
-                <div class="min-w-0">
-                    <h1 class="text-xl sm:text-2xl font-bold text-slate-800">{{ $exam->title }}</h1>
-                    <p class="text-sm text-slate-600 mt-0.5">
-                        {{ $exam->offlineCourse->title ?? $exam->course->title ?? '—' }}
-                        @if($exam->offline_course_id)<span class="text-amber-600">(أوفلاين)</span>@endif
-                    </p>
-                </div>
-            </div>
-            <a href="{{ route('student.exams.index') }}" class="inline-flex items-center gap-2 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-semibold transition-colors">
-                <i class="fas fa-arrow-right"></i>
-                العودة
-            </a>
-        </div>
+@php
+    $locale = app()->getLocale();
+    $isRtl = $locale === 'ar';
+    $courseTitle = $exam->offlineCourse->title ?? $exam->course->title ?? '—';
+    $canAttempt = $exam->canAttempt(auth()->id());
+    $questionsCount = $exam->examQuestions->count();
+    $bestScore = $previousAttempts->where('status', 'completed')->max('percentage');
+    $lastAttempt = $previousAttempts->where('status', 'completed')->first();
+@endphp
+
+@include('partials.student-timeline-top', [
+    'locale' => $locale,
+    'pageTitle' => __('student.exams_page_title'),
+    'crumbs' => [
+        ['label' => __('student_timeline.school_gate'), 'url' => route('dashboard')],
+        ['label' => __('student.exams_page_title'), 'url' => route('student.exams.index')],
+        ['label' => Str::limit($exam->title, 40), 'url' => null],
+    ],
+])
+
+@if(session('success'))
+    <div class="st-flash st-flash--ok">{{ session('success') }}</div>
+@endif
+@if(session('error'))
+    <div class="st-flash st-flash--err">{{ session('error') }}</div>
+@endif
+
+<section class="st-join-hero" aria-label="{{ $exam->title }}">
+    <div class="st-join-hero__copy">
+        <p class="st-join-hero__kicker">
+            {{ $exam->isAvailable() ? __('student.available') : __('student_timeline.exam_unavailable') }}
+            @if($exam->offline_course_id)
+                · {{ __('student_timeline.exam_offline') }}
+            @endif
+        </p>
+        <h2 class="st-join-hero__title">{{ $exam->title }}</h2>
+        <p class="st-join-hero__meta">
+            {{ $courseTitle }}
+            @if($exam->duration_minutes)
+                · {{ $exam->duration_minutes }} {{ __('student.minutes') }}
+            @endif
+            · {{ $questionsCount }} {{ __('student_timeline.exam_questions') }}
+        </p>
     </div>
+    <div class="st-join-hero__actions">
+        @if($canAttempt)
+            <button type="button" onclick="confirmStart()" class="st-pill st-pill--solid st-pill--lg">
+                <i class="fas fa-play" aria-hidden="true"></i>
+                {{ __('student.start_exam') }}
+            </button>
+        @endif
+        <a href="{{ route('student.exams.index') }}" class="st-pill st-pill--outline">
+            <i class="fas fa-arrow-{{ $isRtl ? 'right' : 'left' }}" aria-hidden="true"></i>
+            {{ __('student_timeline.exam_back') }}
+        </a>
+    </div>
+</section>
 
-    <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
-        <!-- المحتوى الرئيسي -->
-        <div class="xl:col-span-2 space-y-6">
-            <!-- تفاصيل الامتحان -->
-            <div class="rounded-2xl bg-white border border-slate-200 shadow-sm overflow-hidden">
-                <div class="px-6 py-4 border-b border-slate-200 bg-slate-50/50 flex items-center justify-between flex-wrap gap-2">
-                    <h2 class="text-lg font-bold text-slate-800">تفاصيل الامتحان</h2>
-                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium {{ $exam->isAvailable() ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800' }}">
-                        {{ $exam->isAvailable() ? 'متاح الآن' : 'غير متاح' }}
-                    </span>
-                </div>
-                <div class="p-6 space-y-6">
-                    @if($exam->description)
-                        <div>
-                            <h3 class="text-sm font-semibold text-slate-700 mb-1">الوصف</h3>
-                            <p class="text-slate-600">{{ $exam->description }}</p>
-                        </div>
-                    @endif
-                    @if($exam->instructions)
-                        <div>
-                            <h3 class="text-sm font-semibold text-slate-700 mb-2">تعليمات الامتحان</h3>
-                            <div class="bg-sky-50 border border-sky-200 rounded-xl p-4 text-sky-900 whitespace-pre-wrap">{{ $exam->instructions }}</div>
-                        </div>
-                    @endif
-                    <div class="grid grid-cols-2 gap-4 pt-4 border-t border-slate-200">
-                        <div>
-                            <span class="text-sm text-slate-500">المدة</span>
-                            <p class="font-semibold text-slate-800">{{ $exam->duration_minutes }} دقيقة</p>
-                        </div>
-                        <div>
-                            <span class="text-sm text-slate-500">عدد الأسئلة</span>
-                            <p class="font-semibold text-slate-800">{{ $exam->examQuestions->count() }} سؤال</p>
-                        </div>
-                    </div>
-                </div>
+<section class="st-stats st-stats--classes" aria-label="{{ __('student_timeline.exam_info') }}">
+    <article class="st-stat-card">
+        <p class="st-stat-card__label">{{ __('student_timeline.exam_duration') }}</p>
+        <p class="st-stat-card__value">{{ $exam->duration_minutes }}</p>
+        <p class="st-stat-card__hint">{{ __('student.minutes') }}</p>
+    </article>
+    <article class="st-stat-card">
+        <p class="st-stat-card__label">{{ __('student_timeline.exam_questions') }}</p>
+        <p class="st-stat-card__value">{{ $questionsCount }}</p>
+    </article>
+    <article class="st-stat-card">
+        <p class="st-stat-card__label">{{ __('student_timeline.exam_pass_mark') }}</p>
+        <p class="st-stat-card__value">{{ $exam->passing_marks }}</p>
+        <p class="st-stat-card__hint">/ {{ $exam->total_marks }}</p>
+    </article>
+    <article class="st-stat-card">
+        <p class="st-stat-card__label">{{ __('student_timeline.exam_attempts') }}</p>
+        <p class="st-stat-card__value">{{ $previousAttempts->count() }}</p>
+        <p class="st-stat-card__hint">
+            {{ $exam->attempts_allowed == 0 ? __('student_timeline.exam_unlimited') : __('student_timeline.exam_of', ['n' => $exam->attempts_allowed]) }}
+        </p>
+    </article>
+</section>
+
+<div class="st-order-show">
+    <div class="st-order-show__main">
+        <section class="st-order-panel">
+            <div class="st-order-panel__head">
+                <h2>{{ __('student_timeline.exam_details') }}</h2>
             </div>
-
-            <!-- المحاولات السابقة -->
-            @if($previousAttempts->count() > 0)
-                <div class="rounded-2xl bg-white border border-slate-200 shadow-sm overflow-hidden">
-                    <div class="px-6 py-4 border-b border-slate-200 bg-slate-50/50">
-                        <h2 class="text-lg font-bold text-slate-800">محاولاتك السابقة</h2>
+            <div class="st-order-panel__body">
+                @if($exam->description)
+                    <p class="st-learn-note" style="margin:0 0 12px">{{ $exam->description }}</p>
+                @endif
+                @if($exam->instructions)
+                    <div class="st-exam-note">
+                        <strong>{{ __('student_timeline.exam_instructions') }}</strong>
+                        <p>{{ $exam->instructions }}</p>
                     </div>
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-slate-200">
-                            <thead class="bg-slate-50">
-                                <tr>
-                                    <th class="px-4 py-3 text-right text-xs font-semibold text-slate-500 uppercase">المحاولة</th>
-                                    <th class="px-4 py-3 text-right text-xs font-semibold text-slate-500 uppercase">النتيجة</th>
-                                    <th class="px-4 py-3 text-right text-xs font-semibold text-slate-500 uppercase">الوقت</th>
-                                    <th class="px-4 py-3 text-right text-xs font-semibold text-slate-500 uppercase">التاريخ</th>
-                                    <th class="px-4 py-3 text-right text-xs font-semibold text-slate-500 uppercase">الحالة</th>
-                                    <th class="px-4 py-3 text-right text-xs font-semibold text-slate-500 uppercase"></th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-slate-200">
-                                @foreach($previousAttempts as $index => $attempt)
-                                    <tr class="hover:bg-slate-50/50">
-                                        <td class="px-4 py-3 text-sm text-slate-800">{{ $index + 1 }}</td>
-                                        <td class="px-4 py-3 text-sm">
-                                            @if($attempt->status === 'completed')
-                                                <span class="font-semibold {{ $attempt->result_color == 'green' ? 'text-emerald-600' : 'text-red-600' }}">{{ number_format($attempt->percentage, 1) }}%</span>
-                                            @else
-                                                <span class="text-slate-500">غير مكتمل</span>
-                                            @endif
-                                        </td>
-                                        <td class="px-4 py-3 text-sm text-slate-600">{{ $attempt->formatted_time }}</td>
-                                        <td class="px-4 py-3 text-sm text-slate-600">{{ $attempt->created_at->format('Y-m-d H:i') }}</td>
-                                        <td class="px-4 py-3">
-                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium {{ $attempt->result_color == 'green' ? 'bg-emerald-100 text-emerald-800' : ($attempt->result_color == 'red' ? 'bg-red-100 text-red-800' : 'bg-slate-100 text-slate-800') }}">{{ $attempt->result_status }}</span>
-                                        </td>
-                                        <td class="px-4 py-3">
-                                            @if($exam->show_results_immediately && $attempt->status === 'completed')
-                                                <a href="{{ route('student.exams.result', [$exam, $attempt]) }}" class="text-sky-600 hover:text-sky-700 text-sm font-medium">عرض النتيجة</a>
-                                            @endif
-                                        </td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            @endif
-        </div>
-
-        <!-- الشريط الجانبي -->
-        <div class="space-y-6">
-            <!-- معلومات سريعة + زر البدء -->
-            <div class="rounded-2xl bg-white border border-slate-200 shadow-sm overflow-hidden">
-                <div class="px-6 py-4 border-b border-slate-200 bg-slate-50/50">
-                    <h3 class="text-lg font-bold text-slate-800">معلومات الامتحان</h3>
-                </div>
-                <div class="p-6 space-y-4">
-                    <div class="flex justify-between text-sm">
-                        <span class="text-slate-500">مدة الامتحان</span>
-                        <span class="font-semibold text-slate-800">{{ $exam->duration_minutes }} دقيقة</span>
-                    </div>
-                    <div class="flex justify-between text-sm">
-                        <span class="text-slate-500">عدد الأسئلة</span>
-                        <span class="font-semibold text-slate-800">{{ $exam->examQuestions->count() }}</span>
-                    </div>
-                    <div class="flex justify-between text-sm">
-                        <span class="text-slate-500">إجمالي الدرجات</span>
-                        <span class="font-semibold text-slate-800">{{ $exam->total_marks }}</span>
-                    </div>
-                    <div class="flex justify-between text-sm">
-                        <span class="text-slate-500">درجة النجاح</span>
-                        <span class="font-semibold text-slate-800">{{ $exam->passing_marks }}</span>
-                    </div>
-                    <div class="flex justify-between text-sm">
-                        <span class="text-slate-500">المحاولات المسموحة</span>
-                        <span class="font-semibold text-slate-800">{{ $exam->attempts_allowed == 0 ? 'غير محدود' : $exam->attempts_allowed }}</span>
-                    </div>
-                    <div class="flex justify-between text-sm">
-                        <span class="text-slate-500">محاولاتك</span>
-                        <span class="font-semibold text-slate-800">{{ $previousAttempts->count() }}</span>
-                    </div>
-                    @if($exam->start_time)
-                        <div class="flex justify-between text-sm">
-                            <span class="text-slate-500">يبدأ في</span>
-                            <span class="font-semibold text-slate-800">{{ $exam->start_time->format('Y-m-d H:i') }}</span>
-                        </div>
-                    @endif
-                    @if($exam->end_time)
-                        <div class="flex justify-between text-sm">
-                            <span class="text-slate-500">ينتهي في</span>
-                            <span class="font-semibold text-slate-800">{{ $exam->end_time->format('Y-m-d H:i') }}</span>
-                        </div>
-                    @endif
-                </div>
+                @endif
+                @if(! $exam->description && ! $exam->instructions)
+                    <p class="st-learn-note" style="margin:0">{{ __('student_timeline.exam_no_extra') }}</p>
+                @endif
             </div>
+        </section>
 
-            @if($exam->prevent_tab_switch || $exam->require_camera || $exam->require_microphone || $exam->auto_submit)
-                <div class="rounded-xl bg-amber-50 border border-amber-200 p-4">
-                    <h4 class="font-semibold text-amber-900 mb-2"><i class="fas fa-shield-alt ml-1"></i> متطلبات الأمان</h4>
-                    <ul class="space-y-1.5 text-sm text-amber-800">
-                        @if($exam->prevent_tab_switch)<li><i class="fas fa-exclamation-triangle ml-1"></i> ممنوع تبديل التبويبات</li>@endif
-                        @if($exam->require_camera)<li><i class="fas fa-video ml-1"></i> يتطلب تفعيل الكاميرا</li>@endif
-                        @if($exam->require_microphone)<li><i class="fas fa-microphone ml-1"></i> يتطلب تفعيل المايكروفون</li>@endif
-                        @if($exam->auto_submit)<li><i class="fas fa-clock ml-1"></i> تسليم تلقائي عند انتهاء الوقت</li>@endif
-                    </ul>
+        @if($previousAttempts->count() > 0)
+            <section class="st-order-panel">
+                <div class="st-order-panel__head">
+                    <h2>{{ __('student_timeline.exam_previous') }}</h2>
                 </div>
-            @endif
-
-            <!-- زر بدء الامتحان -->
-            <div class="rounded-2xl bg-white border border-slate-200 shadow-sm overflow-hidden">
-                <div class="p-6 text-center">
-                    @if($exam->canAttempt(auth()->id()))
-                        <p class="text-sm text-slate-600 mb-4">تأكد من قراءة التعليمات قبل البدء. لن تتمكن من العودة بعد البدء.</p>
-                        <form action="{{ route('student.exams.start', $exam) }}" method="POST" id="start-exam-form">
-                            @csrf
-                            <button type="button" onclick="confirmStart()" class="w-full px-6 py-3.5 bg-sky-600 hover:bg-sky-700 text-white rounded-xl font-bold text-lg transition-colors">
-                                <i class="fas fa-play ml-2"></i>
-                                ابدأ الامتحان الآن
-                            </button>
-                        </form>
-                    @else
-                        <div class="text-center py-2">
-                            <i class="fas fa-times-circle text-4xl text-red-500 mb-3"></i>
-                            <h4 class="text-lg font-bold text-red-800 mb-1">غير متاح للبدء</h4>
-                            <p class="text-sm text-red-700">
-                                @if($previousAttempts->count() >= $exam->attempts_allowed && $exam->attempts_allowed > 0)
-                                    لقد استنفدت عدد المحاولات ({{ $exam->attempts_allowed }})
-                                @elseif(!$exam->isAvailable())
-                                    الامتحان غير متاح حالياً
+                <div class="st-order-panel__body" style="padding:12px">
+                    @foreach($previousAttempts as $index => $attempt)
+                        <article class="st-learn-row" style="padding:10px 4px">
+                            <div>
+                                <strong>{{ __('student_timeline.exam_attempt_n', ['n' => $index + 1]) }}</strong>
+                                <small>
+                                    {{ $attempt->created_at->format('Y-m-d H:i') }}
+                                    · {{ $attempt->formatted_time }}
+                                </small>
+                            </div>
+                            <div class="st-learn-chips">
+                                @if($attempt->status === 'completed')
+                                    <span>{{ number_format($attempt->percentage, 1) }}%</span>
+                                    <span>{{ $attempt->result_status }}</span>
+                                    @if($exam->show_results_immediately)
+                                        <a href="{{ route('student.exams.result', [$exam, $attempt]) }}" class="st-pill st-pill--outline" style="height:auto;padding:4px 10px;font-size:12px">{{ __('student_timeline.exam_view_result') }}</a>
+                                    @endif
                                 @else
-                                    غير مصرح لك بأداء هذا الامتحان
+                                    <span>{{ __('student_timeline.exam_incomplete') }}</span>
                                 @endif
-                            </p>
-                        </div>
+                            </div>
+                        </article>
+                    @endforeach
+                </div>
+            </section>
+        @endif
+    </div>
+
+    <aside class="st-order-show__side">
+        <section class="st-order-panel">
+            <div class="st-order-panel__head">
+                <h2>{{ __('student_timeline.exam_info') }}</h2>
+            </div>
+            <div class="st-order-panel__body">
+                <div class="st-learn-row"><strong>{{ __('student_timeline.exam_duration') }}</strong><small>{{ $exam->duration_minutes }} {{ __('student.minutes') }}</small></div>
+                <div class="st-learn-row"><strong>{{ __('student_timeline.exam_questions') }}</strong><small>{{ $questionsCount }}</small></div>
+                <div class="st-learn-row"><strong>{{ __('student_timeline.exam_total_marks') }}</strong><small>{{ $exam->total_marks }}</small></div>
+                <div class="st-learn-row"><strong>{{ __('student_timeline.exam_pass_mark') }}</strong><small>{{ $exam->passing_marks }}</small></div>
+                <div class="st-learn-row">
+                    <strong>{{ __('student_timeline.exam_allowed') }}</strong>
+                    <small>{{ $exam->attempts_allowed == 0 ? __('student_timeline.exam_unlimited') : $exam->attempts_allowed }}</small>
+                </div>
+                @if($exam->start_time)
+                    <div class="st-learn-row"><strong>{{ __('student_timeline.exam_starts') }}</strong><small>{{ $exam->start_time->format('Y-m-d H:i') }}</small></div>
+                @endif
+                @if($exam->end_time)
+                    <div class="st-learn-row"><strong>{{ __('student_timeline.exam_ends') }}</strong><small>{{ $exam->end_time->format('Y-m-d H:i') }}</small></div>
+                @endif
+            </div>
+        </section>
+
+        @if($exam->prevent_tab_switch || $exam->require_camera || $exam->require_microphone || $exam->auto_submit)
+            <div class="st-exam-security">
+                <strong><i class="fas fa-shield-alt" aria-hidden="true"></i> {{ __('student_timeline.exam_security') }}</strong>
+                <ul>
+                    @if($exam->prevent_tab_switch)<li>{{ __('student_timeline.exam_no_tab') }}</li>@endif
+                    @if($exam->require_camera)<li>{{ __('student_timeline.exam_camera') }}</li>@endif
+                    @if($exam->require_microphone)<li>{{ __('student_timeline.exam_mic') }}</li>@endif
+                    @if($exam->auto_submit)<li>{{ __('student_timeline.exam_auto_submit') }}</li>@endif
+                </ul>
+            </div>
+        @endif
+
+        <section class="st-order-panel">
+            <div class="st-order-panel__body" style="text-align:center">
+                @if($canAttempt)
+                    <p class="st-learn-note" style="margin:0 0 14px">{{ __('student_timeline.exam_start_hint') }}</p>
+                    <form action="{{ route('student.exams.start', $exam) }}" method="POST" id="start-exam-form">
+                        @csrf
+                        <button type="button" onclick="confirmStart()" class="st-pill st-pill--solid st-pill--lg" style="width:100%;justify-content:center">
+                            <i class="fas fa-play" aria-hidden="true"></i>
+                            {{ __('student.start_exam') }}
+                        </button>
+                    </form>
+                @else
+                    <div class="st-empty-panel" style="box-shadow:none;padding:18px 8px">
+                        <h3>{{ __('student_timeline.exam_cannot_start') }}</h3>
+                        <p>
+                            @if($previousAttempts->count() >= $exam->attempts_allowed && $exam->attempts_allowed > 0)
+                                {{ __('student_timeline.exam_attempts_exhausted', ['n' => $exam->attempts_allowed]) }}
+                            @elseif(! $exam->isAvailable())
+                                {{ __('student_timeline.exam_unavailable') }}
+                            @else
+                                {{ __('student_timeline.exam_not_allowed') }}
+                            @endif
+                        </p>
+                    </div>
+                @endif
+            </div>
+        </section>
+
+        @if($bestScore !== null)
+            <section class="st-order-panel">
+                <div class="st-order-panel__head">
+                    <h2>{{ __('student_timeline.exam_best') }}</h2>
+                </div>
+                <div class="st-order-panel__body" style="text-align:center">
+                    <p class="st-stat-card__value" style="margin:0">{{ number_format($bestScore, 1) }}%</p>
+                    @if($exam->show_results_immediately && $lastAttempt)
+                        <a href="{{ route('student.exams.result', [$exam, $lastAttempt]) }}" class="st-pill st-pill--outline" style="margin-top:12px">{{ __('student_timeline.exam_view_result') }}</a>
                     @endif
                 </div>
-            </div>
-
-            @if($previousAttempts->where('status', 'completed')->count() > 0)
-                @php $bestScore = $previousAttempts->where('status', 'completed')->max('percentage'); $lastAttempt = $previousAttempts->where('status', 'completed')->first(); @endphp
-                <div class="rounded-2xl bg-white border border-slate-200 shadow-sm overflow-hidden">
-                    <div class="px-6 py-4 border-b border-slate-200 bg-slate-50/50">
-                        <h3 class="text-lg font-bold text-slate-800">أفضل نتيجة</h3>
-                    </div>
-                    <div class="p-6 text-center">
-                        <div class="text-3xl font-bold text-sky-600">{{ number_format($bestScore, 1) }}%</div>
-                        @if($exam->show_results_immediately && $lastAttempt)
-                            <a href="{{ route('student.exams.result', [$exam, $lastAttempt]) }}" class="inline-block mt-3 text-sky-600 hover:text-sky-700 font-medium text-sm">عرض آخر نتيجة</a>
-                        @endif
-                    </div>
-                </div>
-            @endif
-        </div>
-    </div>
+            </section>
+        @endif
+    </aside>
 </div>
 
-<!-- نافذة تأكيد البدء -->
-<div id="confirmModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4" style="background: rgba(0,0,0,0.5);">
-    <div class="bg-white rounded-2xl shadow-xl border border-slate-200 max-w-md w-full p-6" onclick="event.stopPropagation()">
-        <div class="text-center">
-            <div class="w-14 h-14 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center mx-auto mb-4">
-                <i class="fas fa-exclamation-triangle text-xl"></i>
-            </div>
-            <h3 class="text-lg font-bold text-slate-800 mb-2">تأكيد بدء الامتحان</h3>
-            <p class="text-sm text-slate-600 mb-4">هل أنت متأكد من بدء الامتحان؟ لن تتمكن من العودة أو إيقاف الامتحان بعد البدء.</p>
-            @if($exam->prevent_tab_switch)
-                <div class="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700 font-medium">
-                    <i class="fas fa-warning ml-1"></i> ممنوع تبديل التبويبات أثناء الامتحان
-                </div>
-            @endif
-            <div class="flex gap-3 justify-center">
-                <button type="button" onclick="startExam()" class="px-5 py-2.5 bg-sky-600 hover:bg-sky-700 text-white rounded-xl font-semibold transition-colors">ابدأ</button>
-                <button type="button" onclick="closeModal()" class="px-5 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl font-semibold transition-colors">إلغاء</button>
-            </div>
+<div id="confirmModal" class="st-exam-modal hidden" role="dialog" aria-modal="true" aria-labelledby="exam-confirm-title">
+    <div class="st-exam-modal__card" onclick="event.stopPropagation()">
+        <div class="st-exam-modal__ico" aria-hidden="true"><i class="fas fa-exclamation-triangle"></i></div>
+        <h3 id="exam-confirm-title">{{ __('student_timeline.exam_confirm_title') }}</h3>
+        <p>{{ __('student_timeline.exam_confirm_body') }}</p>
+        @if($exam->prevent_tab_switch)
+            <div class="st-exam-modal__warn">{{ __('student_timeline.exam_no_tab') }}</div>
+        @endif
+        <div class="st-exam-modal__actions">
+            <button type="button" onclick="startExam()" class="st-pill st-pill--solid">{{ __('student_timeline.exam_confirm_go') }}</button>
+            <button type="button" onclick="closeModal()" class="st-pill st-pill--outline">{{ __('common.cancel') }}</button>
         </div>
     </div>
 </div>

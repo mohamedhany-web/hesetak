@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'تعديل سنة المدرسة')
+@section('title', 'تعديل المرحلة الدراسية')
 
 @section('content')
 <div class="w-full max-w-full px-4 py-6 space-y-6" style="background: #f8fafc; min-height: 100vh;">
@@ -11,7 +11,7 @@
                 <div class="space-y-4">
                     <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/15 text-sm font-semibold">
                         <i class="fas fa-school"></i>
-                        سنة مدرسة
+                        مرحلة دراسية
                     </div>
                     <h1 class="text-3xl sm:text-4xl font-bold">{{ $academicYear->name }}</h1>
                     <div class="flex flex-wrap items-center gap-3 text-sm text-white/80">
@@ -57,7 +57,7 @@
             <div class="border-b border-gray-100 px-6 sm:px-8 py-5" style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(37, 99, 235, 0.1) 50%, rgba(2, 132, 199, 0.08) 100%); border-bottom: 2px solid rgba(59, 130, 246, 0.3);">
                 <h2 class="text-xl font-black bg-gradient-to-r from-sky-700 via-blue-600 to-sky-600 bg-clip-text text-transparent">
                     <i class="fas fa-edit text-sky-600 ml-2"></i>
-                    بيانات سنة المدرسة
+                    بيانات المرحلة الدراسية
                 </h2>
                 <p class="text-sm text-gray-500 mt-1">
                     حدّث بيانات السنة، اللون، الأيقونة وترتيب العرض. استخدم مربع الاختيار لتفعيل السنة أو إيقافها.
@@ -69,7 +69,7 @@
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div class="space-y-2">
-                        <label class="block text-sm font-semibold text-gray-700">اسم سنة المدرسة *</label>
+                        <label class="block text-sm font-semibold text-gray-700">اسم المرحلة *</label>
                         <input type="text" name="name" value="{{ old('name', $academicYear->name) }}" required
                                class="w-full rounded-2xl border border-gray-200 bg-white/70 px-4 py-3 text-gray-900 shadow-sm focus:border-sky-500 focus:ring-4 focus:ring-sky-500/20 transition">
                         @error('name') <p class="text-xs text-rose-500 mt-1">{{ $message }}</p> @enderror
@@ -130,7 +130,7 @@
                                 $icons = [
                                     'fas fa-calendar-alt' => '📅 تقويم',
                                     'fas fa-graduation-cap' => '🎓 تخرج',
-                                    'fas fa-school' => '🏫 مدرسة',
+                                    'fas fa-school' => '🏫 مبنى',
                                     'fas fa-book' => '📚 كتاب',
                                     'fas fa-user-graduate' => '👨‍🎓 طالب',
                                     'fas fa-compass' => '🧭 تنظيم أكاديمي',

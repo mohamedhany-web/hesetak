@@ -1,14 +1,14 @@
 @extends('layouts.admin')
 
-@section('title', 'سنوات المدرسة - حصتك')
-@section('page_title', 'سنوات المدرسة')
+@section('title', __('admin.academic_years') . ' - حصتك')
+@section('page_title', __('admin.academic_years'))
 
 @section('content')
 @php
     $kpis = [
-        ['label' => 'إجمالي السنوات', 'value' => $summary['total_tracks'], 'icon' => 'fa-school', 'tone' => 'accent', 'note' => 'كل السنوات المسجّلة'],
-        ['label' => 'سنوات نشطة', 'value' => $summary['active_tracks'], 'icon' => 'fa-check-circle', 'tone' => 'accent', 'note' => 'متاحة لربط المحتوى'],
-        ['label' => 'المواد / المجموعات', 'value' => $summary['skill_clusters'], 'icon' => 'fa-layer-group', 'tone' => 'metal', 'note' => 'مرتبطة بالسنوات'],
+        ['label' => 'إجمالي المراحل', 'value' => $summary['total_tracks'], 'icon' => 'fa-layer-group', 'tone' => 'accent', 'note' => 'كل المراحل المسجّلة'],
+        ['label' => 'مراحل نشطة', 'value' => $summary['active_tracks'], 'icon' => 'fa-check-circle', 'tone' => 'accent', 'note' => 'متاحة لربط المحتوى والمطابقة'],
+        ['label' => 'المواد', 'value' => $summary['skill_clusters'], 'icon' => 'fa-book-open', 'tone' => 'metal', 'note' => 'مرتبطة بالمراحل'],
         ['label' => 'كورسات مرتبطة', 'value' => $summary['courses'], 'icon' => 'fa-graduation-cap', 'tone' => 'muted', 'note' => 'حسب التصنيف الداخلي'],
     ];
     $toneClass = [
@@ -21,27 +21,28 @@
 <div class="space-y-5">
     <section class="flex flex-wrap items-end justify-between gap-4">
         <div class="min-w-0">
-            <p class="text-xs font-medium text-muted">إدارة المحتوى · تنظيم سنوات المدرسة</p>
-            <h2 class="mt-1 text-2xl font-semibold tracking-tight text-ink md:text-[28px]">سنوات المدرسة</h2>
+            <p class="text-xs font-medium text-muted">مسار المناهج · يخدم حجز 1:1</p>
+            <h2 class="mt-1 text-2xl font-semibold tracking-tight text-ink md:text-[28px]">{{ __('admin.academic_years') }}</h2>
             <p class="mt-1 max-w-2xl text-sm text-muted">
-                كل سنة طبقة تنظيمية للمواد والكورسات وفصول المدرسة. من هنا تدير التصنيف والحالة والترتيب.
+                المراحل (ابتدائي / متوسط / …) جزء من مطابقة المعلم: مرحلة + مادة + نوع منهج.
+                ليست كورسات مسجّلة، وليست فصولاً جماعية.
             </p>
         </div>
         <div class="admin-hero-actions flex flex-wrap gap-2">
             <a href="{{ route('admin.academic-years.create') }}" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl bg-accent px-4 text-sm font-medium text-white">
                 <i class="fas fa-plus text-xs"></i>
-                سنة جديدة
+                مرحلة جديدة
             </a>
         </div>
     </section>
 
     @include('admin.partials.workflow-guide', [
-        'title' => 'ترتيب المدرسة من الأعلى للأسفل',
-        'body' => 'ابدأ بالسنوات ثم المواد ثم اربط العروض (كورسات / مجموعات). بدون سنة ومادة منظمين يصعب على العميل فهم أين يضع كل فصل.',
+        'title' => 'ثلاث مسارات في حصتك — لا تخلطهم',
+        'body' => '1) دروس 1:1 مباشرة (حجز مع معلم) · 2) مطابقة المناهج (مرحلة/مادة/نوع منهج لفلترة المعلم) · 3) كورسات مسجّلة مستقلة (اشتراك بمحتوى جاهز). هذه الصفحة للمسار 2 فقط.',
         'steps' => [
-            'أنشئ سنوات المدرسة (مثل: الصف الأول، الثاني…).',
-            'أضف مواد داخل كل سنة من صفحة المواد.',
-            'اربط فصول المدرسة أو الكورسات بهذه السنة/المادة عند الإنشاء.',
+            'أنشئ المراحل الدراسية العامة (ابتدائي، متوسط، ثانوي…).',
+            'أضف المواد تحت كل مرحلة من «المواد الدراسية».',
+            'اضبط «أنواع المنهج» واربطها في ملف المعلم — تظهر في دليل الطلاب عند الحجز.',
         ],
     ])
 
@@ -112,7 +113,7 @@
                         <div class="flex flex-wrap gap-2">
                             <span class="inline-flex items-center gap-1.5 rounded-full border border-line bg-canvas px-2.5 py-1 text-[11px] font-medium text-ink-soft">
                                 <i class="fas fa-layer-group text-[10px]"></i>
-                                {{ $subjectsCount }} مادة / مجموعة
+                                {{ $subjectsCount }} مادة
                             </span>
                             <span class="inline-flex items-center gap-1.5 rounded-full border border-line bg-canvas px-2.5 py-1 text-[11px] font-medium text-ink-soft">
                                 <i class="fas fa-graduation-cap text-[10px]"></i>
@@ -159,7 +160,7 @@
                                     {{ $track->is_active ? 'إيقاف' : 'تفعيل' }}
                                 </button>
                             </form>
-                            <form method="POST" action="{{ route('admin.academic-years.destroy', $track) }}" class="inline" onsubmit="return confirm('حذف هذه السنة الأكاديمية؟ لا يمكن التراجع إذا لم تكن مرتبطة بمواد.');">
+                            <form method="POST" action="{{ route('admin.academic-years.destroy', $track) }}" class="inline" onsubmit="return confirm('حذف هذه المرحلة؟ لا يمكن التراجع إذا لم تكن مرتبطة بمواد.');">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl border border-danger/20 bg-danger/5 px-3.5 text-xs font-medium text-danger hover:bg-danger/10">
@@ -177,13 +178,13 @@
             <span class="mx-auto inline-flex size-14 items-center justify-center rounded-2xl bg-accent-soft text-accent">
                 <i class="fas fa-calendar-alt text-xl"></i>
             </span>
-            <h3 class="mt-4 text-lg font-semibold text-ink">لا توجد سنوات مدرسة بعد</h3>
+            <h3 class="mt-4 text-lg font-semibold text-ink">لا توجد مراحل دراسية بعد</h3>
             <p class="mx-auto mt-2 max-w-md text-sm text-muted">
-                أنشئ أول سنة لتنظيم المواد والكورسات حسب المرحلة الدراسية.
+                أنشئ أول مرحلة لتنظيم المواد وفلاتر دليل المعلمين.
             </p>
             <a href="{{ route('admin.academic-years.create') }}" class="btn-press mt-5 inline-flex h-11 items-center gap-2 rounded-xl bg-accent px-5 text-sm font-medium text-white">
                 <i class="fas fa-plus text-xs"></i>
-                إنشاء سنة أكاديمية
+                إنشاء مرحلة دراسية
             </a>
         </article>
     @endif

@@ -45,6 +45,13 @@
                 <span class="size-1.5 rounded-full bg-current"></span>
                 {{ \App\Models\InstructorProfile::statusLabel($personal_branding->status) }}
             </span>
+            @isset($matchCompleteness)
+                @unless($matchCompleteness['ok'])
+                    <span class="mt-2 ms-2 inline-flex items-center rounded-lg border border-amber-200 bg-amber-50 px-2.5 py-1 text-[11px] font-semibold text-amber-800">
+                        ناقص مطابقة
+                    </span>
+                @endunless
+            @endisset
         </div>
         <div class="flex flex-wrap gap-2">
             <a href="{{ route('admin.personal-branding.edit', $personal_branding) }}"
@@ -67,6 +74,28 @@
 
     <div class="grid grid-cols-1 gap-5 lg:grid-cols-3">
         <div class="space-y-5 lg:col-span-2">
+            @isset($matchCompleteness)
+            <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
+                <div class="border-b border-line px-4 py-4 sm:px-5">
+                    <h3 class="text-base font-semibold text-ink">قائمة مطابقة النشر</h3>
+                    <p class="mt-0.5 text-xs text-muted">مطلوب قبل الموافقة: عنوان · نبذة · ٣ مهارات · نوع منهج · مرحلة أو مادة</p>
+                </div>
+                <ul class="divide-y divide-line p-0">
+                    @foreach(($matchCompleteness['labels'] ?? []) as $key => $label)
+                        @php $ok = (bool) ($matchCompleteness['checklist'][$key] ?? false); @endphp
+                        <li class="flex items-center justify-between gap-3 px-4 py-3 text-sm sm:px-5">
+                            <span class="text-ink">{{ $label }}</span>
+                            @if($ok)
+                                <span class="inline-flex items-center gap-1 text-xs font-semibold text-emerald-700"><i class="fas fa-check"></i> مكتمل</span>
+                            @else
+                                <span class="inline-flex items-center gap-1 text-xs font-semibold text-amber-700"><i class="fas fa-times"></i> ناقص</span>
+                            @endif
+                        </li>
+                    @endforeach
+                </ul>
+            </article>
+            @endisset
+
             <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
                 <div class="border-b border-line px-4 py-4 sm:px-5">
                     <h3 class="text-base font-semibold text-ink">بيانات المدرب</h3>

@@ -26,11 +26,16 @@ class CertificateVerificationController extends Controller
             ]));
         }
 
-        $certificate = Certificate::query()
-            ->where('verification_code', $verificationCode)
-            ->orWhere('serial_number', $verificationCode)
-            ->with(['user', 'course', 'instructor'])
-            ->first();
+        $certificateQuery = Certificate::query()
+            ->where(function ($q) use ($verificationCode) {
+                $q->where('verification_code', $verificationCode);
+                if (\Illuminate\Support\Facades\Schema::hasColumn('certificates', 'serial_number')) {
+                    $q->orWhere('serial_number', $verificationCode);
+                }
+            })
+            ->with(['user', 'course', 'instructor']);
+
+        $certificate = $certificateQuery->first();
 
         if (! $certificate) {
             return view('public.certificates.verify', array_merge($pageMeta, [

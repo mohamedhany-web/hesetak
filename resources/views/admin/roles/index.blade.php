@@ -1,74 +1,100 @@
 @extends('layouts.admin')
 
 @section('title', 'إدارة الأدوار')
+@section('header', 'إدارة الأدوار')
 
 @section('content')
-<div class="container mx-auto px-4 py-8">
-    <div class="flex justify-between items-center mb-6">
-        <h1 class="text-3xl font-bold text-gray-900">إدارة الأدوار</h1>
-        <a href="{{ route('admin.roles.create') }}" class="btn-primary">
-            <i class="fas fa-plus ml-2"></i>
+<div class="space-y-5">
+    <section class="flex flex-wrap items-end justify-between gap-4">
+        <div class="min-w-0">
+            <p class="text-xs font-medium text-muted">الصلاحيات · الأدوار</p>
+            <h2 class="mt-1 text-2xl font-semibold tracking-tight text-ink md:text-[28px]">إدارة الأدوار</h2>
+            <p class="mt-1 max-w-2xl text-sm text-muted">عرّف أدوار الموظفين واربطها بالصلاحيات التي تظهر في سايدبار لوحة الإدارة.</p>
+        </div>
+        <a href="{{ route('admin.roles.create') }}"
+           class="btn-press inline-flex h-9 items-center gap-2 rounded-xl bg-accent px-4 text-sm font-medium text-white hover:bg-[#0d4f4a]">
+            <i class="fas fa-plus text-xs"></i>
             إضافة دور جديد
         </a>
-    </div>
+    </section>
 
-    <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+    @if(session('success'))
+        <div class="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800 shadow-soft">
+            <i class="fas fa-check-circle ml-1"></i> {{ session('success') }}
+        </div>
+    @endif
+
+    <section class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
         <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الاسم</th>
-                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الاسم المعروض</th>
-                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الوصف</th>
-                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الصلاحيات</th>
-                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">المستخدمين</th>
-                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الإجراءات</th>
+            <table class="min-w-full text-sm">
+                <thead class="bg-canvas/80">
+                    <tr class="text-right text-xs font-bold uppercase tracking-wide text-muted">
+                        <th class="px-4 py-3">الاسم</th>
+                        <th class="px-4 py-3">الاسم المعروض</th>
+                        <th class="px-4 py-3">الوصف</th>
+                        <th class="px-4 py-3">الصلاحيات</th>
+                        <th class="px-4 py-3">المستخدمون</th>
+                        <th class="px-4 py-3">الإجراءات</th>
                     </tr>
                 </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
+                <tbody class="divide-y divide-line">
                     @forelse($roles as $role)
-                    <tr class="hover:bg-gray-50">
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="text-sm font-medium text-gray-900">{{ $role->name }}</span>
-                            @if($role->is_system)
-                                <span class="mr-2 px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded">نظام</span>
-                            @endif
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ $role->display_name }}</td>
-                        <td class="px-6 py-4 text-sm text-gray-500">{{ $role->description ?? '-' }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                            <span class="badge badge-primary">{{ $role->permissions->count() }} صلاحية</span>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                            <span class="badge badge-secondary">{{ $role->users->count() }} مستخدم</span>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            <a href="{{ route('admin.roles.show', $role) }}" class="text-sky-600 hover:text-sky-900 mr-4">
-                                <i class="fas fa-eye"></i>
-                            </a>
-                            <a href="{{ route('admin.roles.edit', $role) }}" class="text-blue-600 hover:text-blue-900 mr-4">
-                                <i class="fas fa-edit"></i>
-                            </a>
-                            @if(!$role->is_system)
-                            <form action="{{ route('admin.roles.destroy', $role) }}" method="POST" class="inline" onsubmit="return confirm('هل أنت متأكد من حذف هذا الدور؟');">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="text-red-600 hover:text-red-900">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </form>
-                            @endif
-                        </td>
-                    </tr>
+                        <tr class="hover:bg-canvas/60 transition">
+                            <td class="px-4 py-3.5 whitespace-nowrap">
+                                <div class="flex items-center gap-2">
+                                    <code class="rounded-lg bg-canvas px-2 py-0.5 text-xs font-semibold text-ink">{{ $role->name }}</code>
+                                    @if($role->is_system)
+                                        <span class="rounded-full bg-accent-soft px-2 py-0.5 text-[10px] font-bold text-accent">نظام</span>
+                                    @endif
+                                </div>
+                            </td>
+                            <td class="px-4 py-3.5 font-semibold text-ink whitespace-nowrap">{{ $role->display_name }}</td>
+                            <td class="px-4 py-3.5 text-ink-soft max-w-xs truncate">{{ $role->description ?: '—' }}</td>
+                            <td class="px-4 py-3.5 whitespace-nowrap">
+                                <span class="inline-flex rounded-full bg-accent-soft px-2.5 py-1 text-xs font-bold text-accent">
+                                    {{ $role->permissions->count() }} صلاحية
+                                </span>
+                            </td>
+                            <td class="px-4 py-3.5 whitespace-nowrap">
+                                <span class="inline-flex rounded-full border border-line bg-canvas px-2.5 py-1 text-xs font-bold text-ink-soft">
+                                    {{ $role->users->count() }} مستخدم
+                                </span>
+                            </td>
+                            <td class="px-4 py-3.5 whitespace-nowrap">
+                                <div class="flex items-center gap-1.5">
+                                    <a href="{{ route('admin.roles.show', $role) }}"
+                                       class="inline-flex size-8 items-center justify-center rounded-lg border border-line text-ink-soft hover:bg-accent-soft hover:text-accent"
+                                       title="الصلاحيات">
+                                        <i class="fas fa-key text-xs"></i>
+                                    </a>
+                                    <a href="{{ route('admin.roles.edit', $role) }}"
+                                       class="inline-flex size-8 items-center justify-center rounded-lg border border-line text-ink-soft hover:bg-accent-soft hover:text-accent"
+                                       title="تعديل">
+                                        <i class="fas fa-edit text-xs"></i>
+                                    </a>
+                                    @if(! $role->is_system)
+                                        <form action="{{ route('admin.roles.destroy', $role) }}" method="POST" class="inline"
+                                              onsubmit="return confirm('هل أنت متأكد من حذف هذا الدور؟');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit"
+                                                    class="inline-flex size-8 items-center justify-center rounded-lg border border-line text-rose-600 hover:bg-rose-50"
+                                                    title="حذف">
+                                                <i class="fas fa-trash text-xs"></i>
+                                            </button>
+                                        </form>
+                                    @endif
+                                </div>
+                            </td>
+                        </tr>
                     @empty
-                    <tr>
-                        <td colspan="6" class="px-6 py-4 text-center text-gray-500">لا توجد أدوار</td>
-                    </tr>
+                        <tr>
+                            <td colspan="6" class="px-4 py-12 text-center text-muted">لا توجد أدوار</td>
+                        </tr>
                     @endforelse
                 </tbody>
             </table>
         </div>
-    </div>
+    </section>
 </div>
 @endsection
-

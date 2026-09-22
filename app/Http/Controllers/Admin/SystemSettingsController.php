@@ -13,6 +13,7 @@ use App\Services\PaymentGatewaySettings;
 use App\Services\PlatformSecuritySettings;
 use App\Services\PlatformMediaSettings;
 use App\Services\PublicFooterSettings;
+use App\Services\SiteDataWipeService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -353,5 +354,61 @@ class SystemSettingsController extends Controller
         PublicFooterSettings::forgetCache();
 
         return redirect()->route('admin.system-settings.edit')->with('success', 'تم حفظ إعدادات النظام بنجاح.');
+    }
+
+    /**
+     * مسح كل بيانات الموقع مع الإبقاء على حساب الأدمن الحالي فقط، ثم بذر الصلاحيات.
+     */
+    public function wipeSiteData(Request $request, SiteDataWipeService $wipe): RedirectResponse
+    {
+        $user = $request->user();
+        if (! $user || ! in_array((string) $user->role, ['super_admin', 'admin'], true)) {
+            abort(403);
+        }
+
+        $rateKey = 'site-wipe:'.$user->id;
+        if (RateLimiter::tooManyAttempts($rateKey, 2)) {
+            return redirect()->route('admin.system-settings.edit')
+                ->withErrors(['wipe' => 'محاولات كثيرة. انتظر دقيقة ثم أعد المحاولة.']);
+        }
+        RateLimiter::hit($rateKey, 120);
+
+        $validated = $request->validate([
+            'password' => ['required', 'string'],
+            'confirm_phrase' => ['required', 'string'],
+        ], [
+            'password.required' => 'أدخل كلمة مرور حسابك للتأكيد.',
+            'confirm_phrase.required' => 'اكتب عبارة التأكيد.',
+        ]);
+
+        if (! Hash::check($validated['password'], $user->password)) {
+            return redirect()->route('admin.system-settings.edit')
+                ->withErrors(['wipe' => 'كلمة المرور غير صحيحة.']);
+        }
+
+        $expected = 'مسح كل البيانات';
+        if (trim((string) $validated['confirm_phrase']) !== $expected) {
+            return redirect()->route('admin.system-settings.edit')
+                ->withErrors(['wipe' => 'عبارة التأكيد غير مطابقة. اكتب بالضبط: '.$expected]);
+        }
+
+        try {
+            $result = $wipe->wipeExceptAdmins([(int) $user->id], true);
+        } catch (Throwable $e) {
+            report($e);
+
+            return redirect()->route('admin.system-settings.edit')
+                ->withErrors(['wipe' => 'فشل المسح: '.$e->getMessage()]);
+        }
+
+        return redirect()->route('admin.system-settings.edit')->with(
+            'success',
+            sprintf(
+                'تم مسح بيانات الموقع. أُبقي على حسابك (%s). جداول ممسوحة: %d · مستخدمون محذوفون: %d · أُعيد بذر الصلاحيات.',
+                $user->email ?: $user->name,
+                $result['tables_cleared'],
+                $result['users_deleted']
+            )
+        );
     }
 }

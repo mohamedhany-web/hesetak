@@ -1,14 +1,14 @@
 @extends('layouts.admin')
 
-@section('title', 'مواد المدرسة - حصتك')
-@section('page_title', 'مواد المدرسة')
+@section('title', __('admin.skill_groups') . ' - حصتك')
+@section('page_title', __('admin.skill_groups'))
 
 @section('content')
 @php
     $fieldClass = 'h-11 w-full rounded-xl border border-line bg-surface px-4 text-sm text-ink transition focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20';
     $kpis = [
-        ['label' => 'إجمالي المواد', 'value' => $summary['total'], 'icon' => 'fa-book', 'tone' => 'accent', 'note' => 'حسب التصفية الحالية'],
-        ['label' => 'مواد نشطة', 'value' => $summary['active'], 'icon' => 'fa-check-circle', 'tone' => 'accent', 'note' => 'جاهزة لربط الكورسات'],
+        ['label' => 'إجمالي المواد', 'value' => $summary['total'], 'icon' => 'fa-book-open', 'tone' => 'accent', 'note' => 'حسب التصفية الحالية'],
+        ['label' => 'مواد نشطة', 'value' => $summary['active'], 'icon' => 'fa-check-circle', 'tone' => 'accent', 'note' => 'جاهزة لربط الكورسات والمطابقة'],
         ['label' => 'كورسات مربوطة', 'value' => $summary['courses'], 'icon' => 'fa-graduation-cap', 'tone' => 'metal', 'note' => 'داخل المواد المعروضة'],
     ];
     $toneClass = [
@@ -21,23 +21,23 @@
 <div class="space-y-5">
     <section class="flex flex-wrap items-end justify-between gap-4">
         <div class="min-w-0">
-            <p class="text-xs font-medium text-muted">إدارة المحتوى · المدرسة</p>
+            <p class="text-xs font-medium text-muted">مسار المناهج · يخدم حجز 1:1</p>
             <h2 class="mt-1 text-2xl font-semibold tracking-tight text-ink md:text-[28px]">
                 @if($currentTrack)
                     مواد {{ $currentTrack->name }}
                 @else
-                    مواد المدرسة
+                    {{ __('admin.skill_groups') }}
                 @endif
             </h2>
             <p class="mt-1 max-w-2xl text-sm text-muted">
-                المادة طبقة تنظيمية داخل سنة المدرسة (أو عامة)، وتحتوي الكورسات والفصول المرتبطة بها.
+                المادة تُستخدم في فلتر دليل المعلمين وربط الكورسات اختيارياً — ليست بديلاً عن حجز 1:1 ولا عن الكورسات المسجّلة كمنتج مستقل.
             </p>
         </div>
         <div class="admin-hero-actions flex flex-wrap gap-2">
             @if($currentTrack)
                 <a href="{{ route('admin.academic-years.edit', $currentTrack) }}" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl border border-line bg-surface px-4 text-sm font-medium text-ink-soft transition hover:border-accent/30 hover:text-accent">
                     <i class="fas fa-arrow-right text-xs"></i>
-                    رجوع للسنة
+                    رجوع للمرحلة
                 </a>
             @endif
             <a href="{{ route('admin.academic-subjects.create', $currentTrack ? ['track' => $currentTrack->id] : []) }}"
@@ -49,12 +49,12 @@
     </section>
 
     @include('admin.partials.workflow-guide', [
-        'title' => 'دور مواد المدرسة',
-        'body' => 'المادة تقسّم محتوى السنة (مثل: لغة عربية، رياضيات). اربط الكورسات وفصول المدرسة بالمادة المناسبة ليسهل على الطالب والفريق التصفح.',
+        'title' => 'دور المواد الدراسية',
+        'body' => 'المادة تقسّم محتوى المرحلة (مثل: لغة عربية، رياضيات). اربط الكورسات والمعلمين بالمادة المناسبة ليسهل على الطالب الفلترة والحجز.',
         'steps' => [
-            'اختر السنة (أو ابدأ من صفحة السنوات).',
+            'اختر المرحلة (أو ابدأ من صفحة المراحل).',
             'أنشئ المادة وفعّل حالتها.',
-            'عند إنشاء كورس أو مجموعة جماعية اربطها بهذه المادة.',
+            'عند إنشاء كورس أو ملف معلم اربطها بهذه المادة.',
         ],
     ])
 
@@ -78,7 +78,7 @@
         </div>
         <form method="GET" action="{{ route('admin.academic-subjects.index') }}" class="grid grid-cols-1 gap-4 p-4 sm:grid-cols-3 sm:items-end sm:p-5">
             <div class="sm:col-span-2">
-                <label class="mb-1.5 block text-xs font-medium text-muted" for="track">سنة المدرسة</label>
+                <label class="mb-1.5 block text-xs font-medium text-muted" for="track">المرحلة الدراسية</label>
                 <select id="track" name="track" class="{{ $fieldClass }}" onchange="this.form.submit()">
                     <option value="">كل السنوات</option>
                     @foreach($tracks as $track)

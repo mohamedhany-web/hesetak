@@ -22,8 +22,18 @@
     $footer = \App\Services\PublicFooterSettings::payload();
     $waUrl = $footer['whatsapp_url'] ?? '#';
     $skillChoices = $subjectOptions->isNotEmpty()
-        ? $subjectOptions->map(fn ($s) => ['label' => $s->name, 'count' => null])->values()
-        : collect($skillFacets)->take(12)->values();
+        ? $subjectOptions->map(fn ($s) => [
+            'label' => $s->name,
+            'value' => $s->slug ?: (string) $s->id,
+            'count' => null,
+        ])->values()
+        : collect($skillFacets)->take(12)->map(function ($facet) {
+            if (! isset($facet['value'])) {
+                $facet['value'] = $facet['label'] ?? '';
+            }
+
+            return $facet;
+        })->values();
     $popularSkills = collect($skillFacets)->take(8)->values();
     $filterQuery = fn (array $extra = []) => array_filter(array_merge([
         'q' => $q !== '' ? $q : null,
@@ -100,7 +110,8 @@
           <select class="mc-select" name="skill">
             <option value="">{{ __('public.instructors_skill_all') }}</option>
             @foreach($skillChoices as $facet)
-              <option value="{{ $facet['label'] }}" @selected($skill === $facet['label'])>
+              @php $skillValue = $facet['value'] ?? $facet['label'] ?? ''; @endphp
+              <option value="{{ $skillValue }}" @selected($skill === $skillValue || $skill === ($facet['label'] ?? ''))>
                 {{ $facet['label'] }}@if(!empty($facet['count'])) ({{ $facet['count'] }})@endif
               </option>
             @endforeach

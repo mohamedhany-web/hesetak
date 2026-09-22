@@ -150,7 +150,7 @@
         <div class="st-lecture-block__head">
             <h3>{{ __('student_timeline.lectures_groups') }}</h3>
             @if(Route::has('student.classes.index'))
-                <a class="st-see" href="{{ route('student.classes.index') }}">{{ __('student_timeline.see_all') }}</a>
+                <a class="st-see" href="{{ (Route::has('student.classes.index') ? route('student.classes.index') : route('dashboard')) }}">{{ __('student_timeline.see_all') }}</a>
             @endif
         </div>
 
@@ -195,7 +195,7 @@
                     <p>{{ __('student_timeline.no_group_lectures_hint') }}</p>
                     @if(Route::has('student.classes.index'))
                         <div class="st-biz-banner__actions">
-                            <a href="{{ route('student.classes.index') }}" class="st-pill st-pill--solid">{{ __('student_timeline.my_classes') }}</a>
+                            <a href="{{ Route::has('student.classes.index') ? route('student.classes.index') : route('dashboard') }}" class="st-pill st-pill--solid">{{ __('student_timeline.my_classes') }}</a>
                         </div>
                     @endif
                 </div>

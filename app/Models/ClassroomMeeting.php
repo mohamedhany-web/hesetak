@@ -83,6 +83,12 @@ class ClassroomMeeting extends Model
         return $this->hasMany(ClassroomMeetingReport::class, 'classroom_meeting_id');
     }
 
+    /** Alias used by payout/report gates and admin queues. */
+    public function reports(): HasMany
+    {
+        return $this->aiReports();
+    }
+
     public function isLive(): bool
     {
         return $this->started_at && ! $this->ended_at;

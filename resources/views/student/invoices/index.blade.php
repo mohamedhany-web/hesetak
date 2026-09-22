@@ -1,54 +1,111 @@
 @extends('layouts.student-timeline')
 
 @section('title', __('student.invoices_title'))
-@section('header', __('student.invoices_title'))
 
 @section('content')
-<div class="space-y-6">
-    <div class="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
-        <h1 class="text-2xl font-bold text-gray-900">{{ __('student.invoices_title') }}</h1>
-        <p class="text-gray-600 mt-1">{{ __('student.invoices_subtitle') }}</p>
-    </div>
+@php
+    $locale = app()->getLocale();
+    $invoices = $invoices ?? collect();
+    $paidCount = $invoices->where('status', 'paid')->count();
+    $pendingCount = $invoices->filter(fn ($inv) => $inv->status !== 'paid')->count();
+    $tones = ['blue', 'pink', 'orange', 'purple'];
+@endphp
 
-    @if(isset($invoices) && $invoices->count() > 0)
-    <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200">
-        <div class="overflow-x-auto">
-            <table class="w-full">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">{{ __('student.invoice_number') }}</th>
-                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">{{ __('student.amount_label') }}</th>
-                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">{{ __('common.status') }}</th>
-                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">{{ __('student.actions_label') }}</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-200">
-                    @foreach($invoices as $invoice)
-                    <tr>
-                        <td class="px-6 py-4">{{ $invoice->invoice_number }}</td>
-                        <td class="px-6 py-4">{{ number_format($invoice->total_amount, 2) }} {{ __('public.currency_egp') }}</td>
-                        <td class="px-6 py-4">
-                            <span class="px-2.5 py-0.5 rounded-full text-xs font-medium
-                                @if($invoice->status == 'paid') bg-green-100 text-green-800
-                                @else bg-yellow-100 text-yellow-800
-                                @endif">
-                                {{ $invoice->status == 'paid' ? __('student.paid_status') : __('student.pending_status_label') }}
+@include('partials.student-timeline-top', [
+    'locale' => $locale,
+    'pageTitle' => __('student_timeline.nav_invoices'),
+    'crumbs' => [
+        ['label' => __('student_timeline.school_gate'), 'url' => route('dashboard')],
+        ['label' => __('student_timeline.nav_invoices'), 'url' => null],
+    ],
+])
+
+@if(session('success'))
+    <div class="st-flash st-flash--ok">{{ session('success') }}</div>
+@endif
+@if(session('error'))
+    <div class="st-flash st-flash--err">{{ session('error') }}</div>
+@endif
+
+<section class="st-join-hero {{ $invoices->count() ? '' : 'st-join-hero--muted' }}" aria-label="{{ __('student.invoices_title') }}">
+    <div class="st-join-hero__copy">
+        <p class="st-join-hero__kicker">{{ __('student_timeline.nav_invoices') }}</p>
+        <h2 class="st-join-hero__title">
+            @if($invoices->count())
+                {{ __('student.invoices_title') }}
+            @else
+                {{ __('student.no_invoices') }}
+            @endif
+        </h2>
+        <p class="st-join-hero__meta">{{ __('student.invoices_subtitle') }}</p>
+    </div>
+    <div class="st-join-hero__actions">
+        @if(Route::has('student.wallet.index'))
+            <a href="{{ route('student.wallet.index') }}" class="st-pill st-pill--solid">{{ __('student_timeline.nav_wallet') }}</a>
+        @endif
+        @if(Route::has('orders.index'))
+            <a href="{{ route('orders.index') }}" class="st-pill st-pill--outline">{{ __('student_timeline.nav_orders') }}</a>
+        @endif
+    </div>
+</section>
+
+<section class="st-stats st-stats--classes" aria-label="{{ __('student.invoices_title') }}">
+    <article class="st-stat-card">
+        <p class="st-stat-card__label">{{ __('student_timeline.filter_all') }}</p>
+        <p class="st-stat-card__value">{{ method_exists($invoices, 'total') ? $invoices->total() : $invoices->count() }}</p>
+    </article>
+    <article class="st-stat-card">
+        <p class="st-stat-card__label">{{ __('student.paid_status') }}</p>
+        <p class="st-stat-card__value">{{ $paidCount }}</p>
+    </article>
+    <article class="st-stat-card">
+        <p class="st-stat-card__label">{{ __('student.pending_status_label') }}</p>
+        <p class="st-stat-card__value">{{ $pendingCount }}</p>
+    </article>
+</section>
+
+<section class="st-msg-intro">
+    <div>
+        <h2>{{ __('student.invoices_title') }}</h2>
+        <p>{{ __('student.invoices_subtitle') }}</p>
+    </div>
+</section>
+
+@if($invoices->count() > 0)
+    <div class="st-order-list" aria-label="{{ __('student.invoices_title') }}">
+        @foreach($invoices as $i => $invoice)
+            @php $tone = $tones[$i % count($tones)]; @endphp
+            <article class="st-order-card st-order-card--{{ $tone }}">
+                <div class="st-order-card__main">
+                    <div class="st-order-card__copy">
+                        <div class="st-order-card__badges">
+                            <span class="st-order-card__badge {{ $invoice->status === 'paid' ? 'is-approved' : 'is-pending' }}">
+                                {{ $invoice->status === 'paid' ? __('student.paid_status') : __('student.pending_status_label') }}
                             </span>
-                        </td>
-                        <td class="px-6 py-4">
-                            <a href="{{ route('student.invoices.show', $invoice) }}" class="text-sky-600 hover:text-sky-900">{{ __('common.view') }}</a>
-                        </td>
-                    </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        </div>
-        <div class="px-6 py-4">{{ $invoices->links() }}</div>
+                            @if($invoice->created_at)
+                                <span class="st-order-card__when">{{ $invoice->created_at->format('Y-m-d') }}</span>
+                            @endif
+                        </div>
+                        <h3>{{ __('student.invoice_number') }}: {{ $invoice->invoice_number }}</h3>
+                        <p class="st-order-card__meta">{{ currency_symbol() }}</p>
+                    </div>
+                    <div class="st-order-card__amount">
+                        <strong class="tabular-nums">{{ format_money($invoice->total_amount) }}</strong>
+                    </div>
+                </div>
+                <div class="st-order-card__foot">
+                    <a href="{{ route('student.invoices.show', $invoice) }}" class="st-pill st-pill--solid">{{ __('common.view') }}</a>
+                </div>
+            </article>
+        @endforeach
     </div>
-    @else
-    <div class="bg-white rounded-xl shadow-lg p-12 text-center">
-        <p class="text-gray-600">{{ __('student.no_invoices') }}</p>
-    </div>
+    @if(method_exists($invoices, 'hasPages') && $invoices->hasPages())
+        <div class="st-pager">{{ $invoices->links() }}</div>
     @endif
-</div>
+@else
+    <div class="st-empty-panel">
+        <h3>{{ __('student.no_invoices') }}</h3>
+        <p>{{ __('student_timeline.invoices_empty_hint') }}</p>
+    </div>
+@endif
 @endsection

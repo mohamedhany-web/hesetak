@@ -145,6 +145,14 @@
                                         <div class="min-w-0">
                                             <p class="font-semibold text-ink">{{ htmlspecialchars($withdrawal->instructor->name ?? 'غير محدد', ENT_QUOTES, 'UTF-8') }}</p>
                                             <p class="text-[11px] text-muted">{{ htmlspecialchars($withdrawal->instructor->phone ?? '-', ENT_QUOTES, 'UTF-8') }}</p>
+                                            @php
+                                                $overdueN = (int) (($overdueReportCounts ?? [])[$withdrawal->instructor_id] ?? 0);
+                                            @endphp
+                                            @if($overdueN > 0)
+                                                <p class="mt-1 inline-flex items-center gap-1 rounded-lg border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-800">
+                                                    الصرف موقوف حتى التقرير · {{ $overdueN }} حصة
+                                                </p>
+                                            @endif
                                         </div>
                                     </div>
                                 </td>

@@ -29,6 +29,7 @@ class OneToOneSession extends Model
         'system_channel',
         'is_complimentary',
         'status',
+        'report_required_at',
         'classroom_meeting_id',
         'booked_by_user_id',
         'notes',
@@ -45,6 +46,7 @@ class OneToOneSession extends Model
             'duration_minutes' => 'integer',
             'is_private_lecture' => 'boolean',
             'is_complimentary' => 'boolean',
+            'report_required_at' => 'datetime',
             'student_unlocked_at' => 'datetime',
         ];
     }

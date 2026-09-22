@@ -856,10 +856,38 @@ class OneToOneSessionService
             }
 
             $session->status = OneToOneSession::STATUS_COMPLETED;
+            if (\Illuminate\Support\Facades\Schema::hasColumn('one_to_one_sessions', 'report_required_at')
+                && ! $session->report_required_at) {
+                $session->report_required_at = now();
+            }
             $session->save();
             if ($meeting && ! $meeting->ended_at) {
                 $meeting->update(['ended_at' => now()]);
             }
         });
+    }
+
+    /**
+     * تبديل معلم الحصة دون استهلاك رصيد الباقة.
+     */
+    public static function reassignInstructor(OneToOneSession $session, User $newInstructor): void
+    {
+        if (! $newInstructor->isInstructor() && ! $newInstructor->isTeacher()) {
+            throw new \InvalidArgumentException('المستخدم المحدد ليس معلماً.');
+        }
+
+        if (in_array($session->status, [OneToOneSession::STATUS_COMPLETED, OneToOneSession::STATUS_CANCELLED], true)) {
+            throw new \InvalidArgumentException('لا يمكن إعادة تعيين حصة مكتملة أو ملغاة.');
+        }
+
+        if ((int) $session->instructor_id === (int) $newInstructor->id) {
+            throw new \InvalidArgumentException('المعلم الجديد هو نفس معلم الحصة الحالي.');
+        }
+
+        $session->loadMissing('classroomMeeting');
+        $session->update(['instructor_id' => $newInstructor->id]);
+        if ($session->classroomMeeting) {
+            $session->classroomMeeting->update(['user_id' => $newInstructor->id]);
+        }
     }
 }

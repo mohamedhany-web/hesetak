@@ -96,29 +96,47 @@
             @endif
 
             @if(student_ui('show_courses', false) && Route::has('my-courses.index'))
+            <div class="ins-nav-group mt-2">
+                <span><i class="fas fa-graduation-cap text-[9px] opacity-50"></i> {{ $isRtl ? 'الكورسات المسجّلة' : 'Recorded courses' }}</span>
+            </div>
             <a href="{{ route('my-courses.index') }}" @click="{{ $closeSidebar }}"
                class="ins-nav {{ request()->routeIs('my-courses.*') ? 'active' : '' }}">
                 <span class="ins-icon"><i class="fas fa-bookmark"></i></span>
                 <span class="flex-1 truncate">{{ __('student.my_courses') }}</span>
             </a>
+            @if(Route::has('public.courses'))
             <a href="{{ route('public.courses') }}" @click="{{ $closeSidebar }}" class="ins-nav">
                 <span class="ins-icon"><i class="fas fa-compass"></i></span>
                 <span class="flex-1 truncate">{{ __('student.browse_courses') }}</span>
             </a>
+            @endif
+            @if(Route::has('student.lectures.index'))
+            <a href="{{ route('student.lectures.index') }}" @click="{{ $closeSidebar }}"
+               class="ins-nav {{ request()->routeIs('student.lectures.*') ? 'active' : '' }}">
+                <span class="ins-icon"><i class="fas fa-chalkboard"></i></span>
+                <span class="flex-1 truncate">{{ $isRtl ? 'المحاضرات' : 'Lectures' }}</span>
+            </a>
+            @endif
+            @if(student_ui('show_assignments', false) && Route::has('student.assignments.index'))
+            <a href="{{ route('student.assignments.index') }}" @click="{{ $closeSidebar }}"
+               class="ins-nav {{ request()->routeIs('student.assignments.*') ? 'active' : '' }}">
+                <span class="ins-icon"><i class="fas fa-tasks"></i></span>
+                <span class="flex-1 truncate">{{ $isRtl ? 'الواجبات' : 'Assignments' }}</span>
+            </a>
+            @endif
+            @if(student_ui('show_exams', false) && Route::has('student.exams.index'))
+            <a href="{{ route('student.exams.index') }}" @click="{{ $closeSidebar }}"
+               class="ins-nav {{ request()->routeIs('student.exams.*') ? 'active' : '' }}">
+                <span class="ins-icon"><i class="fas fa-file-alt"></i></span>
+                <span class="flex-1 truncate">{{ $isRtl ? 'الاختبارات' : 'Exams' }}</span>
+            </a>
+            @endif
             @endif
 
             @if(Route::has('public.instructors.index'))
             <a href="{{ route('public.instructors.index') }}" @click="{{ $closeSidebar }}" class="ins-nav">
                 <span class="ins-icon"><i class="fas fa-user-graduate"></i></span>
                 <span class="flex-1 truncate">{{ $isRtl ? 'ابحث عن معلم' : 'Find a teacher' }}</span>
-            </a>
-            @endif
-
-            @if(student_ui('show_classes', false) && Route::has('student.classes.index'))
-            <a href="{{ route('student.classes.index') }}" @click="{{ $closeSidebar }}"
-               class="ins-nav {{ request()->routeIs('student.classes.*') ? 'active' : '' }}">
-                <span class="ins-icon"><i class="fas fa-chalkboard"></i></span>
-                <span class="flex-1 truncate">{{ $isRtl ? 'فصولي' : 'My classes' }}</span>
             </a>
             @endif
 

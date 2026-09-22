@@ -93,16 +93,6 @@
             <p class="mt-0.5 text-xs text-muted">خدمات حصتك الحالية للطالب: كورسات ومجموعات</p>
         </div>
         <div class="grid grid-cols-1 gap-3 p-4 sm:grid-cols-3 sm:p-5">
-            @if(config('admin_ui.show_group_classes', false) && Route::has('admin.tutoring-groups.index'))
-                <a href="{{ route('admin.tutoring-groups.index', 'individual') }}" class="btn-press inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-accent px-4 text-sm font-medium text-white">
-                    <i class="fas fa-user text-xs"></i>
-                    مجموعات فردية
-                </a>
-                <a href="{{ route('admin.tutoring-groups.index', 'collective') }}" class="btn-press inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-line bg-surface px-4 text-sm font-medium text-ink-soft transition hover:border-accent/30 hover:text-accent">
-                    <i class="fas fa-users text-xs"></i>
-                    مجموعات جماعية
-                </a>
-            @endif
             @if(Route::has('admin.one-to-one-sessions.index'))
                 <a href="{{ route('admin.one-to-one-sessions.index') }}" class="btn-press inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-accent px-4 text-sm font-medium text-white">
                     <i class="fas fa-chalkboard-teacher text-xs"></i>

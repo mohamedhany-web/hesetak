@@ -78,10 +78,10 @@ class AcademicYearController extends Controller
             'is_active' => 'boolean',
             'is_public' => 'boolean',
         ], [
-            'name.required' => 'اسم سنة المدرسة مطلوب',
-            'name.unique' => 'اسم سنة المدرسة موجود مسبقاً',
-            'code.required' => 'رمز سنة المدرسة مطلوب',
-            'code.unique' => 'رمز سنة المدرسة موجود مسبقاً',
+            'name.required' => 'اسم المرحلة الدراسية مطلوب',
+            'name.unique' => 'اسم المرحلة الدراسية موجود مسبقاً',
+            'code.required' => 'رمز المرحلة الدراسية مطلوب',
+            'code.unique' => 'رمز المرحلة الدراسية موجود مسبقاً',
             'thumbnail.image' => 'يجب أن يكون الملف صورة',
             'thumbnail.mimes' => 'يجب أن تكون الصورة بصيغة jpeg, png أو jpg',
             'thumbnail.max' => 'حجم الصورة يجب ألا يتجاوز 2 ميجابايت',
@@ -114,7 +114,7 @@ class AcademicYearController extends Controller
         AcademicYear::create($data);
 
         return redirect()->route('admin.academic-years.index')
-            ->with('success', 'تم إضافة سنة المدرسة بنجاح');
+            ->with('success', 'تم إضافة المرحلة الدراسية بنجاح');
     }
 
     public function show(AcademicYear $academicYear)
@@ -235,10 +235,10 @@ class AcademicYearController extends Controller
             'is_active' => 'boolean',
             'is_public' => 'boolean',
         ], [
-            'name.required' => 'اسم سنة المدرسة مطلوب',
-            'name.unique' => 'اسم سنة المدرسة موجود مسبقاً',
-            'code.required' => 'رمز سنة المدرسة مطلوب',
-            'code.unique' => 'رمز سنة المدرسة موجود مسبقاً',
+            'name.required' => 'اسم المرحلة الدراسية مطلوب',
+            'name.unique' => 'اسم المرحلة الدراسية موجود مسبقاً',
+            'code.required' => 'رمز المرحلة الدراسية مطلوب',
+            'code.unique' => 'رمز المرحلة الدراسية موجود مسبقاً',
             'thumbnail.image' => 'يجب أن يكون الملف صورة',
             'thumbnail.mimes' => 'يجب أن تكون الصورة بصيغة jpeg, png أو jpg',
             'thumbnail.max' => 'حجم الصورة يجب ألا يتجاوز 2 ميجابايت',
@@ -269,7 +269,7 @@ class AcademicYearController extends Controller
         $academicYear->update($data);
 
         return redirect()->route('admin.academic-years.edit', $academicYear)
-            ->with('success', 'تم تحديث سنة المدرسة بنجاح');
+            ->with('success', 'تم تحديث المرحلة الدراسية بنجاح');
     }
 
     public function destroy(AcademicYear $academicYear)

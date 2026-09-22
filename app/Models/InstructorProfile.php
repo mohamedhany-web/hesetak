@@ -23,6 +23,7 @@ class InstructorProfile extends Model
         'experience',
         'skills',
         'curriculum_types',
+        'teaching_subject_ids',
         'social_links',
         'status',
         'rejection_reason',
@@ -36,6 +37,7 @@ class InstructorProfile extends Model
     protected $casts = [
         'social_links' => 'array',
         'curriculum_types' => 'array',
+        'teaching_subject_ids' => 'array',
         'reviewed_at' => 'datetime',
         'submitted_at' => 'datetime',
         'consultation_price_egp' => 'decimal:2',
@@ -53,6 +55,19 @@ class InstructorProfile extends Model
         }
 
         return array_values(array_filter(array_map('strval', $raw)));
+    }
+
+    /**
+     * @return list<int>
+     */
+    public function teachingSubjectIds(): array
+    {
+        $raw = $this->teaching_subject_ids;
+        if (! is_array($raw)) {
+            return [];
+        }
+
+        return array_values(array_unique(array_filter(array_map('intval', $raw))));
     }
 
     public function user(): BelongsTo

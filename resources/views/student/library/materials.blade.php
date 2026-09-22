@@ -342,7 +342,7 @@
                         <a href="{{ $packagesUrl }}" class="st-pill st-pill--outline">{{ __('student_timeline.lib_browse_packages') }}</a>
                     @endif
                     @if(Route::has('student.classes.index'))
-                        <a href="{{ route('student.classes.index') }}" class="st-pill st-pill--outline">{{ __('student_timeline.my_classes') }}</a>
+                        <a href="{{ (Route::has('student.classes.index') ? route('student.classes.index') : route('dashboard')) }}" class="st-pill st-pill--outline">{{ __('student_timeline.my_classes') }}</a>
                     @endif
                 </div>
             @endif

@@ -148,7 +148,7 @@
             <div class="mt-1 text-2xl font-semibold text-ink">{{ number_format($stats['courses']) }}</div>
         </div>
         <div class="rounded-2xl border border-line bg-surface p-4 shadow-soft">
-            <div class="text-xs text-muted">مواد المدرسة</div>
+            <div class="text-xs text-muted">المواد الدراسية</div>
             <div class="mt-1 text-2xl font-semibold text-ink">{{ number_format($stats['subjects']) }}</div>
         </div>
     </div>

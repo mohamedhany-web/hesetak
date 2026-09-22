@@ -1,141 +1,135 @@
 @extends('layouts.admin')
 
-@section('title', 'صلاحيات المستخدمين - ' . config('app.name'))
+@section('title', 'صلاحيات المستخدمين')
 @section('header', 'صلاحيات المستخدمين')
 
 @section('content')
-<div class="p-6 space-y-6">
-    <!-- إحصائيات سريعة -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div class="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-gray-600">إجمالي المستخدمين</p>
-                    <p class="text-3xl font-bold text-gray-900">{{ $users->total() }}</p>
-                </div>
-                <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                    <i class="fas fa-users text-blue-600 text-xl"></i>
-                </div>
-            </div>
+<div class="space-y-5">
+    <section class="flex flex-wrap items-end justify-between gap-4">
+        <div class="min-w-0">
+            <p class="text-xs font-medium text-muted">الصلاحيات · المستخدمون</p>
+            <h2 class="mt-1 text-2xl font-semibold tracking-tight text-ink md:text-[28px]">صلاحيات المستخدمين</h2>
+            <p class="mt-1 max-w-2xl text-sm text-muted">اربط الأدوار والصلاحيات المباشرة بكل مستخدم موظف.</p>
         </div>
-        <div class="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-gray-600">إجمالي الصلاحيات</p>
-                    <p class="text-3xl font-bold text-gray-900">{{ $allPermissions->flatten()->count() }}</p>
-                </div>
-                <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                    <i class="fas fa-key text-green-600 text-xl"></i>
-                </div>
-            </div>
+        <div class="flex flex-wrap gap-2">
+            <a href="{{ route('admin.roles.index') }}"
+               class="btn-press inline-flex h-9 items-center gap-2 rounded-xl border border-line bg-surface px-4 text-sm font-medium text-ink hover:bg-accent-soft hover:text-accent">
+                <i class="fas fa-user-tag text-xs"></i>
+                الأدوار
+            </a>
+            <a href="{{ route('admin.permissions.index') }}"
+               class="btn-press inline-flex h-9 items-center gap-2 rounded-xl border border-line bg-surface px-4 text-sm font-medium text-ink hover:bg-accent-soft hover:text-accent">
+                <i class="fas fa-key text-xs"></i>
+                الصلاحيات
+            </a>
         </div>
-        <div class="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-gray-600">المجموعات</p>
-                    <p class="text-3xl font-bold text-gray-900">{{ $allPermissions->count() }}</p>
-                </div>
-                <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                    <i class="fas fa-folder text-purple-600 text-xl"></i>
-                </div>
-            </div>
-        </div>
-    </div>
+    </section>
 
-    <!-- قائمة المستخدمين -->
-    <div class="bg-white rounded-xl shadow-lg border border-gray-200">
-        <div class="p-6 border-b border-gray-200">
-            <h3 class="text-lg font-semibold text-gray-900">قائمة المستخدمين</h3>
+    <section class="grid gap-3 sm:grid-cols-3">
+        <article class="rounded-2xl border border-line bg-surface p-4 shadow-soft">
+            <div class="inline-flex size-9 items-center justify-center rounded-xl bg-[#f2f5f4] text-accent">
+                <i class="fas fa-users text-sm"></i>
+            </div>
+            <p class="mt-3 text-xs font-medium text-muted">إجمالي المستخدمين</p>
+            <p class="mt-1 text-2xl font-semibold tabular-nums text-ink">{{ $users->total() }}</p>
+        </article>
+        <article class="rounded-2xl border border-line bg-surface p-4 shadow-soft">
+            <div class="inline-flex size-9 items-center justify-center rounded-xl bg-[#f2f5f4] text-accent">
+                <i class="fas fa-key text-sm"></i>
+            </div>
+            <p class="mt-3 text-xs font-medium text-muted">إجمالي الصلاحيات</p>
+            <p class="mt-1 text-2xl font-semibold tabular-nums text-ink">{{ $allPermissions->flatten()->count() }}</p>
+        </article>
+        <article class="rounded-2xl border border-line bg-surface p-4 shadow-soft">
+            <div class="inline-flex size-9 items-center justify-center rounded-xl bg-[#f2f5f4] text-accent">
+                <i class="fas fa-folder text-sm"></i>
+            </div>
+            <p class="mt-3 text-xs font-medium text-muted">المجموعات</p>
+            <p class="mt-1 text-2xl font-semibold tabular-nums text-ink">{{ $allPermissions->count() }}</p>
+        </article>
+    </section>
+
+    <section class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
+        <div class="border-b border-line px-4 py-3.5 sm:px-5">
+            <h3 class="text-sm font-bold text-ink">قائمة المستخدمين</h3>
         </div>
-        
         <div class="overflow-x-auto">
-            <table class="w-full">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">المستخدم</th>
-                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الدور</th>
-                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الأدوار المخصصة</th>
-                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الصلاحيات المباشرة</th>
-                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">إجمالي الصلاحيات</th>
-                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الإجراءات</th>
+            <table class="min-w-full text-sm">
+                <thead class="bg-canvas/80">
+                    <tr class="text-right text-xs font-bold uppercase tracking-wide text-muted">
+                        <th class="px-4 py-3">المستخدم</th>
+                        <th class="px-4 py-3">الدور الأساسي</th>
+                        <th class="px-4 py-3">الأدوار المخصصة</th>
+                        <th class="px-4 py-3">مباشرة</th>
+                        <th class="px-4 py-3">الإجمالي</th>
+                        <th class="px-4 py-3">الإجراءات</th>
                     </tr>
                 </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
+                <tbody class="divide-y divide-line">
                     @forelse($users as $user)
                         @php
                             $rolePermissions = $user->roles()->with('permissions')->get()->pluck('permissions')->flatten()->unique('id');
                             $directPermissions = $user->directPermissions;
                             $totalPermissions = $rolePermissions->merge($directPermissions)->unique('id');
                         @endphp
-                        <tr class="hover:bg-gray-50">
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="flex items-center">
-                                    <div class="flex-shrink-0 h-10 w-10">
-                                        @if($user->profile_image)
-                                            <img class="h-10 w-10 rounded-full" src="{{ $user->profile_image_url }}" alt="{{ $user->name }}">
-                                        @else
-                                            <div class="h-10 w-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold">
-                                                {{ substr($user->name, 0, 1) }}
-                                            </div>
-                                        @endif
-                                    </div>
-                                    <div class="mr-4">
-                                        <div class="text-sm font-medium text-gray-900">{{ $user->name }}</div>
-                                        <div class="text-sm text-gray-500">{{ $user->email }}</div>
+                        <tr class="hover:bg-canvas/60 transition">
+                            <td class="px-4 py-3.5 whitespace-nowrap">
+                                <div class="flex items-center gap-3">
+                                    @if($user->profile_image)
+                                        <img class="size-10 rounded-full object-cover" src="{{ $user->profile_image_url }}" alt="">
+                                    @else
+                                        <div class="flex size-10 items-center justify-center rounded-full bg-accent text-sm font-bold text-white">
+                                            {{ mb_substr($user->name, 0, 1, 'UTF-8') }}
+                                        </div>
+                                    @endif
+                                    <div class="min-w-0">
+                                        <p class="font-semibold text-ink truncate">{{ $user->name }}</p>
+                                        <p class="text-xs text-muted truncate">{{ $user->email }}</p>
                                     </div>
                                 </div>
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                                    {{ $user->role === 'super_admin' ? 'bg-red-100 text-red-800' : ($user->role === 'instructor' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800') }}">
+                            <td class="px-4 py-3.5 whitespace-nowrap">
+                                <span class="rounded-full px-2.5 py-1 text-[11px] font-bold
+                                    {{ $user->role === 'super_admin' ? 'bg-rose-50 text-rose-700' : ($user->role === 'instructor' ? 'bg-sky-50 text-sky-700' : 'bg-emerald-50 text-emerald-700') }}">
                                     {{ $user->role === 'super_admin' ? 'مدير عام' : ($user->role === 'instructor' ? 'مدرب' : __('admin.student_role_label')) }}
                                 </span>
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="flex flex-wrap gap-2">
+                            <td class="px-4 py-3.5">
+                                <div class="flex flex-wrap gap-1.5">
                                     @forelse($user->roles as $role)
-                                        <span class="px-2 py-1 text-xs font-medium rounded-full bg-purple-100 text-purple-800">
+                                        <span class="rounded-full bg-accent-soft px-2 py-0.5 text-[11px] font-bold text-accent">
                                             {{ $role->display_name }}
                                         </span>
                                     @empty
-                                        <span class="text-sm text-gray-400">لا يوجد</span>
+                                        <span class="text-xs text-muted">لا يوجد</span>
                                     @endforelse
                                 </div>
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <span class="text-sm font-medium text-gray-900">
-                                    {{ $directPermissions->count() }} صلاحية
-                                </span>
+                            <td class="px-4 py-3.5 whitespace-nowrap font-semibold text-ink-soft">
+                                {{ $directPermissions->count() }}
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <span class="text-sm font-bold text-blue-600">
-                                    {{ $totalPermissions->count() }} صلاحية
-                                </span>
+                            <td class="px-4 py-3.5 whitespace-nowrap font-bold text-accent">
+                                {{ $totalPermissions->count() }}
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                <a href="{{ route('admin.user-permissions.show', $user) }}" 
-                                   class="text-blue-600 hover:text-blue-900">
-                                    <i class="fas fa-edit ml-2"></i>
-                                    إدارة الصلاحيات
+                            <td class="px-4 py-3.5 whitespace-nowrap">
+                                <a href="{{ route('admin.user-permissions.show', $user) }}"
+                                   class="btn-press inline-flex h-8 items-center gap-1.5 rounded-xl bg-accent px-3 text-xs font-bold text-white hover:bg-[#0d4f4a]">
+                                    <i class="fas fa-user-shield text-[10px]"></i>
+                                    إدارة
                                 </a>
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="px-6 py-4 text-center text-gray-500">
-                                لا يوجد مستخدمين
-                            </td>
+                            <td colspan="6" class="px-4 py-12 text-center text-muted">لا يوجد مستخدمون</td>
                         </tr>
                     @endforelse
                 </tbody>
             </table>
         </div>
-
-        <!-- Pagination -->
-        <div class="p-6 border-t border-gray-200">
-            {{ $users->links() }}
-        </div>
-    </div>
+        @if($users->hasPages())
+            <div class="border-t border-line px-4 py-3">{{ $users->links() }}</div>
+        @endif
+    </section>
 </div>
 @endsection
-

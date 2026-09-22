@@ -661,6 +661,8 @@ class AdvancedCourseController extends Controller
      */
     public function statistics(AdvancedCourse $advancedCourse)
     {
+        $advancedCourse->loadMissing(['enrollments', 'lessons', 'orders']);
+
         $stats = [
             // إحصائيات الطلاب
             'students' => [

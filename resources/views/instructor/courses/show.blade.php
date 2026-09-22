@@ -40,12 +40,6 @@
             </div>
         </div>
         <div class="su-page-head__actions">
-            @if(Route::has('instructor.courses.pricing.edit'))
-                <a href="{{ route('instructor.courses.pricing.edit', $course) }}" class="su-btn su-btn--primary">
-                    <i class="fas fa-tags" aria-hidden="true"></i>
-                    {{ $isRtl ? 'تسعير بالريال' : 'SAR pricing' }}
-                </a>
-            @endif
             <a href="{{ route('instructor.courses.index') }}" class="su-btn">
                 <i class="fas fa-arrow-{{ $isRtl ? 'right' : 'left' }}" aria-hidden="true"></i>
                 {{ __('instructor.back') }}
@@ -106,9 +100,9 @@
             </button>
             <button type="button" class="su-tab" :class="{ 'is-on': activeTab === 'students' }" @click="activeTab = 'students'">
                 <i class="fas fa-user-graduate" aria-hidden="true"></i> {{ __('instructor.students') }}
-            </button>
-            <button type="button" class="su-tab" :class="{ 'is-on': activeTab === 'attendance' }" @click="activeTab = 'attendance'">
-                <i class="fas fa-clipboard-list" aria-hidden="true"></i> {{ __('instructor.attendance') }}
+                @if(($stats['total_students'] ?? 0) > 0)
+                    <span class="su-tab__badge">{{ $stats['total_students'] }}</span>
+                @endif
             </button>
         </div>
 
@@ -235,8 +229,8 @@
                                     <strong>{{ $stats['pending_submissions'] ?? 0 }}</strong>
                                 </div>
                                 <div class="su-stat-line su-soft-3">
-                                    <span>{{ __('instructor.attendance_records') }}</span>
-                                    <strong>{{ $stats['total_attendance_records'] ?? 0 }}</strong>
+                                    <span>{{ __('instructor.enrolled_students') }}</span>
+                                    <strong>{{ $stats['total_students'] ?? 0 }}</strong>
                                 </div>
                             </div>
                         </div>
@@ -405,87 +399,46 @@
                                     <th>{{ __('instructor.email') }}</th>
                                     <th>{{ __('instructor.phone') }}</th>
                                     <th>{{ __('instructor.registration_date') }}</th>
+                                    <th>{{ __('instructor.progress_label') }}</th>
                                     <th>{{ __('common.status') }}</th>
-                                    <th>{{ __('instructor.actions') }}</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @foreach($enrollments as $enrollment)
+                                    @php
+                                        $student = $enrollment->student ?? $enrollment->user;
+                                        $progress = (float) ($enrollment->progress ?? 0);
+                                    @endphp
                                     <tr>
                                         <td>
                                             <div class="su-person">
-                                                <span class="su-avatar">{{ mb_substr($enrollment->user->name ?? __('instructor.student_single'), 0, 1) }}</span>
-                                                <strong>{{ $enrollment->user->name ?? __('instructor.not_specified') }}</strong>
+                                                <span class="su-avatar">{{ mb_substr($student->name ?? __('instructor.student_single'), 0, 1) }}</span>
+                                                <strong>{{ $student->name ?? __('instructor.not_specified') }}</strong>
                                             </div>
                                         </td>
-                                        <td style="color:var(--su-ink-40)">{{ $enrollment->user->email ?? __('instructor.not_specified') }}</td>
-                                        <td style="color:var(--su-ink-40)">{{ $enrollment->user->phone ?? __('instructor.not_specified') }}</td>
-                                        <td style="color:var(--su-ink-40)">{{ optional($enrollment->created_at)->format('Y/m/d') }}</td>
+                                        <td style="color:var(--su-ink-40)">{{ $student->email ?? __('instructor.not_specified') }}</td>
+                                        <td style="color:var(--su-ink-40)">{{ $student->phone ?? __('instructor.not_specified') }}</td>
+                                        <td style="color:var(--su-ink-40)">{{ optional($enrollment->enrolled_at ?? $enrollment->created_at)->format('Y/m/d') }}</td>
+                                        <td>
+                                            <span class="tabular-nums">{{ number_format($progress, 0) }}%</span>
+                                        </td>
                                         <td>
                                             <span class="su-chip su-chip--ok">
                                                 <i class="fas fa-check-circle" aria-hidden="true"></i>
-                                                {{ $enrollment->status ?? __('instructor.active_status') }}
+                                                {{ $enrollment->status_text ?? __('instructor.active_status') }}
                                             </span>
-                                        </td>
-                                        <td>
-                                            <a href="{{ route('profile') }}" class="su-icon-link"><i class="fas fa-user" aria-hidden="true"></i></a>
                                         </td>
                                     </tr>
                                 @endforeach
                             </tbody>
                         </table>
                     </div>
-                    <div class="su-pager">{{ $enrollments->links() }}</div>
+                    <div class="su-pager">{{ $enrollments->appends(request()->except('students_page'))->links() }}</div>
                 @else
                     <div class="su-empty">
                         <i class="fas fa-user-graduate" aria-hidden="true"></i>
                         <p>{{ __('instructor.no_enrolled_students') }}</p>
                         <p>{{ __('instructor.no_enrolled_description') }}</p>
-                    </div>
-                @endif
-            </div>
-
-            {{-- Attendance --}}
-            <div x-show="activeTab === 'attendance'" x-cloak>
-                <div class="su-section-head">
-                    <h3><i class="fas fa-clipboard-list" aria-hidden="true"></i> {{ __('instructor.attendance_absence') }}</h3>
-                    <a href="{{ route('instructor.attendance.index', ['course_id' => $course->id]) }}" class="su-btn su-btn--primary">
-                        <i class="fas fa-eye" aria-hidden="true"></i> {{ __('instructor.view_all_records') }}
-                    </a>
-                </div>
-                @php
-                    $courseLectures = \App\Models\Lecture::where('course_id', $course->id)
-                        ->where('status', 'completed')
-                        ->withCount('attendanceRecords')
-                        ->orderBy('scheduled_at', 'desc')
-                        ->take(10)
-                        ->get();
-                @endphp
-                @if($courseLectures->count() > 0)
-                    <div class="su-list">
-                        @foreach($courseLectures as $lecture)
-                            <div class="su-list-item">
-                                <span class="su-list-item__ico su-soft-3"><i class="fas fa-clipboard-list" aria-hidden="true"></i></span>
-                                <div class="su-list-item__body">
-                                    <div class="su-list-item__title">{{ $lecture->title }}</div>
-                                    <div class="su-list-item__meta">
-                                        {{ optional($lecture->scheduled_at)->format('Y/m/d H:i') }}
-                                        · {{ $lecture->attendance_records_count }} {{ __('instructor.attendance_record_single') }}
-                                    </div>
-                                </div>
-                                <div class="su-list-item__actions">
-                                    <a href="{{ route('instructor.attendance.lecture', $lecture) }}" class="su-btn">
-                                        <i class="fas fa-eye" aria-hidden="true"></i> {{ __('common.view') }}
-                                    </a>
-                                </div>
-                            </div>
-                        @endforeach
-                    </div>
-                @else
-                    <div class="su-empty">
-                        <i class="fas fa-clipboard-list" aria-hidden="true"></i>
-                        <p>{{ __('instructor.no_attendance_records') }}</p>
-                        <p>{{ __('instructor.no_attendance_description') }}</p>
                     </div>
                 @endif
             </div>

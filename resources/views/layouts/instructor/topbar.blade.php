@@ -6,8 +6,8 @@
         : ($user?->profile_image_url ?? $figma.'/avatar.png');
     $switchLocale = app()->getLocale() === 'ar' ? 'en' : 'ar';
     $switchLabel = $switchLocale === 'ar' ? 'عربي' : 'EN';
-    $bookingsUrl = Route::has('instructor.tutoring-bookings.index')
-        ? route('instructor.tutoring-bookings.index')
+    $bookingsUrl = Route::has('instructor.one-to-one-sessions.index')
+        ? route('instructor.one-to-one-sessions.index')
         : route('dashboard');
     $calendarUrl = Route::has('instructor.calendar')
         ? route('instructor.calendar')
@@ -30,8 +30,8 @@
             <a href="{{ route('dashboard') }}" class="ip-topbar__tab {{ request()->routeIs('dashboard') ? 'is-on' : '' }}">
                 {{ __('instructor.overview') }}
             </a>
-            <a href="{{ $bookingsUrl }}" class="ip-topbar__tab {{ request()->routeIs('instructor.tutoring-bookings.*') ? 'is-on' : '' }}">
-                {{ __('instructor.group_bookings') }}
+            <a href="{{ $bookingsUrl }}" class="ip-topbar__tab {{ request()->routeIs('instructor.one-to-one-sessions.*') ? 'is-on' : '' }}">
+                {{ __('instructor.private_lessons') }}
             </a>
             <a href="{{ $calendarUrl }}" class="ip-topbar__tab {{ request()->routeIs('instructor.calendar*') ? 'is-on' : '' }}">
                 {{ __('instructor.my_calendar') }}

@@ -14,7 +14,7 @@
     $showCourses = instructor_ui('show_courses', false);
     $teachingCourseIds = $user ? $user->teachingAdvancedCourseIds() : collect();
     $myCoursesCount = $teachingCourseIds->count();
-    $hasTeachingCourses = $showCourses && $myCoursesCount > 0;
+    $hasTeachingCourses = $myCoursesCount > 0 && $showCourses;
     $canAccessCurriculumLibrary = instructor_ui('show_libraries', true) && $user && $user->isAcademyWorkingInstructor();
 
     $navItems = [
@@ -25,21 +25,18 @@
         ['route' => 'instructor.free-trial-bookings.index', 'match' => ['instructor.free-trial-bookings.*'], 'label' => app()->getLocale() === 'ar' ? 'حصص مجانية' : 'Free sessions', 'fa' => 'fas fa-gift'],
         ['route' => 'instructor.calendar', 'match' => ['instructor.calendar', 'instructor.calendar.events'], 'label' => __('instructor.my_calendar'), 'fa' => 'fas fa-calendar-alt'],
         ['route' => 'instructor.live-sessions.index', 'match' => ['instructor.live-sessions.*'], 'label' => __('instructor.live_broadcast'), 'fa' => 'fas fa-broadcast-tower', 'when' => instructor_ui('show_live_broadcast', true)],
-        ['route' => 'instructor.tutoring-bookings.index', 'match' => ['instructor.tutoring-bookings.*'], 'label' => __('instructor.group_bookings'), 'fa' => 'fas fa-calendar-check', 'when' => instructor_ui('show_tutoring', false)],
-        ['route' => 'instructor.tutoring-cohorts.index', 'match' => ['instructor.tutoring-cohorts.*'], 'label' => __('instructor.class_command'), 'fa' => 'fas fa-layer-group', 'when' => instructor_ui('show_group_classes', false)],
-        ['route' => 'instructor.tutor-work-schedule.index', 'match' => ['instructor.tutor-work-schedule.*'], 'label' => __('instructor.group_work_schedule'), 'fa' => 'fas fa-users', 'when' => instructor_ui('show_group_classes', false)],
         ['route' => 'instructor.private-messages.index', 'match' => ['instructor.private-messages.*'], 'label' => __('instructor.student_messages'), 'fa' => 'fas fa-comments'],
         ['route' => 'instructor.notifications.index', 'match' => ['instructor.notifications.*'], 'label' => __('instructor.notifications'), 'fa' => 'fas fa-bell'],
         ['route' => 'instructor.consultations.index', 'match' => ['instructor.consultations.*'], 'label' => __('instructor.student_consultations'), 'fa' => 'fas fa-comments-dollar'],
         ['route' => 'instructor.libraries.curriculum.index', 'match' => ['instructor.libraries.curriculum.*'], 'label' => __('instructor.curriculum_library'), 'fa' => 'fas fa-sitemap', 'when' => $canAccessCurriculumLibrary],
         ['route' => 'instructor.libraries.materials.index', 'match' => ['instructor.libraries.materials.*'], 'label' => __('instructor.materials_library'), 'fa' => 'fas fa-folder-open', 'when' => $canAccessCurriculumLibrary],
         ['route' => 'instructor.libraries.videos.index', 'match' => ['instructor.libraries.videos.*'], 'label' => __('instructor.videos_for_students'), 'fa' => 'fas fa-film', 'when' => $canAccessCurriculumLibrary],
-        ['route' => 'instructor.lecture-recordings.index', 'match' => ['instructor.lecture-recordings.*'], 'label' => __('instructor.lecture_recordings'), 'fa' => 'fas fa-video', 'when' => $showCourses],
+        ['route' => 'instructor.lecture-recordings.index', 'match' => ['instructor.lecture-recordings.*'], 'label' => __('instructor.lecture_recordings'), 'fa' => 'fas fa-video', 'when' => $hasTeachingCourses],
         ['route' => 'instructor.lectures.index', 'match' => ['instructor.lectures.*'], 'label' => __('instructor.lectures'), 'fa' => 'fas fa-chalkboard', 'when' => $hasTeachingCourses && ($isInstructor || $user->hasPermission('instructor.manage.lectures'))],
-        ['route' => 'instructor.assignments.index', 'match' => ['instructor.assignments.*'], 'label' => __('instructor.assignments'), 'fa' => 'fas fa-tasks', 'when' => $showCourses && ($isInstructor || $user->hasPermission('instructor.manage.assignments'))],
-        ['route' => 'instructor.exams.index', 'match' => ['instructor.exams.*'], 'label' => __('instructor.exams'), 'fa' => 'fas fa-clipboard-check', 'when' => $showCourses && ($isInstructor || $user->hasPermission('instructor.manage.exams'))],
-        ['route' => 'instructor.question-banks.index', 'match' => ['instructor.question-banks.*', 'instructor.questions.*'], 'label' => __('instructor.question_banks'), 'fa' => 'fas fa-database', 'when' => $showCourses && $isInstructor],
-        ['route' => 'instructor.attendance.index', 'match' => ['instructor.attendance.*'], 'label' => __('instructor.attendance'), 'fa' => 'fas fa-clipboard-list', 'when' => $hasTeachingCourses && ($isInstructor || $user->hasPermission('instructor.manage.attendance'))],
+        ['route' => 'instructor.assignments.index', 'match' => ['instructor.assignments.*'], 'label' => __('instructor.assignments'), 'fa' => 'fas fa-tasks', 'when' => $hasTeachingCourses && ($isInstructor || $user->hasPermission('instructor.manage.assignments'))],
+        ['route' => 'instructor.exams.index', 'match' => ['instructor.exams.*'], 'label' => __('instructor.exams'), 'fa' => 'fas fa-clipboard-check', 'when' => $hasTeachingCourses && ($isInstructor || $user->hasPermission('instructor.manage.exams'))],
+        ['route' => 'instructor.question-banks.index', 'match' => ['instructor.question-banks.*', 'instructor.questions.*'], 'label' => __('instructor.question_banks'), 'fa' => 'fas fa-database', 'when' => $hasTeachingCourses && $isInstructor],
+        ['route' => 'instructor.attendance.index', 'match' => ['instructor.attendance.*'], 'label' => __('instructor.attendance'), 'fa' => 'fas fa-clipboard-list', 'when' => instructor_ui('show_attendance', false) && $hasTeachingCourses && ($isInstructor || $user->hasPermission('instructor.manage.attendance'))],
         ['route' => 'instructor.tasks.index', 'match' => ['instructor.tasks.*'], 'label' => __('instructor.tasks_from_management'), 'fa' => 'fas fa-check-square', 'when' => $isInstructor || $user->hasPermission('instructor.view.tasks')],
         ['route' => 'instructor.management-requests.index', 'match' => ['instructor.management-requests.*'], 'label' => __('instructor.submit_requests_to_management'), 'fa' => 'fas fa-paper-plane', 'when' => $isInstructor || $user->hasPermission('instructor.view.tasks')],
         ['route' => 'instructor.agreements.index', 'match' => ['instructor.agreements.*'], 'label' => __('instructor.agreements_system'), 'fa' => 'fas fa-handshake'],

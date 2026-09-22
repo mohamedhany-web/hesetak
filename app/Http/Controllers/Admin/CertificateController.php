@@ -20,6 +20,17 @@ use Illuminate\Validation\Rule;
 
 class CertificateController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware(function ($request, $next) {
+            if (! config('admin_ui.show_certificates', false)) {
+                abort(404);
+            }
+
+            return $next($request);
+        });
+    }
+
     private function filterCertificateTableColumns(array $data): array
     {
         try {

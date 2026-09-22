@@ -75,7 +75,7 @@
       <p class="mc-prx-note">{{ __('public.pricing_hero_note') }}</p>
       <div class="mc-prx-actions">
         <a href="#packages" class="mc-btn mc-btn--md mc-btn--primary">{{ __('public.pricing_packages_title') }}</a>
-        <a href="#tutoring-groups" class="mc-btn mc-btn--md mc-btn--outline">{{ __('public.pricing_groups_title') }}</a>
+        <a href="{{ route('public.instructors.index') }}" class="mc-btn mc-btn--md mc-btn--outline">{{ __('public.nav_instructors') }}</a>
       </div>
     </div>
   </section>
@@ -162,87 +162,6 @@
         </div>
       @else
         <div class="mc-empty">{{ __('public.pricing_no_packages') }}</div>
-      @endif
-    </div>
-  </section>
-
-  <section class="mc-section mc-section--muted" id="tutoring-groups">
-    <div class="mc-container">
-      <div class="mc-section-head" style="margin-bottom:1.75rem">
-        <div>
-          <p class="mc-eyebrow">{{ __('public.pricing_groups_badge') }}</p>
-          <h2 class="mc-title">{{ __('public.pricing_groups_title') }}</h2>
-          <p class="mc-lead">{{ __('public.pricing_groups_sub') }}</p>
-        </div>
-      </div>
-
-      @if($tutoringGroups->isNotEmpty())
-        <div class="mc-grid mc-grid--3">
-          @foreach($tutoringGroups as $group)
-            @php
-              $img = $group->imageUrl();
-              $isFeatured = (bool) $group->is_featured;
-            @endphp
-            <article @class(['mc-card mc-prx-card', 'is-popular' => $isFeatured])>
-              <div class="mc-card__body">
-                @if($isFeatured)
-                  <span class="mc-card__badge" style="position:static;align-self:flex-start">{{ __('public.pricing_package_popular') }}</span>
-                @endif
-                <div class="mc-prx-head">
-                  <div class="mc-prx-thumb">
-                    @if($img)
-                      <img src="{{ $img }}" alt="" loading="lazy">
-                    @else
-                      <i class="fas fa-{{ $group->isIndividual() ? 'user' : 'users' }}"></i>
-                    @endif
-                  </div>
-                  <div>
-                    <h3 class="mc-card__title">{{ $group->title }}</h3>
-                    <div class="mc-card__meta">
-                      <span>
-                        {{ $group->typeLabel() }}
-                        @if($group->instructor)
-                          · {{ $group->instructor->name }}
-                        @endif
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="mc-card__foot" style="border:0;padding:0;margin:0">
-                  <span class="mc-card__price">
-                    @if($group->price !== null && (float) $group->price > 0)
-                      {{ format_money((float) $group->price, 0) }}
-                    @else
-                      {{ __('public.pricing_groups_price_contact') }}
-                    @endif
-                  </span>
-                </div>
-
-                @if(filled($group->description))
-                  <p class="mc-prx-desc">{{ $group->description }}</p>
-                @endif
-
-                <ul class="mc-prx-list">
-                  @if($group->duration_minutes)
-                    <li><i class="fas fa-clock"></i><span>{{ __('public.pricing_groups_duration', ['minutes' => $group->duration_minutes]) }}</span></li>
-                  @endif
-                  @if($group->capacity)
-                    <li><i class="fas fa-user-group"></i><span>{{ __('public.pricing_groups_capacity', ['count' => $group->capacity]) }}</span></li>
-                  @endif
-                </ul>
-
-                <a href="{{ route('public.groups.show', $group->slug) }}"
-                   class="mc-btn mc-btn--md {{ $isFeatured ? 'mc-btn--primary' : 'mc-btn--outline' }}"
-                   style="margin-top:auto;justify-content:center;width:100%">
-                  {{ __('public.pricing_groups_cta') }}
-                </a>
-              </div>
-            </article>
-          @endforeach
-        </div>
-      @else
-        <div class="mc-empty">{{ __('public.pricing_no_groups') }}</div>
       @endif
     </div>
   </section>

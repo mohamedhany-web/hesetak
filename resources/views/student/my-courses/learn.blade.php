@@ -9,526 +9,7 @@
 
 @push('styles')
 <style>
-    [x-cloak] {
-        display: none !important;
-    }
-    
-    @keyframes shimmer {
-        0% { transform: translateX(-100%); }
-        100% { transform: translateX(100%); }
-    }
-    
-    .animate-shimmer {
-        animation: shimmer 2s infinite;
-    }
-    
-    .border-b-3 {
-        border-bottom-width: 3px;
-    }
-    
-    .scrollbar-hide {
-        -ms-overflow-style: none;
-        scrollbar-width: none;
-    }
-    
-    .scrollbar-hide::-webkit-scrollbar {
-        display: none;
-    }
-    
-    /* منع التمرير الأفقي على الجوال */
-    @media (max-width: 1024px) {
-        body {
-            overflow-x: hidden !important;
-        }
-        
-        * {
-            max-width: 100%;
-        }
-    }
-    
-    /* عناصر المنهج - بطاقات مثل لوحة التحكم */
-    .curriculum-item {
-        background: #ffffff;
-        border: 1px solid rgb(226 232 240);
-        border-radius: 12px;
-        padding: 0.6rem 0.75rem;
-        margin-bottom: 0.4rem;
-        transition: all 0.2s ease;
-        cursor: pointer;
-        position: relative;
-        touch-action: manipulation;
-    }
-    @media (max-width: 640px) {
-        .curriculum-item { padding: 0.55rem 0.7rem; margin-bottom: 0.35rem; border-radius: 10px; }
-    }
-    .curriculum-item:hover {
-        background: rgb(248 250 252);
-        border-color: rgb(191, 219, 240);
-        transform: translateX(-2px);
-    }
-    .curriculum-item.active {
-        background: rgb(232, 240, 250);
-        border-color: rgb(30, 78, 140);
-        box-shadow: 0 0 0 2px rgba(30, 78, 140, 0.15);
-    }
-    .curriculum-item.completed {
-        border-color: rgb(167 243 208);
-        background: rgb(236 253 245);
-    }
-    .curriculum-item.locked {
-        opacity: 0.6;
-        cursor: not-allowed;
-        background: rgb(248 250 252);
-    }
-    .curriculum-item.locked:hover {
-        transform: none;
-    }
-    .curriculum-section-header.section-locked {
-        color: rgb(100 116 139);
-    }
-    .curriculum-section-header.section-locked .curriculum-section-chevron {
-        opacity: 0.7;
-    }
-    
-    /* شريط تفاصيل الدرس */
-    .lesson-details-bar {
-        background: #ffffff;
-        border-bottom: 1px solid rgb(226 232 240);
-        padding: 0.875rem 1.25rem;
-        display: flex;
-        align-items: center;
-        gap: 0.875rem 1rem;
-        flex-wrap: wrap;
-        flex-shrink: 0;
-    }
-    @media (max-width: 640px) {
-        .lesson-details-bar {
-            padding: 0.625rem 0.75rem;
-            gap: 0.5rem 0.75rem;
-        }
-    }
-    .lesson-details-bar .lesson-thumb {
-        width: 56px;
-        height: 32px;
-        border-radius: 8px;
-        object-fit: cover;
-        background: rgb(241 245 249);
-        flex-shrink: 0;
-    }
-    @media (max-width: 640px) {
-        .lesson-details-bar .lesson-thumb {
-            width: 48px;
-            height: 28px;
-        }
-    }
-    .lesson-details-bar .lesson-title-text {
-        color: rgb(17 24 39);
-        font-weight: 600;
-        font-size: 0.875rem;
-        flex: 1;
-        min-width: 0;
-    }
-    @media (max-width: 640px) {
-        .lesson-details-bar .lesson-title-text {
-            font-size: 0.8125rem;
-            order: -1;
-            width: 100%;
-        }
-    }
-    .lesson-details-bar .lesson-meta {
-        color: rgb(100 116 139);
-        font-size: 0.75rem;
-    }
-    @media (max-width: 640px) {
-        .lesson-details-bar .lesson-meta {
-            font-size: 0.6875rem;
-        }
-    }
-    .btn-lesson-complete {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        padding: 0.5rem 1rem;
-        background: rgb(30, 78, 140);
-        color: white;
-        font-weight: 600;
-        font-size: 0.875rem;
-        border: none;
-        border-radius: 10px;
-        cursor: pointer;
-        transition: background 0.2s;
-        touch-action: manipulation;
-    }
-    @media (max-width: 640px) {
-        .btn-lesson-complete {
-            min-height: 40px;
-            padding: 0.5rem 0.75rem;
-            font-size: 0.8125rem;
-        }
-    }
-    .btn-lesson-complete:hover {
-        background: rgb(21, 58, 104);
-    }
-    .btn-lesson-complete:disabled,
-    .btn-lesson-complete.completed {
-        background: rgb(16 185 129);
-        cursor: default;
-    }
-    .lesson-details-bar .btn-share {
-        color: rgb(100 116 139);
-        font-size: 0.8125rem;
-        display: inline-flex;
-        align-items: center;
-        gap: 0.35rem;
-        background: none;
-        border: none;
-        cursor: pointer;
-    }
-    .lesson-details-bar .btn-share:hover {
-        color: rgb(30, 78, 140);
-    }
-    
-    .curriculum-section-header {
-        color: rgb(71 85 105);
-        font-weight: 600;
-        font-size: 0.65rem;
-        text-transform: uppercase;
-        letter-spacing: 0.06em;
-        padding: 0.5rem 0.75rem;
-        background: rgb(248 250 252);
-        border-radius: 10px;
-        margin-bottom: 0.5rem;
-        margin-top: 0.9rem;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        border: 1px solid rgb(226 232 240);
-        cursor: pointer;
-        user-select: none;
-        transition: background 0.2s, border-color 0.2s;
-    }
-    .curriculum-section-header:hover {
-        background: rgb(241 245 249);
-        border-color: rgb(191, 219, 240);
-    }
-    .curriculum-section-header:first-of-type { margin-top: 0; }
-    .curriculum-section-chevron {
-        transition: transform 0.2s ease;
-        color: rgb(100 116 139);
-        font-size: 0.6rem;
-    }
-    .curriculum-section-header.collapsed .curriculum-section-chevron {
-        transform: rotate(-90deg);
-    }
-    @media (max-width: 640px) {
-        .curriculum-section-header {
-            font-size: 0.6rem;
-            padding: 0.45rem 0.65rem;
-            border-radius: 8px;
-        }
-    }
-    
-    .curriculum-item-title {
-        color: rgb(17 24 39);
-        font-weight: 600;
-        font-size: 0.8rem;
-        margin-bottom: 0.15rem;
-        line-height: 1.35;
-        word-break: break-word;
-    }
-    @media (max-width: 640px) {
-        .curriculum-item-title { font-size: 0.75rem; }
-    }
-    .curriculum-item-meta {
-        color: rgb(100 116 139);
-        font-size: 0.65rem;
-        display: flex;
-        gap: 0.4rem;
-        flex-wrap: wrap;
-        line-height: 1.3;
-    }
-    
-    @media (max-width: 640px) {
-        .curriculum-item-meta {
-            font-size: 0.6rem;
-            gap: 0.3rem;
-        }
-    }
-    
-    .focus-main-content-wrapper {
-        padding: 0;
-        width: 100%;
-        flex: 1;
-        min-height: 0;
-        box-sizing: border-box;
-        display: flex;
-        flex-direction: column;
-        overflow: hidden;
-        position: relative;
-    }
-    
-    .lesson-content-viewer,
-    .lecture-viewer {
-        width: 100%;
-        flex: 1;
-        min-height: 0;
-        box-sizing: border-box;
-        padding: 1.5rem;
-        overflow-y: auto;
-        overflow-x: hidden;
-        -webkit-overflow-scrolling: touch;
-    }
-    
-    @media (max-width: 768px) {
-        .lesson-content-viewer,
-        .lecture-viewer {
-            padding: 1rem;
-        }
-    }
-    
-    .lesson-content-viewer > div,
-    .lecture-viewer > div {
-        width: 100%;
-        max-width: 100%;
-    }
-    
-    .lesson-content-viewer::-webkit-scrollbar,
-    .lecture-viewer::-webkit-scrollbar {
-        width: 6px;
-    }
-    .lesson-content-viewer::-webkit-scrollbar-track,
-    .lecture-viewer::-webkit-scrollbar-track {
-        background: rgb(241 245 249);
-    }
-    .lesson-content-viewer::-webkit-scrollbar-thumb,
-    .lecture-viewer::-webkit-scrollbar-thumb {
-        background: rgb(203 213 225);
-        border-radius: 3px;
-    }
-    
-    .empty-content-state {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        flex: 1;
-        width: 100%;
-        text-align: center;
-        padding: 2.5rem 1.5rem;
-        min-height: 400px;
-        color: rgb(71 85 105);
-        box-sizing: border-box;
-    }
-    
-    @media (max-width: 640px) {
-        .empty-content-state {
-            padding: 2rem 1rem;
-            min-height: 320px;
-        }
-        .empty-content-state h3 {
-            font-size: 1.25rem !important;
-        }
-        .empty-content-state .lg\\:hidden {
-            min-height: 48px;
-            padding: 0.75rem 1.25rem;
-        }
-    }
-    
-    /* وضع التركيز: إخفاء سايدبار ونافبار لوحة التحكم */
-    body.learn-focus-mode .st-rail,
-    body.learn-focus-mode .st-rail-backdrop,
-    body.learn-focus-mode .st-events { display: none !important; }
-    body.learn-focus-mode main .w-full.max-w-full { padding: 0 !important; }
-    body.learn-focus-mode main { height: 100vh; overflow: hidden; }
-    body.learn-focus-mode .learn-page { min-height: 100vh; height: 100%; display: flex; flex-direction: column; }
-    body.learn-focus-mode .learn-focus-wrapper { flex: 1; display: flex; flex-direction: column; min-height: 0; }
-    body.learn-focus-mode .learn-focus-wrapper .learn-focus-grid { flex: 1; min-height: 0; display: flex; flex-direction: row; gap: 0; }
-    body.learn-focus-mode .learn-focus-sidebar { flex-shrink: 0; width: 280px; min-width: 240px; max-height: 100%; overflow: hidden; display: flex; flex-direction: column; }
-    body.learn-focus-mode .learn-focus-sidebar .bg-white.rounded-2xl { flex: 1; display: flex; flex-direction: column; min-height: 0; max-height: none; }
-    body.learn-focus-mode .learn-focus-sidebar .focus-sidebar-content { flex: 1; min-height: 0; overflow-y: auto; max-height: none; }
-    body.learn-focus-mode .learn-focus-content { flex: 1; min-height: 0; min-width: 0; display: flex; flex-direction: column; }
-    @media (max-width: 639px) {
-        body.learn-focus-mode .learn-focus-sidebar { width: 220px; min-width: 200px; }
-    }
-    @media (max-width: 1023px) {
-        body.learn-focus-mode .learn-focus-wrapper { padding-left: 0; padding-right: 0; }
-        body.learn-focus-mode .learn-focus-content .rounded-2xl { border-radius: 0; border-right: none; border-left: none; }
-    }
-    
-    .learn-page[data-font-size='small'] .curriculum-content {
-        font-size: 0.875rem;
-    }
-    
-    .learn-page[data-font-size='medium'] .curriculum-content {
-        font-size: 1rem;
-    }
-    
-    .learn-page[data-font-size='large'] .curriculum-content {
-        font-size: 1.125rem;
-    }
-    
-    @media print {
-        .learn-page .btn-control,
-        .learn-page [class*="learn-progress"] {
-            display: none;
-        }
-        .learn-page { position: static; }
-    }
-    
-    /* مشغل الفيديو داخل حاوية 16:9 */
-    .lesson-video-viewer {
-        position: relative;
-        width: 100%;
-        background: #000;
-        display: flex;
-        flex-direction: column;
-    }
-    
-    #video-container {
-        position: absolute;
-        inset: 0;
-        width: 100%;
-        height: 100%;
-        display: flex;
-        flex-direction: column;
-        background: #000;
-    }
-    
-    /* منطقة الفيديو تملأ الحاوية بالكامل */
-    #video-container .video-player-area,
-    #video-container #video-player {
-        position: relative;
-        flex: 1;
-        min-height: 0;
-        width: 100%;
-        height: 100%;
-        display: block;
-        overflow: hidden;
-    }
-    
-    /* الوعاء الذي نملؤه من JS (video-surface) وعناصر الفيديو */
-    #video-container .video-display-wrapper,
-    #video-container #video-surface {
-        position: absolute !important;
-        inset: 0 !important;
-        width: 100% !important;
-        height: 100% !important;
-        margin: 0 !important;
-        padding: 0 !important;
-    }
-    #video-container #yt-player-box {
-        position: absolute !important;
-        inset: 0 !important;
-        width: 100% !important;
-        height: 100% !important;
-    }
-    #video-container #yt-player-box iframe {
-        position: absolute !important;
-        top: 0 !important;
-        left: 0 !important;
-        width: 100% !important;
-        height: 100% !important;
-        border: none !important;
-    }
-    
-    /* iframe الفيديو يملأ الوعاء بحجم طبيعي (يوتيوب/فيميو/غيره) */
-    #video-container .video-display-wrapper iframe,
-    #video-container iframe {
-        position: absolute !important;
-        top: 0 !important;
-        left: 0 !important;
-        width: 100% !important;
-        height: 100% !important;
-        border: none !important;
-        margin: 0 !important;
-    }
-    
-    /* فيديو مباشر (mp4) يملأ المساحة */
-    #video-container video {
-        width: 100% !important;
-        height: 100% !important;
-        object-fit: contain;
-    }
-    
-    /* عنصر مشغل YouTube بعد الاستبدال (YT.Player) - يملأ المساحة بالكامل */
-    #video-container [id^="youtube-player-"],
-    #video-container .youtube-player-wrapper {
-        position: absolute !important;
-        top: 0 !important;
-        left: 0 !important;
-        width: 100% !important;
-        height: 100% !important;
-    }
-    /* iframe الذي ينشئه YT.Player داخل الـ div يملأ الـ div */
-    #video-container [id^="youtube-player-"] iframe,
-    #video-container .youtube-player-wrapper iframe {
-        position: absolute !important;
-        top: 0 !important;
-        left: 0 !important;
-        width: 100% !important;
-        height: 100% !important;
-        border: none !important;
-    }
-    
-    /* منع تحديد النص في مشغل الفيديو */
-    .lesson-video-viewer * {
-        -webkit-user-select: none;
-        -moz-user-select: none;
-        -ms-user-select: none;
-        user-select: none;
-        -webkit-touch-callout: none;
-        -webkit-tap-highlight-color: transparent;
-    }
-    
-    /* منع السحب */
-    .lesson-video-viewer * {
-        -webkit-user-drag: none;
-        -khtml-user-drag: none;
-        -moz-user-drag: none;
-        -o-user-drag: none;
-        user-drag: none;
-    }
-    
-    /* حماية من التصوير */
-    .screenshot-protection {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        z-index: 10;
-        pointer-events: none;
-    }
-    
-    .screenshot-blocker {
-        position: fixed !important;
-        top: 0 !important;
-        left: 0 !important;
-        width: 100vw !important;
-        height: 100vh !important;
-        background: black !important;
-        z-index: 9999 !important;
-        pointer-events: none !important;
-        opacity: 0 !important;
-        transition: opacity 0.1s ease !important;
-    }
-    
-    .screenshot-blocker.active {
-        opacity: 1 !important;
-    }
-    
-    /* حماية Canvas من التصوير */
-    #video-container canvas {
-        image-rendering: pixelated !important;
-        image-rendering: -moz-crisp-edges !important;
-        image-rendering: crisp-edges !important;
-    }
-    
-    /* إخفاء أدوات التحكم في الفيديو المدمج */
-    #video-container iframe {
-        pointer-events: auto !important;
-        border: none !important;
-    }
+    [x-cloak] { display: none !important; }
 </style>
 @endpush
 
@@ -610,34 +91,28 @@
 @section('content')
 <script type="application/json" id="learn-lectures-data">{!! $lecturesDataJson !!}</script>
 <script type="application/json" id="learn-next-item-map">{!! json_encode($nextItemByLectureId ?? []) !!}</script>
-<script type="application/json" id="learn-lectures-data">{!! $lecturesDataJson !!}</script>
-<script type="application/json" id="learn-next-item-map">{!! json_encode($nextItemByLectureId ?? []) !!}</script>
-<div class="learn-page min-h-screen pb-8"
+@php
+    $locale = app()->getLocale();
+    $progressPct = min(100, (float) ($progress ?? 0));
+    $doneCount = (int) ($completedLessons ?? 0);
+    $totalCount = (int) ($totalLessons ?? 0);
+@endphp
+<div class="learn-page st-course-learn"
      data-course-id="{{ $course->id }}"
-     data-course-progress="{{ min(100, (float)($progress ?? 0)) }}"
-     data-total-items="{{ $totalLessons ?? 0 }}"
-     data-completed-items="{{ $completedLessons ?? 0 }}"
+     data-course-progress="{{ $progressPct }}"
+     data-total-items="{{ $totalCount }}"
+     data-completed-items="{{ $doneCount }}"
      data-lectures-url="{{ route('my-courses.lectures.show', [$course, '_LID_']) }}"
      :data-font-size="fontSize"
      x-data="courseFocusMode()"
      @keydown.escape.window="if (focusMode) { focusMode = false } else { window.location.href='{{ route('my-courses.show', $course) }}' }"
-     @keydown.ctrl.f.window.prevent="document.querySelector('.search-box input')?.focus()"
+     @keydown.ctrl.f.window.prevent="document.querySelector('.st-course-learn__search input')?.focus()"
      @keydown.ctrl.p.window.prevent="printCurriculum()"
      x-init="
          const descEl = document.getElementById('learn-section-descriptions');
          if (descEl) try { window.learnSectionDescriptions = JSON.parse(descEl.textContent); } catch(e) { window.learnSectionDescriptions = {}; }
          else window.learnSectionDescriptions = {};
-         $watch('searchQuery', () => filterItems());
-         $watch('focusMode', v => { document.body.classList.toggle('learn-focus-mode', !!v); });
-         updateProgressBar();
-         setInterval(() => updateProgressBar(), 100);
-         document.addEventListener('fullscreenchange', () => { isFullscreen = !!document.fullscreenElement; });
-         const _learnComp = this;
-         window.addEventListener('video-progress-report', (e) => {
-             const d = e.detail || {};
-             _learnComp.reportVideoProgressFromPlayer(d.currentSec, d.durationSec, d.isPlaying);
-             if (_learnComp.selectedLecture) _learnComp.lectureProgressPercent = _learnComp.videoProgressPercent;
-         });
+         window._learnComp = this;
          window.addEventListener('learn-lecture-progress', (e) => {
              if (e.detail && typeof e.detail.progress_percent === 'number') _learnComp.lectureProgressPercent = e.detail.progress_percent;
          });
@@ -649,9 +124,10 @@
              else if (d.type === 'assignment' && d.id) _learnComp.loadAssignment(d.id);
          });
      ">
+
     <div x-show="!focusMode">
         @include('partials.student-timeline-top', [
-            'locale' => app()->getLocale(),
+            'locale' => $locale,
             'pageTitle' => __('student_timeline.courses_learn'),
             'crumbs' => [
                 ['label' => __('student_timeline.school_gate'), 'url' => route('dashboard')],
@@ -662,97 +138,90 @@
         ])
     </div>
 
-    {{-- رأس الكورس (مخفي في وضع التركيز) --}}
-    <section x-show="!focusMode" class="st-join-hero" aria-label="{{ $course->title }}">
+    <section x-show="!focusMode" class="st-join-hero st-course-learn__hero" aria-label="{{ $course->title }}">
         <div class="st-join-hero__copy">
             <p class="st-join-hero__kicker">{{ __('student_timeline.courses_learn') }}</p>
             <h2 class="st-join-hero__title">{{ $course->title }}</h2>
             <p class="st-join-hero__meta">
-                {{ ($completedLessons ?? 0) }}/{{ ($totalLessons ?? 0) }}
-                · {{ number_format((float)($progress ?? 0), 0) }}%
+                {{ __('student_timeline.courses_learn_progress', ['done' => $doneCount, 'total' => $totalCount]) }}
+                · {{ number_format($progressPct, 0) }}%
             </p>
-            <div class="st-course-card__progress" style="max-width:220px;margin-top:10px;background:rgba(255,255,255,.25)" aria-hidden="true">
-                <span class="learn-progress-fill" style="width: {{ min(100, (float)($progress ?? 0)) }}%;background:var(--st-gold,#C9952A)"></span>
+            <div class="st-course-learn__progress" aria-hidden="true">
+                <span class="learn-progress-fill" style="width: {{ $progressPct }}%"></span>
             </div>
         </div>
         <div class="st-join-hero__actions">
             <button type="button" @click="toggleFocusMode()" class="st-pill st-pill--solid">
                 <i class="fas fa-expand-arrows-alt" aria-hidden="true"></i>
-                وضع التركيز
+                {{ __('student_timeline.courses_learn_focus') }}
             </button>
             <button type="button" @click="toggleFullscreen()" class="st-pill st-pill--outline">
                 <i class="fas" :class="isFullscreen ? 'fa-compress' : 'fa-expand'" aria-hidden="true"></i>
-                ملء الشاشة
+                {{ __('student_timeline.courses_learn_fullscreen') }}
             </button>
             <a href="{{ route('my-courses.show', $course) }}" class="st-pill st-pill--outline">{{ __('student_timeline.courses_back') }}</a>
         </div>
     </section>
 
-    {{-- شريط وضع التركيز --}}
-    <div x-show="focusMode" class="st-learn-focusbar flex items-center justify-between px-3 py-2 border-b border-slate-200 bg-white flex-shrink-0">
+    <div x-show="focusMode" x-cloak class="st-course-learn__focusbar">
         <button type="button" @click="focusMode = false" class="st-pill st-pill--outline">
             <i class="fas fa-compress-arrows-alt" aria-hidden="true"></i>
-            خروج من وضع التركيز
+            {{ __('student_timeline.courses_learn_exit_focus') }}
         </button>
-        <div class="flex items-center gap-2">
-            <div class="h-2 w-24 bg-slate-200 rounded-full overflow-hidden">
-                <div class="learn-progress-fill h-full bg-gradient-to-l from-[#1E4E8C] to-[#2A6BB5] rounded-full transition-all duration-500" style="width: {{ min(100, (float)($progress ?? 0)) }}%"></div>
+        <div class="st-course-learn__focusbar-meta">
+            <div class="st-course-learn__focusbar-track" aria-hidden="true">
+                <span class="learn-progress-fill" style="width: {{ $progressPct }}%"></span>
             </div>
-            <span class="learn-progress-count text-xs font-semibold text-slate-600">{{ $completedLessons ?? 0 }}/{{ $totalLessons ?? 0 }}</span>
-            <span class="learn-progress-pct text-xs font-bold text-[#1E4E8C]">{{ number_format((float)($progress ?? 0), 0) }}%</span>
+            <span class="learn-progress-count">{{ $doneCount }}/{{ $totalCount }}</span>
+            <span class="learn-progress-pct">{{ number_format($progressPct, 0) }}%</span>
         </div>
     </div>
 
-    {{-- شبكة عمودين: منهج (يسار) + محتوى (يمين) --}}
-    <div class="learn-focus-wrapper w-full px-4 lg:px-6 flex-1 flex flex-col min-h-0">
-    <div class="learn-focus-grid w-full grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6 flex-1 min-h-0">
-        {{-- بطاقة المنهج --}}
-        <div class="learn-focus-sidebar lg:col-span-4 xl:col-span-3">
-            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden sticky top-4">
-                <div class="p-4 border-b border-slate-200">
-                    <h3 class="text-gray-900 font-bold text-sm flex items-center gap-2 mb-3">
-                        <span class="w-7 h-7 rounded-lg bg-[#E8F0FA] flex items-center justify-center"><i class="fas fa-list text-[#1E4E8C] text-xs"></i></span>
-                        المنهج
-                    </h3>
-                    <div class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-slate-50 border border-slate-200 mb-3">
-                        <div class="h-1.5 flex-1 rounded-full bg-slate-200 overflow-hidden">
-                            <div class="h-full bg-gradient-to-l from-[#1E4E8C] to-[#2A6BB5] rounded-full" style="width: {{ min(100, (float)($progress ?? 0)) }}%"></div>
-                        </div>
-                        <span class="learn-progress-count text-[10px] font-bold text-gray-600 whitespace-nowrap">{{ $completedLessons ?? 0 }}/{{ $totalLessons ?? 0 }}</span>
-                        <span class="learn-progress-pct text-[10px] font-bold text-[#1E4E8C]">{{ number_format((float)($progress ?? 0), 0) }}%</span>
+    <div class="st-course-learn__grid">
+        <aside class="st-course-learn__aside learn-focus-sidebar" aria-label="{{ __('student_timeline.courses_learn_curriculum') }}">
+            <div class="st-course-learn__aside-head">
+                <h3 class="st-course-learn__aside-title">
+                    <i class="fas fa-list" aria-hidden="true"></i>
+                    {{ __('student_timeline.courses_learn_curriculum') }}
+                </h3>
+                <div class="st-course-learn__aside-progress">
+                    <div class="st-course-learn__aside-progress-track" aria-hidden="true">
+                        <span style="width: {{ $progressPct }}%"></span>
                     </div>
-                    <div class="search-box relative">
-                        <input type="text" 
-                               x-model="searchQuery"
-                               placeholder="ابحث..."
-                               class="w-full bg-slate-50 border border-slate-200 text-gray-900 placeholder-gray-400 px-3 py-2 pr-9 rounded-xl text-xs focus:outline-none focus:border-[#1E4E8C] focus:ring-2 focus:ring-[#1E4E8C]/20 transition-all"
-                               @keydown.escape="searchQuery = ''">
-                        <div class="absolute right-2.5 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"><i class="fas fa-search text-xs"></i></div>
-                    </div>
+                    <strong class="learn-progress-count">{{ $doneCount }}/{{ $totalCount }}</strong>
+                    <em class="learn-progress-pct">{{ number_format($progressPct, 0) }}%</em>
                 </div>
-                <div class="focus-sidebar-content max-h-[60vh] overflow-y-auto p-3">
-                    <!-- الاختبارات في السايدبار -->
-                    @if(isset($sidebarExams) && $sidebarExams->count() > 0)
-                        <div class="mb-4">
-                            <div class="curriculum-section-header mb-2"
-                                 :class="{ 'collapsed': isSectionCollapsed('sidebar-exams') }"
-                                 @click="toggleSection('sidebar-exams')"
-                                 role="button"
-                                 tabindex="0"
-                                 @keydown.enter.prevent="toggleSection('sidebar-exams')"
-                                 @keydown.space.prevent="toggleSection('sidebar-exams')">
-                                <span class="flex items-center gap-1.5">
-                                    <i class="fas fa-clipboard-check text-[#2A6BB5]/90 text-[10px]"></i>
-                                    <span>الاختبارات</span>
-                                    <span class="text-gray-500 text-[10px]">({{ $sidebarExams->count() }})</span>
-                                </span>
-                                <i class="fas fa-chevron-down curriculum-section-chevron"></i>
-                            </div>
-                            <div x-show="!isSectionCollapsed('sidebar-exams')" x-transition>
+                <div class="st-course-learn__search search-box">
+                    <input type="search"
+                           x-model="searchQuery"
+                           placeholder="{{ __('student_timeline.courses_learn_search') }}"
+                           @keydown.escape="searchQuery = ''">
+                    <i class="fas fa-search" aria-hidden="true"></i>
+                </div>
+            </div>
+
+            <div class="st-course-learn__curriculum focus-sidebar-content">
+                @if(isset($sidebarExams) && $sidebarExams->count() > 0)
+                    <div class="mb-3">
+                        <div class="curriculum-section-header"
+                             :class="{ 'collapsed': isSectionCollapsed('sidebar-exams') }"
+                             @click="toggleSection('sidebar-exams')"
+                             role="button"
+                             tabindex="0"
+                             @keydown.enter.prevent="toggleSection('sidebar-exams')"
+                             @keydown.space.prevent="toggleSection('sidebar-exams')">
+                            <span class="flex items-center gap-1.5">
+                                <i class="fas fa-clipboard-check text-[#2A6BB5]/90 text-[10px]"></i>
+                                <span>{{ __('student_timeline.courses_learn_exams') }}</span>
+                                <span class="text-gray-500 text-[10px]">({{ $sidebarExams->count() }})</span>
+                            </span>
+                            <i class="fas fa-chevron-down curriculum-section-chevron"></i>
+                        </div>
+                        <div x-show="!isSectionCollapsed('sidebar-exams')" x-cloak x-transition>
                             @foreach($sidebarExams as $exam)
-                                <div class="curriculum-item" 
+                                <div class="curriculum-item"
                                      @click="loadExam({{ $exam->id }})"
-                                     x-show="!searchQuery || '{{ strtolower($exam->title) }}'.includes(searchQuery.toLowerCase())">
+                                     x-show="!searchQuery || '{{ strtolower(addslashes($exam->title)) }}'.includes(searchQuery.toLowerCase())">
                                     <div class="flex items-start gap-2">
                                         <div class="flex-shrink-0 mt-0.5">
                                             <div class="w-6 h-6 bg-indigo-500 rounded-md flex items-center justify-center">
@@ -769,148 +238,120 @@
                                     </div>
                                 </div>
                             @endforeach
-                            </div>
                         </div>
-                    @endif
+                    </div>
+                @endif
 
-                    @if(isset($sections) && $sections->count() > 0)
-                        <!-- عرض المنهج من الأقسام (جذور + أقسام فرعية متداخلة) -->
-                        <script type="application/json" id="learn-section-descriptions">@json($sectionDescriptions ?? [])</script>
-                        @foreach($sections as $section)
-                            @include('student.my-courses.partials.learn-sidebar-section', ['section' => $section, 'depth' => 0])
-                        @endforeach
-                    @else
-                        <!-- لا يوجد منهج (تم إلغاء عرض الدروس) -->
-                        <div class="py-6 px-4 text-center">
-                            <p class="text-gray-600 text-sm">لا توجد عناصر في المنهج بعد.</p>
-                            <p class="text-gray-500 text-xs mt-1">المحاضرات والواجبات والامتحانات تظهر هنا عند إضافتها من المدرب.</p>
-                        </div>
-                    @endif
-                </div>
+                @if(isset($sections) && $sections->count() > 0)
+                    <script type="application/json" id="learn-section-descriptions">@json($sectionDescriptions ?? [])</script>
+                    @foreach($sections as $section)
+                        @include('student.my-courses.partials.learn-sidebar-section', ['section' => $section, 'depth' => 0])
+                    @endforeach
+                @else
+                    <div class="st-course-learn__empty" style="min-height:180px;padding:28px 12px">
+                        <p>{{ __('student_timeline.courses_learn_empty_curriculum') }}</p>
+                        <p>{{ __('student_timeline.courses_learn_empty_curriculum_hint') }}</p>
+                    </div>
+                @endif
             </div>
-        </div>
+        </aside>
 
-        {{-- بطاقة المحتوى --}}
-        <div class="learn-focus-content lg:col-span-8 xl:col-span-9">
-            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden min-h-[400px]">
-                <div class="focus-main-content-wrapper p-4 lg:p-6">
-                    <!-- حالة ترحيب -->
-                    <div x-show="!selectedLesson && !selectedLecture" 
-                         x-transition
-                         class="empty-content-state">
-                        <div class="relative mb-8">
-                            <div class="w-28 h-28 md:w-36 md:h-36 rounded-3xl bg-gradient-to-br from-[#E8F0FA]0/20 to-emerald-500/20 border border-[#1E4E8C]/30 flex items-center justify-center mx-auto shadow-xl shadow-[#1E4E8C]/10">
-                                <i class="fas fa-book-open text-[#2A6BB5] text-5xl md:text-6xl"></i>
-                            </div>
-                            <div class="absolute -bottom-1 -right-2 w-12 h-12 rounded-xl bg-emerald-500/20 border border-emerald-400/30 flex items-center justify-center">
-                                <i class="fas fa-play text-emerald-400 text-lg"></i>
-                            </div>
-                        </div>
-                        <h3 class="text-2xl md:text-3xl font-bold text-gray-900 mb-2">مرحباً في {{ $course->title }}</h3>
-                        <p class="text-gray-600 text-base md:text-lg mb-2 max-w-md mx-auto">اختر محاضرة أو واجباً أو امتحاناً من القائمة لبدء التعلم</p>
-                        <p class="text-gray-500 text-sm mb-8">التقدم: {{ $completedLessons ?? 0 }} من {{ $totalLessons ?? 0 }} — {{ number_format((float)($progress ?? 0), 0) }}%</p>
+        <section class="st-course-learn__stage learn-focus-content" aria-label="{{ __('student_timeline.courses_learn') }}">
+            <div class="st-course-learn__stage-body focus-main-content-wrapper">
+                <div x-show="!selectedLesson && !selectedLecture" class="st-course-learn__empty empty-content-state">
+                    <div class="st-course-learn__empty-ico" aria-hidden="true">
+                        <i class="fas fa-book-open"></i>
                     </div>
-                    
-                    <!-- وصف القسم (يظهر في منطقة المحتوى عند اختيار عنصر من قسم له وصف — وليس في السايدبار) -->
-                    <div x-show="currentSectionDescription" x-transition
-                         class="mb-4 p-4 rounded-xl bg-slate-50 border border-slate-200 text-slate-700 text-sm leading-relaxed">
-                        <p class="whitespace-pre-wrap" x-text="currentSectionDescription"></p>
+                    <h3>{{ __('student_timeline.courses_learn_welcome', ['title' => $course->title]) }}</h3>
+                    <p>{{ __('student_timeline.courses_learn_pick') }}</p>
+                    <div class="st-course-learn__empty-meta">
+                        <span>{{ __('student_timeline.courses_learn_progress', ['done' => $doneCount, 'total' => $totalCount]) }}</span>
+                        <span>{{ number_format($progressPct, 0) }}%</span>
                     </div>
+                </div>
 
-                    <!-- محتوى الدرس المحدد -->
-                    <div x-show="selectedLesson && !selectedLecture && !showVideoPlayer" x-transition class="lesson-content-viewer">
-                        <div x-html="lessonContent"></div>
-                    </div>
-                    
-                    <!-- مشغل الفيديو داخل حاوية 16:9 -->
-                    <div x-show="(selectedLesson && showVideoPlayer) || (selectedLecture && showVideoPlayer)" 
-                         x-transition
-                         class="lesson-video-viewer w-full flex flex-col rounded-xl overflow-hidden border border-slate-200 bg-black">
-                        <div x-show="selectedLesson && !selectedLecture" class="lesson-details-bar">
-                            <span class="lesson-meta">التقدم: <span x-text="videoProgressPercent || 0">0</span>%</span>
-                            <span class="lesson-meta">الوقت: <span x-text="videoTimeCurrent || '0:00'">0:00</span> / <span x-text="currentLessonDuration ? (currentLessonDuration + ' د') : (videoTimeTotal || '0:00')">0:00</span></span>
-                            <img x-show="currentLessonThumbnail" :src="currentLessonThumbnail" alt="" class="lesson-thumb" />
-                            <span class="lesson-title-text truncate" x-text="currentLessonTitle || 'الدرس'">الدرس</span>
-                            <button type="button"
-                                    @click="markLessonComplete()"
-                                    :disabled="currentLessonCompleted"
-                                    :class="currentLessonCompleted ? 'btn-lesson-complete completed' : 'btn-lesson-complete'">
-                                <i class="fas fa-check text-white"></i>
-                                <span x-text="currentLessonCompleted ? 'تم إكمال الدرس بنجاح!' : 'تم إكمال الدرس بنجاح!'">تم إكمال الدرس بنجاح!</span>
-                            </button>
-                            <button type="button" class="btn-share" title="مشاركة"><i class="fas fa-share-alt"></i> مشاركة</button>
-                        </div>
-                        <!-- شريط تقدم المشاهدة — للمحاضرة: تحديث مباشر من سكربت الفيديو (بدون Alpine). للدرس: Alpine -->
-                        <div class="flex-shrink-0 px-3 py-2.5 bg-slate-800 border-b border-slate-600 min-h-[52px] flex flex-col justify-center" id="learn-watch-percent-bar">
-                            <div class="flex items-center justify-between gap-2 mb-1.5">
-                                <span class="text-sm font-semibold text-[#93B4D8]">نسبة المشاهدة</span>
-                                <template x-if="selectedLecture">
-                                    <span id="lecture-watch-pct-text" class="text-sm font-bold text-white tabular-nums">0.0%</span>
-                                </template>
-                                <span x-show="selectedLesson && showVideoPlayer" x-text="(Math.round((videoProgressPercent || 0) * 10) / 10).toFixed(1) + '%'" class="text-sm font-bold text-white tabular-nums">0.0%</span>
-                            </div>
-                            <div class="h-2.5 bg-slate-700 rounded-full overflow-hidden">
-                                <template x-if="selectedLecture">
-                                    <div id="lecture-watch-pct-fill" class="h-full bg-gradient-to-r from-[#1E4E8C] to-[#2A6BB5] rounded-full transition-all duration-300 min-w-[2px]" style="width: 0%;"></div>
-                                </template>
-                                <div x-show="selectedLesson && showVideoPlayer" class="h-full bg-gradient-to-r from-[#1E4E8C] to-[#2A6BB5] rounded-full transition-all duration-300 min-w-[2px]" :style="'width: ' + Math.min(100, Math.max(0, videoProgressPercent || 0)) + '%'"></div>
-                            </div>
-                        </div>
-                        <div class="aspect-video w-full relative bg-black flex-1 min-h-0" x-show="(selectedLesson && showVideoPlayer) || (selectedLecture && showVideoPlayer)">
-                            {{-- محاضرة: نفس أسلوب البوب أب في المنهج — حاوية واحدة و innerHTML مباشر --}}
-                            <div x-show="selectedLecture && showVideoPlayer" class="absolute inset-0 w-full h-full" id="learn-video-embed"></div>
-                            {{-- درس: مشغل الفيديو الحالي --}}
-                            <div x-show="selectedLesson && showVideoPlayer" class="absolute inset-0 w-full h-full">
-                                @include('student.my-courses.partials.video-player')
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- محتوى المحاضرة (بدون فيديو) -->
-                    <div x-show="selectedLecture && !showVideoPlayer" x-transition class="lesson-content-viewer">
-                        <div x-html="lectureContent"></div>
+                <div x-show="currentSectionDescription" x-cloak x-transition class="st-course-learn__section-note">
+                    <p class="whitespace-pre-wrap" x-text="currentSectionDescription"></p>
+                </div>
+
+                <div x-show="selectedLesson && !selectedLecture && !showVideoPlayer" x-cloak x-transition class="lesson-content-viewer">
+                    <div x-html="lessonContent"></div>
+                </div>
+
+                <div x-show="(selectedLesson && showVideoPlayer) || (selectedLecture && showVideoPlayer)"
+                     x-cloak
+                     x-transition
+                     class="st-course-learn__player lesson-video-viewer">
+                    <div x-show="selectedLesson && !selectedLecture" x-cloak class="lesson-details-bar">
+                        <span class="lesson-meta">التقدم: <span x-text="videoProgressPercent || 0">0</span>%</span>
+                        <span class="lesson-meta">الوقت: <span x-text="videoTimeCurrent || '0:00'">0:00</span> / <span x-text="currentLessonDuration ? (currentLessonDuration + ' د') : (videoTimeTotal || '0:00')">0:00</span></span>
+                        <img x-show="currentLessonThumbnail" :src="currentLessonThumbnail" alt="" class="lesson-thumb" />
+                        <span class="lesson-title-text truncate" x-text="currentLessonTitle || 'الدرس'">الدرس</span>
+                        <button type="button"
+                                @click="markLessonComplete()"
+                                :disabled="currentLessonCompleted"
+                                :class="currentLessonCompleted ? 'btn-lesson-complete completed' : 'btn-lesson-complete'">
+                            <i class="fas fa-check text-white"></i>
+                            <span x-text="currentLessonCompleted ? 'تم إكمال الدرس بنجاح!' : 'تم إكمال الدرس بنجاح!'">تم إكمال الدرس بنجاح!</span>
+                        </button>
+                        <button type="button" class="btn-share" title="مشاركة"><i class="fas fa-share-alt"></i> مشاركة</button>
                     </div>
 
-                    <!-- مواد المحاضرة (ظاهرة عند اختيار محاضرة ولديها مواد) -->
-                    <div x-show="selectedLecture && lectureMaterials && lectureMaterials.length" x-transition
-                         class="mt-5 rounded-2xl border border-slate-200 dark:border-slate-600 overflow-hidden bg-white dark:bg-slate-800/50 shadow-sm">
-                        <div class="px-4 sm:px-5 py-3.5 bg-gradient-to-l from-[#E8F0FA] to-white dark:from-slate-800 dark:to-slate-800/80 border-b border-slate-100 dark:border-slate-600 flex items-center justify-between gap-3 flex-wrap">
-                            <h3 class="text-base font-bold text-slate-800 dark:text-white flex items-center gap-2.5">
-                                <span class="w-9 h-9 rounded-xl bg-[#E8F0FA] dark:bg-[#1E4E8C]/40 flex items-center justify-center">
-                                    <i class="fas fa-paperclip text-[#1E4E8C] dark:text-[#2A6BB5]"></i>
+                    <div class="st-course-learn__watchbar" id="learn-watch-percent-bar">
+                        <div class="st-course-learn__watchbar-row">
+                            <span>{{ __('student_timeline.courses_learn_watch_pct') }}</span>
+                            <template x-if="selectedLecture">
+                                <span id="lecture-watch-pct-text">0.0%</span>
+                            </template>
+                            <span x-show="selectedLesson && showVideoPlayer" x-cloak x-text="(Math.round((videoProgressPercent || 0) * 10) / 10).toFixed(1) + '%'">0.0%</span>
+                        </div>
+                        <div class="st-course-learn__watchbar-track">
+                            <template x-if="selectedLecture">
+                                <span id="lecture-watch-pct-fill" style="width: 0%;"></span>
+                            </template>
+                            <span x-show="selectedLesson && showVideoPlayer" x-cloak :style="'width: ' + Math.min(100, Math.max(0, videoProgressPercent || 0)) + '%'"></span>
+                        </div>
+                    </div>
+
+                    <div class="st-course-learn__frame" x-show="(selectedLesson && showVideoPlayer) || (selectedLecture && showVideoPlayer)" x-cloak>
+                        <div x-show="selectedLecture && showVideoPlayer" x-cloak id="learn-video-embed"></div>
+                        <div x-show="selectedLesson && showVideoPlayer" x-cloak>
+                            @include('student.my-courses.partials.video-player')
+                        </div>
+                    </div>
+                </div>
+
+                <div x-show="selectedLecture && !showVideoPlayer" x-cloak x-transition class="lesson-content-viewer">
+                    <div x-html="lectureContent"></div>
+                </div>
+
+                <div x-show="selectedLecture && lectureMaterials && lectureMaterials.length" x-cloak x-transition class="st-course-learn__materials">
+                    <div class="st-course-learn__materials-head">
+                        <h3>
+                            <span><i class="fas fa-paperclip" aria-hidden="true"></i></span>
+                            {{ __('student_timeline.courses_learn_materials') }}
+                            <span class="st-course-learn__materials-count" x-text="lectureMaterials.length"></span>
+                        </h3>
+                    </div>
+                    <div class="st-course-learn__materials-grid">
+                        <template x-for="mat in lectureMaterials" :key="mat.id">
+                            <a :href="mat.download_url" target="_blank" rel="noopener" class="st-course-learn__mat">
+                                <span class="st-course-learn__mat-ico"><i class="fas" :class="getMaterialIconClass(mat)"></i></span>
+                                <span class="st-course-learn__mat-copy">
+                                    <strong x-text="mat.title"></strong>
+                                    <small x-text="mat.file_name"></small>
                                 </span>
-                                مواد المحاضرة
-                                <span class="text-xs font-semibold text-[#1E4E8C] dark:text-[#2A6BB5] bg-[#E8F0FA] dark:bg-[#1E4E8C]/40 px-2.5 py-0.5 rounded-full" x-text="lectureMaterials.length"></span>
-                            </h3>
-                        </div>
-                        <div class="p-4 sm:p-5">
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                <template x-for="mat in lectureMaterials" :key="mat.id">
-                                    <a :href="mat.download_url" target="_blank" rel="noopener"
-                                       class="group flex items-center gap-4 p-4 rounded-xl bg-slate-50 dark:bg-slate-700/50 border border-slate-100 dark:border-slate-600 hover:bg-[#E8F0FA] dark:hover:bg-[#1E4E8C]/20 hover:border-[#93B4D8] dark:hover:border-[#2A6BB5] transition-all duration-200">
-                                        <span class="w-12 h-12 rounded-xl bg-white dark:bg-slate-600 shadow-sm border border-slate-200 dark:border-slate-500 flex items-center justify-center shrink-0 group-hover:bg-[#E8F0FA] dark:group-hover:bg-[#1E4E8C]/30 transition-colors">
-                                            <i class="fas text-lg" :class="getMaterialIconClass(mat)"></i>
-                                        </span>
-                                        <div class="flex-1 min-w-0">
-                                            <span class="block font-semibold text-slate-800 dark:text-white truncate group-hover:text-[#152A4A] dark:group-hover:text-[#93B4D8] transition-colors" x-text="mat.title"></span>
-                                            <span class="text-xs text-slate-500 dark:text-slate-400 mt-0.5 block truncate" x-text="mat.file_name"></span>
-                                        </div>
-                                        <span class="w-10 h-10 rounded-lg bg-[#E8F0FA]0 text-white flex items-center justify-center shrink-0 group-hover:bg-[#152A4A] transition-colors">
-                                            <i class="fas fa-download text-sm"></i>
-                                        </span>
-                                    </a>
-                                </template>
-                            </div>
-                        </div>
+                                <span class="st-course-learn__mat-dl"><i class="fas fa-download"></i></span>
+                            </a>
+                        </template>
                     </div>
-                    
                 </div>
             </div>
-        </div>
-    </div>
+        </section>
     </div>
 </div>
 @endsection
+
 
 @push('scripts')
 <script>

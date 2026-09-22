@@ -21,7 +21,7 @@ class PlatformCourseCertificateService
      */
     public function issueIfEligible(?StudentCourseEnrollment $enrollment): ?Certificate
     {
-        if (! $enrollment || ! config('certificates.platform_auto_issue', true)) {
+        if (! $enrollment || ! config('certificates.enabled', false) || ! config('certificates.platform_auto_issue', false)) {
             return null;
         }
 

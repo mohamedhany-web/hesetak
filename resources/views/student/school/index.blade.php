@@ -22,7 +22,7 @@
                 <i class="fas fa-box-open text-xs"></i>
                 {{ $isRtl ? 'باقات المدرسة' : 'School packages' }}
             </a>
-            <a href="{{ route('public.groups') }}" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl border border-line bg-white px-4 text-sm font-medium text-ink-soft transition hover:border-accent/30 hover:text-accent">
+            <a href="{{ Route::has('public.groups') ? route('public.groups') : (Route::has('public.curricula') ? route('public.curricula') : route('public.instructors.index')) }}" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl border border-line bg-white px-4 text-sm font-medium text-ink-soft transition hover:border-accent/30 hover:text-accent">
                 <i class="fas fa-school text-xs"></i>
                 {{ $isRtl ? 'صفحة المدرسة' : 'School page' }}
             </a>
@@ -62,7 +62,7 @@
             @if($recommendedYear->tagline)
                 <p class="text-sm text-muted">{{ $recommendedYear->tagline }}</p>
             @endif
-            <a href="{{ route('public.school.year', $recommendedYear->slug) }}" class="mt-3 inline-flex h-10 items-center gap-2 rounded-xl bg-accent px-4 text-sm font-medium text-white">
+            <a href="{{ Route::has('public.school.year') ? route('public.school.year', $recommendedYear->slug) : (Route::has('public.curricula.show') ? route('public.curricula.show', $recommendedYear) : route('public.curricula')) }}" class="mt-3 inline-flex h-10 items-center gap-2 rounded-xl bg-accent px-4 text-sm font-medium text-white">
                 <i class="fas fa-door-open"></i> {{ $isRtl ? 'عرض فصول السنة' : 'View year classes' }}
             </a>
         </article>
@@ -98,7 +98,11 @@
     <article class="overflow-hidden rounded-2xl border border-line bg-white shadow-soft">
         <div class="flex flex-wrap items-center justify-between gap-3 border-b border-line px-4 py-4 sm:px-5">
             <h3 class="text-base font-semibold text-ink">{{ $isRtl ? 'الحصص القادمة' : 'Upcoming classes' }}</h3>
+            @if(Route::has('student.tutoring-bookings.index'))
             <a href="{{ route('student.tutoring-bookings.index') }}" class="text-sm font-medium text-accent hover:underline">{{ $isRtl ? 'كل الحجوزات' : 'All bookings' }}</a>
+            @elseif(Route::has('student.one-to-one-sessions.index'))
+            <a href="{{ route('student.one-to-one-sessions.index') }}" class="text-sm font-medium text-accent hover:underline">{{ $isRtl ? 'حصصي' : 'My sessions' }}</a>
+            @endif
         </div>
         <div class="overflow-x-auto">
             <table class="min-w-full text-sm">
@@ -121,7 +125,9 @@
                                     @if($booking->classroomMeeting)
                                         <a href="{{ url('/classroom/join/'.$booking->classroomMeeting->code) }}" class="text-accent hover:underline">{{ $isRtl ? 'دخول' : 'Join' }}</a>
                                     @endif
+                                    @if(Route::has('student.tutoring-bookings.show'))
                                     <a href="{{ route('student.tutoring-bookings.show', $booking) }}" class="text-ink-soft hover:underline">{{ $isRtl ? 'تفاصيل' : 'Details' }}</a>
+                                    @endif
                                 </div>
                             </td>
                         </tr>
@@ -138,7 +144,7 @@
             <h3 class="mb-3 text-base font-semibold text-ink">{{ $isRtl ? 'استكشف السنوات' : 'Explore school years' }}</h3>
             <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
                 @foreach($allYears as $y)
-                    <a href="{{ route('public.school.year', $y->slug) }}" class="rounded-2xl border border-line bg-white p-4 shadow-soft transition hover:border-accent/40">
+                    <a href="{{ Route::has('public.school.year') ? route('public.school.year', $y->slug) : (Route::has('public.curricula.show') ? route('public.curricula.show', $y) : route('public.curricula')) }}" class="rounded-2xl border border-line bg-white p-4 shadow-soft transition hover:border-accent/40">
                         <p class="text-xs font-bold text-accent">{{ str_pad((string) $y->level_number, 2, '0', STR_PAD_LEFT) }}</p>
                         <p class="mt-1 text-sm font-semibold text-ink">{{ $y->name }}</p>
                         <p class="mt-1 text-xs text-muted">{{ $y->tagline }}</p>

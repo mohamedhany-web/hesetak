@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Support\SearchInput;
+use App\Support\OneToOneReportGate;
 use App\Models\WithdrawalRequest;
 use App\Models\Payment;
 use App\Models\ActivityLog;
@@ -60,7 +61,11 @@ class WithdrawalRequestController extends Controller
             }
 
             $withdrawals = $query->orderBy('created_at', 'desc')->paginate(20);
-            $instructors = \App\Models\User::where('role', 'teacher')->orderBy('name')->get();
+            $instructors = \App\Models\User::whereIn('role', ['instructor', 'teacher'])->orderBy('name')->get();
+
+            $overdueReportCounts = OneToOneReportGate::overdueCountsByInstructorIds(
+                $withdrawals->pluck('instructor_id')->filter()->unique()->all()
+            );
 
             $stats = [
                 'total' => WithdrawalRequest::count(),
@@ -69,7 +74,7 @@ class WithdrawalRequestController extends Controller
                 'completed' => WithdrawalRequest::where('status', WithdrawalRequest::STATUS_COMPLETED)->sum('amount'),
             ];
 
-            return view('admin.withdrawals.index', compact('withdrawals', 'instructors', 'stats'));
+            return view('admin.withdrawals.index', compact('withdrawals', 'instructors', 'stats', 'overdueReportCounts'));
         } catch (\Exception $e) {
             Log::error('Error loading withdrawals: ' . $e->getMessage());
             abort(500, 'حدث خطأ أثناء تحميل طلبات السحب');

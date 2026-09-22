@@ -1,7 +1,7 @@
 @extends('layouts.admin')
 
-@section('title', 'إنشاء سنة مدرسة - حصتك')
-@section('page_title', 'إنشاء سنة مدرسة')
+@section('title', 'إنشاء مرحلة دراسية - حصتك')
+@section('page_title', 'إنشاء مرحلة دراسية')
 
 @section('content')
 @php
@@ -11,7 +11,7 @@
 
     $icons = [
         'fas fa-graduation-cap' => 'قبعة تخرج',
-        'fas fa-school' => 'مدرسة',
+        'fas fa-school' => 'مبنى (اختياري)',
         'fas fa-book-open' => 'كتاب',
         'fas fa-user-graduate' => 'طالب',
         'fas fa-chalkboard' => 'سبورة',
@@ -27,10 +27,10 @@
 <div class="space-y-5">
     <section class="flex flex-wrap items-end justify-between gap-4">
         <div class="min-w-0">
-            <p class="text-xs font-medium text-muted">إدارة المحتوى · سنوات المدرسة</p>
-            <h2 class="mt-1 text-2xl font-semibold tracking-tight text-ink md:text-[28px]">إنشاء سنة مدرسة</h2>
+            <p class="text-xs font-medium text-muted">إدارة المحتوى · مطابقة المناهج</p>
+            <h2 class="mt-1 text-2xl font-semibold tracking-tight text-ink md:text-[28px]">إنشاء مرحلة دراسية</h2>
             <p class="mt-1 max-w-2xl text-sm text-muted">
-                سنة المدرسة طبقة تنظيمية لتجميع المواد والكورسات وفصول المدرسة (مثل Foundations 1 أو مرحلة إعدادي). بعد الحفظ يمكنك ربط المواد والكورسات والمدربين من صفحة التعديل.
+                المرحلة طبقة تنظيمية لتجميع المواد والكورسات وفلاتر المطابقة (مثل ابتدائي أو ثانوي). بعد الحفظ اربط المواد والكورسات والمدربين من صفحة التعديل.
             </p>
         </div>
         <a href="{{ route('admin.academic-years.index') }}" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl border border-line bg-surface px-4 text-sm font-medium text-ink-soft transition hover:border-accent/30 hover:text-accent">
@@ -62,7 +62,7 @@
                     </div>
                     <div class="grid grid-cols-1 gap-5 p-4 sm:grid-cols-2 sm:p-5">
                         <div class="sm:col-span-1">
-                            <label class="{{ $labelClass }}" for="name">اسم سنة المدرسة <span class="text-danger">*</span></label>
+                            <label class="{{ $labelClass }}" for="name">اسم المرحلة <span class="text-danger">*</span></label>
                             <input id="name" type="text" name="name" value="{{ old('name') }}" required maxlength="255"
                                    placeholder="مثال: الصف الأول الثانوي"
                                    class="{{ $fieldClass }}" autocomplete="off">

@@ -46,7 +46,12 @@
             $idCssRel = 'css/instructor-dashboard.css';
             $idCssFile = public_path($idCssRel);
             $idCssVer = is_file($idCssFile) ? (string) filemtime($idCssFile) : (string) time();
+            $suCssRel = 'css/instructor-panel.css';
+            $suCssFile = public_path($suCssRel);
+            $suCssVer = is_file($suCssFile) ? (string) filemtime($suCssFile) : (string) time();
         @endphp
+        {{-- su-* components used by legacy instructor course tools (lectures/exams/…) --}}
+        <link rel="stylesheet" href="{{ asset($suCssRel) }}?v={{ $suCssVer }}">
         <link rel="stylesheet" href="{{ asset($idCssRel) }}?v={{ $idCssVer }}">
         <script>
             (function () {
@@ -166,6 +171,34 @@
             body.st-inst-body .st-main .bg-white {
                 border: 1px solid #E6EEF8;
                 box-shadow: 0 4px 14px rgba(22, 58, 104, .04);
+            }
+            /* su-* pages inside st-shell: use full main width + dashboard canvas tokens */
+            body.st-inst-body .st-main > .su-page {
+                width: 100%;
+                max-width: 100%;
+                min-width: 0;
+            }
+            body.st-inst-body .su-page-head__title {
+                font-size: clamp(1.15rem, 2vw, 1.45rem);
+                font-weight: 900;
+                color: #152A4A;
+            }
+            body.st-inst-body .su-kpi {
+                background: #fff;
+                border: 1px solid #E6EEF8;
+                box-shadow: 0 4px 14px rgba(22, 58, 104, .04);
+            }
+            body.st-inst-body .su-kpi--1,
+            body.st-inst-body .su-kpi--2,
+            body.st-inst-body .su-kpi--3,
+            body.st-inst-body .su-kpi--4 {
+                background: #fff;
+            }
+            body.st-inst-body .su-card {
+                background: #fff;
+                border: 1px solid #E6EEF8;
+                box-shadow: 0 4px 14px rgba(22, 58, 104, .04);
+                border-radius: 18px;
             }
         </style>
     @endif

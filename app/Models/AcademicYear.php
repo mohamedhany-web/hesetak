@@ -43,6 +43,25 @@ class AcademicYear extends Model
         return 'slug';
     }
 
+    public function getRouteKey()
+    {
+        $slug = trim((string) ($this->slug ?? ''));
+
+        return $slug !== '' ? $slug : (string) $this->getKey();
+    }
+
+    public function resolveRouteBinding($value, $field = null)
+    {
+        $field = $field ?: $this->getRouteKeyName();
+
+        return static::query()
+            ->where(function ($q) use ($value, $field) {
+                $q->where($field, $value)
+                    ->orWhere($this->getKeyName(), $value);
+            })
+            ->first();
+    }
+
     public function subjects()
     {
         return $this->hasMany(AcademicSubject::class);
@@ -131,7 +150,11 @@ class AcademicYear extends Model
 
     public function scopePublicCatalog($query)
     {
-        return $query->where('is_public', true)->where('is_active', true);
+        return $query->where('is_public', true)
+            ->where('is_active', true)
+            ->where(function ($q) {
+                $q->whereNull('code')->orWhere('code', 'not like', 'TCH-%');
+            });
     }
 
     public function scopeOrdered($query)

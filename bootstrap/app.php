@@ -42,12 +42,6 @@ return Application::configure(basePath: dirname(__DIR__))
         $schedule->command('courses:expire-subscriptions')->dailyAt('00:10');
         $schedule->command('courses:process-auto-renewals')->dailyAt('08:30');
 
-        // تأجيل دفعات المجموعات غير المكتملة + تذكير حصص tutoring
-        $schedule->command('tutoring:process-cohorts')
-                 ->hourly()
-                 ->withoutOverlapping()
-                 ->runInBackground();
-
         // تذكير الطلاب قبل 10 دقائق من بدء جلسة البث المباشر
         $schedule->command('live:send-reminders --minutes=10')
                  ->everyMinute()

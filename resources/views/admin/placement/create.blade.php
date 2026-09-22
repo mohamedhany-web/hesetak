@@ -48,14 +48,9 @@
     @endif
 
     <div class="flex flex-wrap gap-2">
-        <a href="{{ route('admin.placement.create', array_filter(['mode' => 'private', 'student_id' => $selectedStudentId ?: null])) }}"
-           class="btn-press inline-flex h-9 items-center gap-2 rounded-xl px-4 text-sm font-medium {{ $mode === 'private' ? 'bg-accent text-white' : 'border border-line bg-surface text-ink-soft hover:border-accent/30 hover:text-accent' }}">
+        <span class="btn-press inline-flex h-9 items-center gap-2 rounded-xl bg-accent px-4 text-sm font-medium text-white">
             <i class="fas fa-user text-xs"></i> فردي 1:1
-        </a>
-        <a href="{{ route('admin.placement.create', array_filter(['mode' => 'group', 'student_id' => $selectedStudentId ?: null])) }}"
-           class="btn-press inline-flex h-9 items-center gap-2 rounded-xl px-4 text-sm font-medium {{ $mode === 'group' ? 'bg-accent text-white' : 'border border-line bg-surface text-ink-soft hover:border-accent/30 hover:text-accent' }}">
-            <i class="fas fa-users text-xs"></i> مجموعات
-        </a>
+        </span>
     </div>
 
     <form method="POST" action="{{ route('admin.placement.store') }}" class="space-y-5" id="placementForm">

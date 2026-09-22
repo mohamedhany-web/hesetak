@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\AcademicYear;
 use App\Models\InstructorProfile;
 use App\Services\PublicMediaStorage;
+use App\Support\InstructorMatchCompleteness;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
 
@@ -13,7 +14,7 @@ class InstructorPersonalBrandingController extends Controller
 {
     public function index(Request $request)
     {
-        $query = InstructorProfile::with(['user', 'reviewedByUser']);
+        $query = InstructorProfile::with(['user.teachingLearningPaths', 'reviewedByUser']);
 
         if ($request->filled('status')) {
             $query->where('status', $request->status);
@@ -40,9 +41,10 @@ class InstructorPersonalBrandingController extends Controller
 
     public function show(InstructorProfile $personal_branding)
     {
-        $personal_branding->load(['user', 'reviewedByUser']);
+        $personal_branding->load(['user.teachingLearningPaths', 'reviewedByUser']);
+        $matchCompleteness = InstructorMatchCompleteness::evaluate($personal_branding);
 
-        return view('admin.marketing.personal-branding.show', compact('personal_branding'));
+        return view('admin.marketing.personal-branding.show', compact('personal_branding', 'matchCompleteness'));
     }
 
     public function edit(InstructorProfile $personal_branding)
@@ -60,9 +62,11 @@ class InstructorPersonalBrandingController extends Controller
             'experience' => 'nullable|string|max:50000',
             'skills' => 'nullable|string|max:5000',
             'curriculum_types' => 'nullable|array',
-            'curriculum_types.*' => 'string|in:'.implode(',', \App\Support\HesetakMatchCatalog::allowedCurriculumTypeKeys()),
+            'curriculum_types.*' => 'string|in:'.implode(',', \App\Support\HesetakMatchCatalog::allowedCurriculumTypeKeys() ?: ['__none__']),
             'teaching_year_ids' => 'nullable|array',
             'teaching_year_ids.*' => 'integer|exists:academic_years,id',
+            'teaching_subject_ids' => 'nullable|array',
+            'teaching_subject_ids.*' => 'integer|exists:academic_subjects,id',
             'consultation_price_egp' => 'nullable|numeric|min:0|max:999999.99',
             'consultation_duration_minutes' => 'nullable|integer|min:15|max:480',
             'photo' => 'nullable|image|max:'.config('upload_limits.max_upload_kb'),
@@ -84,6 +88,7 @@ class InstructorPersonalBrandingController extends Controller
         unset($data['photo']);
         $data['social_links'] = $personal_branding->social_links ?? [];
         $data['curriculum_types'] = array_values(array_unique($data['curriculum_types'] ?? []));
+        $data['teaching_subject_ids'] = array_values(array_unique(array_map('intval', $data['teaching_subject_ids'] ?? [])));
         $teachingYearIds = array_values(array_unique(array_map('intval', $data['teaching_year_ids'] ?? [])));
         unset($data['teaching_year_ids']);
 
@@ -105,6 +110,13 @@ class InstructorPersonalBrandingController extends Controller
                 ->pluck('id')
                 ->all();
             $personal_branding->user->teachingLearningPaths()->sync($publicIds);
+            $personal_branding->user->forceFill([
+                'private_teaching_meta' => [
+                    'subject_ids' => $data['teaching_subject_ids'],
+                    'curriculum_types' => $data['curriculum_types'],
+                    'year_ids' => $publicIds,
+                ],
+            ])->save();
         }
 
         return redirect()
@@ -132,6 +144,16 @@ class InstructorPersonalBrandingController extends Controller
         if ($personal_branding->status !== InstructorProfile::STATUS_PENDING_REVIEW) {
             return back()->with('error', 'يمكن الموافقة فقط على الملفات قيد المراجعة.');
         }
+
+        $personal_branding->loadMissing('user.teachingLearningPaths');
+        $completeness = InstructorMatchCompleteness::evaluate($personal_branding);
+        if (! $completeness['ok']) {
+            return back()->with(
+                'error',
+                'لا يمكن النشر — ملف المطابقة ناقص: '.implode(' · ', $completeness['missing'])
+            );
+        }
+
         $personal_branding->update([
             'status' => InstructorProfile::STATUS_APPROVED,
             'reviewed_at' => now(),

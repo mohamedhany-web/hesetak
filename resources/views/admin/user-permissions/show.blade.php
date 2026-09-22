@@ -4,27 +4,27 @@
 @section('header', 'صلاحيات ' . $user->name)
 
 @section('content')
-<div class="p-6 space-y-6">
+<div class="space-y-5">
     <!-- معلومات المستخدم -->
-    <div class="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
+    <div class="bg-surface rounded-xl shadow-soft p-6 border border-line">
         <div class="flex items-center justify-between">
             <div class="flex items-center gap-4">
                 @if($user->profile_image)
                     <img class="h-16 w-16 rounded-full" src="{{ $user->profile_image_url }}" alt="{{ $user->name }}">
                 @else
-                    <div class="h-16 w-16 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-2xl font-bold">
+                    <div class="h-16 w-16 rounded-full bg-gradient-to-br from-accent to-[#0d4f4a] flex items-center justify-center text-white text-2xl font-bold">
                         {{ substr($user->name, 0, 1) }}
                     </div>
                 @endif
                 <div>
-                    <h3 class="text-xl font-bold text-gray-900">{{ $user->name }}</h3>
-                    <p class="text-sm text-gray-500">{{ $user->email }}</p>
-                    <p class="text-sm text-gray-500">{{ $user->phone }}</p>
+                    <h3 class="text-xl font-bold text-ink">{{ $user->name }}</h3>
+                    <p class="text-sm text-muted">{{ $user->email }}</p>
+                    <p class="text-sm text-muted">{{ $user->phone }}</p>
                 </div>
             </div>
             <div class="text-left">
                 <span class="px-3 py-1 text-sm font-semibold rounded-full 
-                    {{ $user->role === 'super_admin' ? 'bg-red-100 text-red-800' : ($user->role === 'instructor' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800') }}">
+                    {{ $user->role === 'super_admin' ? 'bg-red-100 text-red-800' : ($user->role === 'instructor' ? 'bg-accent-soft text-blue-800' : 'bg-green-100 text-green-800') }}">
                     {{ $user->role === 'super_admin' ? 'مدير عام' : ($user->role === 'instructor' ? 'مدرب' : __('admin.student_role_label')) }}
                 </span>
             </div>
@@ -33,44 +33,44 @@
 
     <!-- إحصائيات الصلاحيات -->
     <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div class="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
+        <div class="bg-surface rounded-xl shadow-soft p-6 border border-line">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-sm font-medium text-gray-600">من الأدوار</p>
-                    <p class="text-3xl font-bold text-gray-900">{{ $rolePermissions->count() }}</p>
+                    <p class="text-sm font-medium text-ink-soft">من الأدوار</p>
+                    <p class="text-3xl font-bold text-ink">{{ $rolePermissions->count() }}</p>
                 </div>
-                <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                    <i class="fas fa-user-tag text-purple-600 text-xl"></i>
+                <div class="w-12 h-12 bg-accent-soft rounded-lg flex items-center justify-center">
+                    <i class="fas fa-user-tag text-accent text-xl"></i>
                 </div>
             </div>
         </div>
-        <div class="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
+        <div class="bg-surface rounded-xl shadow-soft p-6 border border-line">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-sm font-medium text-gray-600">مباشرة</p>
-                    <p class="text-3xl font-bold text-gray-900">{{ $directPermissions->count() }}</p>
+                    <p class="text-sm font-medium text-ink-soft">مباشرة</p>
+                    <p class="text-3xl font-bold text-ink">{{ $directPermissions->count() }}</p>
                 </div>
-                <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                    <i class="fas fa-key text-blue-600 text-xl"></i>
+                <div class="w-12 h-12 bg-accent-soft rounded-lg flex items-center justify-center">
+                    <i class="fas fa-key text-accent text-xl"></i>
                 </div>
             </div>
         </div>
-        <div class="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
+        <div class="bg-surface rounded-xl shadow-soft p-6 border border-line">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-sm font-medium text-gray-600">إجمالي الصلاحيات</p>
-                    <p class="text-3xl font-bold text-blue-600">{{ $allUserPermissions->count() }}</p>
+                    <p class="text-sm font-medium text-ink-soft">إجمالي الصلاحيات</p>
+                    <p class="text-3xl font-bold text-accent">{{ $allUserPermissions->count() }}</p>
                 </div>
                 <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
                     <i class="fas fa-shield-alt text-green-600 text-xl"></i>
                 </div>
             </div>
         </div>
-        <div class="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
+        <div class="bg-surface rounded-xl shadow-soft p-6 border border-line">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-sm font-medium text-gray-600">الأدوار</p>
-                    <p class="text-3xl font-bold text-gray-900">{{ $user->roles->count() }}</p>
+                    <p class="text-sm font-medium text-ink-soft">الأدوار</p>
+                    <p class="text-3xl font-bold text-ink">{{ $user->roles->count() }}</p>
                 </div>
                 <div class="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
                     <i class="fas fa-users-cog text-yellow-600 text-xl"></i>
@@ -87,10 +87,10 @@
     @endif
 
     <!-- إدارة الأدوار -->
-    <div class="bg-white rounded-xl shadow-lg border border-gray-200">
-        <div class="p-6 border-b border-gray-200">
-            <h3 class="text-lg font-semibold text-gray-900">إدارة الأدوار</h3>
-            <p class="text-sm text-gray-500 mt-1">حدد الأدوار المخصصة للمستخدم. صلاحيات الأدوار تُضاف تلقائياً. عند الحفظ مع اختيار دور واحد على الأقل يُفعَّل المستخدم كموظف ليتم تطبيق RBAC في الأدمن.</p>
+    <div class="bg-surface rounded-xl shadow-soft border border-line">
+        <div class="p-6 border-b border-line">
+            <h3 class="text-lg font-semibold text-ink">إدارة الأدوار</h3>
+            <p class="text-sm text-muted mt-1">حدد الأدوار المخصصة للمستخدم. صلاحيات الأدوار تُضاف تلقائياً. عند الحفظ مع اختيار دور واحد على الأقل يُفعَّل المستخدم كموظف ليتم تطبيق RBAC في الأدمن.</p>
         </div>
 
         <form action="{{ route('admin.user-permissions.update-roles', $user) }}" method="POST">
@@ -100,22 +100,22 @@
             <div class="p-6 space-y-4">
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     @foreach($allRoles as $role)
-                        <label class="flex items-start p-4 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
+                        <label class="flex items-start p-4 border border-line rounded-lg cursor-pointer hover:bg-canvas transition-colors">
                             <input type="checkbox"
                                    name="roles[]"
                                    value="{{ $role->id }}"
                                    {{ $user->roles->contains('id', $role->id) ? 'checked' : '' }}
-                                   class="mt-1 h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded">
+                                   class="mt-1 h-4 w-4 text-accent focus:ring-purple-500 border-line rounded">
                             <div class="mr-3 flex-1">
                                 <div class="flex items-center justify-between">
-                                    <span class="text-sm font-medium text-gray-900">{{ $role->display_name }}</span>
+                                    <span class="text-sm font-medium text-ink">{{ $role->display_name }}</span>
                                     @if($role->is_system)
-                                        <span class="text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-800" title="دور نظامي">نظام</span>
+                                        <span class="text-xs px-2 py-1 rounded-full bg-accent-soft text-blue-800" title="دور نظامي">نظام</span>
                                     @endif
                                 </div>
-                                <p class="text-xs text-gray-500 mt-1">{{ $role->name }}</p>
+                                <p class="text-xs text-muted mt-1">{{ $role->name }}</p>
                                 @if($role->description)
-                                    <p class="text-xs text-gray-600 mt-1">{{ $role->description }}</p>
+                                    <p class="text-xs text-ink-soft mt-1">{{ $role->description }}</p>
                                 @endif
                             </div>
                         </label>
@@ -127,9 +127,9 @@
                 @enderror
             </div>
 
-            <div class="p-6 border-t border-gray-200 bg-gray-50">
+            <div class="p-6 border-t border-line bg-canvas">
                 <div class="flex items-center justify-end">
-                    <button type="submit" class="px-6 py-2 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-lg transition-colors">
+                    <button type="submit" class="px-6 py-2 bg-accent hover:bg-[#0d4f4a] text-white font-semibold rounded-lg transition-colors">
                         <i class="fas fa-save ml-2"></i>
                         حفظ الأدوار
                     </button>
@@ -139,28 +139,28 @@
     </div>
 
     <!-- صلاحيات المستخدم الفعلية (من الأدوار + المباشرة) -->
-    <div class="bg-white rounded-xl shadow-lg border border-gray-200">
-        <div class="p-6 border-b border-gray-200">
-            <h3 class="text-lg font-semibold text-gray-900">صلاحيات هذا المستخدم</h3>
-            <p class="text-sm text-gray-500 mt-1">يُعرض هنا فقط ما يملكه المستخدم حالياً (من أدواره أو مباشرة). أزل التحديد عن الصلاحية المباشرة ثم احفظ لإزالتها من المستخدم.</p>
+    <div class="bg-surface rounded-xl shadow-soft border border-line">
+        <div class="p-6 border-b border-line">
+            <h3 class="text-lg font-semibold text-ink">صلاحيات هذا المستخدم</h3>
+            <p class="text-sm text-muted mt-1">يُعرض هنا فقط ما يملكه المستخدم حالياً (من أدواره أو مباشرة). أزل التحديد عن الصلاحية المباشرة ثم احفظ لإزالتها من المستخدم.</p>
         </div>
 
         <form action="{{ route('admin.user-permissions.update', $user) }}" method="POST" id="permissionsForm">
             @csrf
             @method('PUT')
 
-            <div class="p-6 space-y-6">
+            <div class="space-y-5">
                 @if($allUserPermissions->isEmpty())
-                    <p class="text-sm text-gray-600 text-center py-8">
+                    <p class="text-sm text-ink-soft text-center py-8">
                         <i class="fas fa-info-circle text-amber-500 ml-2"></i>
                         لا توجد صلاحيات مرتبطة بهذا المستخدم عبر الأدوار أو التعيين المباشر. اختر أدواراً أعلاه أو أضف صلاحيات مباشرة من
-                        <a href="{{ route('admin.permissions.index') }}" class="text-blue-600 font-semibold underline">قائمة الصلاحيات</a>
+                        <a href="{{ route('admin.permissions.index') }}" class="text-accent font-semibold underline">قائمة الصلاحيات</a>
                         إن وُجدت أداة تعيين سريع لديكم.
                     </p>
                 @else
                     @foreach($userPermissionsGrouped as $group => $permissions)
-                        <div class="border-b border-gray-200 pb-6 last:border-b-0 last:pb-0">
-                            <h4 class="text-md font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                        <div class="border-b border-line pb-6 last:border-b-0 last:pb-0">
+                            <h4 class="text-md font-semibold text-ink mb-4 flex items-center gap-2">
                                 <i class="fas fa-folder text-blue-500"></i>
                                 {{ $group ?: 'عام' }}
                             </h4>
@@ -171,43 +171,43 @@
                                         $hasDirect = $directPermissions->contains('id', $permission->id);
                                     @endphp
                                     @if($hasDirect)
-                                        <label class="flex items-start p-4 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors
-                                            {{ $hasFromRole ? 'border-purple-300 bg-purple-50' : 'border-gray-200' }}
-                                            border-blue-500 bg-blue-50">
+                                        <label class="flex items-start p-4 border rounded-lg cursor-pointer hover:bg-canvas transition-colors
+                                            {{ $hasFromRole ? 'border-accent/40 bg-accent-soft' : 'border-line' }}
+                                            border-blue-500 bg-accent-soft">
                                             <input type="checkbox"
                                                    name="permissions[]"
                                                    value="{{ $permission->id }}"
                                                    checked
-                                                   class="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                                                   class="mt-1 h-4 w-4 text-accent focus:ring-blue-500 border-line rounded">
                                             <div class="mr-3 flex-1">
                                                 <div class="flex items-center justify-between gap-2 flex-wrap">
-                                                    <span class="text-sm font-medium text-gray-900">{{ $permission->display_name }}</span>
+                                                    <span class="text-sm font-medium text-ink">{{ $permission->display_name }}</span>
                                                     <div class="flex items-center gap-1 flex-wrap">
                                                         @if($hasFromRole)
-                                                            <span class="text-xs px-2 py-1 rounded-full bg-purple-100 text-purple-800">من الأدوار</span>
+                                                            <span class="text-xs px-2 py-1 rounded-full bg-accent-soft text-accent">من الأدوار</span>
                                                         @endif
-                                                        <span class="text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-800">مباشرة</span>
+                                                        <span class="text-xs px-2 py-1 rounded-full bg-accent-soft text-blue-800">مباشرة</span>
                                                     </div>
                                                 </div>
-                                                <code class="text-[10px] text-gray-400 font-mono block mt-1">{{ $permission->name }}</code>
+                                                <code class="text-[10px] text-muted font-mono block mt-1">{{ $permission->name }}</code>
                                                 @if($permission->description)
-                                                    <p class="text-xs text-gray-500 mt-1">{{ $permission->description }}</p>
+                                                    <p class="text-xs text-muted mt-1">{{ $permission->description }}</p>
                                                 @endif
                                             </div>
                                         </label>
                                     @else
-                                        <div class="flex items-start p-4 border rounded-lg border-purple-200 bg-purple-50/80">
-                                            <div class="mt-1 h-4 w-4 flex-shrink-0 rounded border border-purple-300 bg-purple-100 flex items-center justify-center">
-                                                <i class="fas fa-lock text-[10px] text-purple-600"></i>
+                                        <div class="flex items-start p-4 border rounded-lg border-accent/30 bg-accent-soft/80">
+                                            <div class="mt-1 h-4 w-4 flex-shrink-0 rounded border border-accent/40 bg-accent-soft flex items-center justify-center">
+                                                <i class="fas fa-lock text-[10px] text-accent"></i>
                                             </div>
                                             <div class="mr-3 flex-1">
                                                 <div class="flex items-center justify-between gap-2 flex-wrap">
-                                                    <span class="text-sm font-medium text-gray-900">{{ $permission->display_name }}</span>
-                                                    <span class="text-xs px-2 py-1 rounded-full bg-purple-100 text-purple-800">من الأدوار فقط</span>
+                                                    <span class="text-sm font-medium text-ink">{{ $permission->display_name }}</span>
+                                                    <span class="text-xs px-2 py-1 rounded-full bg-accent-soft text-accent">من الأدوار فقط</span>
                                                 </div>
-                                                <code class="text-[10px] text-gray-400 font-mono block mt-1">{{ $permission->name }}</code>
+                                                <code class="text-[10px] text-muted font-mono block mt-1">{{ $permission->name }}</code>
                                                 @if($permission->description)
-                                                    <p class="text-xs text-gray-500 mt-1">{{ $permission->description }}</p>
+                                                    <p class="text-xs text-muted mt-1">{{ $permission->description }}</p>
                                                 @endif
                                             </div>
                                         </div>
@@ -220,13 +220,13 @@
             </div>
 
             @if($allUserPermissions->isNotEmpty())
-            <div class="p-6 border-t border-gray-200 bg-gray-50">
+            <div class="p-6 border-t border-line bg-canvas">
                 <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                    <p class="text-sm text-gray-600">
+                    <p class="text-sm text-ink-soft">
                         <i class="fas fa-info-circle ml-2"></i>
                         الصلاحيات «من الأدوار فقط» تُزال بتعديل الأدوار أعلاه. الصلاحيات «مباشرة» تُحفظ هنا عند إلغاء التحديد والضغط على حفظ.
                     </p>
-                    <button type="submit" class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors flex-shrink-0">
+                    <button type="submit" class="px-6 py-2 bg-accent hover:bg-[#0d4f4a] text-white font-semibold rounded-lg transition-colors flex-shrink-0">
                         <i class="fas fa-save ml-2"></i>
                         حفظ الصلاحيات المباشرة
                     </button>

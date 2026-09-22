@@ -72,7 +72,7 @@
             </div>
             <div class="grid grid-cols-1 gap-4 p-4 sm:grid-cols-2 sm:p-5">
                 <div class="sm:col-span-2">
-                    <label class="{{ $labelClass }}" for="academic_year_id">سنة المدرسة <span class="font-normal text-muted">(اختياري)</span></label>
+                    <label class="{{ $labelClass }}" for="academic_year_id">المرحلة الدراسية <span class="font-normal text-muted">(اختياري)</span></label>
                     <select name="academic_year_id" id="academic_year_id" class="{{ $fieldClass }}">
                         <option value="">— مادة عامة (بدون سنة) —</option>
                         @foreach($academicYears as $year)

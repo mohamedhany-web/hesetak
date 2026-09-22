@@ -1,59 +1,107 @@
 @extends('layouts.student-timeline')
 
 @section('title', __('student.wallet_title'))
-@section('header', __('student.wallet_title'))
 
 @section('content')
-<div class="w-full px-4 sm:px-6 lg:px-8 py-6 space-y-6">
-    <!-- الهيدر والرصيد -->
-    <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-        <div class="p-5 sm:p-6">
-            <h1 class="text-xl sm:text-2xl font-bold text-gray-900 mb-4">{{ __('student.wallet_title') }}</h1>
-            @if(isset($wallet))
-            <div class="flex items-center justify-between gap-4 p-4 sm:p-5 bg-sky-50 rounded-xl border border-sky-100">
-                <div>
-                    <p class="text-sm font-medium text-gray-500 mb-1">{{ __('student.current_balance') }}</p>
-                    <p class="text-2xl sm:text-3xl font-bold text-sky-600">{{ number_format($wallet->balance ?? 0, 2) }} {{ __('public.currency_egp') }}</p>
-                </div>
-                <div class="w-12 h-12 rounded-xl bg-sky-100 flex items-center justify-center text-sky-600">
-                    <i class="fas fa-wallet text-xl"></i>
-                </div>
-            </div>
-            @else
-            <div class="p-4 bg-gray-50 rounded-xl border border-gray-100 text-gray-600 text-sm">{{ __('student.no_wallet_message') }}</div>
-            @endif
-        </div>
-    </div>
+@php
+    $locale = app()->getLocale();
+    $wallet = $wallet ?? null;
+    $transactions = $transactions ?? collect();
+    $balance = (float) ($wallet->balance ?? 0);
+    $packagesUrl = Route::has('public.service-packages.index')
+        ? route('public.service-packages.index')
+        : (Route::has('public.pricing') ? route('public.pricing') : route('dashboard'));
+@endphp
 
-    @if(isset($transactions) && $transactions->count() > 0)
-    <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-        <div class="px-4 sm:px-5 py-4 border-b border-gray-100">
-            <h2 class="text-base font-bold text-gray-900">{{ __('student.transactions_log') }}</h2>
-        </div>
-        <div class="divide-y divide-gray-100">
-            @foreach($transactions as $transaction)
-            <div class="flex justify-between items-center p-4 sm:p-5 hover:bg-gray-50/50 transition-colors">
-                <div class="min-w-0">
-                    <p class="font-medium text-gray-900 truncate">{{ $transaction->description ?? __('student.transaction_default') }}</p>
-                    <p class="text-sm text-gray-500 mt-0.5">{{ $transaction->created_at ? $transaction->created_at->format('Y-m-d H:i') : '—' }}</p>
-                </div>
-                <p class="text-lg font-bold flex-shrink-0 {{ ($transaction->type == 'deposit' || $transaction->type == 'إيداع') ? 'text-emerald-600' : 'text-red-600' }}">
-                    {{ ($transaction->type == 'deposit' || $transaction->type == 'إيداع') ? '+' : '−' }}{{ number_format($transaction->amount ?? 0, 2) }} {{ __('public.currency_egp') }}
-                </p>
-            </div>
-            @endforeach
-        </div>
-        @if($transactions->hasPages())
-        <div class="p-4 border-t border-gray-100">{{ $transactions->links() }}</div>
+@include('partials.student-timeline-top', [
+    'locale' => $locale,
+    'pageTitle' => __('student_timeline.nav_wallet'),
+    'crumbs' => [
+        ['label' => __('student_timeline.school_gate'), 'url' => route('dashboard')],
+        ['label' => __('student_timeline.nav_wallet'), 'url' => null],
+    ],
+])
+
+@if(session('success'))
+    <div class="st-flash st-flash--ok">{{ session('success') }}</div>
+@endif
+@if(session('error'))
+    <div class="st-flash st-flash--err">{{ session('error') }}</div>
+@endif
+
+<section class="st-join-hero" aria-label="{{ __('student.wallet_title') }}">
+    <div class="st-join-hero__copy">
+        <p class="st-join-hero__kicker">{{ __('student.current_balance') }}</p>
+        <h2 class="st-join-hero__title tabular-nums">{{ format_money($balance) }}</h2>
+        <p class="st-join-hero__meta">{{ __('student.wallet_title') }} · {{ currency_symbol() }}</p>
+    </div>
+    <div class="st-join-hero__actions">
+        <a href="{{ $packagesUrl }}" class="st-pill st-pill--solid st-pill--lg">
+            <i class="fas fa-plus" aria-hidden="true"></i>
+            {{ __('student_timeline.wallet_topup') }}
+        </a>
+        @if(Route::has('orders.index'))
+            <a href="{{ route('orders.index') }}" class="st-pill st-pill--outline">{{ __('student_timeline.nav_orders') }}</a>
         @endif
     </div>
-    @else
-    <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-8 text-center">
-        <div class="w-14 h-14 bg-gray-100 rounded-xl flex items-center justify-center mx-auto mb-3 text-gray-400">
-            <i class="fas fa-exchange-alt text-xl"></i>
-        </div>
-        <p class="text-sm text-gray-500">{{ __('student.no_transactions') }}</p>
+</section>
+
+<section class="st-stats st-stats--classes" aria-label="{{ __('student.wallet_title') }}">
+    <article class="st-stat-card">
+        <p class="st-stat-card__label">{{ __('student.current_balance') }}</p>
+        <p class="st-stat-card__value tabular-nums" style="font-size:1.35rem">{{ format_money($balance) }}</p>
+    </article>
+    <article class="st-stat-card">
+        <p class="st-stat-card__label">{{ __('student.transactions_log') }}</p>
+        <p class="st-stat-card__value">{{ method_exists($transactions, 'total') ? $transactions->total() : $transactions->count() }}</p>
+    </article>
+</section>
+
+<section class="st-msg-intro">
+    <div>
+        <h2>{{ __('student.transactions_log') }}</h2>
+        <p>{{ __('student_timeline.wallet_tx_hint') }}</p>
     </div>
+</section>
+
+@if($transactions->count() > 0)
+    <div class="st-order-list" aria-label="{{ __('student.transactions_log') }}">
+        @foreach($transactions as $i => $transaction)
+            @php
+                $isIn = in_array($transaction->type, ['deposit', 'credit', 'إيداع', 'refund'], true);
+                $tones = ['blue', 'pink', 'orange', 'purple'];
+                $tone = $tones[$i % count($tones)];
+            @endphp
+            <article class="st-order-card st-order-card--{{ $tone }}">
+                <div class="st-order-card__main">
+                    <div class="st-order-card__copy">
+                        <div class="st-order-card__badges">
+                            <span class="st-order-card__badge {{ $isIn ? 'is-approved' : 'is-rejected' }}">
+                                {{ $isIn ? __('student.deposit_label') : __('student_timeline.wallet_debit') }}
+                            </span>
+                            <span class="st-order-card__when">{{ optional($transaction->created_at)->format('Y-m-d H:i') }}</span>
+                        </div>
+                        <h3>{{ $transaction->description ?? __('student.transaction_default') }}</h3>
+                    </div>
+                    <div class="st-order-card__amount">
+                        <strong class="tabular-nums" style="color:{{ $isIn ? '#047857' : '#b91c1c' }}">
+                            {{ $isIn ? '+' : '−' }}{{ format_money(abs((float) ($transaction->amount ?? 0))) }}
+                        </strong>
+                    </div>
+                </div>
+            </article>
+        @endforeach
+    </div>
+    @if(method_exists($transactions, 'hasPages') && $transactions->hasPages())
+        <div class="st-pager">{{ $transactions->links() }}</div>
     @endif
-</div>
+@else
+    <div class="st-empty-panel">
+        <h3>{{ __('student.no_transactions') }}</h3>
+        <p>{{ __('student_timeline.wallet_empty_hint') }}</p>
+        <div class="st-biz-banner__actions">
+            <a href="{{ $packagesUrl }}" class="st-pill st-pill--solid">{{ __('student_timeline.wallet_topup') }}</a>
+        </div>
+    </div>
+@endif
 @endsection

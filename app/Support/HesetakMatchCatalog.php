@@ -2,6 +2,9 @@
 
 namespace App\Support;
 
+use App\Models\HesetakCurriculumType;
+use Illuminate\Support\Facades\Schema;
+
 class HesetakMatchCatalog
 {
     /**
@@ -11,7 +14,8 @@ class HesetakMatchCatalog
     {
         $locale = $locale ?: app()->getLocale();
         $out = [];
-        foreach (config('hesetak_match.curriculum_types', []) as $key => $row) {
+
+        foreach (self::rawCurriculumTypeRows() as $key => $row) {
             $label = $locale === 'ar'
                 ? (string) ($row['label_ar'] ?? $key)
                 : (string) ($row['label_en'] ?? $key);
@@ -30,7 +34,17 @@ class HesetakMatchCatalog
      */
     public static function allowedCurriculumTypeKeys(): array
     {
-        return array_keys(config('hesetak_match.curriculum_types', []));
+        return array_keys(self::rawCurriculumTypeRows(includeInactive: true));
+    }
+
+    /**
+     * Active keys only (for public filters / instructor self-serve).
+     *
+     * @return list<string>
+     */
+    public static function activeCurriculumTypeKeys(): array
+    {
+        return array_keys(self::rawCurriculumTypeRows(includeInactive: false));
     }
 
     public static function curriculumTypeLabel(string $key, ?string $locale = null): string
@@ -82,5 +96,42 @@ class HesetakMatchCatalog
         }
 
         return false;
+    }
+
+    /**
+     * @return array<string, array{label_ar:string,label_en:string,aliases:list<string>}>
+     */
+    private static function rawCurriculumTypeRows(bool $includeInactive = false): array
+    {
+        if (Schema::hasTable('hesetak_curriculum_types')) {
+            $query = HesetakCurriculumType::query()->ordered();
+            if (! $includeInactive) {
+                $query->active();
+            }
+            $rows = $query->get();
+            if ($rows->isNotEmpty()) {
+                $out = [];
+                foreach ($rows as $row) {
+                    $out[$row->key] = [
+                        'label_ar' => (string) $row->label_ar,
+                        'label_en' => (string) $row->label_en,
+                        'aliases' => array_values(array_filter(array_map('strval', $row->aliases ?? []))),
+                    ];
+                }
+
+                return $out;
+            }
+        }
+
+        $out = [];
+        foreach (config('hesetak_match.curriculum_types', []) as $key => $row) {
+            $out[(string) $key] = [
+                'label_ar' => (string) ($row['label_ar'] ?? $key),
+                'label_en' => (string) ($row['label_en'] ?? $key),
+                'aliases' => array_values(array_filter(array_map('strval', $row['aliases'] ?? []))),
+            ];
+        }
+
+        return $out;
     }
 }

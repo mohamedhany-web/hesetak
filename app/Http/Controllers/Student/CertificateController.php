@@ -9,6 +9,17 @@ use Illuminate\Support\Facades\Storage;
 
 class CertificateController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware(function ($request, $next) {
+            if (! student_ui('show_certificates', false)) {
+                abort(404);
+            }
+
+            return $next($request);
+        });
+    }
+
     public function index()
     {
         $certificates = Certificate::where('user_id', auth()->id())

@@ -14,14 +14,14 @@
     }
 
     $railBookings = collect();
-    if (\Illuminate\Support\Facades\Schema::hasTable('tutoring_group_bookings')) {
-        $railBookings = \App\Models\TutoringGroupBooking::query()
+    if (\Illuminate\Support\Facades\Schema::hasTable('one_to_one_sessions')) {
+        $railBookings = \App\Models\OneToOneSession::query()
             ->where('instructor_id', $railUser->id)
-            ->where('status', 'confirmed')
-            ->where('starts_at', '>=', now()->subHours(2))
-            ->orderBy('starts_at')
+            ->where('status', \App\Models\OneToOneSession::STATUS_SCHEDULED)
+            ->where('scheduled_at', '>=', now()->subHours(2))
+            ->orderBy('scheduled_at')
             ->limit(5)
-            ->with(['user:id,name,profile_image', 'tutoringGroup:id,title'])
+            ->with(['student:id,name,profile_image'])
             ->get();
     }
 
@@ -61,17 +61,17 @@
 <div>
     <h3 class="su-rail-h">{{ __('instructor.activities') }}</h3>
     @forelse($railBookings as $b)
-        <a href="{{ Route::has('instructor.tutoring-bookings.show') ? route('instructor.tutoring-bookings.show', $b) : '#' }}" class="su-rail-item">
+        <a href="{{ Route::has('instructor.one-to-one-sessions.show') ? route('instructor.one-to-one-sessions.show', $b) : (Route::has('instructor.one-to-one-sessions.index') ? route('instructor.one-to-one-sessions.index') : '#') }}" class="su-rail-item">
             <span class="su-rail-avatar">
-                @if($b->user?->profile_image)
-                    <img src="{{ $b->user->profile_image_url }}" alt="">
+                @if($b->student?->profile_image)
+                    <img src="{{ $b->student->profile_image_url }}" alt="">
                 @else
-                    {{ mb_substr($b->user?->name ?? 'G', 0, 1) }}
+                    {{ mb_substr($b->student?->name ?? 'S', 0, 1) }}
                 @endif
             </span>
             <div class="min-w-0">
-                <div class="su-rail-t truncate">{{ $b->tutoringGroup?->title ?? __('instructor.group_session') }}</div>
-                <div class="su-rail-m">{{ optional($b->starts_at)->diffForHumans() }}</div>
+                <div class="su-rail-t truncate">{{ $b->student?->name ?? __('instructor.private_session') }}</div>
+                <div class="su-rail-m">{{ optional($b->scheduled_at)->diffForHumans() }}</div>
             </div>
         </a>
     @empty
@@ -82,7 +82,7 @@
 <div>
     <h3 class="su-rail-h">{{ __('instructor.contacts') }}</h3>
     @php
-        $contacts = $railBookings->pluck('user')->filter()->unique('id')->take(6);
+        $contacts = $railBookings->pluck('student')->filter()->unique('id')->take(6);
     @endphp
     @forelse($contacts as $c)
         <div class="su-rail-item">

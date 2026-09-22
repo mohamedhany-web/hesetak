@@ -104,6 +104,13 @@
                     <span>{{ __('admin.profile') }}</span>
                 </a>
             </li>
+            @php $opsGuideActive = request()->routeIs('admin.ops-guide.*'); @endphp
+            <li>
+                <a href="{{ route('admin.ops-guide.index') }}" class="sidebar-link {{ $opsGuideActive ? 'active' : '' }}">
+                    <i class="fas fa-book-open"></i>
+                    <span>مساعد التشغيل</span>
+                </a>
+            </li>
 
             {{-- 2) التشغيل اليومي --}}
             @php
@@ -279,13 +286,11 @@
                     || request()->routeIs('admin.support-inquiry-categories.*')
                     || request()->routeIs('admin.consultations.*')
                     || request()->routeIs('admin.one-to-one-sessions.*')
+                    || request()->routeIs('admin.one-to-one-report-queue.*')
+                    || request()->routeIs('admin.parents.*')
                     || request()->routeIs('admin.student-lesson-cleanup.*')
                     || request()->routeIs('admin.placement.*')
                     || request()->routeIs('admin.student-entitlements.*')
-                    || request()->routeIs('admin.tutoring-subscriptions.*')
-                    || request()->routeIs('admin.tutoring-group-bookings.*')
-                    || request()->routeIs('admin.tutor-work-schedules.*')
-                    || request()->routeIs('admin.tutoring-groups.*')
                     || request()->routeIs('admin.online-enrollments.*')
                     || request()->routeIs('admin.attendance.*')
                     || request()->routeIs('admin.private-courses.*');
@@ -317,6 +322,14 @@
                     </li>
                     @endif
 
+                    @if(($isFull || $u->hasPermission('manage.users') || $u->hasPermission('manage.students-accounts')) && Route::has('admin.parents.index'))
+                    <li>
+                        <a href="{{ route('admin.parents.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.parents.*') ? 'active' : '' }}">
+                            <i class="fas fa-people-roof"></i><span>أولياء الأمور والأبناء</span>
+                        </a>
+                    </li>
+                    @endif
+
                     @if(($isFull || $u->hasPermission('manage.tutoring-groups') || $u->hasPermission('manage.courses') || $u->hasPermission('manage.packages')) && Route::has('admin.placement.index'))
                     <li>
                         <a href="{{ route('admin.placement.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.placement.*') ? 'active' : '' }}">
@@ -333,14 +346,6 @@
                     </li>
                     @endif
 
-                    @if(($isFull || $u->hasPermission('manage.packages') || $u->hasPermission('manage.tutoring-groups') || $u->hasPermission('manage.users')) && Route::has('admin.tutoring-subscriptions.index'))
-                    <li>
-                        <a href="{{ route('admin.tutoring-subscriptions.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.tutoring-subscriptions.*') ? 'active' : '' }}">
-                            <i class="fas fa-id-card"></i><span>اشتراكات التدريس</span>
-                        </a>
-                    </li>
-                    @endif
-
                     @if(($isFull || $u->hasPermission('manage.tutoring-groups') || $u->hasPermission('manage.courses')) && Route::has('admin.one-to-one-sessions.index'))
                     <li>
                         <a href="{{ route('admin.one-to-one-sessions.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.one-to-one-sessions.*') ? 'active' : '' }}">
@@ -349,39 +354,18 @@
                     </li>
                     @endif
 
+                    @if(($isFull || $u->hasPermission('manage.tutoring-groups') || $u->hasPermission('manage.courses') || $u->hasPermission('manage.one-to-one')) && Route::has('admin.one-to-one-report-queue.index'))
+                    <li>
+                        <a href="{{ route('admin.one-to-one-report-queue.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.one-to-one-report-queue.*') ? 'active' : '' }}">
+                            <i class="fas fa-file-alt"></i><span>تقارير الحصص (قبل الصرف)</span>
+                        </a>
+                    </li>
+                    @endif
+
                     @if(($isFull || $u->hasPermission('manage.tutoring-groups') || $u->hasPermission('manage.courses') || $u->hasPermission('manage.live-sessions')) && Route::has('admin.student-lesson-cleanup.index'))
                     <li>
                         <a href="{{ route('admin.student-lesson-cleanup.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.student-lesson-cleanup.*') ? 'active' : '' }}">
                             <i class="fas fa-broom"></i><span>تنظيف الحصص والتجارب</span>
-                        </a>
-                    </li>
-                    @endif
-
-                    @if(config('admin_ui.show_group_bookings', false) && ($isFull || $u->hasPermission('manage.tutoring-groups')) && Route::has('admin.tutoring-group-bookings.index'))
-                    <li>
-                        <a href="{{ route('admin.tutoring-group-bookings.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.tutoring-group-bookings.*') ? 'active' : '' }}">
-                            <i class="fas fa-calendar-check"></i><span>تسكين الفصول والحجوزات</span>
-                        </a>
-                    </li>
-                    @endif
-
-                    @if(config('admin_ui.show_group_classes', false) && ($isFull || $u->hasPermission('manage.tutoring-groups')) && Route::has('admin.tutoring-groups.index'))
-                    <li>
-                        <a href="{{ route('admin.tutoring-groups.index', 'collective') }}" class="sidebar-sub-link {{ request()->routeIs('admin.tutoring-groups.*') && request()->route('type') === 'collective' ? 'active' : '' }}">
-                            <i class="fas fa-school"></i><span>فصول المدرسة</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{{ route('admin.tutoring-groups.index', 'individual') }}" class="sidebar-sub-link {{ request()->routeIs('admin.tutoring-groups.*') && request()->route('type') === 'individual' ? 'active' : '' }}">
-                            <i class="fas fa-user"></i><span>المجموعات الفردية</span>
-                        </a>
-                    </li>
-                    @endif
-
-                    @if(($isFull || $u->hasPermission('manage.tutoring-groups')) && Route::has('admin.tutor-work-schedules.index'))
-                    <li>
-                        <a href="{{ route('admin.tutor-work-schedules.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.tutor-work-schedules.*') ? 'active' : '' }}">
-                            <i class="fas fa-calendar-week"></i><span>جداول عمل المدربين</span>
                         </a>
                     </li>
                     @endif
@@ -508,9 +492,9 @@
 
             @endif
 
-            @if($isFull || $u->hasPermission('manage.invoices') || $u->hasPermission('manage.payments') || $u->hasPermission('manage.transactions') || $u->hasPermission('manage.wallets') || $u->hasPermission('view.wallets') || $u->hasPermission('manage.salaries') || $u->hasPermission('manage.expenses') || $u->hasPermission('manage.instructor-accounts') || $u->hasPermission('manage.installments'))
+            @if($isFull || $u->hasPermission('manage.invoices') || $u->hasPermission('manage.payments') || $u->hasPermission('manage.transactions') || $u->hasPermission('manage.wallets') || $u->hasPermission('view.wallets') || $u->hasPermission('manage.salaries') || $u->hasPermission('manage.expenses') || $u->hasPermission('manage.instructor-accounts') || $u->hasPermission('manage.installments') || $u->hasPermission('manage.packages'))
             <li class="sidebar-section-label">المالية</li>
-            @php $accountingSectionOpen = request()->routeIs('admin.invoices.*') || request()->routeIs('admin.payments.*') || request()->routeIs('admin.wallets.*') || request()->routeIs('admin.salaries.*') || request()->routeIs('admin.expenses.*') || request()->routeIs('admin.installments.*') || request()->routeIs('admin.accounting.*') || request()->routeIs('admin.transactions.*'); @endphp
+            @php $accountingSectionOpen = request()->routeIs('admin.invoices.*') || request()->routeIs('admin.payments.*') || request()->routeIs('admin.wallets.*') || request()->routeIs('admin.platform-wallets.*') || request()->routeIs('admin.salaries.*') || request()->routeIs('admin.expenses.*') || request()->routeIs('admin.installments.*') || request()->routeIs('admin.accounting.*') || request()->routeIs('admin.transactions.*'); @endphp
             <li x-data="{ open: {{ $accountingSectionOpen ? 'true' : 'false' }} }">
                 <button type="button" @click="open = !open" class="sidebar-group-btn">
                     <span class="flex items-center gap-3"><i class="fas fa-calculator"></i><span>المحاسبة</span></span>
@@ -528,6 +512,9 @@
                     @endif
                     @if($isFull || $u->hasPermission('manage.wallets') || $u->hasPermission('view.wallets'))
                     <li><a href="{{ route('admin.wallets.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.wallets.*') ? 'active' : '' }}"><i class="fas fa-wallet"></i><span>المحافظ</span></a></li>
+                    @endif
+                    @if(($isFull || $u->hasPermission('manage.packages') || $u->hasPermission('manage.transactions') || $u->hasPermission('manage.wallets') || $u->hasPermission('view.wallets')) && Route::has('admin.platform-wallets.index'))
+                    <li><a href="{{ route('admin.platform-wallets.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.platform-wallets.*') ? 'active' : '' }}"><i class="fas fa-university"></i><span>محافظ المنصة (طلاب/معلمون)</span></a></li>
                     @endif
                     @if($isFull || $u->hasPermission('manage.salaries'))
                     <li><a href="{{ route('admin.salaries.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.salaries.*') ? 'active' : '' }}"><i class="fas fa-money-check-alt"></i><span>رواتب المدربين</span></a></li>
@@ -637,7 +624,7 @@
             @if($isFull || $u->hasPermission('manage.coupons') || $u->hasPermission('manage.referrals') || $u->hasPermission('manage.popup-ads') || $u->hasPermission('manage.personal-branding'))
             {{-- إدارة التسويق --}}
             @php
-                $marketingOpen = request()->routeIs('admin.coupons.*') || request()->routeIs('admin.coupon-commissions.*') || request()->routeIs('admin.referral-programs.*') || request()->routeIs('admin.referrals.*') || request()->routeIs('admin.personal-branding.*') || request()->routeIs('admin.popup-ads.*');
+                $marketingOpen = request()->routeIs('admin.coupons.*') || request()->routeIs('admin.coupon-commissions.*') || request()->routeIs('admin.referral-programs.*') || request()->routeIs('admin.referrals.*') || request()->routeIs('admin.popup-ads.*');
             @endphp
             <li class="sidebar-section-label">التسويق</li>
             <li x-data="{ open: {{ $marketingOpen ? 'true' : 'false' }} }">
@@ -648,9 +635,6 @@
                 <ul x-show="open" x-cloak class="mt-1 mr-3 space-y-0.5 border-r border-white/10 pr-3">
                     @if($isFull || $u->hasPermission('manage.popup-ads'))
                     <li><a href="{{ route('admin.popup-ads.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.popup-ads.*') ? 'active' : '' }}"><i class="fas fa-bullhorn"></i><span>{{ __('admin.popup_ads') }}</span></a></li>
-                    @endif
-                    @if($isFull || $u->hasPermission('manage.personal-branding'))
-                    <li><a href="{{ route('admin.personal-branding.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.personal-branding.*') ? 'active' : '' }}"><i class="fas fa-user-tie"></i><span>{{ __('admin.personal_branding') }}</span></a></li>
                     @endif
                     @if($isFull || $u->hasPermission('manage.coupons'))
                     <li><a href="{{ route('admin.coupons.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.coupons.*') && !request()->routeIs('admin.coupon-commissions.*') ? 'active' : '' }}"><i class="fas fa-ticket-alt"></i><span>{{ __('admin.coupons_discounts') }}</span></a></li>
@@ -687,16 +671,47 @@
 
             @endif
 
-            @if($isFull || $u->hasPermission('manage.enrollments') || $u->hasPermission('manage.courses') || $u->hasPermission('manage.exams') || $u->hasPermission('manage.lectures') || $u->hasPermission('manage.assignments') || $u->hasPermission('manage.live-sessions') || $u->hasPermission('manage.live-servers') || $u->hasPermission('manage.question-bank') || $u->hasPermission('manage.attendance') || $u->hasPermission('manage.achievements') || $u->hasPermission('manage.badges') || $u->hasPermission('manage.reviews') || $u->hasPermission('manage.academic-years') || $u->hasPermission('manage.academic-subjects'))
-            <li class="sidebar-section-label">التعليم</li>
-            {{-- مكتبات الطلاب: ماتريال + فيديو + مناهج --}}
+            @if($isFull || $u->hasPermission('manage.enrollments') || $u->hasPermission('manage.courses') || $u->hasPermission('manage.exams') || $u->hasPermission('manage.lectures') || $u->hasPermission('manage.assignments') || $u->hasPermission('manage.live-sessions') || $u->hasPermission('manage.live-servers') || $u->hasPermission('manage.question-bank') || $u->hasPermission('manage.attendance') || $u->hasPermission('manage.achievements') || $u->hasPermission('manage.badges') || $u->hasPermission('manage.reviews') || $u->hasPermission('manage.academic-years') || $u->hasPermission('manage.academic-subjects') || $u->hasPermission('manage.personal-branding'))
+            <li class="sidebar-section-label">المنتج التعليمي</li>
+
+            {{-- 1) مطابقة المناهج: مرحلة + مادة + نوع منهج (تخدم حجز 1:1) --}}
+            @if($isFull || $u->hasPermission('manage.academic-years') || $u->hasPermission('manage.academic-subjects') || $u->hasPermission('manage.personal-branding'))
+            @php
+                $matchCatalogOpen = request()->routeIs('admin.academic-years.*')
+                    || request()->routeIs('admin.academic-subjects.*')
+                    || request()->routeIs('admin.curriculum-types.*')
+                    || request()->routeIs('admin.personal-branding.*');
+            @endphp
+            <li x-data="{ open: {{ $matchCatalogOpen ? 'true' : 'false' }} }">
+                <button type="button" @click="open = !open" class="sidebar-group-btn">
+                    <span class="flex items-center gap-3"><i class="fas fa-filter"></i><span>مطابقة المناهج</span></span>
+                    <i class="fas fa-chevron-down chevron" :class="open ? 'rotate-180' : ''"></i>
+                </button>
+                <ul x-show="open" x-cloak class="mt-1 mr-3 space-y-0.5 border-r border-white/10 pr-3">
+                    @if($isFull || $u->hasPermission('manage.academic-years'))
+                    <li><a href="{{ route('admin.academic-years.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.academic-years.*') ? 'active' : '' }}"><i class="fas fa-layer-group"></i><span>{{ __('admin.academic_years') }}</span></a></li>
+                    @endif
+                    @if($isFull || $u->hasPermission('manage.academic-subjects') || $u->hasPermission('manage.academic-years'))
+                    <li><a href="{{ route('admin.academic-subjects.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.academic-subjects.*') ? 'active' : '' }}"><i class="fas fa-book-open"></i><span>{{ __('admin.skill_groups') }}</span></a></li>
+                    @endif
+                    @if(($isFull || $u->hasPermission('manage.personal-branding') || $u->hasPermission('manage.academic-years')) && Route::has('admin.curriculum-types.index'))
+                    <li><a href="{{ route('admin.curriculum-types.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.curriculum-types.*') ? 'active' : '' }}"><i class="fas fa-globe"></i><span>{{ __('admin.curriculum_types') }}</span></a></li>
+                    @endif
+                    @if($isFull || $u->hasPermission('manage.personal-branding'))
+                    <li><a href="{{ route('admin.personal-branding.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.personal-branding.*') ? 'active' : '' }}"><i class="fas fa-user-tie"></i><span>ملفات المعلمين (المطابقة)</span></a></li>
+                    @endif
+                </ul>
+            </li>
+            @endif
+
+            {{-- مكتبات الطلاب: ماتريال + فيديو --}}
             @if($isFull || $u->hasPermission('manage.lectures') || $u->hasPermission('manage.courses') || $u->hasPermission('manage.live-sessions') || $u->hasPermission('manage.academic-years') || $u->hasPermission('manage.academic-subjects'))
             @php
                 $librariesOpen = request()->routeIs('admin.libraries.*') || request()->routeIs('admin.curriculum-library.*');
             @endphp
             <li x-data="{ open: {{ $librariesOpen ? 'true' : 'false' }} }">
                 <button type="button" @click="open = !open" class="sidebar-group-btn">
-                    <span class="flex items-center gap-3"><i class="fas fa-layer-group"></i><span>مكتبة الملفات</span></span>
+                    <span class="flex items-center gap-3"><i class="fas fa-folder-open"></i><span>مكتبة الملفات</span></span>
                     <i class="fas fa-chevron-down chevron" :class="open ? 'rotate-180' : ''"></i>
                 </button>
                 <ul x-show="open" x-cloak class="mt-1 mr-3 space-y-0.5 border-r border-white/10 pr-3">
@@ -704,7 +719,7 @@
                     <li><a href="{{ route('admin.libraries.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.libraries.index') ? 'active' : '' }}"><i class="fas fa-th-large"></i><span>مركز الملفات</span></a></li>
                     @endif
                     @if(($isFull || $u->hasPermission('manage.lectures') || $u->hasPermission('manage.courses')) && Route::has('admin.libraries.materials.index'))
-                    <li><a href="{{ route('admin.libraries.materials.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.libraries.materials.*') ? 'active' : '' }}"><i class="fas fa-book-open"></i><span>ماتريال (ملفات)</span></a></li>
+                    <li><a href="{{ route('admin.libraries.materials.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.libraries.materials.*') ? 'active' : '' }}"><i class="fas fa-file-alt"></i><span>ملفات الماتريال</span></a></li>
                     @endif
                     @if(($isFull || $u->hasPermission('manage.curriculum-library') || $u->hasPermission('manage.courses') || $u->hasPermission('manage.lectures')) && Route::has('admin.curriculum-library.index'))
                     <li><a href="{{ route('admin.curriculum-library.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.curriculum-library.*') ? 'active' : '' }}"><i class="fas fa-chalkboard"></i><span>مناهج تفاعلية (ملفات)</span></a></li>
@@ -719,10 +734,10 @@
             </li>
             @endif
             @if($isFull || $u->hasPermission('manage.users') || $u->hasPermission('manage.tutoring-groups') || $u->hasPermission('manage.courses'))
-            @php $teacherControlOpen = request()->routeIs('admin.teachers.*'); @endphp
+            @php $teacherControlOpen = request()->routeIs('admin.teachers.*') || request()->routeIs('admin.academy-instructors.*') || request()->routeIs('admin.teacher-switch.*'); @endphp
             <li x-data="{ open: {{ $teacherControlOpen ? 'true' : 'false' }} }">
                 <button type="button" @click="open = !open" class="sidebar-group-btn">
-                    <span class="flex items-center gap-3"><i class="fas fa-user-tie"></i><span>تحكم المعلمين</span></span>
+                    <span class="flex items-center gap-3"><i class="fas fa-chalkboard-teacher"></i><span>تشغيل المعلمين</span></span>
                     <i class="fas fa-chevron-down chevron" :class="open ? 'rotate-180' : ''"></i>
                 </button>
                 <ul x-show="open" x-cloak class="mt-1 mr-3 space-y-0.5 border-r border-white/10 pr-3">
@@ -731,17 +746,17 @@
                             <i class="fas fa-th-large"></i><span>مركز التحكم</span>
                         </a>
                     </li>
-                    @if(Route::has('admin.academy-instructors.index') && ($isFull || $u->hasPermission('manage.academic-years') || $u->hasPermission('manage.tutoring-groups') || $u->hasPermission('manage.users')))
+                    @if(Route::has('admin.teacher-switch.create') && ($isFull || $u->hasPermission('manage.tutoring-groups') || $u->hasPermission('manage.courses') || $u->hasPermission('manage.users')))
                     <li>
-                        <a href="{{ route('admin.academy-instructors.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.academy-instructors.*') ? 'active' : '' }}">
-                            <i class="fas fa-user-check"></i><span>توصيف الطلاب</span>
+                        <a href="{{ route('admin.teacher-switch.create') }}" class="sidebar-sub-link {{ request()->routeIs('admin.teacher-switch.*') ? 'active' : '' }}">
+                            <i class="fas fa-exchange-alt"></i><span>تبديل معلم (بدون خصم رصيد)</span>
                         </a>
                     </li>
                     @endif
-                    @if(Route::has('admin.tutor-work-schedules.index') && ($isFull || $u->hasPermission('manage.tutoring-groups')))
+                    @if(Route::has('admin.academy-instructors.index') && ($isFull || $u->hasPermission('manage.academic-years') || $u->hasPermission('manage.tutoring-groups') || $u->hasPermission('manage.users')))
                     <li>
-                        <a href="{{ route('admin.tutor-work-schedules.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.tutor-work-schedules.*') ? 'active' : '' }}">
-                            <i class="fas fa-calendar-alt"></i><span>جداول العمل</span>
+                        <a href="{{ route('admin.academy-instructors.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.academy-instructors.*') ? 'active' : '' }}">
+                            <i class="fas fa-user-check"></i><span>توصيف الطلاب للمعلمين</span>
                         </a>
                     </li>
                     @endif
@@ -749,30 +764,34 @@
             </li>
             @endif
 
-            {{-- إدارة المحتوى — الكورسات ومسارات التعلم --}}
-            @if($isFull || $u->hasPermission('manage.courses') || $u->hasPermission('manage.tutoring-groups') || $u->hasPermission('manage.academic-years') || $u->hasPermission('manage.academic-subjects') || $u->hasPermission('manage.lectures') || $u->hasPermission('manage.assignments') || $u->hasPermission('manage.exams') || $u->hasPermission('manage.question-bank') || $u->hasPermission('manage.attendance') || $u->hasPermission('manage.achievements') || $u->hasPermission('manage.badges') || $u->hasPermission('manage.reviews'))
+            {{-- 2) الكورسات المسجّلة (مسار مستقل عن حجز 1:1) --}}
+            @if($isFull || $u->hasPermission('manage.courses') || $u->hasPermission('manage.lectures') || $u->hasPermission('manage.assignments') || $u->hasPermission('manage.exams') || $u->hasPermission('manage.question-bank') || $u->hasPermission('manage.achievements') || $u->hasPermission('manage.badges') || $u->hasPermission('manage.reviews'))
             @php
-                $contentManagementOpen = request()->routeIs('admin.advanced-courses.*') || request()->routeIs('admin.academic-years.*') || request()->routeIs('admin.academic-subjects.*') || request()->routeIs('admin.course-categories.*') || request()->routeIs('admin.exams.*') || request()->routeIs('admin.question-bank.*') || request()->routeIs('admin.question-categories.*') || request()->routeIs('admin.lectures.*') || request()->routeIs('admin.assignments.*') || request()->routeIs('admin.achievements.*') || request()->routeIs('admin.badges.*') || request()->routeIs('admin.reviews.*');
+                $recordedCoursesOpen = request()->routeIs('admin.advanced-courses.*')
+                    || request()->routeIs('admin.courses.lessons.*')
+                    || request()->routeIs('admin.course-categories.*')
+                    || request()->routeIs('admin.exams.*')
+                    || request()->routeIs('admin.question-bank.*')
+                    || request()->routeIs('admin.question-categories.*')
+                    || request()->routeIs('admin.lectures.*')
+                    || request()->routeIs('admin.assignments.*')
+                    || request()->routeIs('admin.achievements.*')
+                    || request()->routeIs('admin.badges.*')
+                    || request()->routeIs('admin.reviews.*');
             @endphp
-            <li x-data="{ open: {{ $contentManagementOpen ? 'true' : 'false' }} }">
+            <li x-data="{ open: {{ $recordedCoursesOpen ? 'true' : 'false' }} }">
                 <button type="button" @click="open = !open" class="sidebar-group-btn">
-                    <span class="flex items-center gap-3"><i class="fas fa-folder"></i><span>المحتوى والكورسات</span></span>
+                    <span class="flex items-center gap-3"><i class="fas fa-play-circle"></i><span>الكورسات المسجّلة</span></span>
                     <i class="fas fa-chevron-down chevron" :class="open ? 'rotate-180' : ''"></i>
                 </button>
                 <ul x-show="open" x-cloak class="mt-1 mr-3 space-y-0.5 border-r border-white/10 pr-3">
-                    @if($isFull || $u->hasPermission('manage.academic-years'))
-                    <li><a href="{{ route('admin.academic-years.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.academic-years.*') ? 'active' : '' }}"><i class="fas fa-school"></i><span>سنوات المدرسة</span></a></li>
-                    @endif
-                    @if($isFull || $u->hasPermission('manage.academic-subjects') || $u->hasPermission('manage.academic-years'))
-                    <li><a href="{{ route('admin.academic-subjects.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.academic-subjects.*') ? 'active' : '' }}"><i class="fas fa-book"></i><span>مواد المدرسة</span></a></li>
-                    @endif
                     @if($isFull || $u->hasPermission('manage.courses'))
                     @php $advancedCoursesActive = request()->routeIs('admin.advanced-courses.*') || request()->routeIs('admin.courses.lessons.*'); @endphp
-                    <li><a href="{{ route('admin.advanced-courses.index') }}" class="sidebar-sub-link {{ $advancedCoursesActive ? 'active' : '' }}"><i class="fas fa-graduation-cap"></i><span>{{ __('admin.courses_management') }}</span></a></li>
-                    <li><a href="{{ route('admin.course-categories.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.course-categories.*') ? 'active' : '' }}"><i class="fas fa-tags"></i><span>{{ __('admin.course_categories') }}</span></a></li>
+                    <li><a href="{{ route('admin.advanced-courses.index') }}" class="sidebar-sub-link {{ $advancedCoursesActive ? 'active' : '' }}"><i class="fas fa-graduation-cap"></i><span>إدارة الكورسات</span></a></li>
+                    <li><a href="{{ route('admin.course-categories.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.course-categories.*') ? 'active' : '' }}"><i class="fas fa-tags"></i><span>تصنيفات الكورسات</span></a></li>
                     @endif
                     @if($isFull || $u->hasPermission('manage.lectures'))
-                    <li><a href="{{ route('admin.lectures.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.lectures.*') ? 'active' : '' }}"><i class="fas fa-video"></i><span>{{ __('admin.lectures') }}</span></a></li>
+                    <li><a href="{{ route('admin.lectures.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.lectures.*') ? 'active' : '' }}"><i class="fas fa-video"></i><span>دروس الكورس</span></a></li>
                     @endif
                     @if($isFull || $u->hasPermission('manage.assignments'))
                     <li><a href="{{ route('admin.assignments.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.assignments.*') ? 'active' : '' }}"><i class="fas fa-tasks"></i><span>{{ __('admin.assignments_projects') }}</span></a></li>
@@ -963,12 +982,12 @@
 
             @endif
 
-            @if($isFull || $u->hasPermission('manage.certificates') || $u->hasPermission('manage.roles') || $u->hasPermission('manage.permissions') || $u->hasPermission('manage.messages') || $u->hasPermission('view.statistics') || $u->hasPermission('view.reports') || $u->hasPermission('view.financial-reports') || $u->hasPermission('view.academic-reports'))
+            @if($isFull || $u->hasPermission('manage.roles') || $u->hasPermission('manage.permissions') || $u->hasPermission('manage.messages') || $u->hasPermission('view.statistics') || $u->hasPermission('view.reports') || $u->hasPermission('view.financial-reports') || $u->hasPermission('view.academic-reports') || (config('admin_ui.show_certificates') && $u->hasPermission('manage.certificates')))
             <li class="sidebar-section-label">المزيد</li>
             @endif
 
-            @if($isFull || $u->hasPermission('manage.certificates'))
-            {{-- التحكم في الشهادات --}}
+            @if(config('admin_ui.show_certificates') && ($isFull || $u->hasPermission('manage.certificates')))
+            {{-- التحكم في الشهادات (مخفي عبر admin_ui.show_certificates) --}}
             @php $certificatesManagementOpen = request()->routeIs('admin.certificates.*'); @endphp
             <li x-data="{ open: {{ $certificatesManagementOpen ? 'true' : 'false' }} }">
                 <button type="button" @click="open = !open" class="sidebar-group-btn">
@@ -1003,7 +1022,6 @@
                     @endif
                 </ul>
             </li>
-
             @endif
 
             {{-- إدارة الصلاحيات والأدوار --}}

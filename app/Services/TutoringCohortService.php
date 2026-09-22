@@ -150,9 +150,11 @@ class TutoringCohortService
                 'type' => 'reminder',
                 'priority' => 'high',
                 'audience' => 'student',
-                'action_url' => Route::has('student.classes.show')
+                'action_url' => \Illuminate\Support\Facades\Route::has('student.classes.show')
                     ? route('student.classes.show', $cohort)
-                    : route('public.groups.show', $cohort->tutoringGroup->slug ?? ''),
+                    : (\Illuminate\Support\Facades\Route::has('dashboard')
+                        ? route('dashboard')
+                        : '/'),
                 'action_text' => 'عرض الفصل',
             ]);
         }

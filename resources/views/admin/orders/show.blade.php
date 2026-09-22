@@ -260,10 +260,17 @@
                             <h4 class="mb-2 text-sm font-semibold text-ink">الحجوزات المرتبطة</h4>
                             <div class="space-y-2">
                                 @foreach($order->tutoringGroupBookings as $booking)
+                                    @if(Route::has('admin.tutoring-group-bookings.show'))
                                     <a href="{{ route('admin.tutoring-group-bookings.show', $booking) }}" class="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-line px-4 py-3 text-sm hover:border-accent/30">
                                         <span class="font-medium text-ink">{{ $booking->tutoringGroup?->title ?: 'حجز #'.$booking->id }}</span>
                                         <span class="text-muted">{{ $booking->instructor?->name ?: 'بدون معلم' }} · {{ $booking->starts_at?->format('Y-m-d H:i') }} · {{ $booking->statusLabel() }}</span>
                                     </a>
+                                    @else
+                                    <div class="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-line px-4 py-3 text-sm">
+                                        <span class="font-medium text-ink">{{ $booking->tutoringGroup?->title ?: 'حجز #'.$booking->id }}</span>
+                                        <span class="text-muted">{{ $booking->instructor?->name ?: 'بدون معلم' }} · {{ $booking->starts_at?->format('Y-m-d H:i') }} · {{ $booking->statusLabel() }}</span>
+                                    </div>
+                                    @endif
                                 @endforeach
                             </div>
                         </div>

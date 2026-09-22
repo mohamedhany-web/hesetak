@@ -35,15 +35,7 @@
         </div>
     @endif
 
-    <section class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <article class="rounded-2xl border border-line bg-surface p-4 shadow-soft">
-            <p class="text-xs text-muted">مجموعات جماعية</p>
-            <p class="mt-1 text-xl font-semibold text-ink">{{ $collectiveGroups->count() }}</p>
-        </article>
-        <article class="rounded-2xl border border-line bg-surface p-4 shadow-soft">
-            <p class="text-xs text-muted">مجموعات فردية</p>
-            <p class="mt-1 text-xl font-semibold text-ink">{{ $individualGroups->count() }}</p>
-        </article>
+    <section class="grid gap-3 sm:grid-cols-2">
         <article class="rounded-2xl border border-line bg-surface p-4 shadow-soft">
             <p class="text-xs text-muted">كورسات</p>
             <p class="mt-1 text-xl font-semibold text-ink">{{ $courses->count() }}</p>
@@ -56,47 +48,6 @@
 
     <div class="grid grid-cols-1 gap-5 xl:grid-cols-3">
         <div class="xl:col-span-2 space-y-5">
-            <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
-                <div class="border-b border-line px-4 py-4 sm:px-5">
-                    <h3 class="text-base font-semibold text-ink">مجموعات جماعية</h3>
-                </div>
-                <div class="divide-y divide-line">
-                    @forelse($collectiveGroups as $group)
-                        <div class="flex items-center justify-between gap-3 px-4 py-3 sm:px-5">
-                            <div>
-                                <p class="font-medium text-ink">{{ $group->title }}</p>
-                                <p class="text-xs text-muted">{{ $group->cohorts_count }} دفعة · سعة {{ $group->capacity }}</p>
-                            </div>
-                            @if(Route::has('admin.tutoring-groups.edit'))
-                                <a href="{{ route('admin.tutoring-groups.edit', ['type' => 'collective', 'tutoringGroup' => $group]) }}" class="text-xs font-semibold text-accent">إدارة</a>
-                            @endif
-                        </div>
-                    @empty
-                        <p class="px-4 py-8 text-center text-sm text-muted">لا مجموعات جماعية لهذا المدرّب.</p>
-                    @endforelse
-                </div>
-            </article>
-
-            <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
-                <div class="border-b border-line px-4 py-4 sm:px-5">
-                    <h3 class="text-base font-semibold text-ink">مجموعات فردية</h3>
-                </div>
-                <div class="divide-y divide-line">
-                    @forelse($individualGroups as $group)
-                        <div class="flex items-center justify-between gap-3 px-4 py-3 sm:px-5">
-                            <div>
-                                <p class="font-medium text-ink">{{ $group->title }}</p>
-                                <p class="text-xs text-muted">{{ $group->packages_count }} باقة</p>
-                            </div>
-                            @if(Route::has('admin.tutoring-groups.edit'))
-                                <a href="{{ route('admin.tutoring-groups.edit', ['type' => 'individual', 'tutoringGroup' => $group]) }}" class="text-xs font-semibold text-accent">إدارة</a>
-                            @endif
-                        </div>
-                    @empty
-                        <p class="px-4 py-8 text-center text-sm text-muted">لا مجموعات فردية لهذا المدرّب.</p>
-                    @endforelse
-                </div>
-            </article>
 
             <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
                 <div class="border-b border-line px-4 py-4 sm:px-5">
@@ -116,22 +67,6 @@
                     @endforelse
                 </div>
             </article>
-
-            @if($upcomingBookings->isNotEmpty())
-                <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
-                    <div class="border-b border-line px-4 py-4 sm:px-5">
-                        <h3 class="text-base font-semibold text-ink">حصص قادمة</h3>
-                    </div>
-                    <div class="divide-y divide-line">
-                        @foreach($upcomingBookings as $booking)
-                            <div class="px-4 py-3 sm:px-5 text-sm">
-                                <p class="font-medium text-ink">{{ $booking->tutoringGroup?->title }}</p>
-                                <p class="text-xs text-muted">{{ $booking->user?->name ?? 'ضيف' }} · {{ $booking->starts_at?->format('Y-m-d H:i') }}</p>
-                            </div>
-                        @endforeach
-                    </div>
-                </article>
-            @endif
         </div>
 
         <aside class="space-y-5">
@@ -156,8 +91,6 @@
                         <label class="mb-1.5 block text-xs font-medium text-muted">النطاق</label>
                         <select name="scope" class="{{ $fieldClass }}">
                             <option value="general">عام</option>
-                            <option value="collective">مجموعات جماعية</option>
-                            <option value="individual">مجموعات فردية</option>
                             <option value="courses">كورسات</option>
                         </select>
                     </div>

@@ -1,8 +1,23 @@
 <?php
 
+/**
+ * Legacy private-lessons facet keys (Quran-centric).
+ *
+ * Matching for Hesetak is now:
+ *   stage (academic_years) + subject (academic_subjects) + curriculum type (hesetak_curriculum_types)
+ *
+ * Keep genders + lesson_duration_minutes for optional UX / booking defaults.
+ * Do not use subjects/age_groups/languages/specializations for public directory filters.
+ */
 return [
     'lesson_duration_minutes' => 50,
 
+    'genders' => [
+        'female' => ['en' => 'Female', 'ar' => 'معلمة'],
+        'male' => ['en' => 'Male', 'ar' => 'معلم'],
+    ],
+
+    // Deprecated catalogs — retained only so old stored private_teaching_meta keys do not break readers.
     'subjects' => [
         'quran' => ['en' => 'Quran', 'ar' => 'قرآن'],
         'arabic' => ['en' => 'Arabic', 'ar' => 'العربية'],
@@ -20,11 +35,6 @@ return [
         'teens' => ['en' => 'Teens', 'ar' => 'مراهقون'],
     ],
 
-    'genders' => [
-        'female' => ['en' => 'Female', 'ar' => 'معلمة'],
-        'male' => ['en' => 'Male', 'ar' => 'معلم'],
-    ],
-
     'languages' => [
         'english' => ['en' => 'English', 'ar' => 'إنجليزية'],
         'arabic' => ['en' => 'Arabic', 'ar' => 'عربية'],
@@ -32,16 +42,16 @@ return [
     ],
 
     'specializations' => [
-        'quran_non_arabic' => ['en' => 'Quran for Non-Arabic Speakers', 'ar' => 'قرآن لغير الناطقين بالعربية'],
-        'arabic_non_arabic' => ['en' => 'Arabic for Non-Arabic Speakers', 'ar' => 'عربية لغير الناطقين'],
+        'quran_non_arabic' => ['en' => 'Quran for non-Arabic speakers', 'ar' => 'قرآن لغير الناطقين بالعربية'],
+        'arabic_non_arabic' => ['en' => 'Arabic for non-speakers', 'ar' => 'عربية لغير الناطقين'],
         'children' => ['en' => 'Children', 'ar' => 'الأطفال'],
         'new_muslims' => ['en' => 'New Muslims', 'ar' => 'مسلمون جدد'],
     ],
 
     'availability' => [
-        'morning' => ['en' => 'Morning', 'ar' => 'صباحًا'],
-        'afternoon' => ['en' => 'Afternoon', 'ar' => 'ظهرًا'],
-        'evening' => ['en' => 'Evening', 'ar' => 'مساءً'],
+        'morning' => ['en' => 'Morning', 'ar' => 'صباح'],
+        'afternoon' => ['en' => 'Afternoon', 'ar' => 'ظهر'],
+        'evening' => ['en' => 'Evening', 'ar' => 'مساء'],
         'weekend' => ['en' => 'Weekend', 'ar' => 'نهاية الأسبوع'],
     ],
 ];

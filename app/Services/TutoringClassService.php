@@ -187,7 +187,9 @@ class TutoringClassService
                 'type' => 'reminder',
                 'priority' => 'high',
                 'audience' => 'student',
-                'action_url' => route('student.classes.show', $cohort),
+                'action_url' => \Illuminate\Support\Facades\Route::has('student.classes.show')
+                    ? route('student.classes.show', $cohort)
+                    : route('dashboard'),
                 'action_text' => 'عرض الفصل',
             ]);
 

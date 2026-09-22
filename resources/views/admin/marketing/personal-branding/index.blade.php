@@ -113,6 +113,7 @@
                     @forelse($profiles as $p)
                         @php
                             $badge = $statusBadges[$p->status] ?? $statusBadges['default'];
+                            $matchOk = \App\Support\InstructorMatchCompleteness::isComplete($p);
                         @endphp
                         <tr class="hover:bg-canvas/60">
                             <td class="px-4 py-3">
@@ -128,10 +129,17 @@
                             </td>
                             <td class="px-4 py-3 text-ink">{{ Str::limit($p->headline ?? '—', 40) }}</td>
                             <td class="px-4 py-3">
-                                <span class="inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-[11px] font-semibold {{ $badge }}">
-                                    <span class="size-1.5 rounded-full bg-current"></span>
-                                    {{ \App\Models\InstructorProfile::statusLabel($p->status) }}
-                                </span>
+                                <div class="flex flex-wrap items-center gap-1.5">
+                                    <span class="inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-[11px] font-semibold {{ $badge }}">
+                                        <span class="size-1.5 rounded-full bg-current"></span>
+                                        {{ \App\Models\InstructorProfile::statusLabel($p->status) }}
+                                    </span>
+                                    @unless($matchOk)
+                                        <span class="inline-flex items-center rounded-lg border border-amber-200 bg-amber-50 px-2 py-1 text-[11px] font-semibold text-amber-800">
+                                            ناقص مطابقة
+                                        </span>
+                                    @endunless
+                                </div>
                             </td>
                             <td class="px-4 py-3">
                                 <p class="font-semibold tabular-nums text-ink">{{ number_format($p->effectiveConsultationPriceEgp(), 2) }}</p>

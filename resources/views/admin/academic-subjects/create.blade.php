@@ -26,7 +26,7 @@
     <section class="flex flex-wrap items-end justify-between gap-4">
         <div class="min-w-0">
             <p class="text-xs font-medium text-muted">إدارة المحتوى · المواد</p>
-            <h2 class="mt-1 text-2xl font-semibold tracking-tight text-ink md:text-[28px]">مادة مدرسة جديدة</h2>
+            <h2 class="mt-1 text-2xl font-semibold tracking-tight text-ink md:text-[28px]">مادة دراسية جديدة</h2>
             <p class="mt-1 text-sm text-muted">بعد الحفظ اربط الكورسات من صفحة المادة. يمكن ترك السنة فارغة للمواد العامة.</p>
         </div>
         <a href="{{ route('admin.academic-subjects.index', array_filter(['track' => $selectedTrack])) }}" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl border border-line bg-surface px-4 text-sm font-medium text-ink-soft transition hover:border-accent/30 hover:text-accent">
@@ -56,7 +56,7 @@
             </div>
             <div class="grid grid-cols-1 gap-4 p-4 sm:grid-cols-2 sm:p-5">
                 <div class="sm:col-span-2">
-                    <label class="{{ $labelClass }}" for="academic_year_id">سنة المدرسة <span class="font-normal text-muted">(اختياري)</span></label>
+                    <label class="{{ $labelClass }}" for="academic_year_id">المرحلة الدراسية <span class="font-normal text-muted">(اختياري)</span></label>
                     <select name="academic_year_id" id="academic_year_id" class="{{ $fieldClass }}">
                         <option value="">— مادة عامة (بدون سنة) —</option>
                         @foreach($academicYears as $year)

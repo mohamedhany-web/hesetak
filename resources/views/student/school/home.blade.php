@@ -171,7 +171,7 @@
             @elseif(Route::has('student.private-lectures.index'))
                 <a href="{{ route('student.private-lectures.index') }}" class="st-pill st-pill--light">{{ __('student_timeline.my_classes') }}</a>
             @elseif(Route::has('student.classes.index') && student_ui('show_classes'))
-                <a href="{{ route('student.classes.index') }}" class="st-pill st-pill--light">{{ __('student_timeline.my_classes') }}</a>
+                <a href="{{ Route::has('student.classes.index') ? route('student.classes.index') : route('dashboard') }}" class="st-pill st-pill--light">{{ __('student_timeline.my_classes') }}</a>
             @endif
             <a href="{{ $exploreUrl }}" class="st-pill st-pill--ghost">{{ __('student_timeline.explore_school') }}</a>
         </div>
@@ -249,7 +249,7 @@
         @if(Route::has('student.private-lectures.index'))
             <a class="st-see" href="{{ route('student.private-lectures.index') }}">{{ __('student_timeline.see_all') }}</a>
         @elseif(Route::has('student.classes.index') && student_ui('show_classes'))
-            <a class="st-see" href="{{ route('student.classes.index') }}">{{ __('student_timeline.see_all') }}</a>
+            <a class="st-see" href="{{ Route::has('student.classes.index') ? route('student.classes.index') : route('dashboard') }}">{{ __('student_timeline.see_all') }}</a>
         @endif
     </div>
 
@@ -399,7 +399,7 @@
                 @if(Route::has('public.curricula'))
                     <a href="{{ route('public.curricula') }}" class="st-pill st-pill--light">{{ __('student_timeline.open_year_path') }}</a>
                 @elseif(Route::has('public.school.year'))
-                    <a href="{{ route('public.school.year', $recommendedYear->slug) }}" class="st-pill st-pill--light">{{ __('student_timeline.open_year_path') }}</a>
+                    <a href="{{ (Route::has('public.school.year') ? route('public.school.year', $recommendedYear->slug) : (Route::has('public.curricula') ? route('public.curricula') : route('dashboard'))) }}" class="st-pill st-pill--light">{{ __('student_timeline.open_year_path') }}</a>
                 @endif
             @endif
             @if(!empty($placement?->admin_notes))

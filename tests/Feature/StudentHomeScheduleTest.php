@@ -28,7 +28,7 @@ class StudentHomeScheduleTest extends TestCase
         $this->createExtraTables();
     }
 
-    public function test_week_calendar_includes_private_and_class_slots(): void
+    public function test_week_calendar_includes_private_slots(): void
     {
         $student = User::factory()->create(['role' => 'student', 'is_active' => true]);
         $instructor = User::factory()->create(['role' => 'instructor', 'is_active' => true]);
@@ -52,50 +52,10 @@ class StudentHomeScheduleTest extends TestCase
             'classroom_meeting_id' => $meeting->id,
         ]);
 
-        $group = TutoringGroup::create([
-            'type' => TutoringGroup::TYPE_COLLECTIVE,
-            'title' => 'فصل',
-            'slug' => 'g-'.uniqid(),
-            'instructor_id' => $instructor->id,
-            'price' => 0,
-            'capacity' => 10,
-            'duration_minutes' => 60,
-            'is_active' => true,
-            'sort_order' => 0,
-        ]);
-        $cohort = TutoringGroupCohort::create([
-            'tutoring_group_id' => $group->id,
-            'title' => 'دفعة',
-            'slug' => 'c-'.uniqid(),
-            'starts_at' => $sat,
-            'study_days' => [6],
-            'study_time' => '18:00',
-            'sessions_count' => 2,
-            'session_duration_minutes' => 60,
-            'timezone' => 'Africa/Cairo',
-            'capacity' => 10,
-            'enrolled_count' => 0,
-            'min_enrollment' => 1,
-            'status' => TutoringGroupCohort::STATUS_OPEN,
-            'is_visible' => true,
-            'sort_order' => 0,
-        ]);
-        TutoringClassService::enrollStudent($cohort, $student, countSeat: true);
-        TutoringClassSession::create([
-            'tutoring_group_cohort_id' => $cohort->id,
-            'tutoring_group_id' => $group->id,
-            'session_number' => 1,
-            'title' => 'الحصة 1',
-            'starts_at' => $sat->copy()->setTime(18, 0),
-            'ends_at' => $sat->copy()->setTime(19, 0),
-            'status' => TutoringClassSession::STATUS_SCHEDULED,
-        ]);
-
         $days = StudentScheduleService::weekDays($student);
         $this->assertCount(7, $days);
         $all = $days->flatMap->items;
         $this->assertTrue($all->contains(fn ($i) => $i->type === 'private'));
-        $this->assertTrue($all->contains(fn ($i) => $i->type === 'class'));
     }
 
     public function test_join_private_and_class_redirects(): void
@@ -202,11 +162,12 @@ class StudentHomeScheduleTest extends TestCase
         $this->assertTrue(\Illuminate\Support\Facades\Route::has('student.schedule.join'));
     }
 
-    public function test_student_ui_hides_courses_by_default(): void
+    public function test_student_ui_course_flags_follow_config(): void
     {
-        $this->assertFalse(student_ui('show_courses'));
-        $this->assertFalse(student_ui('show_exams'));
-        $this->assertTrue(student_ui('show_libraries', true));
+        // بدون تسجيل نشط: يتبع الإعداد (كورسات مفعّلة في حصتك، مكتبات مرجعية معطّلة)
+        $this->assertTrue(student_ui('show_courses'));
+        $this->assertTrue(student_ui('show_exams'));
+        $this->assertFalse(student_ui('show_libraries'));
     }
 
     protected function createExtraTables(): void

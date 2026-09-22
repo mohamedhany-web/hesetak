@@ -7,8 +7,6 @@ use App\Models\Lecture;
 use App\Models\LectureMaterial;
 use App\Models\LibraryFolder;
 use App\Models\OneToOneSession;
-use App\Models\TutoringClassSession;
-use App\Models\TutoringCohortEnrollment;
 use App\Services\LectureMaterialStorage;
 use App\Services\LibraryFolderAccessService;
 use App\Services\StudentScheduleService;
@@ -867,21 +865,50 @@ class StudentHomeExtrasController extends Controller
 
     public function lectures(Request $request): View|RedirectResponse
     {
-        if ($deny = $this->denyLegacyLibraries()) {
-            return $deny;
+        $user = $request->user();
+        $canCourses = student_ui('show_courses')
+            || ($user && method_exists($user, 'hasActiveRecordedCourses') && $user->hasActiveRecordedCourses());
+        $canPrivate = student_ui('show_private_lessons');
+        $canLibraries = student_ui('show_libraries');
+
+        if (! $canCourses && ! $canPrivate && ! $canLibraries) {
+            return redirect()->route('dashboard');
         }
 
-        $user = $request->user();
         $q = trim((string) $request->query('q', ''));
         $filter = (string) $request->query('filter', 'all');
-        if (! in_array($filter, ['all', 'private', 'classes'], true)) {
+        if (! in_array($filter, ['all', 'courses', 'private'], true)) {
             $filter = 'all';
         }
 
+        $courseLectures = collect();
         $private = collect();
-        $classes = collect();
 
-        if (Schema::hasTable('one_to_one_sessions')) {
+        if ($canCourses && Schema::hasTable('lectures') && Schema::hasTable('student_course_enrollments')) {
+            $courseIds = DB::table('student_course_enrollments')
+                ->where('user_id', $user->id)
+                ->when(Schema::hasColumn('student_course_enrollments', 'status'), fn ($query) => $query->where('status', 'active'))
+                ->pluck('advanced_course_id');
+
+            if ($courseIds->isNotEmpty()) {
+                $courseLectures = Lecture::query()
+                    ->with(['course:id,title', 'instructor:id,name,profile_image'])
+                    ->whereIn('course_id', $courseIds)
+                    ->when($q !== '', function ($query) use ($q) {
+                        $query->where(function ($inner) use ($q) {
+                            $inner->where('title', 'like', '%'.$q.'%')
+                                ->orWhereHas('course', fn ($cq) => $cq->where('title', 'like', '%'.$q.'%'))
+                                ->orWhereHas('instructor', fn ($iq) => $iq->where('name', 'like', '%'.$q.'%'));
+                        });
+                    })
+                    ->orderByDesc('scheduled_at')
+                    ->orderByDesc('id')
+                    ->limit(60)
+                    ->get();
+            }
+        }
+
+        if ($canPrivate && Schema::hasTable('one_to_one_sessions')) {
             $private = OneToOneSession::query()
                 ->with(['course:id,title', 'instructor:id,name,profile_image', 'classroomMeeting'])
                 ->where('student_id', $user->id)
@@ -897,66 +924,51 @@ class StudentHomeExtrasController extends Controller
                 ->get();
         }
 
-        if (Schema::hasTable('tutoring_class_sessions') && Schema::hasTable('tutoring_cohort_enrollments')) {
-            $cohortIds = TutoringCohortEnrollment::query()
-                ->where('user_id', $user->id)
-                ->where('status', TutoringCohortEnrollment::STATUS_ACTIVE)
-                ->pluck('tutoring_group_cohort_id');
-
-            $classes = TutoringClassSession::query()
-                ->with(['cohort:id,title', 'tutoringGroup:id,title', 'classroomMeeting'])
-                ->whereIn('tutoring_group_cohort_id', $cohortIds)
-                ->where('status', '!=', TutoringClassSession::STATUS_CANCELLED)
-                ->when($q !== '', function ($query) use ($q) {
-                    $query->where(function ($inner) use ($q) {
-                        $inner->where('title', 'like', '%'.$q.'%')
-                            ->orWhereHas('cohort', fn ($cq) => $cq->where('title', 'like', '%'.$q.'%'))
-                            ->orWhereHas('tutoringGroup', fn ($gq) => $gq->where('title', 'like', '%'.$q.'%'));
-                    });
-                })
-                ->orderByDesc('starts_at')
-                ->limit(40)
-                ->get();
-        }
-
-        $nextJoinable = null;
-        foreach ($classes as $session) {
-            if (method_exists($session, 'isJoinable') && $session->isJoinable()) {
-                $nextJoinable = (object) [
-                    'kind' => 'class',
-                    'title' => $session->displayTitle(),
-                    'meta' => $session->cohort?->title,
-                    'at' => $session->starts_at,
-                    'join_url' => route('student.schedule.join', ['type' => 'class', 'id' => $session->id]),
-                ];
-                break;
+        $nextOpen = null;
+        foreach ($courseLectures as $lecture) {
+            if (! $lecture->course_id) {
+                continue;
             }
+            $hasContent = filled($lecture->recording_url)
+                || filled($lecture->recording_file_path)
+                || filled($lecture->teams_meeting_link);
+            if (! $hasContent && $lecture->status === 'draft') {
+                continue;
+            }
+            $nextOpen = (object) [
+                'kind' => 'course',
+                'title' => $lecture->title,
+                'meta' => $lecture->course?->title,
+                'at' => $lecture->scheduled_at,
+                'open_url' => route('my-courses.lectures.show', [$lecture->course_id, $lecture->id]),
+            ];
+            break;
         }
-        if (! $nextJoinable) {
+        if (! $nextOpen) {
             foreach ($private as $session) {
                 $canJoin = $session->status === OneToOneSession::STATUS_SCHEDULED
                     && $session->scheduled_at
                     && $session->scheduled_at->lte(now()->addMinutes(30))
                     && $session->scheduled_at->gte(now()->subMinutes(50));
                 if ($canJoin) {
-                    $nextJoinable = (object) [
+                    $nextOpen = (object) [
                         'kind' => 'private',
                         'title' => $session->course?->title ?: (__('student_timeline.private_lesson')),
                         'meta' => $session->instructor?->name,
                         'at' => $session->scheduled_at,
-                        'join_url' => route('student.schedule.join', ['type' => 'private', 'id' => $session->id]),
+                        'open_url' => route('student.schedule.join', ['type' => 'private', 'id' => $session->id]),
                     ];
                     break;
                 }
             }
         }
 
-        return view('student.library.lectures', [
+        return view('student.lectures.index', [
+            'courseLectures' => $courseLectures,
             'private' => $private,
-            'classes' => $classes,
             'searchQuery' => $q,
             'filter' => $filter,
-            'nextJoinable' => $nextJoinable,
+            'nextOpen' => $nextOpen,
         ]);
     }
 }

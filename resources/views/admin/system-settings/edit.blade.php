@@ -337,5 +337,52 @@
             @endif
         </div>
     </article>
+
+    <article class="{{ $panel }} border-rose-200/80">
+        <div class="{{ $sectionHead }} bg-rose-50/80">
+            <span class="inline-flex size-9 items-center justify-center rounded-xl bg-rose-100 text-rose-700">
+                <i class="fas fa-skull-crossbones text-sm"></i>
+            </span>
+            <div class="min-w-0 flex-1">
+                <h3 class="text-sm font-bold text-rose-900">منطقة خطر — مسح بيانات الموقع</h3>
+                <p class="mt-0.5 text-xs text-rose-800/80">يحذف حرفياً كل البيانات ما عدا حساب الأدمن الحالي ({{ auth()->user()->email ?? auth()->user()->name }}).</p>
+            </div>
+        </div>
+        <div class="{{ $sectionBody }}">
+            @if($errors->has('wipe'))
+                <div class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-800">
+                    {{ $errors->first('wipe') }}
+                </div>
+            @endif
+
+            <div class="rounded-xl border border-rose-200 bg-rose-50/60 px-4 py-3 text-sm leading-7 text-rose-900">
+                <p class="font-bold"><i class="fas fa-exclamation-triangle ms-1"></i> لا يمكن التراجع عن هذا الإجراء.</p>
+                <ul class="mt-2 list-disc list-inside space-y-1 text-xs sm:text-sm">
+                    <li>يُمسح الطلاب، المعلمون، الطلبات، الفواتير، الحصص، الكورسات، الإعدادات المخزّنة، وكل الجداول المرتبطة.</li>
+                    <li>يُبقى فقط على حسابك الحالي، ثم تُعاد بذرة الصلاحيات والأدوار وربطها بك.</li>
+                    <li>جدول الـ migrations يبقى كما هو (هيكل القاعدة لا يُحذف).</li>
+                </ul>
+            </div>
+
+            <form method="post" action="{{ route('admin.system-settings.wipe-site-data') }}" class="max-w-lg space-y-4"
+                  onsubmit="return confirm('تأكيد نهائي: مسح كل بيانات الموقع مع الإبقاء على حسابك فقط؟');">
+                @csrf
+                <div>
+                    <label class="{{ $label }}">كلمة مرور حسابك</label>
+                    <input type="password" name="password" required autocomplete="current-password" class="{{ $input }}">
+                </div>
+                <div>
+                    <label class="{{ $label }}">اكتب للتأكيد: <span class="font-bold text-rose-700" dir="rtl">مسح كل البيانات</span></label>
+                    <input type="text" name="confirm_phrase" required autocomplete="off" class="{{ $input }}"
+                           placeholder="مسح كل البيانات" dir="rtl">
+                </div>
+                <button type="submit"
+                        class="btn-press inline-flex h-11 items-center gap-2 rounded-xl bg-rose-700 px-5 text-sm font-bold text-white transition hover:bg-rose-800">
+                    <i class="fas fa-trash-alt"></i>
+                    مسح كل بيانات الموقع الآن
+                </button>
+            </form>
+        </div>
+    </article>
 </div>
 @endsection

@@ -472,23 +472,16 @@ class TeacherControlController extends Controller
         ]);
 
         $newInstructor = User::query()->findOrFail($data['instructor_id']);
-        if (! $newInstructor->isInstructor() && ! $newInstructor->isTeacher()) {
-            return back()->with('error', 'المستخدم المحدد ليس معلماً.');
-        }
 
-        if (in_array($session->status, [OneToOneSession::STATUS_COMPLETED, OneToOneSession::STATUS_CANCELLED], true)) {
-            return back()->with('error', 'لا يمكن إعادة تعيين حصة مكتملة أو ملغاة.');
-        }
-
-        $session->loadMissing('classroomMeeting');
-        $session->update(['instructor_id' => $newInstructor->id]);
-        if ($session->classroomMeeting) {
-            $session->classroomMeeting->update(['user_id' => $newInstructor->id]);
+        try {
+            OneToOneSessionService::reassignInstructor($session, $newInstructor);
+        } catch (\InvalidArgumentException $e) {
+            return back()->with('error', $e->getMessage());
         }
 
         return redirect()
             ->route('admin.teachers.show', ['teacher' => $newInstructor, 'tab' => 'sessions'])
-            ->with('success', 'تم نقل الحصة إلى المعلم '.$newInstructor->name.'.');
+            ->with('success', 'تم نقل الحصة إلى المعلم '.$newInstructor->name.' دون خصم رصيد.');
     }
 
     public function updateBookingStatus(Request $request, User $teacher, TutoringGroupBooking $booking): RedirectResponse
