@@ -305,6 +305,13 @@ Route::get('/css/instructor-panel.css', function () use ($serveAtheerAsset) {
     );
 })->name('assets.instructor-panel.css.public');
 
+Route::get('/css/hesetak-live-meeting.css', function () use ($serveAtheerAsset) {
+    return $serveAtheerAsset(
+        [public_path('css/hesetak-live-meeting.css')],
+        'text/css; charset=UTF-8'
+    );
+})->name('assets.hesetak-live-meeting.css');
+
 Route::get('/js/platform-protection.js', function () use ($serveAtheerAsset) {
     return $serveAtheerAsset(
         [public_path('js/platform-protection.js'), resource_path('js/platform-protection.js')],
