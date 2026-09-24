@@ -293,10 +293,10 @@
                             </td>
                             <td class="px-4 py-3">
                                 <div class="flex items-center justify-end gap-1.5">
-                                    <a href="{{ route('admin.users.show', $user->id) }}"
+                                    <a href="{{ route('admin.users.show', $user) }}"
                                        class="inline-flex size-9 items-center justify-center rounded-xl border border-line text-muted hover:bg-canvas hover:text-accent"
                                        title="عرض"><i class="fas fa-eye text-xs"></i></a>
-                                    <a href="{{ route('admin.users.edit', $user->id) }}"
+                                    <a href="{{ route('admin.users.edit', $user) }}"
                                        class="inline-flex size-9 items-center justify-center rounded-xl border border-line text-muted hover:bg-accent-soft hover:text-accent"
                                        title="تعديل"><i class="fas fa-pen text-xs"></i></a>
                                     @if(in_array($user->role, ['instructor', 'teacher'], true) && Route::has('admin.tutor-work-schedules.index'))
@@ -305,13 +305,13 @@
                                            title="جدول العمل"><i class="fas fa-calendar-alt text-xs"></i></a>
                                     @endif
                                     @if(in_array($user->role, ['instructor', 'teacher'], true) && Route::has('public.instructors.show'))
-                                        <a href="{{ route('public.instructors.show', $user->id) }}" target="_blank" rel="noopener"
+                                        <a href="{{ route('public.instructors.show', $user) }}" target="_blank" rel="noopener"
                                            class="inline-flex size-9 items-center justify-center rounded-xl border border-line text-muted hover:bg-accent-soft hover:text-accent"
                                            title="الصفحة العامة"><i class="fas fa-external-link-alt text-xs"></i></a>
                                     @endif
                                     @if($user->id !== auth()->id())
                                         <button type="button" onclick="deleteUser(this)"
-                                                data-delete-url="{{ route('admin.users.delete', $user->id) }}"
+                                                data-delete-url="{{ route('admin.users.delete', $user) }}"
                                                 class="inline-flex size-9 items-center justify-center rounded-xl border border-line text-rose-600 hover:bg-rose-50"
                                                 title="حذف"><i class="fas fa-trash text-xs"></i></button>
                                     @endif
@@ -342,7 +342,7 @@
             <div class="max-h-96 space-y-1 overflow-y-auto p-2">
                 @forelse($recentUsers as $recentUser)
                     @php $rk = $recentUser->is_employee ? 'employee' : ($recentUser->role ?? 'student'); @endphp
-                    <a href="{{ route('admin.users.show', $recentUser->id) }}" class="flex items-center gap-3 rounded-xl px-3 py-2.5 hover:bg-canvas">
+                    <a href="{{ route('admin.users.show', $recentUser) }}" class="flex items-center gap-3 rounded-xl px-3 py-2.5 hover:bg-canvas">
                         <div class="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#f2f5f4] text-xs font-bold text-accent">
                             {{ mb_substr($recentUser->name, 0, 1, 'UTF-8') }}
                         </div>
@@ -366,7 +366,7 @@
             <div class="max-h-96 space-y-1 overflow-y-auto p-2">
                 @forelse($recentlyActiveUsers as $activeUser)
                     @php $ak = $activeUser->is_employee ? 'employee' : ($activeUser->role ?? 'student'); @endphp
-                    <a href="{{ route('admin.users.show', $activeUser->id) }}" class="flex items-center gap-3 rounded-xl px-3 py-2.5 hover:bg-canvas">
+                    <a href="{{ route('admin.users.show', $activeUser) }}" class="flex items-center gap-3 rounded-xl px-3 py-2.5 hover:bg-canvas">
                         <div class="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#f2f5f4] text-xs font-bold text-accent">
                             {{ mb_substr($activeUser->name, 0, 1, 'UTF-8') }}
                         </div>

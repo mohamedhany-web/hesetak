@@ -246,7 +246,7 @@ class PublicLearnCatalogService
                     'courses_count' => (int) ($courseCounts[$profile->user_id] ?? 0),
                     'calendar' => $calendar,
                     'has_children' => in_array('children', $user?->privateTeachingMeta()['specializations'] ?? [], true),
-                    'url' => route('public.instructors.show', $profile->user_id),
+                    'url' => route('public.instructors.show', $user ?? $profile->user_id),
                 ];
             })->values()
         );
@@ -310,7 +310,7 @@ class PublicLearnCatalogService
                     'duration' => (int) ($group->duration_minutes ?? 60),
                     'price' => $group->formattedPrice(),
                     'url' => route('public.groups.show', $group->slug),
-                    'teacher_url' => $instructor ? route('public.instructors.show', $instructor->id) : null,
+                    'teacher_url' => $instructor ? route('public.instructors.show', $instructor) : null,
                 ];
             })->values()
         );

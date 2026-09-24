@@ -40,7 +40,7 @@
 <div class="space-y-5">
     <section class="flex flex-wrap items-end justify-between gap-4">
         <div class="min-w-0">
-            <p class="text-xs font-medium text-muted">التوظيف · طلب #{{ $application->id }}</p>
+            <p class="text-xs font-medium text-muted">التوظيف · <span dir="ltr">{{ $application->uuid }}</span></p>
             <h2 class="mt-1 text-2xl font-semibold tracking-tight text-ink md:text-[28px]">{{ $application->full_name }}</h2>
             <p class="mt-1 text-sm text-muted">{{ $application->headline ?: 'مراجعة طلب التوظيف' }}</p>
         </div>
@@ -71,8 +71,8 @@
                 <div>
                     <p class="text-sm font-semibold text-ink">تم تفعيل الحساب — المعلم يسجّل بنفس الإيميل وكلمة المرور وتُفتح له لوحة المعلم:</p>
                     <p class="mt-2 font-mono text-sm font-bold text-accent" dir="ltr">{{ session('activated_email') }}</p>
-                    @if(session('activated_user_id'))
-                        <a href="{{ route('admin.users.edit', session('activated_user_id')) }}" class="mt-2 inline-flex text-sm font-semibold text-accent underline">فتح صفحة المستخدم</a>
+                    @if(session('activated_user_uuid'))
+                        <a href="{{ route('admin.users.edit', session('activated_user_uuid')) }}" class="mt-2 inline-flex text-sm font-semibold text-accent underline">فتح صفحة المستخدم</a>
                     @endif
                 </div>
             </div>
@@ -91,7 +91,7 @@
                     <div>
                         <h3 class="text-lg font-semibold text-ink">{{ $application->full_name }}</h3>
                         <p class="mt-0.5 font-medium text-accent">{{ $application->headline }}</p>
-                        <p class="mt-1 text-xs text-muted">رقم الطلب #{{ $application->id }} · {{ $application->created_at?->format('Y-m-d H:i') }}</p>
+                        <p class="mt-1 text-xs text-muted">مرجع الطلب <span dir="ltr">{{ $application->uuid }}</span> · {{ $application->created_at?->format('Y-m-d H:i') }}</p>
                     </div>
                 </div>
 
@@ -220,13 +220,23 @@
                 @endforeach
             </article>
 
-            @if($application->status === 'pending')
+            <article class="rounded-2xl border border-line bg-surface p-5 shadow-soft space-y-3">
+                <h3 class="text-base font-semibold text-ink">المطابقة / التخصص</h3>
+                @php $specialty = $specialty ?? ['complete' => false, 'missing' => [], 'subject_ids' => [], 'curriculum_types' => []]; @endphp
+                @if($specialty['complete'])
+                    <p class="text-sm text-accent font-semibold">مكتمل ✓</p>
+                @else
+                    <p class="text-sm text-danger">ناقص: {{ implode(' + ', $specialty['missing'] ?: ['—']) }}</p>
+                @endif
+                <p class="text-xs text-muted">مواد: {{ count($specialty['subject_ids'] ?? []) }} · مناهج: {{ implode(', ', $specialty['curriculum_types'] ?? []) ?: '—' }}</p>
+            </article>
+
+            @if(in_array($application->status, ['pending', 'rejected'], true))
                 <article class="rounded-2xl border border-line bg-surface p-5 shadow-soft space-y-3">
-                    <h3 class="text-base font-semibold text-ink">١) قبول الطلب بعد المراجعة</h3>
-                    <p class="text-xs text-muted">بعد القبول يمكنك تفعيل حساب المعلم في الخطوة التالية.</p>
-                    <form method="POST" action="{{ route('admin.tutor-applications.approve', $application) }}">
+                    <h3 class="text-base font-semibold text-ink">دعوة مقابلة تقنية</h3>
+                    <form method="POST" action="{{ route('admin.tutor-applications.invite-interview', $application) }}">
                         @csrf
-                        <button class="btn-press w-full rounded-xl bg-accent py-2.5 text-sm font-semibold text-white">قبول الطلب</button>
+                        <button class="btn-press w-full rounded-xl bg-accent py-2.5 text-sm font-semibold text-white">دعوة لاختيار موعد</button>
                     </form>
                     <form method="POST" action="{{ route('admin.tutor-applications.reject', $application) }}" class="space-y-2">
                         @csrf
@@ -236,12 +246,68 @@
                 </article>
             @endif
 
+            @if(in_array($application->status, ['interview_pending', 'interview_scheduled'], true))
+                <article class="rounded-2xl border border-line bg-surface p-5 shadow-soft space-y-3">
+                    <h3 class="text-base font-semibold text-ink">المقابلة</h3>
+                    @if($application->latestInterview)
+                        <p class="text-sm" dir="ltr">{{ $application->latestInterview->scheduled_at?->format('Y-m-d H:i') }} · {{ $application->latestInterview->statusLabel() }}</p>
+                        <a href="{{ $application->latestInterview->effectiveJoinUrl() }}" class="text-sm font-semibold text-accent" target="_blank" rel="noopener">رابط المقابلة</a>
+                    @else
+                        <p class="text-sm text-muted">بانتظار اختيار المرشح لموعد.</p>
+                    @endif
+                    <form method="POST" action="{{ route('admin.tutor-applications.interview-passed', $application) }}">
+                        @csrf
+                        <button class="btn-press w-full rounded-xl bg-accent py-2.5 text-sm font-semibold text-white">تسجيل نجاح المقابلة</button>
+                    </form>
+                </article>
+            @endif
+
+            @if($application->status === 'blocked_no_show')
+                <article class="rounded-2xl border border-danger/30 bg-surface p-5 shadow-soft space-y-3">
+                    <h3 class="text-base font-semibold text-ink">محجوب — تغيب</h3>
+                    <form method="POST" action="{{ route('admin.tutor-applications.unblock', $application) }}">
+                        @csrf
+                        <button class="btn-press w-full rounded-xl border border-line py-2.5 text-sm font-semibold">فك الحجب وإعادة الدعوة</button>
+                    </form>
+                </article>
+            @endif
+
+            @if(in_array($application->status, ['interview_passed', 'contract_pending'], true)
+                || ((!($settings['require_interview'] ?? true)) && $application->status === 'pending'))
+                <article class="rounded-2xl border border-line bg-surface p-5 shadow-soft space-y-3">
+                    <h3 class="text-base font-semibold text-ink">عرض عقد وأجر</h3>
+                    <form method="POST" action="{{ route('admin.tutor-applications.offer-contract', $application) }}" class="space-y-2">
+                        @csrf
+                        <select name="billing_type" class="{{ $fieldClass }}">
+                            @foreach(($billingLabels ?? []) as $key => $label)
+                                <option value="{{ $key }}">{{ $label }}</option>
+                            @endforeach
+                        </select>
+                        <input type="number" step="0.01" name="salary_per_session" class="{{ $fieldClass }}" placeholder="أجر الجلسة">
+                        <input type="number" step="0.01" name="monthly_amount" class="{{ $fieldClass }}" placeholder="راتب شهري (إن وُجد)">
+                        <textarea name="terms" rows="5" required class="{{ $fieldClass }}" placeholder="نص الشروط والعقد *">{{ old('terms', 'يلتزم المعلم بمعايير الجودة والتقارير الإلزامية وسياسات المنصة.') }}</textarea>
+                        <button class="btn-press w-full rounded-xl bg-accent py-2.5 text-sm font-semibold text-white">إرسال للتوقيع</button>
+                    </form>
+                    @if($application->latestAgreement?->offer_token)
+                        <a class="text-xs font-semibold text-accent" href="{{ route('tutor.contract.sign', $application->latestAgreement->offer_token) }}" target="_blank">رابط التوقيع</a>
+                    @endif
+                </article>
+            @endif
+
+            @if(in_array($application->status, ['contract_signed', 'interview_passed', 'approved'], true)
+                || ((!($settings['require_contract'] ?? true)) && in_array($application->status, ['interview_passed', 'pending'], true)))
+                <article class="rounded-2xl border border-line bg-surface p-5 shadow-soft space-y-3">
+                    <h3 class="text-base font-semibold text-ink">قبول نهائي للتفعيل</h3>
+                    <form method="POST" action="{{ route('admin.tutor-applications.approve', $application) }}">
+                        @csrf
+                        <button class="btn-press w-full rounded-xl bg-accent py-2.5 text-sm font-semibold text-white">اعتماد نهائي (Approved)</button>
+                    </form>
+                </article>
+            @endif
+
             @if($application->canActivateAccount())
                 <article class="rounded-2xl border border-accent/30 bg-surface p-5 shadow-soft space-y-3">
-                    <h3 class="text-base font-semibold text-ink">٢) تفعيل الحساب ولوحة المعلم</h3>
-                    <p class="text-sm leading-6 text-muted">
-                        الحساب موجود مسبقاً. التفعيل يفتح لوحة المعلم ولوحات التحكم، ويعتمد الملف التعريفي للظهور للطلاب.
-                    </p>
+                    <h3 class="text-base font-semibold text-ink">تفعيل الحساب ولوحة المعلم</h3>
                     @if($application->user)
                         <p class="text-xs font-medium text-accent" dir="ltr">{{ $application->user->email }}</p>
                     @endif

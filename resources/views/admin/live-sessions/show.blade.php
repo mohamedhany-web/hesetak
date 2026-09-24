@@ -73,7 +73,7 @@
                         <p class="text-xs text-muted">المضيف</p>
                         <p class="mt-1 font-semibold text-ink">
                             @if($liveSession->instructor)
-                                <a href="{{ route('admin.users.show', $liveSession->instructor->id) }}" class="hover:text-accent">{{ $liveSession->instructor->name }}</a>
+                                <a href="{{ route('admin.users.show', $liveSession->instructor) }}" class="hover:text-accent">{{ $liveSession->instructor->name }}</a>
                             @else — @endif
                         </p>
                     </div>
@@ -181,7 +181,7 @@
                 <article class="rounded-2xl border border-line bg-surface p-5 shadow-soft">
                     <h3 class="text-sm font-semibold text-ink">المضيف</h3>
                     <p class="mt-2 text-sm font-medium text-ink">{{ $liveSession->instructor->name }}</p>
-                    <a href="{{ route('admin.users.show', $liveSession->instructor->id) }}" class="btn-press mt-3 inline-flex h-9 w-full items-center justify-center rounded-xl border border-line text-sm font-medium text-ink-soft hover:border-accent/30 hover:text-accent">عرض الحساب</a>
+                    <a href="{{ route('admin.users.show', $liveSession->instructor) }}" class="btn-press mt-3 inline-flex h-9 w-full items-center justify-center rounded-xl border border-line text-sm font-medium text-ink-soft hover:border-accent/30 hover:text-accent">عرض الحساب</a>
                 </article>
             @endif
 

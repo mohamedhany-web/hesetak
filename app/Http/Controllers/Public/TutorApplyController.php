@@ -119,11 +119,23 @@ class TutorApplyController extends Controller
         if (in_array($application->status, [
             TutorApplication::STATUS_PENDING,
             TutorApplication::STATUS_APPROVED,
+            TutorApplication::STATUS_INTERVIEW_PASSED,
+            TutorApplication::STATUS_CONTRACT_PENDING,
+            TutorApplication::STATUS_CONTRACT_SIGNED,
         ], true)) {
             return view('tutor.apply-submitted', [
                 'application' => $application,
                 'waitStatus' => $application->status,
             ]);
+        }
+
+        if ($application->status === TutorApplication::STATUS_INTERVIEW_PENDING
+            || $application->status === TutorApplication::STATUS_INTERVIEW_SCHEDULED) {
+            return redirect()->route('tutor.interview.pick');
+        }
+
+        if ($application->status === TutorApplication::STATUS_BLOCKED_NO_SHOW) {
+            return view('tutor.interview-blocked', compact('application'));
         }
 
         if ($application->status === TutorApplication::STATUS_ACTIVATED) {
@@ -141,6 +153,9 @@ class TutorApplyController extends Controller
             'user' => $user,
             'form' => $form,
             'fields' => $form->activeFields,
+            'subjectOptions' => \App\Services\TeacherSpecialtyMatcher::subjectOptions(),
+            'yearOptions' => \App\Services\TeacherSpecialtyMatcher::yearOptions(),
+            'curriculumOptions' => \App\Support\HesetakMatchCatalog::curriculumTypes(),
         ]);
     }
 
@@ -174,8 +189,22 @@ class TutorApplyController extends Controller
                 $form
             );
             $application->refresh();
+
+            $normalized = \App\Services\TeacherSpecialtyMatcher::normalizePayload(
+                (array) $request->input('teaching_subject_ids', []),
+                (array) $request->input('academic_year_ids', []),
+                (array) $request->input('curriculum_types', [])
+            );
+            \App\Services\TeacherSpecialtyMatcher::applyToApplication($application, $normalized);
+            \App\Services\TeacherSpecialtyMatcher::assertComplete($application->fresh());
+
             $application->forceFill(['email' => $user->email, 'user_id' => $user->id])->save();
-            HiringFormService::syncUserAndProfile($user, $application, $processed['mapped']);
+            HiringFormService::syncUserAndProfile($user, $application->fresh(), $processed['mapped']);
+
+            $profile = \App\Models\InstructorProfile::query()->where('user_id', $user->id)->first();
+            if ($profile) {
+                \App\Services\TeacherSpecialtyMatcher::syncProfile($profile, $normalized);
+            }
         } catch (ValidationException $e) {
             throw $e;
         } catch (\Throwable $e) {

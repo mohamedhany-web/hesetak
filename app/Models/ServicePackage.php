@@ -42,6 +42,7 @@ class ServicePackage extends Model
         'tutoring_group_id',
         'academic_year_id',
         'academic_subject_id',
+        'curriculum_type',
         'units_count',
         'session_minutes',
         'duration_days',

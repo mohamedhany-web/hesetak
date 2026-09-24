@@ -27,6 +27,7 @@
     </div>
     <div class="mc-curr-actions">
       <a href="#mc-pricing-packages" class="mc-btn mc-btn--md mc-btn--primary">{{ __('public.pricing_packages_title') }}</a>
+      <a href="{{ route('public.gift-package.show') }}" class="mc-btn mc-btn--md mc-btn--outline"><i class="fas fa-gift"></i> {{ $isRtl ? 'إهداء باقة' : 'Gift a package' }}</a>
       <a href="{{ route('public.instructors.index') }}" class="mc-btn mc-btn--md mc-btn--outline">{{ __('landing.mc.hero.cta_primary') }}</a>
     </div>
     <p class="mc-curr-note" style="margin-top:1rem">{{ __('public.pricing_hero_note') }}</p>
@@ -43,33 +44,55 @@
       </div>
     </div>
 
+    @include('partials.landing.mycourses.package-catalog-filters', [
+      'packageCatalog' => $packageCatalog ?? [],
+      'anchor' => 'mc-pricing-packages',
+    ])
+
     @if($packages->isEmpty())
       <div class="mc-empty">{{ __('public.pricing_no_packages') }}</div>
     @else
       <div class="mc-packages">
-        @foreach($packages as $pkg)
+        @foreach($packages as $row)
           @php
-            $recommended = (bool) ($pkg->is_featured || $pkg->is_popular);
-            $hoursLabel = $pkg->units_count
-              ? ($isRtl ? $pkg->units_count.' حصة' : $pkg->units_count.' sessions')
-              : ($pkg->tagline ?: '');
-            $perks = is_array($pkg->features) ? $pkg->features : [];
+            $isArr = is_array($row);
+            $recommended = $isArr ? (bool) ($row['is_featured'] ?? false) : (bool) ($row->is_featured || ($row->is_popular ?? false));
+            $name = $isArr ? $row['name'] : $row->name;
+            $units = $isArr ? (int) $row['units_count'] : (int) $row->units_count;
+            $hoursLabel = $units ? ($isRtl ? $units.' حصة' : $units.' sessions') : ($isArr ? ($row['tagline'] ?? '') : ($row->tagline ?: ''));
+            $priceLabel = $isArr
+              ? number_format((float) $row['display_price'], 2).' '.($row['currency'] ?? 'SAR')
+              : $row->formattedPrice();
+            $perks = $isArr ? ($row['features'] ?? []) : (is_array($row->features) ? $row->features : []);
+            $checkout = $isArr ? $row['checkout_url'] : route('public.service-packages.checkout', $row);
+            $giftUrl = $isArr ? $row['gift_url'] : route('public.gift-package.show', ['package' => $row->id]);
+            $badge = $isArr ? ($row['badge'] ?? null) : ($row->badge ?? null);
+            $tagline = $isArr ? ($row['tagline'] ?? null) : ($row->tagline ?? null);
+            $description = $isArr ? ($row['description'] ?? null) : ($row->description ?? null);
+            $unitHint = $isArr
+              ? ($isRtl
+                  ? 'سعر الحصة '.number_format((float) $row['display_unit'], 2).' '.$row['currency']
+                  : number_format((float) $row['display_unit'], 2).' '.$row['currency'].' / session')
+              : null;
           @endphp
           <article class="mc-package {{ $recommended ? 'mc-package--recommended' : '' }}">
-            @if(!empty($pkg->badge))
-              <span class="mc-package__badge">{{ $pkg->badge }}</span>
+            @if(!empty($badge))
+              <span class="mc-package__badge">{{ $badge }}</span>
             @elseif($recommended)
               <span class="mc-package__badge">{{ __('public.pricing_package_popular') }}</span>
             @endif
-            <h3>{{ $pkg->name }}</h3>
+            <h3>{{ $name }}</h3>
             @if($hoursLabel !== '')
               <p class="mc-package__hours">{{ $hoursLabel }}</p>
             @endif
-            <p class="mc-package__price">{{ $pkg->formattedPrice() }}</p>
-            @if(!empty($pkg->tagline))
-              <p class="mc-package__why">{{ $pkg->tagline }}</p>
-            @elseif(!empty($pkg->description))
-              <p class="mc-package__why">{{ \Illuminate\Support\Str::limit(strip_tags($pkg->description), 110) }}</p>
+            <p class="mc-package__price">{{ $priceLabel }}</p>
+            @if($unitHint)
+              <p class="mc-package__why" style="opacity:.85">{{ $unitHint }}</p>
+            @endif
+            @if(!empty($tagline))
+              <p class="mc-package__why">{{ $tagline }}</p>
+            @elseif(!empty($description))
+              <p class="mc-package__why">{{ \Illuminate\Support\Str::limit(strip_tags($description), 110) }}</p>
             @endif
             @if(count($perks) > 0)
               <ul>
@@ -78,10 +101,10 @@
                 @endforeach
               </ul>
             @endif
-            <a
-              href="{{ route('public.service-packages.checkout', $pkg) }}"
-              class="mc-btn mc-btn--md {{ $recommended ? 'mc-btn--secondary' : 'mc-btn--soft' }}"
-            >{{ __('public.pricing_package_buy') }}</a>
+            <div style="display:flex;flex-wrap:wrap;gap:.4rem">
+              <a href="{{ $checkout }}" class="mc-btn mc-btn--md {{ $recommended ? 'mc-btn--secondary' : 'mc-btn--soft' }}">{{ __('public.pricing_package_buy') }}</a>
+              <a href="{{ $giftUrl }}" class="mc-btn mc-btn--md mc-btn--outline">{{ $isRtl ? 'إهداء' : 'Gift' }}</a>
+            </div>
           </article>
         @endforeach
       </div>

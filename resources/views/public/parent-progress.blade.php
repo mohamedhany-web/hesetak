@@ -10,7 +10,7 @@
 @endphp
 
 @push('head')
-<meta name="robots" content="noindex,follow">
+<meta name="robots" content="noindex,nofollow">
 @endpush
 
 @section('content')
@@ -18,7 +18,7 @@
   <div class="mc-container">
     <p class="mc-eyebrow">{{ $isRtl ? 'متابعة ولي الأمر' : 'Parent progress' }}</p>
     <h1>{{ $isRtl ? 'اطّلع على تقدّم الطالب' : 'View student progress' }}</h1>
-    <p class="mc-lead">{{ $isRtl ? 'أدخل رقم الطالب لعرض ملخص الحضور والحصص والنتائج والتقارير التعليمية.' : 'Enter the student ID to view attendance, lessons, results, and reports.' }}</p>
+    <p class="mc-lead">{{ $isRtl ? 'الصق رمز المشاركة من ملف الطالب (أو افتح الرابط الكامل الذي يصلك من ولي الأمر).' : 'Paste the share code from the student profile (or open the full link you were given).' }}</p>
   </div>
 </section>
 
@@ -26,8 +26,8 @@
   <div class="mc-container" style="max-width:1050px">
     <form method="GET" action="{{ route('public.parent-progress') }}" class="mc-card" style="padding:1.25rem;margin-bottom:1.5rem">
       <div class="mc-field">
-        <label for="student_id">{{ $isRtl ? 'رقم الطالب' : 'Student ID' }}</label>
-        <input id="student_id" type="number" name="student_id" min="1" required value="{{ $studentId }}" class="mc-input" inputmode="numeric">
+        <label for="token">{{ $isRtl ? 'رمز المشاركة' : 'Share code' }}</label>
+        <input id="token" type="text" name="token" required value="{{ $token }}" class="mc-input" dir="ltr" autocomplete="off" spellcheck="false" placeholder="{{ $isRtl ? 'الصق الرمز هنا' : 'Paste code here' }}">
       </div>
       <button type="submit" class="mc-btn mc-btn--md mc-btn--primary"><i class="fas fa-search"></i> {{ $isRtl ? 'عرض التقرير' : 'View report' }}</button>
     </form>
@@ -36,7 +36,6 @@
 
     @if($found && $student)
       <article class="mc-card" style="padding:1.25rem;margin-bottom:1.5rem">
-        <p class="mc-eyebrow">ID {{ $student['id'] }}</p>
         <h2 style="margin:.5rem 0">{{ $student['name'] }}</h2>
         <p style="margin:0;color:var(--mc-muted)">{{ $student['academic_year'] ?: ($isRtl ? 'لم تُحدد المرحلة' : 'Stage not set') }}</p>
       </article>
@@ -51,6 +50,30 @@
           <article class="mc-stat"><strong class="mc-stat__num">{{ $value }}</strong><span class="mc-stat__label">{{ $label }}</span></article>
         @endforeach
       </div>
+
+      @php $insights = $report['insights'] ?? []; @endphp
+      @if(!empty($insights['strengths']) || !empty($insights['improvements']))
+        <div class="mc-grid" style="margin-bottom:1.5rem">
+          <article class="mc-card" style="padding:1.25rem">
+            <h2 style="font-size:1.1rem;margin:0 0 1rem">{{ $isRtl ? 'نقاط القوة' : 'Strengths' }}</h2>
+            <ul style="margin:0;padding-inline-start:1.1rem;line-height:1.7">
+              @foreach(($insights['strengths'] ?? []) as $s)
+                <li>{{ $s }}</li>
+              @endforeach
+            </ul>
+          </article>
+          <article class="mc-card" style="padding:1.25rem">
+            <h2 style="font-size:1.1rem;margin:0 0 1rem">{{ $isRtl ? 'مؤشرات التحسّن' : 'Improvement signals' }}</h2>
+            <ul style="margin:0;padding-inline-start:1.1rem;line-height:1.7">
+              @forelse(($insights['improvements'] ?? []) as $i)
+                <li>{{ $i }}</li>
+              @empty
+                <li>{{ $isRtl ? 'لا توجد تنبيهات حرجة.' : 'No critical alerts.' }}</li>
+              @endforelse
+            </ul>
+          </article>
+        </div>
+      @endif
 
       @php
         $reportSections = [
@@ -90,7 +113,7 @@
           </div>
         </section>
       @endif
-    @elseif(!$studentId)
+    @elseif(!$token)
       <div class="mc-tracks">
         <article class="mc-track"><span class="mc-track__icon"><i class="fas fa-calendar-check"></i></span><h3>{{ $isRtl ? 'الحضور والحصص' : 'Attendance' }}</h3><p>{{ $isRtl ? 'تابع الحصص المنفذة والقادمة.' : 'Track completed and upcoming lessons.' }}</p></article>
         <article class="mc-track"><span class="mc-track__icon"><i class="fas fa-chart-line"></i></span><h3>{{ $isRtl ? 'التقدّم والنتائج' : 'Progress' }}</h3><p>{{ $isRtl ? 'راجع نتائج الاختبارات والكورسات.' : 'Review exams and course progress.' }}</p></article>

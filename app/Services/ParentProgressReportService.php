@@ -18,8 +18,56 @@ use Illuminate\Support\Facades\Schema;
 class ParentProgressReportService
 {
     /**
-     * Build a parent-safe progress dossier for a student user id.
+     * Build a parent-safe progress dossier for a student share token.
      * Omits email, phone, payment amounts, and private messages.
+     *
+     * @return array{found: bool, error?: string, student?: array, report?: array}
+     */
+    public function lookupByShareToken(string $token): array
+    {
+        $token = trim($token);
+        if ($token === '' || strlen($token) < 24) {
+            return [
+                'found' => false,
+                'error' => app()->getLocale() === 'ar'
+                    ? 'رمز المشاركة غير صالح. انسخ الرابط أو الرمز من ملف الطالب.'
+                    : 'Invalid share code. Copy the link or code from the student profile.',
+            ];
+        }
+
+        $student = User::query()
+            ->with(['academicYear:id,name'])
+            ->where('progress_share_token', $token)
+            ->where('role', 'student')
+            ->first();
+
+        if (! $student) {
+            return [
+                'found' => false,
+                'error' => app()->getLocale() === 'ar'
+                    ? 'لم نعثر على تقرير بهذا الرمز. تأكد من الرابط أو حدّث الرمز من ملف الطالب.'
+                    : 'No report found for this code. Check the link or refresh the code on the student profile.',
+            ];
+        }
+
+        if (! $student->is_active) {
+            return [
+                'found' => false,
+                'error' => app()->getLocale() === 'ar'
+                    ? 'حساب الطالب غير نشط حالياً. تواصل مع الأكاديمية.'
+                    : 'This student account is inactive. Please contact the academy.',
+            ];
+        }
+
+        return [
+            'found' => true,
+            'student' => $this->profileSnapshot($student),
+            'report' => $this->buildReport($student),
+        ];
+    }
+
+    /**
+     * @deprecated Public access must use lookupByShareToken(). Kept for internal/admin callers only.
      *
      * @return array{found: bool, error?: string, student?: array, report?: array}
      */
@@ -33,8 +81,8 @@ class ParentProgressReportService
             return [
                 'found' => false,
                 'error' => app()->getLocale() === 'ar'
-                    ? 'لم نعثر على طالب بهذا الرقم. تأكد من رقم الدخول الظاهر في ملف الطالب.'
-                    : 'No student found with this ID. Check the class entry ID on the student profile.',
+                    ? 'لم نعثر على طالب بهذا المعرّف.'
+                    : 'No student found with this identifier.',
             ];
         }
 
@@ -60,7 +108,7 @@ class ParentProgressReportService
     protected function profileSnapshot(User $student): array
     {
         return [
-            'id' => (int) $student->id,
+            'uuid' => (string) $student->uuid,
             'name' => (string) $student->name,
             'academic_year' => $student->academicYear?->name,
             'last_login_at' => $student->last_login_at?->format('Y-m-d H:i'),
@@ -130,7 +178,40 @@ class ParentProgressReportService
             ],
             'certificates' => $this->certificates((int) $student->id),
             'monthly_reports' => $this->monthlyReports((int) $student->id),
+            'insights' => $this->insightsBlock($student),
         ];
+    }
+
+    /**
+     * مقارنة تاريخية مبسّطة لأولياء الأمور (نقاط قوة + مؤشرات تحسّن).
+     *
+     * @return array<string, mixed>
+     */
+    protected function insightsBlock(User $student): array
+    {
+        try {
+            $comparison = app(StudentProgressAnalyticsService::class)->comparePeriods($student);
+
+            return [
+                'period' => $comparison['period'] ?? null,
+                'previous_period' => $comparison['previous_period'] ?? null,
+                'trend' => $comparison['trend'] ?? 'stable',
+                'current' => $comparison['current'] ?? [],
+                'deltas' => $comparison['deltas'] ?? [],
+                'strengths' => $comparison['strengths'] ?? [],
+                'improvements' => $comparison['improvements'] ?? [],
+            ];
+        } catch (\Throwable) {
+            return [
+                'period' => null,
+                'previous_period' => null,
+                'trend' => 'stable',
+                'current' => [],
+                'deltas' => [],
+                'strengths' => [],
+                'improvements' => [],
+            ];
+        }
     }
 
     /**

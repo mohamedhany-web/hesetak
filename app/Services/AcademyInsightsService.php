@@ -197,7 +197,7 @@ class AcademyInsightsService
                 'title' => $u->name,
                 'meta' => $u->email,
                 'when' => optional($u->created_at)->diffForHumans(),
-                'url' => Route::has('admin.users.show') ? route('admin.users.show', $u->id) : null,
+                'url' => Route::has('admin.users.show') ? route('admin.users.show', $u) : null,
             ]),
             'activity' => ActivityLog::with('user:id,name')->latest()->take(8)->get()->map(fn ($a) => [
                 'id' => $a->id,

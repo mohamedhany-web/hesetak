@@ -12,6 +12,7 @@
         ['route' => 'student.private-lectures.index', 'match' => ['student.private-lectures.*', 'student.one-to-one-sessions.*'], 'label' => __('student_timeline.nav_lessons'), 'icon' => 'lessons.svg', 'ui' => 'show_private_lessons'],
         ['route' => 'student.learn.index', 'match' => ['student.learn.*'], 'label' => __('student_timeline.nav_learn'), 'icon' => 'lessons.svg', 'ui' => 'show_private_lessons'],
         ['route' => 'student.service-entitlements.index', 'match' => ['student.service-entitlements.*'], 'label' => __('student_timeline.nav_progress'), 'icon' => 'credits.svg', 'ui' => 'show_entitlements'],
+        ['route' => 'student.progress.index', 'match' => ['student.progress.*'], 'label' => __('student_timeline.nav_progress_hub'), 'fa' => 'fas fa-chart-line'],
         ['route' => 'my-courses.index', 'match' => ['my-courses.*'], 'label' => __('student.my_courses'), 'fa' => 'fas fa-bookmark', 'ui' => 'show_courses'],
         ['route' => 'student.lectures.index', 'match' => ['student.lectures.*'], 'label' => __('student_timeline.nav_lectures'), 'fa' => 'fas fa-chalkboard', 'ui' => 'show_courses', 'course_tools' => true],
         ['route' => 'student.assignments.index', 'match' => ['student.assignments.*'], 'label' => __('student_timeline.nav_assignments'), 'fa' => 'fas fa-tasks', 'ui' => 'show_assignments', 'course_tools' => true],

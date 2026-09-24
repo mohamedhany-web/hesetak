@@ -5,12 +5,27 @@ namespace App\Models;
 use App\Services\TutorApplicationStorage;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Str;
 
 class TutorApplication extends Model
 {
     public const STATUS_DRAFT = 'draft';
 
     public const STATUS_PENDING = 'pending';
+
+    public const STATUS_INTERVIEW_PENDING = 'interview_pending';
+
+    public const STATUS_INTERVIEW_SCHEDULED = 'interview_scheduled';
+
+    public const STATUS_INTERVIEW_PASSED = 'interview_passed';
+
+    public const STATUS_BLOCKED_NO_SHOW = 'blocked_no_show';
+
+    public const STATUS_CONTRACT_PENDING = 'contract_pending';
+
+    public const STATUS_CONTRACT_SIGNED = 'contract_signed';
 
     public const STATUS_APPROVED = 'approved';
 
@@ -19,6 +34,7 @@ class TutorApplication extends Model
     public const STATUS_REJECTED = 'rejected';
 
     protected $fillable = [
+        'uuid',
         'hiring_form_id',
         'full_name',
         'email',
@@ -37,6 +53,9 @@ class TutorApplication extends Model
         'intro_video_path',
         'intro_video_url',
         'answers',
+        'teaching_subject_ids',
+        'academic_year_ids',
+        'curriculum_types',
         'status',
         'admin_notes',
         'reviewed_at',
@@ -44,6 +63,8 @@ class TutorApplication extends Model
         'user_id',
         'activated_at',
         'activated_by',
+        'blocked_at',
+        'blocked_reason',
     ];
 
     protected function casts(): array
@@ -51,9 +72,41 @@ class TutorApplication extends Model
         return [
             'years_experience' => 'integer',
             'answers' => 'array',
+            'teaching_subject_ids' => 'array',
+            'academic_year_ids' => 'array',
+            'curriculum_types' => 'array',
             'reviewed_at' => 'datetime',
             'activated_at' => 'datetime',
+            'blocked_at' => 'datetime',
         ];
+    }
+
+    protected static function booted(): void
+    {
+        static::creating(function (TutorApplication $application) {
+            if (blank($application->uuid)) {
+                $application->uuid = (string) Str::uuid();
+            }
+        });
+    }
+
+    public function getRouteKeyName(): string
+    {
+        return 'uuid';
+    }
+
+    public function getRouteKey()
+    {
+        $uuid = trim((string) ($this->uuid ?? ''));
+
+        return $uuid !== '' ? $uuid : (string) $this->getKey();
+    }
+
+    public function resolveRouteBinding($value, $field = null)
+    {
+        $field = $field ?: $this->getRouteKeyName();
+
+        return static::query()->where($field, $value)->first();
     }
 
     public function hiringForm(): BelongsTo
@@ -74,6 +127,26 @@ class TutorApplication extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function interviews(): HasMany
+    {
+        return $this->hasMany(TutorInterview::class);
+    }
+
+    public function latestInterview(): HasOne
+    {
+        return $this->hasOne(TutorInterview::class)->latestOfMany();
+    }
+
+    public function agreements(): HasMany
+    {
+        return $this->hasMany(InstructorAgreement::class, 'tutor_application_id');
+    }
+
+    public function latestAgreement(): HasOne
+    {
+        return $this->hasOne(InstructorAgreement::class, 'tutor_application_id')->latestOfMany();
     }
 
     public function scopePending($query)
@@ -107,11 +180,35 @@ class TutorApplication extends Model
             && $this->user_id !== null;
     }
 
+    public function isBlocked(): bool
+    {
+        return $this->status === self::STATUS_BLOCKED_NO_SHOW;
+    }
+
+    /**
+     * @return list<string>
+     */
+    public function curriculumTypeKeys(): array
+    {
+        $raw = $this->curriculum_types;
+        if (! is_array($raw)) {
+            return [];
+        }
+
+        return array_values(array_filter(array_map('strval', $raw)));
+    }
+
     public static function statusLabels(): array
     {
         return [
             self::STATUS_DRAFT => 'مسودة — لم يُكمل البيانات',
             self::STATUS_PENDING => 'قيد المراجعة',
+            self::STATUS_INTERVIEW_PENDING => 'بانتظار اختيار موعد مقابلة',
+            self::STATUS_INTERVIEW_SCHEDULED => 'مقابلة مجدولة',
+            self::STATUS_INTERVIEW_PASSED => 'اجتاز المقابلة',
+            self::STATUS_BLOCKED_NO_SHOW => 'محجوب — تغيب عن المقابلة',
+            self::STATUS_CONTRACT_PENDING => 'بانتظار توقيع العقد',
+            self::STATUS_CONTRACT_SIGNED => 'تم توقيع العقد',
             self::STATUS_APPROVED => 'مقبول — بانتظار التفعيل العام',
             self::STATUS_ACTIVATED => 'مفعّل (لوحة المعلم مفتوحة)',
             self::STATUS_REJECTED => 'مرفوض',

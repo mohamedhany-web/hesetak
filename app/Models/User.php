@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class User extends Authenticatable
 {
@@ -26,6 +27,8 @@ class User extends Authenticatable
         'password',
         'google_id',
         'role',
+        'uuid',
+        'progress_share_token',
         'is_community_contributor',
         'community_contributor_type',
         'parent_id',
@@ -114,6 +117,66 @@ class User extends Authenticatable
             'portfolio_profile_submitted_at' => 'datetime',
             'portfolio_profile_reviewed_at' => 'datetime',
         ];
+    }
+
+    protected static function booted(): void
+    {
+        static::creating(function (User $user) {
+            if (blank($user->uuid)) {
+                $user->uuid = (string) Str::uuid();
+            }
+            if (($user->role ?? null) === 'student' && blank($user->progress_share_token)) {
+                $user->progress_share_token = Str::random(48);
+            }
+        });
+    }
+
+    public function getRouteKeyName(): string
+    {
+        return 'uuid';
+    }
+
+    public function getRouteKey()
+    {
+        $uuid = trim((string) ($this->uuid ?? ''));
+        if ($uuid === '') {
+            // لا نُسقط إلى الرقم التسلسلي في الروابط العامة.
+            $this->uuid = (string) Str::uuid();
+            if ($this->exists) {
+                $this->saveQuietly();
+            }
+        }
+
+        return (string) $this->uuid;
+    }
+
+    public function resolveRouteBinding($value, $field = null)
+    {
+        $field = $field ?: $this->getRouteKeyName();
+
+        return static::query()->where($field, $value)->first();
+    }
+
+    /**
+     * رمز مشاركة تقرير ولي الأمر — غير قابل للتخمين (ليس رقم الحساب).
+     */
+    public function ensureProgressShareToken(bool $rotate = false): string
+    {
+        if (! $rotate && filled($this->progress_share_token)) {
+            return (string) $this->progress_share_token;
+        }
+
+        $token = Str::random(48);
+        $this->forceFill(['progress_share_token' => $token])->save();
+
+        return $token;
+    }
+
+    public function progressShareUrl(): string
+    {
+        return route('public.parent-progress', [
+            'token' => $this->ensureProgressShareToken(),
+        ]);
     }
 
     /**

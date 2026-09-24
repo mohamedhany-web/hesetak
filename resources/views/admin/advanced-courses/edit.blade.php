@@ -113,6 +113,15 @@
                                     <p class="text-xs text-muted mt-2">أكمل التوصيف (الوصف، الأهداف، ماذا ستتعلّم، المتطلبات) ليظهر بالكامل في صفحة تفاصيل البرنامج العامة.</p>
                                     @error('delivery_type') <p class="text-xs text-rose-500 mt-1">{{ $message }}</p> @enderror
                                 </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-ink mb-2">مسار المنتج (اختياري)</label>
+                                    <select name="product_track" class="w-full rounded-xl border border-line bg-surface px-4 py-3 text-ink">
+                                        <option value="" @selected(old('product_track', $advancedCourse->product_track ?? '') === '')>مباشر / افتراضي</option>
+                                        <option value="recorded" @selected(old('product_track', $advancedCourse->product_track ?? '') === 'recorded')>كورس مسجّل (فيديو/شرح)</option>
+                                        <option value="book" @selected(old('product_track', $advancedCourse->product_track ?? '') === 'book')>كتاب للقراءة على الموقع (upsell)</option>
+                                    </select>
+                                    @error('product_track') <p class="text-xs text-rose-500 mt-1">{{ $message }}</p> @enderror
+                                </div>
                                 <div class="space-y-2 md:col-span-2">
                                     <label class="block text-sm font-semibold text-ink">نظام الدفع</label>
                                     <select name="billing_mode" class="w-full rounded-xl border border-line bg-surface px-4 py-3 text-ink">

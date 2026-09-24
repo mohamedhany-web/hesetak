@@ -24,7 +24,7 @@
             <p class="mt-1 text-sm text-muted">{{ $user->name }} · تحديث الاسم، التواصل، الدور وحالة الحساب</p>
         </div>
         <div class="admin-hero-actions flex flex-wrap gap-2">
-            <a href="{{ route('admin.users.show', $user->id) }}" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl border border-line bg-surface px-4 text-sm font-medium text-ink-soft transition hover:border-accent/30 hover:text-accent">
+            <a href="{{ route('admin.users.show', $user) }}" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl border border-line bg-surface px-4 text-sm font-medium text-ink-soft transition hover:border-accent/30 hover:text-accent">
                 <i class="fas fa-eye text-xs"></i>
                 عرض
             </a>
@@ -53,7 +53,7 @@
         </div>
     @endif
 
-    <form method="POST" action="{{ route('admin.users.update', $user->id) }}" id="editUserForm" class="space-y-5">
+    <form method="POST" action="{{ route('admin.users.update', $user) }}" id="editUserForm" class="space-y-5">
         @csrf
         @method('PUT')
 
@@ -138,7 +138,7 @@
                             <i class="fas fa-save text-xs"></i>
                             حفظ التعديلات
                         </button>
-                        <a href="{{ route('admin.users.show', $user->id) }}" class="btn-press inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-line bg-surface px-4 text-sm font-medium text-ink-soft transition hover:border-accent/30 hover:text-accent">
+                        <a href="{{ route('admin.users.show', $user) }}" class="btn-press inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-line bg-surface px-4 text-sm font-medium text-ink-soft transition hover:border-accent/30 hover:text-accent">
                             <i class="fas fa-times text-xs"></i>
                             إلغاء
                         </a>

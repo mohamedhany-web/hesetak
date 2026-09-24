@@ -174,13 +174,13 @@
                     $sidebarTutorAppsPending = 0;
                     $sidebarTutorAwaiting = 0;
                 }
-                $hiringOpen = request()->routeIs('admin.tutor-applications.*') || request()->routeIs('admin.hiring-form.*');
+                $hiringOpen = request()->routeIs('admin.tutor-applications.*') || request()->routeIs('admin.hiring-form.*') || request()->routeIs('admin.tutor-interview-slots.*') || request()->routeIs('admin.hiring.settings.*');
                 $hiringBadge = $sidebarTutorAppsPending + $sidebarTutorAwaiting;
             @endphp
             <li class="sidebar-section-label">التوظيف</li>
             <li x-data="{ open: {{ $hiringOpen ? 'true' : 'false' }} }">
                 <button type="button" @click="open = !open" class="sidebar-group-btn">
-                    <span class="flex items-center gap-3">
+                    <span class="flex items-center gap-2">
                         <i class="fas fa-user-tie"></i>
                         <span>توظيف المعلمين</span>
                         @if($hiringBadge > 0)
@@ -193,6 +193,16 @@
                     <li>
                         <a href="{{ route('admin.hiring-form.edit') }}" class="sidebar-sub-link {{ request()->routeIs('admin.hiring-form.*') ? 'active' : '' }}">
                             <i class="fas fa-wpforms"></i><span>منشئ نموذج التقديم</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('admin.tutor-interview-slots.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.tutor-interview-slots.*') ? 'active' : '' }}">
+                            <i class="fas fa-calendar-check"></i><span>مواعيد المقابلات</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('admin.hiring.settings.edit') }}" class="sidebar-sub-link {{ request()->routeIs('admin.hiring.settings.*') ? 'active' : '' }}">
+                            <i class="fas fa-sliders-h"></i><span>إعدادات البروسيس</span>
                         </a>
                     </li>
                     <li>
@@ -652,7 +662,7 @@
             @if($isFull || $u->hasPermission('manage.packages') || $u->hasPermission('manage.tutoring-groups'))
             <li class="sidebar-section-label">مدفوع</li>
             @php
-                $paidPackagesOpen = request()->routeIs('admin.packages.*') || request()->routeIs('admin.service-packages.*') || request()->routeIs('admin.service-package-pricing-rules.*');
+                $paidPackagesOpen = request()->routeIs('admin.packages.*') || request()->routeIs('admin.service-packages.*') || request()->routeIs('admin.service-package-pricing-rules.*') || request()->routeIs('admin.service-session-rates.*');
             @endphp
             <li x-data="{ open: {{ $paidPackagesOpen ? 'true' : 'false' }} }">
                 <button type="button" @click="open = !open" class="sidebar-group-btn">
@@ -665,6 +675,7 @@
                     @endif
                     <li><a href="{{ route('admin.service-packages.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.service-packages.index') || request()->routeIs('admin.service-packages.create') || request()->routeIs('admin.service-packages.edit') ? 'active' : '' }}"><i class="fas fa-box-open"></i><span>باقات الحصص</span></a></li>
                     <li><a href="{{ route('admin.service-packages.grant') }}" class="sidebar-sub-link {{ request()->routeIs('admin.service-packages.grant*') ? 'active' : '' }}"><i class="fas fa-user-plus"></i><span>منح باقة يدوياً</span></a></li>
+                    <li><a href="{{ route('admin.service-session-rates.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.service-session-rates.*') ? 'active' : '' }}"><i class="fas fa-table"></i><span>سعر الحصة (مرحلة×مسار)</span></a></li>
                     <li><a href="{{ route('admin.service-package-pricing-rules.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.service-package-pricing-rules.*') ? 'active' : '' }}"><i class="fas fa-sliders"></i><span>تسعير خصص باقتك</span></a></li>
                 </ul>
             </li>

@@ -6,7 +6,7 @@
   $freeSlots = $bookableSlots ?? collect();
 @endphp
 
-<div class="mc-tp-free" id="mc-tp-free" data-instructor-id="{{ $instructorUser->id }}">
+<div class="mc-tp-free" id="mc-tp-free" data-instructor-id="{{ $instructorUser->id }}" data-instructor-uuid="{{ $instructorUser->uuid }}">
   <div class="mc-tp-free__head">
     <span class="mc-package__badge">{{ $isRtl ? 'بعد الاشتراك' : 'After subscribe' }}</span>
     <h4>{{ $isRtl ? 'احجز حصة تجريبية مجانية مع هذا المعلم' : 'Book a free trial with this teacher' }}</h4>
@@ -53,6 +53,7 @@
   var root = document.getElementById('mc-tp-free');
   if (!root) return;
   var instructorId = parseInt(root.getAttribute('data-instructor-id') || '0', 10);
+  var instructorUuid = root.getAttribute('data-instructor-uuid') || '';
   var statusEl = document.getElementById('mc-tp-free-status');
   var bookUrl = @json(route('public.free-trial.book'));
   var csrfMeta = document.querySelector('meta[name="csrf-token"]');
@@ -90,7 +91,8 @@
 
   var basePayload = {
     goal: 'free_session',
-    instructor_id: instructorId,
+    instructor_uuid: instructorUuid,
+    instructor_id: instructorId || undefined,
     name: @json(auth()->user()->name ?? ''),
     email: @json(auth()->user()->email ?? ''),
     timezone: @json($viewerTz)

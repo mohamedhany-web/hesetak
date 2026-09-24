@@ -11,15 +11,20 @@ class ParentProgressController extends Controller
 {
     public function show(Request $request, ParentProgressReportService $reports): View
     {
-        $studentId = (int) $request->query('student_id', 0);
+        // رفض المعرّف الرقمي القديم — التعداد كان يكشف تقارير الطلاب بدون مصادقة.
+        if ($request->query->has('student_id')) {
+            abort(404);
+        }
+
+        $token = trim((string) $request->query('token', ''));
         $result = null;
 
-        if ($studentId > 0) {
-            $result = $reports->lookup($studentId);
+        if ($token !== '') {
+            $result = $reports->lookupByShareToken($token);
         }
 
         return view('public.parent-progress', [
-            'studentId' => $studentId > 0 ? $studentId : null,
+            'token' => $token !== '' ? $token : null,
             'result' => $result,
         ]);
     }

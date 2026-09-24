@@ -340,7 +340,7 @@ class CertificateController extends Controller
             'description' => $validated['description'] ?? null,
             'issue_date' => $validated['issued_at'] ?? now(),
             'issued_at' => $validated['issued_at'] ?? now(),
-            'verification_code' => strtoupper(uniqid('CERT')),
+            'verification_code' => strtoupper('CERT-'.bin2hex(random_bytes(12))),
             'status' => $validated['status'] ?? 'pending',
             'is_verified' => $validated['status'] === 'issued',
             'instructor_id' => $validated['instructor_id'] ?? null,

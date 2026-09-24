@@ -35,14 +35,14 @@ fi
 echo
 echo "==> Health"
 curl -fsS http://127.0.0.1:7880/ && echo " (7880 OK)" || echo "7880 FAILED"
-curl -fsSI https://live.glottical.com/ 2>/dev/null | head -5 || true
+curl -fsSI https://live.hissatak.online/ 2>/dev/null | head -5 || true
 
 echo
 echo "==> Recommendations for choppy audio"
 cat <<'EOF'
 1. افتح UDP 50000-60000 (أو نطاق rtc.port_range في livekit.yaml) في ufw/iptables.
-2. فعّل use_external_ip: true في rtc: مع IP العام 187.124.36.228.
-3. فعّل TURN على المنفذ 5349 مع domain: live.glottical.com.
+2. فعّل use_external_ip: true في rtc: مع IP العام 187.127.87.170.
+3. فعّل TURN على المنفذ 5349 مع domain: live.hissatak.online.
 4. مثال rtc:
    rtc:
      tcp_port: 7881

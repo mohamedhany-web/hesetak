@@ -75,8 +75,8 @@ class LiveKitRoomProviderTest extends TestCase
             'livekit.provider' => 'livekit',
             'livekit.livekit.api_key' => 'APItestkey',
             'livekit.livekit.api_secret' => 'test-secret-value-1234567890',
-            'livekit.livekit.url' => 'wss://live.glottical.com',
-            'livekit.livekit.host' => 'live.glottical.com',
+            'livekit.livekit.url' => 'wss://live.hissatak.online',
+            'livekit.livekit.host' => 'live.hissatak.online',
         ]);
     }
 
@@ -90,7 +90,7 @@ class LiveKitRoomProviderTest extends TestCase
 
         $server = LiveServer::create([
             'name' => 'حصتك LiveKit',
-            'domain' => 'live.glottical.com',
+            'domain' => 'live.hissatak.online',
             'provider' => 'livekit',
             'status' => 'active',
             'ip_address' => '187.124.36.228',
@@ -101,7 +101,7 @@ class LiveKitRoomProviderTest extends TestCase
             'instructor_id' => $instructor->id,
             'server_id' => $server->id,
             'title' => 'اختبار LiveKit',
-            'room_name' => 'glottical-livekit-test',
+            'room_name' => 'hesetak-livekit-test',
             'status' => 'live',
             'started_at' => now(),
             'require_enrollment' => false,
@@ -112,7 +112,7 @@ class LiveKitRoomProviderTest extends TestCase
 
         $response->assertOk();
         $response->assertSee('livekit-client', false);
-        $response->assertSee('live.glottical.com', false);
+        $response->assertSee('live.hissatak.online', false);
         $response->assertSee('مشاركة الشاشة', false);
         $response->assertDontSee('id="lk-chat-panel"', false);
         $response->assertDontSee('الدردشة', false);
@@ -169,7 +169,7 @@ class LiveKitRoomProviderTest extends TestCase
         ]);
         $server = LiveServer::create([
             'name' => 'حصتك LiveKit',
-            'domain' => 'live.glottical.com',
+            'domain' => 'live.hissatak.online',
             'provider' => 'livekit',
             'status' => 'active',
         ]);
@@ -177,7 +177,7 @@ class LiveKitRoomProviderTest extends TestCase
             'instructor_id' => $instructor->id,
             'server_id' => $server->id,
             'title' => 'جلسة طالب',
-            'room_name' => 'glottical-student-theme',
+            'room_name' => 'hesetak-student-theme',
             'status' => 'live',
             'started_at' => now(),
             'require_enrollment' => false,
@@ -216,7 +216,7 @@ class LiveKitRoomProviderTest extends TestCase
         ]);
         $server = LiveServer::create([
             'name' => 'حصتك LiveKit',
-            'domain' => 'live.glottical.com',
+            'domain' => 'live.hissatak.online',
             'provider' => 'livekit',
             'status' => 'active',
         ]);
@@ -224,7 +224,7 @@ class LiveKitRoomProviderTest extends TestCase
             'instructor_id' => $instructor->id,
             'server_id' => $server->id,
             'title' => 'بدون شير',
-            'room_name' => 'glottical-no-share',
+            'room_name' => 'hesetak-no-share',
             'status' => 'live',
             'started_at' => now(),
             'require_enrollment' => false,
@@ -250,14 +250,14 @@ class LiveKitRoomProviderTest extends TestCase
         ]);
         LiveServer::create([
             'name' => 'حصتك LiveKit',
-            'domain' => 'live.glottical.com',
+            'domain' => 'live.hissatak.online',
             'provider' => 'livekit',
             'status' => 'active',
         ]);
         $session = LiveSession::create([
             'instructor_id' => $instructor->id,
             'title' => 'شات مفعّل في DB',
-            'room_name' => 'glottical-chat-blocked',
+            'room_name' => 'hesetak-chat-blocked',
             'status' => 'live',
             'started_at' => now(),
             'require_enrollment' => false,

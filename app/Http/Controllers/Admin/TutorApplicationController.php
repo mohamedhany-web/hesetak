@@ -4,12 +4,19 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\StorageFileController;
+use App\Models\InstructorAgreement;
 use App\Models\TutorApplication;
+use App\Models\TutorHiringSetting;
+use App\Models\TutorInterview;
 use App\Models\User;
+use App\Services\TeacherSpecialtyMatcher;
 use App\Services\TutorApplicationActivationService;
 use App\Services\TutorApplicationStorage;
+use App\Services\TutorContractService;
+use App\Services\TutorInterviewBookingService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 use InvalidArgumentException;
 use Symfony\Component\HttpFoundation\Response;
@@ -21,9 +28,18 @@ class TutorApplicationController extends Controller
         $stats = [
             'draft' => TutorApplication::draft()->count(),
             'pending' => TutorApplication::pending()->count(),
+            'interview' => TutorApplication::query()->whereIn('status', [
+                TutorApplication::STATUS_INTERVIEW_PENDING,
+                TutorApplication::STATUS_INTERVIEW_SCHEDULED,
+            ])->count(),
+            'contract' => TutorApplication::query()->whereIn('status', [
+                TutorApplication::STATUS_CONTRACT_PENDING,
+                TutorApplication::STATUS_CONTRACT_SIGNED,
+            ])->count(),
             'approved' => TutorApplication::awaitingActivation()->count(),
             'activated' => TutorApplication::activated()->count(),
             'rejected' => TutorApplication::where('status', TutorApplication::STATUS_REJECTED)->count(),
+            'blocked' => TutorApplication::where('status', TutorApplication::STATUS_BLOCKED_NO_SHOW)->count(),
             'total' => TutorApplication::count(),
             'instructors' => User::query()->whereIn('role', ['instructor', 'teacher'])->where('is_active', true)->count(),
         ];
@@ -44,13 +60,8 @@ class TutorApplicationController extends Controller
     {
         $query = TutorApplication::query()->with(['user:id,name,email', 'reviewedByUser:id,name'])->orderByDesc('id');
 
-        if ($request->filled('status') && in_array($request->status, [
-            TutorApplication::STATUS_DRAFT,
-            TutorApplication::STATUS_PENDING,
-            TutorApplication::STATUS_APPROVED,
-            TutorApplication::STATUS_ACTIVATED,
-            TutorApplication::STATUS_REJECTED,
-        ], true)) {
+        $allowedStatuses = array_keys(TutorApplication::statusLabels());
+        if ($request->filled('status') && in_array($request->status, $allowedStatuses, true)) {
             $query->where('status', $request->status);
         }
 
@@ -146,6 +157,8 @@ class TutorApplicationController extends Controller
             'reviewedByUser:id,name',
             'activatedByUser:id,name',
             'user:id,name,email,phone,is_active,role,created_at',
+            'latestInterview',
+            'latestAgreement',
         ]);
 
         $applyUrl = route('public.tutor.apply');
@@ -157,12 +170,19 @@ class TutorApplicationController extends Controller
             ? null
             : TutorApplicationStorage::inlineDataUri($tutorApplication->certificate_path);
 
+        $specialty = TeacherSpecialtyMatcher::summarize($tutorApplication);
+        $settings = TutorHiringSetting::allMapped();
+        $billingLabels = InstructorAgreement::billingTypeLabels();
+
         return view('admin.tutor-applications.show', [
             'application' => $tutorApplication,
             'applyUrl' => $applyUrl,
             'photoInline' => $photoInline,
             'idInline' => $idInline,
             'certificateInline' => $certificateInline,
+            'specialty' => $specialty,
+            'settings' => $settings,
+            'billingLabels' => $billingLabels,
         ]);
     }
 
@@ -184,6 +204,70 @@ class TutorApplicationController extends Controller
         return app(StorageFileController::class)->show(request(), $relative);
     }
 
+    public function inviteInterview(TutorApplication $tutorApplication, TutorInterviewBookingService $booking): RedirectResponse
+    {
+        try {
+            $booking->inviteToInterview($tutorApplication, auth()->user());
+        } catch (ValidationException $e) {
+            return back()->withErrors($e->errors())->with('error', collect($e->errors())->flatten()->first());
+        }
+
+        return back()->with('success', 'تمت دعوة المرشح لاختيار موعد مقابلة. رابط الاختيار: '.route('tutor.interview.pick'));
+    }
+
+    public function markInterviewPassed(Request $request, TutorApplication $tutorApplication, TutorInterviewBookingService $booking): RedirectResponse
+    {
+        $interview = TutorInterview::query()
+            ->where('tutor_application_id', $tutorApplication->id)
+            ->whereIn('status', [TutorInterview::STATUS_SCHEDULED, TutorInterview::STATUS_COMPLETED])
+            ->latest('id')
+            ->first();
+
+        if (! $interview) {
+            $tutorApplication->update([
+                'status' => TutorApplication::STATUS_INTERVIEW_PASSED,
+                'reviewed_at' => now(),
+                'reviewed_by' => auth()->id(),
+            ]);
+
+            return back()->with('success', 'تم تسجيل اجتياز المقابلة.');
+        }
+
+        $booking->markPassed($interview, auth()->user(), $request->input('notes'));
+
+        return back()->with('success', 'تم تسجيل نجاح المقابلة.');
+    }
+
+    public function unblock(TutorApplication $tutorApplication, TutorInterviewBookingService $booking): RedirectResponse
+    {
+        $booking->unblock($tutorApplication, auth()->user());
+
+        return back()->with('success', 'تم فك الحجب وإعادة فتح اختيار الموعد.');
+    }
+
+    public function offerContract(Request $request, TutorApplication $tutorApplication, TutorContractService $contracts): RedirectResponse
+    {
+        $data = $request->validate([
+            'billing_type' => ['required', 'string', 'max:40'],
+            'salary_per_session' => ['nullable', 'numeric', 'min:0'],
+            'monthly_amount' => ['nullable', 'numeric', 'min:0'],
+            'rate' => ['nullable', 'numeric', 'min:0'],
+            'title' => ['nullable', 'string', 'max:190'],
+            'terms' => ['required', 'string', 'max:20000'],
+            'notes' => ['nullable', 'string', 'max:2000'],
+            'start_date' => ['nullable', 'date'],
+            'end_date' => ['nullable', 'date', 'after_or_equal:start_date'],
+        ]);
+
+        try {
+            $agreement = $contracts->offer($tutorApplication, auth()->user(), $data);
+        } catch (ValidationException $e) {
+            return back()->withInput()->withErrors($e->errors())->with('error', collect($e->errors())->flatten()->first());
+        }
+
+        return back()->with('success', 'تم إرسال عرض العقد للتوقيع. الرابط: '.route('tutor.contract.sign', ['token' => $agreement->offer_token]));
+    }
+
     public function approve(TutorApplication $tutorApplication): RedirectResponse
     {
         if ($tutorApplication->isActivated()) {
@@ -192,6 +276,26 @@ class TutorApplicationController extends Controller
 
         if ($tutorApplication->status === TutorApplication::STATUS_REJECTED) {
             return back()->with('error', 'الطلب مرفوض — أعده للمراجعة أولاً إن لزم.');
+        }
+
+        try {
+            TeacherSpecialtyMatcher::assertComplete($tutorApplication);
+            if (TutorHiringSetting::bool('require_interview', true)
+                && ! in_array($tutorApplication->status, [
+                    TutorApplication::STATUS_INTERVIEW_PASSED,
+                    TutorApplication::STATUS_CONTRACT_PENDING,
+                    TutorApplication::STATUS_CONTRACT_SIGNED,
+                    TutorApplication::STATUS_APPROVED,
+                ], true)) {
+                return back()->with('error', 'أكمل المقابلة التقنية أولاً (أو عطّل إلزامها من إعدادات التوظيف).');
+            }
+            if (TutorHiringSetting::bool('require_contract', true)
+                && $tutorApplication->status !== TutorApplication::STATUS_CONTRACT_SIGNED
+                && $tutorApplication->status !== TutorApplication::STATUS_APPROVED) {
+                return back()->with('error', 'توقيع العقد مطلوب قبل القبول النهائي.');
+            }
+        } catch (ValidationException $e) {
+            return back()->with('error', collect($e->errors())->flatten()->first());
         }
 
         $tutorApplication->update([
@@ -206,10 +310,13 @@ class TutorApplicationController extends Controller
     public function activate(Request $request, TutorApplication $tutorApplication): RedirectResponse
     {
         try {
+            app(TutorContractService::class)->assertReadyForActivation($tutorApplication);
             $result = TutorApplicationActivationService::activate(
                 $tutorApplication,
                 $request->user()
             );
+        } catch (ValidationException $e) {
+            return back()->with('error', collect($e->errors())->flatten()->first());
         } catch (InvalidArgumentException $e) {
             return back()->with('error', $e->getMessage());
         }
@@ -218,7 +325,7 @@ class TutorApplicationController extends Controller
             ->route('admin.tutor-applications.show', $tutorApplication)
             ->with('success', 'تم تفعيل الملف العام للمعلم. الحساب كان مُنشأ عند التسجيل: '.$result['user']->email)
             ->with('activated_email', $result['user']->email)
-            ->with('activated_user_id', $result['user']->id);
+            ->with('activated_user_uuid', $result['user']->uuid);
     }
 
     public function reject(Request $request, TutorApplication $tutorApplication): RedirectResponse

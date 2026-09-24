@@ -96,19 +96,31 @@ class PageController extends Controller
         ]);
     }
 
-    public function pricing()
+    public function pricing(\Illuminate\Http\Request $request)
     {
-        $packages = collect();
-        if (\Illuminate\Support\Facades\Schema::hasTable('service_packages')) {
-            $packages = \App\Models\ServicePackage::storefrontCatalog();
-        }
+        $packageCatalog = \Illuminate\Support\Facades\Schema::hasTable('service_packages')
+            ? app(\App\Services\PackageCatalogFilterService::class)->catalog(
+                yearId: $request->filled('year') ? $request->integer('year') : null,
+                subjectId: $request->filled('subject') ? $request->integer('subject') : null,
+                curriculumType: $request->query('curriculum_type'),
+            )
+            : [
+                'years' => collect(),
+                'subjects' => collect(),
+                'tracks' => [],
+                'selected_year_id' => null,
+                'selected_subject_id' => null,
+                'selected_curriculum_type' => 'saudi',
+                'packages' => collect(),
+            ];
 
         return view('public.marketing.pricing', [
             'mcActive' => 'pricing',
             'bodyClass' => 'mc-body--dir',
             'pageTitle' => __('public.pricing_page_title'),
             'pageDescription' => __('public.pricing_meta_description'),
-            'packages' => $packages,
+            'packageCatalog' => $packageCatalog,
+            'packages' => $packageCatalog['packages'],
         ]);
     }
 

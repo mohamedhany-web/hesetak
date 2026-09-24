@@ -17,6 +17,12 @@ return Application::configure(basePath: dirname(__DIR__))
                  ->withoutOverlapping()
                  ->runInBackground();
 
+        // تقارير العائلة الدورية المبسّطة (نقاط قوة + مؤشرات تحسّن)
+        $schedule->command('reports:send-family-progress')
+                 ->monthlyOn(1, '10:00')
+                 ->withoutOverlapping()
+                 ->runInBackground();
+
         // تنظيف البيانات القديمة شهرياً
         $schedule->call(function () {
             \App\Models\WhatsAppMessage::where('created_at', '<', now()->subMonths(6))->delete();
@@ -56,6 +62,12 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // إنهاء جلسات البث التي تجاوزت المدة القصوى تلقائياً
         $schedule->command('live:auto-end-sessions')
+                 ->everyFiveMinutes()
+                 ->withoutOverlapping()
+                 ->runInBackground();
+
+        // حجب مرشحي التوظيف المتغيبين عن المقابلة
+        $schedule->command('tutor:interviews-mark-no-shows')
                  ->everyFiveMinutes()
                  ->withoutOverlapping()
                  ->runInBackground();

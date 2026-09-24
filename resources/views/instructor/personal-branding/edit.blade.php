@@ -45,7 +45,7 @@
     };
 
     $publicHref = ($profile->status === \App\Models\InstructorProfile::STATUS_APPROVED && Route::has('public.instructors.show'))
-        ? route('public.instructors.show', $profile->user_id)
+        ? route('public.instructors.show', $profile->user)
         : null;
     $profileHref = Route::has('instructor.profile')
         ? route('instructor.profile')

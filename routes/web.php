@@ -165,7 +165,7 @@ Route::get('/sitemap.xml', function () {
     try {
         $instructors = \App\Models\User::whereIn('role', ['instructor', 'teacher'])
             ->where('is_active', true)
-            ->select('id', 'name', 'updated_at')
+            ->select('id', 'uuid', 'name', 'updated_at')
             ->orderBy('updated_at', 'desc')
             ->limit(1000)
             ->get();
@@ -457,6 +457,22 @@ Route::get('/faq', [\App\Http\Controllers\Public\PageController::class, 'faq'])-
 Route::get('/terms', [\App\Http\Controllers\Public\PageController::class, 'terms'])->name('public.terms');
 Route::get('/privacy', [\App\Http\Controllers\Public\PageController::class, 'privacy'])->name('public.privacy');
 Route::get('/pricing', [\App\Http\Controllers\Public\PageController::class, 'pricing'])->name('public.pricing');
+Route::get('/api/public/package-catalog', [\App\Http\Controllers\Public\PackageCatalogApiController::class, '__invoke'])
+    ->middleware('throttle:60,1')
+    ->name('public.package-catalog');
+Route::get('/gift-package', [\App\Http\Controllers\Public\GiftPackageController::class, 'show'])->name('public.gift-package.show');
+Route::post('/gift-package', [\App\Http\Controllers\Public\GiftPackageController::class, 'store'])
+    ->middleware(['auth', 'throttle:20,1'])
+    ->name('public.gift-package.store');
+Route::get('/gift-package/orders/{order}/pay', [\App\Http\Controllers\Public\GiftPackageController::class, 'pay'])
+    ->middleware('auth')
+    ->name('public.gift-package.pay');
+Route::post('/gift-package/orders/{order}/fawaterak/prepare', [\App\Http\Controllers\Public\GiftPackageController::class, 'fawaterakPrepare'])
+    ->middleware(['auth', 'throttle:20,1'])
+    ->name('public.gift-package.fawaterak.prepare');
+Route::get('/gift/{token}', [\App\Http\Controllers\Public\GiftPackageController::class, 'claim'])
+    ->where('token', '[A-Za-z0-9]{32,64}')
+    ->name('public.gift-package.claim');
 Route::get('/team', [\App\Http\Controllers\Public\PageController::class, 'team'])->name('public.team');
 Route::get('/certificates', [\App\Http\Controllers\Public\PageController::class, 'certificates'])->name('public.certificates');
 Route::get('/certificates/verify', [\App\Http\Controllers\Public\CertificateVerificationController::class, 'verify'])->name('public.certificates.verify');
@@ -569,6 +585,12 @@ Route::get('/teachers/{instructor}', function (\App\Models\User $instructor) {
 // صفحة الكورسات العامة (?subject=id & ?delivery=one_to_one|group)
 Route::get('/courses', [\App\Http\Controllers\Public\CoursesController::class, 'index'])->name('public.courses');
 
+// مسارات المنتج: كورسات مسجّلة + كتب للقراءة (upsell)
+Route::get('/recorded-courses', [\App\Http\Controllers\Public\ProductTrackCatalogController::class, 'recorded'])
+    ->name('public.recorded-courses');
+Route::get('/books', [\App\Http\Controllers\Public\ProductTrackCatalogController::class, 'books'])
+    ->name('public.books');
+
 // صفحة المدربين (الملفات التعريفية المعتمدة)
 Route::get('/instructors', [\App\Http\Controllers\Public\InstructorController::class, 'index'])->name('public.instructors.index');
 Route::get('/instructors/{instructor}', [\App\Http\Controllers\Public\InstructorController::class, 'show'])->name('public.instructors.show');
@@ -580,6 +602,16 @@ Route::get('/tutor/apply/profile', [\App\Http\Controllers\Public\TutorApplyContr
 Route::post('/tutor/apply/profile', [\App\Http\Controllers\Public\TutorApplyController::class, 'storeProfile'])
     ->middleware(['auth', 'role:instructor|teacher'])
     ->name('public.tutor.apply.profile.store');
+
+Route::middleware(['auth'])->group(function () {
+    Route::get('/tutor/interview', [\App\Http\Controllers\Public\TutorInterviewController::class, 'pick'])->name('tutor.interview.pick');
+    Route::post('/tutor/interview/book', [\App\Http\Controllers\Public\TutorInterviewController::class, 'book'])->name('tutor.interview.book');
+    Route::get('/tutor/interview/{interview}/join', [\App\Http\Controllers\Public\TutorInterviewController::class, 'join'])->name('tutor.interview.join');
+});
+Route::get('/tutor/contract/{token}', [\App\Http\Controllers\Public\TutorContractController::class, 'show'])->name('tutor.contract.sign');
+Route::post('/tutor/contract/{token}', [\App\Http\Controllers\Public\TutorContractController::class, 'sign'])->name('tutor.contract.sign.submit');
+Route::get('/tutor/contract/{token}/pdf', [\App\Http\Controllers\Public\TutorContractController::class, 'downloadPdf'])->name('tutor.contract.pdf');
+
 
 // صفحة تفاصيل الكورس العامة
 Route::get('/course/{id}', [\App\Http\Controllers\Public\CourseShowController::class, 'show'])
@@ -991,6 +1023,10 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::get('/learn', [\App\Http\Controllers\Student\LearnHubController::class, 'index'])->name('student.learn.index');
         Route::get('/learn/teachers/{instructor}', [\App\Http\Controllers\Student\LearnHubController::class, 'teacher'])->name('student.learn.teacher');
 
+        Route::get('/progress', [\App\Http\Controllers\Student\ProgressHubController::class, 'index'])->name('student.progress.index');
+        Route::post('/progress/refresh-adaptive', [\App\Http\Controllers\Student\ProgressHubController::class, 'refreshAdaptive'])->name('student.progress.refresh-adaptive');
+        Route::post('/progress/send-family', [\App\Http\Controllers\Student\ProgressHubController::class, 'sendFamilyPreview'])->name('student.progress.send-family');
+
         Route::get('/one-to-one-sessions', [\App\Http\Controllers\Student\OneToOneSessionController::class, 'index'])->name('student.one-to-one-sessions.index');
         Route::get('/one-to-one-sessions/{oneToOneSession}', [\App\Http\Controllers\Student\OneToOneSessionController::class, 'show'])->name('student.one-to-one-sessions.show');
         Route::post('/one-to-one-sessions/{oneToOneSession}/book', [\App\Http\Controllers\Student\OneToOneSessionController::class, 'book'])->name('student.one-to-one-sessions.book');
@@ -1260,12 +1296,12 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::post('/users', [\App\Http\Controllers\Admin\AdminController::class, 'storeUser'])
             ->middleware('throttle:20,1')
             ->name('users.store');
-        Route::get('/users/{id}', [\App\Http\Controllers\Admin\AdminController::class, 'showUser'])->name('users.show')->where('id', '[0-9]+');
-        Route::get('/users/{id}/edit', [\App\Http\Controllers\Admin\AdminController::class, 'editUser'])->name('users.edit')->where('id', '[0-9]+');
+        Route::get('/users/{user}', [\App\Http\Controllers\Admin\AdminController::class, 'showUser'])->name('users.show')->whereUuid('user');
+        Route::get('/users/{user}/edit', [\App\Http\Controllers\Admin\AdminController::class, 'editUser'])->name('users.edit')->whereUuid('user');
         // دعم fallback لـ POST في حالة فشل method spoof (_method=PUT) على بعض البيئات/المتصفحات
-        Route::post('/users/{id}', [\App\Http\Controllers\Admin\AdminController::class, 'updateUser'])->where('id', '[0-9]+');
-        Route::put('/users/{id}', [\App\Http\Controllers\Admin\AdminController::class, 'updateUser'])->name('users.update')->where('id', '[0-9]+');
-        Route::delete('/users/{id}', [\App\Http\Controllers\Admin\AdminController::class, 'deleteUser'])->name('users.delete')->where('id', '[0-9]+');
+        Route::post('/users/{user}', [\App\Http\Controllers\Admin\AdminController::class, 'updateUser'])->whereUuid('user');
+        Route::put('/users/{user}', [\App\Http\Controllers\Admin\AdminController::class, 'updateUser'])->name('users.update')->whereUuid('user');
+        Route::delete('/users/{user}', [\App\Http\Controllers\Admin\AdminController::class, 'deleteUser'])->name('users.delete')->whereUuid('user');
 
         // مسارات التعلم (السنوات الدراسية)
         Route::resource('academic-years', \App\Http\Controllers\Admin\AcademicYearController::class)->except(['show']);
@@ -1601,6 +1637,20 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
             ->where('kind', 'photo|id|certificate|video')
             ->name('tutor-applications.file');
         Route::get('/tutor-applications/{tutorApplication}', [\App\Http\Controllers\Admin\TutorApplicationController::class, 'show'])->name('tutor-applications.show');
+        
+        Route::post('/tutor-applications/{tutorApplication}/invite-interview', [\App\Http\Controllers\Admin\TutorApplicationController::class, 'inviteInterview'])->name('tutor-applications.invite-interview');
+        Route::post('/tutor-applications/{tutorApplication}/interview-passed', [\App\Http\Controllers\Admin\TutorApplicationController::class, 'markInterviewPassed'])->name('tutor-applications.interview-passed');
+        Route::post('/tutor-applications/{tutorApplication}/unblock', [\App\Http\Controllers\Admin\TutorApplicationController::class, 'unblock'])->name('tutor-applications.unblock');
+        Route::post('/tutor-applications/{tutorApplication}/offer-contract', [\App\Http\Controllers\Admin\TutorApplicationController::class, 'offerContract'])->name('tutor-applications.offer-contract');
+
+        Route::get('/tutor-interview-slots', [\App\Http\Controllers\Admin\TutorInterviewSlotController::class, 'index'])->name('tutor-interview-slots.index');
+        Route::post('/tutor-interview-slots', [\App\Http\Controllers\Admin\TutorInterviewSlotController::class, 'store'])->name('tutor-interview-slots.store');
+        Route::put('/tutor-interview-slots/{slot}', [\App\Http\Controllers\Admin\TutorInterviewSlotController::class, 'update'])->name('tutor-interview-slots.update');
+        Route::delete('/tutor-interview-slots/{slot}', [\App\Http\Controllers\Admin\TutorInterviewSlotController::class, 'destroy'])->name('tutor-interview-slots.destroy');
+
+        Route::get('/hiring/settings', [\App\Http\Controllers\Admin\TutorHiringProcessSettingsController::class, 'edit'])->name('hiring.settings.edit');
+        Route::put('/hiring/settings', [\App\Http\Controllers\Admin\TutorHiringProcessSettingsController::class, 'update'])->name('hiring.settings.update');
+
         Route::post('/tutor-applications/{tutorApplication}/approve', [\App\Http\Controllers\Admin\TutorApplicationController::class, 'approve'])->name('tutor-applications.approve');
         Route::post('/tutor-applications/{tutorApplication}/activate', [\App\Http\Controllers\Admin\TutorApplicationController::class, 'activate'])->name('tutor-applications.activate');
         Route::post('/tutor-applications/{tutorApplication}/reject', [\App\Http\Controllers\Admin\TutorApplicationController::class, 'reject'])->name('tutor-applications.reject');
@@ -1680,6 +1730,10 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::post('/service-packages/{servicePackage}/toggle-status', [\App\Http\Controllers\Admin\ServicePackageController::class, 'toggleStatus'])->name('service-packages.toggle-status');
         Route::resource('service-package-pricing-rules', \App\Http\Controllers\Admin\ServicePackagePricingRuleController::class)
             ->only(['index', 'store', 'update', 'destroy']);
+        Route::get('/service-session-rates', [\App\Http\Controllers\Admin\ServiceSessionRateController::class, 'index'])
+            ->name('service-session-rates.index');
+        Route::post('/service-session-rates', [\App\Http\Controllers\Admin\ServiceSessionRateController::class, 'save'])
+            ->name('service-session-rates.save');
         Route::get('/student-entitlements', [\App\Http\Controllers\Admin\StudentEntitlementController::class, 'index'])->name('student-entitlements.index');
         Route::get('/student-entitlements/create', [\App\Http\Controllers\Admin\StudentEntitlementController::class, 'create'])->name('student-entitlements.create');
         Route::post('/student-entitlements', [\App\Http\Controllers\Admin\StudentEntitlementController::class, 'store'])->name('student-entitlements.store');

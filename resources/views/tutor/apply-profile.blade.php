@@ -118,6 +118,57 @@
             </div>
           @endif
 
+          <div class="mc-ta-section">
+            <h3>{{ $isRtl ? 'التخصص (إلزامي)' : 'Specialty (required)' }}</h3>
+            <p>{{ $isRtl
+              ? 'اختر المواد والمراحل وأنواع المناهج التي ستدرّسها — يجب أن تطابق ما ستُعيَّن له لاحقاً.'
+              : 'Select subjects, stages, and curriculum types you will teach.' }}</p>
+          </div>
+          <div class="mc-ta-panel">
+            <div class="mc-ta-grid">
+              <div class="mc-ta-field">
+                <label>{{ $isRtl ? 'المواد' : 'Subjects' }} *</label>
+                <div class="mc-ta-checks" style="display:grid;gap:.45rem;max-height:220px;overflow:auto;padding:.5rem;border:1px solid #e5e7eb;border-radius:.75rem;">
+                  @forelse(($subjectOptions ?? []) as $opt)
+                    <label style="display:flex;gap:.5rem;align-items:flex-start;font-size:.9rem;">
+                      <input type="checkbox" name="teaching_subject_ids[]" value="{{ $opt['id'] }}"
+                        @checked(in_array($opt['id'], old('teaching_subject_ids', $application->teaching_subject_ids ?? []), false))>
+                      <span>{{ $opt['name'] }}@if(!empty($opt['year_name'])) <em style="color:#64748b;">({{ $opt['year_name'] }})</em>@endif</span>
+                    </label>
+                  @empty
+                    <p class="text-muted">{{ $isRtl ? 'لا توجد مواد معرفة بعد.' : 'No subjects configured.' }}</p>
+                  @endforelse
+                </div>
+                @error('specialty')<p class="mc-ta-err">{{ $message }}</p>@enderror
+                @error('teaching_subject_ids')<p class="mc-ta-err">{{ $message }}</p>@enderror
+              </div>
+              <div class="mc-ta-field">
+                <label>{{ $isRtl ? 'المراحل' : 'Stages' }}</label>
+                <div class="mc-ta-checks" style="display:grid;gap:.45rem;max-height:180px;overflow:auto;padding:.5rem;border:1px solid #e5e7eb;border-radius:.75rem;">
+                  @foreach(($yearOptions ?? []) as $opt)
+                    <label style="display:flex;gap:.5rem;align-items:center;font-size:.9rem;">
+                      <input type="checkbox" name="academic_year_ids[]" value="{{ $opt['id'] }}"
+                        @checked(in_array($opt['id'], old('academic_year_ids', $application->academic_year_ids ?? []), false))>
+                      <span>{{ $opt['name'] }}</span>
+                    </label>
+                  @endforeach
+                </div>
+              </div>
+              <div class="mc-ta-field">
+                <label>{{ $isRtl ? 'أنواع المناهج' : 'Curriculum types' }} *</label>
+                <div class="mc-ta-checks" style="display:grid;gap:.45rem;padding:.5rem;border:1px solid #e5e7eb;border-radius:.75rem;">
+                  @foreach(($curriculumOptions ?? []) as $key => $meta)
+                    <label style="display:flex;gap:.5rem;align-items:center;font-size:.9rem;">
+                      <input type="checkbox" name="curriculum_types[]" value="{{ $key }}"
+                        @checked(in_array($key, old('curriculum_types', $application->curriculum_types ?? []), true))>
+                      <span>{{ $meta['label'] ?? $key }}</span>
+                    </label>
+                  @endforeach
+                </div>
+              </div>
+            </div>
+          </div>
+
           <button type="submit" class="mc-btn mc-btn--lg mc-btn--secondary mc-ta-submit">
             <i class="fas fa-paper-plane" aria-hidden="true"></i>
             {{ $isRtl ? 'إرسال للمراجعة' : 'Submit for review' }}

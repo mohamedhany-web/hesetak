@@ -276,17 +276,26 @@ class HiringFormService
             'profile_image' => $application->photo_path ?: $user->profile_image,
         ])->save();
 
+        $profilePayload = [
+            'headline' => $mapped['headline'] ?? $application->headline,
+            'bio' => $mapped['bio'] ?? $application->bio,
+            'experience' => $mapped['experience'] ?? $application->experience,
+            'photo_path' => $application->photo_path,
+            'status' => InstructorProfile::STATUS_PENDING_REVIEW,
+            'submitted_at' => now(),
+            'rejection_reason' => null,
+        ];
+
+        if (! empty($application->teaching_subject_ids)) {
+            $profilePayload['teaching_subject_ids'] = $application->teaching_subject_ids;
+        }
+        if (! empty($application->curriculum_types)) {
+            $profilePayload['curriculum_types'] = $application->curriculum_types;
+        }
+
         InstructorProfile::updateOrCreate(
             ['user_id' => $user->id],
-            [
-                'headline' => $mapped['headline'] ?? $application->headline,
-                'bio' => $mapped['bio'] ?? $application->bio,
-                'experience' => $mapped['experience'] ?? $application->experience,
-                'photo_path' => $application->photo_path,
-                'status' => InstructorProfile::STATUS_PENDING_REVIEW,
-                'submitted_at' => now(),
-                'rejection_reason' => null,
-            ]
+            $profilePayload
         );
     }
 

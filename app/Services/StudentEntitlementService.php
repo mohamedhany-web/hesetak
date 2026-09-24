@@ -15,8 +15,13 @@ use InvalidArgumentException;
 
 class StudentEntitlementService
 {
-    public static function createOrder(User $user, ServicePackage $package, string $paymentMethod = 'online', ?int $walletId = null): Order
-    {
+    public static function createOrder(
+        User $user,
+        ServicePackage $package,
+        string $paymentMethod = 'online',
+        ?int $walletId = null,
+        ?array $context = null,
+    ): Order {
         if (! $package->is_active) {
             throw new InvalidArgumentException('الباقة غير متاحة حالياً.');
         }
@@ -26,26 +31,56 @@ class StudentEntitlementService
             $paymentMethod = 'bank_transfer';
         }
 
-        $currency = strtoupper((string) ($package->currencyCode() ?: config('currency.code', 'SAR')));
+        $context = is_array($context) ? $context : [];
+        $yearId = isset($context['academic_year_id']) ? (int) $context['academic_year_id'] : null;
+        $subjectId = isset($context['academic_subject_id']) ? (int) $context['academic_subject_id'] : null;
+        $curriculumType = isset($context['curriculum_type']) ? (string) $context['curriculum_type'] : null;
+
+        $quote = app(ServiceSessionRateService::class)->quotePackage($package, $yearId ?: null, $curriculumType);
+        // لا نثق بـ quoted_* من العميل — السعر دائماً من الخادم
+        $amount = (float) $quote['total'];
+        $unit = (float) $quote['unit'];
+        $original = $package->original_price !== null
+            ? (float) $package->original_price
+            : $amount;
+
+        $currency = strtoupper((string) ($quote['currency'] ?: ($package->currencyCode() ?: config('currency.code', 'SAR'))));
         if (! in_array($currency, ['SAR', 'EGP', 'USD'], true)) {
             $currency = strtoupper((string) config('currency.code', 'SAR')) ?: 'SAR';
         }
+
+        $meta = array_filter([
+            'quoted_unit_price' => $unit,
+            'quoted_total' => $amount,
+            'curriculum_type' => $quote['curriculum_type'],
+            'academic_year_id' => $quote['academic_year_id'] ?? $yearId,
+            'academic_subject_id' => $subjectId ?: $package->academic_subject_id,
+            'quote_source' => $quote['source'],
+            'is_gift' => (bool) ($context['is_gift'] ?? false),
+            'gift_recipient_email' => $context['gift_recipient_email'] ?? null,
+            'gift_recipient_name' => $context['gift_recipient_name'] ?? null,
+            'gift_recipient_phone' => $context['gift_recipient_phone'] ?? null,
+            'gift_message' => $context['gift_message'] ?? null,
+        ], fn ($v) => $v !== null && $v !== '');
 
         return Order::create([
             'user_id' => $user->id,
             'service_package_id' => $package->id,
             'tutoring_group_id' => $package->tutoring_group_id,
+            'academic_year_id' => $meta['academic_year_id'] ?? null,
+            'custom_package_data' => $meta,
             'order_type' => Order::TYPE_SERVICE_PACKAGE,
-            'original_amount' => $package->original_price ?? $package->price,
-            'discount_amount' => max(0, (float) ($package->original_price ?? $package->price) - (float) $package->price),
-            'amount' => $package->price,
+            'original_amount' => $original,
+            'discount_amount' => max(0, $original - $amount),
+            'amount' => $amount,
             'currency' => $currency,
             'payment_method' => $paymentMethod,
             'wallet_id' => $walletId,
             'status' => Order::STATUS_PENDING,
-            'notes' => $package->isCommercialPlan()
-                ? $package->planLabel().' — '.$package->termLabel().' ('.$package->weeklySessionsTotal().' حصص/أسبوع)'
-                : 'باقة خدمات: '.$package->name.' ('.$package->units_count.' حصة)',
+            'notes' => ($meta['is_gift'] ?? false ? 'إهداء باقة: ' : '')
+                .($package->isCommercialPlan()
+                    ? $package->planLabel().' — '.$package->termLabel().' ('.$package->weeklySessionsTotal().' حصص/أسبوع)'
+                    : 'باقة خدمات: '.$package->name.' ('.$package->units_count.' حصة)'),
         ]);
     }
 
@@ -163,6 +198,11 @@ class StudentEntitlementService
         if ($order->order_type === Order::TYPE_SERVICE_PACKAGE && $order->service_package_id) {
             $existing = StudentServiceEntitlement::query()->where('order_id', $order->id)->orderBy('id')->first();
             if ($existing) {
+                $meta = is_array($order->custom_package_data) ? $order->custom_package_data : [];
+                if (! empty($meta['is_gift'])) {
+                    app(PackageGiftService::class)->fulfillAfterPayment($order);
+                }
+
                 return $existing;
             }
 
@@ -172,14 +212,32 @@ class StudentEntitlementService
             }
 
             if ($package->isPremier()) {
-                return self::grantPremierPlan((int) $order->user_id, $package, (int) $order->id);
+                $entitlement = self::grantPremierPlan((int) $order->user_id, $package, (int) $order->id);
+            } else {
+                $entitlement = self::grant(
+                    userId: (int) $order->user_id,
+                    package: $package,
+                    orderId: (int) $order->id,
+                );
             }
 
-            return self::grant(
-                userId: (int) $order->user_id,
-                package: $package,
-                orderId: (int) $order->id,
-            );
+            if ($entitlement) {
+                $meta = is_array($order->custom_package_data) ? $order->custom_package_data : [];
+                $yearOverride = $meta['academic_year_id'] ?? $order->academic_year_id;
+                $subjectOverride = $meta['academic_subject_id'] ?? null;
+                if ($yearOverride || $subjectOverride) {
+                    $entitlement->forceFill([
+                        'academic_year_id' => $yearOverride ?: $entitlement->academic_year_id,
+                        'academic_subject_id' => $subjectOverride ?: $entitlement->academic_subject_id,
+                    ])->save();
+                }
+
+                if (! empty($meta['is_gift'])) {
+                    app(PackageGiftService::class)->fulfillAfterPayment($order);
+                }
+            }
+
+            return $entitlement;
         }
 
         return null;

@@ -1070,11 +1070,9 @@ class AdminController extends Controller
     /**
      * عرض تفاصيل مستخدم
      */
-    public function showUser($id)
+    public function showUser(User $user)
     {
-        $user = User::query()
-            ->with('instructorProfile')
-            ->findOrFail($id);
+        $user->load('instructorProfile');
 
         return view('admin.users.show', compact('user'));
     }
@@ -1082,11 +1080,10 @@ class AdminController extends Controller
     /**
      * عرض صفحة تعديل مستخدم
      */
-    public function editUser(Request $request, $id)
+    public function editUser(Request $request, User $user)
     {
-        Log::info('editUser: start', ['id' => $id]);
+        Log::info('editUser: start', ['id' => $user->id, 'uuid' => $user->uuid]);
         try {
-            $user = User::findOrFail($id);
             Log::info('editUser: user loaded', ['user_id' => $user->id]);
 
             // إجبار الرندر داخل try لالتقاط أي خطأ في الـ Blade/Layout
@@ -1096,7 +1093,7 @@ class AdminController extends Controller
 
             return response($rendered);
         } catch (\Throwable $e) {
-            Log::error('editUser failed', ['id' => $id, 'error' => $e->getMessage(), 'file' => $e->getFile(), 'line' => $e->getLine(), 'trace' => $e->getTraceAsString()]);
+            Log::error('editUser failed', ['id' => $user->id, 'error' => $e->getMessage(), 'file' => $e->getFile(), 'line' => $e->getLine(), 'trace' => $e->getTraceAsString()]);
             throw $e;
         }
     }
@@ -1104,10 +1101,12 @@ class AdminController extends Controller
     /**
      * تحديث بيانات المستخدم
      */
-    public function updateUser(Request $request, $id)
+    public function updateUser(Request $request, User $user)
     {
+        $id = $user->id;
         Log::info('updateUser: start', [
             'id' => $id,
+            'uuid' => $user->uuid,
             'method' => $request->method(),
             'has_method_override' => $request->has('_method'),
             'override_value' => $request->input('_method'),
@@ -1118,7 +1117,6 @@ class AdminController extends Controller
             || str_contains($request->header('Accept', ''), 'application/json');
 
         try {
-            $user = User::findOrFail($id);
             $oldValues = [
                 'name' => $user->name,
                 'email' => $user->email,
@@ -1203,7 +1201,7 @@ class AdminController extends Controller
                     'message' => 'حدث خطأ أثناء التحديث، ولكن تم منع تعطل الصفحة.',
                 ], 500);
             }
-            return redirect()->route('admin.users.edit', $id, 303)
+            return redirect()->route('admin.users.edit', $user, 303)
                 ->with('warning', 'حدث خطأ تقني أثناء التحديث. حاول مرة أخرى.')
                 ->withInput();
         }
@@ -1212,17 +1210,17 @@ class AdminController extends Controller
     /**
      * حذف مستخدم
      */
-    public function deleteUser(Request $request, $id)
+    public function deleteUser(Request $request, User $user)
     {
         try {
-            $user = User::findOrFail($id);
-
             if ($user->id === Auth::id()) {
                 return response()->json([
                     'success' => false,
                     'message' => 'لا يمكنك حذف حسابك الخاص'
                 ], 403);
             }
+
+            $id = $user->id;
 
             // حفظ بيانات بسيطة للتسجيل فقط (تجنب toArray() الذي قد يسبب مشاكل)
             $oldValues = [

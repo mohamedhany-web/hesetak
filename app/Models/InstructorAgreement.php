@@ -21,8 +21,11 @@ class InstructorAgreement extends Model
     public const BILLING_COURSE_PERCENTAGE = 'course_percentage';
     public const BILLING_CONSULTATION = 'consultation_session';
 
+    public const STATUS_OFFERED = 'offered';
+
     protected $fillable = [
         'instructor_id',
+        'tutor_application_id',
         'advanced_course_id',
         'course_percentage',
         'billing_type',
@@ -43,6 +46,14 @@ class InstructorAgreement extends Model
         'terms',
         'notes',
         'created_by',
+        'offered_at',
+        'signed_at',
+        'signer_name',
+        'signature_path',
+        'pdf_path',
+        'candidate_ip',
+        'candidate_user_agent',
+        'offer_token',
     ];
 
     protected $casts = [
@@ -53,6 +64,8 @@ class InstructorAgreement extends Model
         'salary_per_session' => 'decimal:2',
         'total_amount' => 'decimal:2',
         'monthly_amount' => 'decimal:2',
+        'offered_at' => 'datetime',
+        'signed_at' => 'datetime',
     ];
 
     /**
@@ -61,6 +74,16 @@ class InstructorAgreement extends Model
     public function instructor(): BelongsTo
     {
         return $this->belongsTo(User::class, 'instructor_id');
+    }
+
+    public function tutorApplication(): BelongsTo
+    {
+        return $this->belongsTo(TutorApplication::class, 'tutor_application_id');
+    }
+
+    public function isSigned(): bool
+    {
+        return $this->signed_at !== null && filled($this->signature_path);
     }
 
     /**

@@ -199,12 +199,12 @@
                                 </td>
                                 <td class="px-5 py-3">
                                     <div class="flex items-center gap-1.5">
-                                        <a href="{{ route('admin.users.show', $user->id) }}"
+                                        <a href="{{ route('admin.users.show', $user) }}"
                                            class="btn-press inline-flex size-8 items-center justify-center rounded-lg bg-canvas-muted text-muted transition hover:bg-ink hover:text-white"
                                            title="عرض">
                                             <i class="fas fa-eye text-xs"></i>
                                         </a>
-                                        <a href="{{ route('admin.users.edit', $user->id) }}"
+                                        <a href="{{ route('admin.users.edit', $user) }}"
                                            class="btn-press inline-flex size-8 items-center justify-center rounded-lg bg-accent-soft text-accent transition hover:bg-accent hover:text-white"
                                            title="تعديل">
                                             <i class="fas fa-pen text-xs"></i>
@@ -212,7 +212,7 @@
                                         @if($user->id !== auth()->id())
                                             <button type="button"
                                                     onclick="deleteStudent(this)"
-                                                    data-delete-url="{{ route('admin.users.delete', $user->id) }}"
+                                                    data-delete-url="{{ route('admin.users.delete', $user) }}"
                                                     class="btn-press inline-flex size-8 items-center justify-center rounded-lg bg-danger/10 text-danger transition hover:bg-danger hover:text-white"
                                                     title="حذف">
                                                 <i class="fas fa-trash text-xs"></i>
@@ -254,7 +254,7 @@
             </div>
             <div class="divide-y divide-line">
                 @forelse($recentUsers as $recentUser)
-                    <a href="{{ route('admin.users.show', $recentUser->id) }}" class="flex items-center gap-3 px-4 py-3 transition hover:bg-canvas sm:px-5">
+                    <a href="{{ route('admin.users.show', $recentUser) }}" class="flex items-center gap-3 px-4 py-3 transition hover:bg-canvas sm:px-5">
                         <span class="inline-flex size-10 shrink-0 items-center justify-center rounded-xl bg-accent-soft text-sm font-semibold text-accent">
                             {{ mb_substr($recentUser->name, 0, 1, 'UTF-8') }}
                         </span>
@@ -281,7 +281,7 @@
             </div>
             <div class="divide-y divide-line">
                 @forelse($recentlyActiveUsers as $activeUser)
-                    <a href="{{ route('admin.users.show', $activeUser->id) }}" class="flex items-center gap-3 px-4 py-3 transition hover:bg-canvas sm:px-5">
+                    <a href="{{ route('admin.users.show', $activeUser) }}" class="flex items-center gap-3 px-4 py-3 transition hover:bg-canvas sm:px-5">
                         <span class="inline-flex size-10 shrink-0 items-center justify-center rounded-xl bg-metal/15 text-sm font-semibold text-metal">
                             {{ mb_substr($activeUser->name, 0, 1, 'UTF-8') }}
                         </span>

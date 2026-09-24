@@ -10,8 +10,9 @@
     $q = (string) ($filters['q'] ?? '');
     $categoryId = (int) ($filters['category'] ?? 0);
     $sort = (string) ($filters['sort'] ?? 'featured');
+    $track = (string) ($filters['track'] ?? '');
     $resultCount = method_exists($courses, 'total') ? (int) $courses->total() : $courses->count();
-    $hasActiveFilters = $q !== '' || $categoryId > 0 || $sort !== 'featured';
+    $hasActiveFilters = $q !== '' || $categoryId > 0 || $sort !== 'featured' || $track !== '';
     $currency = __('public.currency_egp');
     $mcCss = public_path('css/landing/mycourses.css');
     $mcVer = is_file($mcCss) ? (string) filemtime($mcCss) : (string) time();
@@ -20,6 +21,7 @@
         'q' => $q !== '' ? $q : null,
         'category' => $categoryId > 0 ? $categoryId : null,
         'sort' => $sort !== 'featured' ? $sort : null,
+        'track' => $track !== '' ? $track : null,
     ], $extra), fn ($v) => $v !== null && $v !== '');
 @endphp
 <!DOCTYPE html>
@@ -121,6 +123,12 @@
           @endforeach
         </div>
       @endif
+
+      <div class="mc-dir-chips" role="list" aria-label="{{ $isRtl ? 'مسار المنتج' : 'Product track' }}" style="margin-top:.75rem">
+        <a role="listitem" class="mc-dir-chip {{ $track === '' ? 'is-on' : '' }}" href="{{ route('public.courses', $filterQuery(['track' => null])) }}">{{ $isRtl ? 'كل المسارات' : 'All tracks' }}</a>
+        <a role="listitem" class="mc-dir-chip {{ $track === 'recorded' ? 'is-on' : '' }}" href="{{ route('public.recorded-courses') }}">{{ $isRtl ? 'كورسات مسجّلة' : 'Recorded' }}</a>
+        <a role="listitem" class="mc-dir-chip {{ $track === 'book' ? 'is-on' : '' }}" href="{{ route('public.books') }}">{{ $isRtl ? 'كتب للقراءة' : 'Books' }}</a>
+      </div>
 
       @if($activeCategory)
         <p class="mc-dir-meta__filter mc-dir-head__active">

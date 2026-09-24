@@ -22,10 +22,10 @@ class ReferralService
             return $user->referral_code;
         }
 
-        $code = 'REF'.str_pad((string) $user->id, 6, '0', STR_PAD_LEFT).strtoupper(Str::random(4));
+        $code = 'REF'.strtoupper(Str::random(12));
 
         while (User::where('referral_code', $code)->exists()) {
-            $code = 'REF'.str_pad((string) $user->id, 6, '0', STR_PAD_LEFT).strtoupper(Str::random(4));
+            $code = 'REF'.strtoupper(Str::random(12));
         }
 
         $user->update(['referral_code' => $code]);

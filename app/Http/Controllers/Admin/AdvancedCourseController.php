@@ -178,6 +178,7 @@ class AdvancedCourseController extends Controller
             'price_usd' => 'nullable|numeric|min:0',
             'price_usd_after_discount' => 'nullable|numeric|min:0',
             'delivery_type' => 'required|in:group,one_to_one',
+            'product_track' => 'nullable|in:recorded,book',
             'billing_mode' => 'nullable|in:one_time,monthly',
             'monthly_price' => 'nullable|numeric|min:0',
             'monthly_price_after_discount' => 'nullable|numeric|min:0',
@@ -237,6 +238,7 @@ class AdvancedCourseController extends Controller
                 'price_usd',
                 'price_usd_after_discount',
                 'delivery_type',
+                'product_track',
                 'billing_mode',
                 'monthly_price',
                 'requirements',
@@ -289,6 +291,8 @@ class AdvancedCourseController extends Controller
         $monthlyList = (float) ($request->input('monthly_price') ?? 0);
         $data['delivery_type'] = in_array($request->input('delivery_type'), ['group', 'one_to_one'], true)
             ? $request->input('delivery_type') : 'group';
+        $track = $request->input('product_track');
+        $data['product_track'] = in_array($track, ['recorded', 'book'], true) ? $track : null;
         $data['billing_mode'] = in_array($request->input('billing_mode'), ['one_time', 'monthly'], true)
             ? $request->input('billing_mode') : 'one_time';
         $data['monthly_price'] = $monthlyList > 0 ? $monthlyList : null;
@@ -417,6 +421,7 @@ class AdvancedCourseController extends Controller
             'price_usd' => 'nullable|numeric|min:0',
             'price_usd_after_discount' => 'nullable|numeric|min:0',
             'delivery_type' => 'required|in:group,one_to_one',
+            'product_track' => 'nullable|in:recorded,book',
             'billing_mode' => 'nullable|in:one_time,monthly',
             'monthly_price' => 'nullable|numeric|min:0',
             'monthly_price_after_discount' => 'nullable|numeric|min:0',
@@ -467,6 +472,7 @@ class AdvancedCourseController extends Controller
             'price_usd',
             'price_usd_after_discount',
             'delivery_type',
+            'product_track',
             'billing_mode',
             'monthly_price',
             'requirements',
@@ -501,6 +507,8 @@ class AdvancedCourseController extends Controller
         $monthlyList = (float) ($request->input('monthly_price') ?? 0);
         $data['delivery_type'] = in_array($request->input('delivery_type'), ['group', 'one_to_one'], true)
             ? $request->input('delivery_type') : 'group';
+        $track = $request->input('product_track');
+        $data['product_track'] = in_array($track, ['recorded', 'book'], true) ? $track : null;
         $data['billing_mode'] = in_array($request->input('billing_mode'), ['one_time', 'monthly'], true)
             ? $request->input('billing_mode') : 'one_time';
         $data['monthly_price'] = $monthlyList > 0 ? $monthlyList : null;

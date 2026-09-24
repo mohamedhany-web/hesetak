@@ -34,7 +34,7 @@
             <p class="mt-1 text-sm text-muted">عضوية #{{ str_pad($user->id, 5, '0', STR_PAD_LEFT) }} · تفاصيل الحساب والحالة</p>
         </div>
         <div class="admin-hero-actions flex flex-wrap gap-2">
-            <a href="{{ route('admin.users.edit', $user->id) }}" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl bg-accent px-4 text-sm font-medium text-white">
+            <a href="{{ route('admin.users.edit', $user) }}" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl bg-accent px-4 text-sm font-medium text-white">
                 <i class="fas fa-pen text-xs"></i>
                 تعديل
             </a>
@@ -146,7 +146,7 @@
                 <p class="mt-0.5 text-xs text-muted">{{ $isTeacherAccount ? 'تعديل الحساب والجدول والملف العام' : 'تعديل أو العودة للقائمة' }}</p>
             </div>
             <div class="space-y-2 p-4 sm:p-5">
-                <a href="{{ route('admin.users.edit', $user->id) }}" class="btn-press inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-accent px-4 text-sm font-medium text-white">
+                <a href="{{ route('admin.users.edit', $user) }}" class="btn-press inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-accent px-4 text-sm font-medium text-white">
                     <i class="fas fa-pen text-xs"></i>
                     تعديل بيانات المستخدم
                 </a>
@@ -182,7 +182,7 @@
                     @endif
                     @if($user->id !== auth()->id())
                         <button type="button" onclick="deleteUser(this)"
-                                data-delete-url="{{ route('admin.users.delete', $user->id) }}"
+                                data-delete-url="{{ route('admin.users.delete', $user) }}"
                                 class="btn-press inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-rose-200 bg-rose-50 px-4 text-sm font-medium text-rose-700">
                             <i class="fas fa-trash text-xs"></i>
                             حذف الحساب

@@ -70,6 +70,8 @@ class TutorApplicationActivationService
                     'experience' => $application->experience,
                     'skills' => self::skillsFromExperience($application),
                     'photo_path' => $application->photo_path,
+                    'teaching_subject_ids' => $application->teaching_subject_ids ?? [],
+                    'curriculum_types' => $application->curriculum_types ?? [],
                     'status' => InstructorProfile::STATUS_APPROVED,
                     'submitted_at' => $application->created_at ?? now(),
                     'reviewed_at' => now(),

@@ -56,7 +56,6 @@
             <div>
               <h3>{{ $isRtl ? 'معلومات الحاصل' : 'Holder details' }}</h3>
               <p><strong>{{ $isRtl ? 'الاسم' : 'Name' }}:</strong> {{ $certificate->user->name ?? ($isRtl ? 'غير معروف' : 'Unknown') }}</p>
-              <p><strong>{{ $isRtl ? 'البريد' : 'Email' }}:</strong> <span dir="ltr">{{ $certificate->user->email ?? '-' }}</span></p>
             </div>
             <div>
               <h3>{{ $isRtl ? 'معلومات الشهادة' : 'Certificate details' }}</h3>

@@ -231,15 +231,23 @@ class ServicePackageCheckoutController extends Controller
             return response()->json(['message' => 'يجب تسجيل الدخول.'], 401);
         }
 
-        $amount = (float) $servicePackage->price;
-        if ($amount < 0.01) {
-            return response()->json(['message' => 'هذه الباقة لا تتطلب دفعاً عبر البوابة.'], 422);
-        }
-
         $user = Auth::user();
         $email = trim((string) ($user->email ?? ''));
         if ($email === '' || ! filter_var($email, FILTER_VALIDATE_EMAIL)) {
             return response()->json(['message' => 'يرجى إضافة بريد إلكتروني صالح في ملفك الشخصي قبل الدفع.'], 422);
+        }
+
+        $yearId = $request->filled('academic_year_id') ? $request->integer('academic_year_id') : null;
+        $subjectId = $request->filled('academic_subject_id') ? $request->integer('academic_subject_id') : null;
+        $curriculumType = $request->input('curriculum_type');
+        $quote = app(\App\Services\ServiceSessionRateService::class)->quotePackage(
+            $servicePackage,
+            $yearId,
+            is_string($curriculumType) ? $curriculumType : null,
+        );
+
+        if ((float) $quote['total'] < 0.01) {
+            return response()->json(['message' => 'هذه الباقة لا تتطلب دفعاً عبر البوابة.'], 422);
         }
 
         $existingOrder = Order::query()
@@ -247,22 +255,48 @@ class ServicePackageCheckoutController extends Controller
             ->where('service_package_id', $servicePackage->id)
             ->where('order_type', Order::TYPE_SERVICE_PACKAGE)
             ->where('status', Order::STATUS_PENDING)
-            ->first();
+            ->latest('id')
+            ->get()
+            ->first(function (Order $order) {
+                $meta = is_array($order->custom_package_data) ? $order->custom_package_data : [];
+
+                return empty($meta['is_gift']);
+            });
 
         if ($existingOrder) {
             if ($existingOrder->payment_method !== 'online' || $existingOrder->payment_proof !== null) {
                 return response()->json(['message' => 'لديك طلب قيد المراجعة لهذه الباقة.'], 409);
             }
+            $meta = is_array($existingOrder->custom_package_data) ? $existingOrder->custom_package_data : [];
+            $meta = array_merge($meta, [
+                'quoted_unit_price' => $quote['unit'],
+                'quoted_total' => $quote['total'],
+                'curriculum_type' => $quote['curriculum_type'],
+                'academic_year_id' => $quote['academic_year_id'] ?? $yearId,
+                'academic_subject_id' => $subjectId ?: ($meta['academic_subject_id'] ?? $servicePackage->academic_subject_id),
+                'quote_source' => $quote['source'],
+                'is_gift' => false,
+            ]);
+            $original = $servicePackage->original_price !== null
+                ? (float) $servicePackage->original_price
+                : (float) $quote['total'];
             $existingOrder->update([
-                'original_amount' => $servicePackage->original_price ?? $servicePackage->price,
-                'discount_amount' => max(0, (float) ($servicePackage->original_price ?? $servicePackage->price) - (float) $servicePackage->price),
-                'amount' => $servicePackage->price,
+                'original_amount' => $original,
+                'discount_amount' => max(0, $original - (float) $quote['total']),
+                'amount' => $quote['total'],
+                'currency' => $quote['currency'],
+                'academic_year_id' => $quote['academic_year_id'] ?? $yearId,
+                'custom_package_data' => $meta,
                 'wallet_id' => null,
                 'payment_method' => 'online',
             ]);
             $order = $existingOrder->fresh();
         } else {
-            $order = StudentEntitlementService::createOrder($user, $servicePackage, 'online', null);
+            $order = StudentEntitlementService::createOrder($user, $servicePackage, 'online', null, [
+                'academic_year_id' => $yearId,
+                'academic_subject_id' => $subjectId,
+                'curriculum_type' => is_string($curriculumType) ? $curriculumType : null,
+            ]);
         }
 
         $request->session()->put('fawaterak_order_id', $order->id);

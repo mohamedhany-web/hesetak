@@ -6,7 +6,7 @@ set -euo pipefail
 API_KEY="${LIVEKIT_API_KEY:-}"
 API_SECRET="${LIVEKIT_API_SECRET:-}"
 HTTP_URL="${LIVEKIT_HTTP_URL:-http://127.0.0.1:7880}"
-WS_HOST="${LIVEKIT_PUBLIC_HOST:-live.glottical.com}"
+WS_HOST="${LIVEKIT_PUBLIC_HOST:-live.hissatak.online}"
 ROOM="mx-audio-test-$(date +%s)"
 
 if [[ -z "$API_KEY" || -z "$API_SECRET" ]]; then

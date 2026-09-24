@@ -82,7 +82,7 @@
                 @if($salesLead->linkedUser)
                     <p>
                         <span class="text-muted">المستخدم:</span>
-                        <a href="{{ route('admin.users.show', $salesLead->linkedUser->id) }}" class="font-semibold text-accent hover:underline">{{ $salesLead->linkedUser->name }}</a>
+                        <a href="{{ route('admin.users.show', $salesLead->linkedUser) }}" class="font-semibold text-accent hover:underline">{{ $salesLead->linkedUser->name }}</a>
                     </p>
                 @endif
                 @if($salesLead->convertedOrder)

@@ -13,6 +13,8 @@ use App\Models\SiteService;
 use App\Models\SiteTestimonial;
 use App\Models\User;
 use App\Services\CourseSubscriptionService;
+use App\Services\PackageCatalogFilterService;
+use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Schema;
@@ -24,7 +26,7 @@ use Illuminate\View\View;
  */
 class LandingController extends Controller
 {
-    public function index(): View
+    public function index(Request $request): View
     {
         $locale = app()->getLocale();
         $buildHomePayload = function () {
@@ -49,7 +51,6 @@ class LandingController extends Controller
 
             $homeInstructors = $this->buildHomeInstructors();
             $trialInstructors = $this->buildTrialInstructors();
-            $homePackages = $this->buildHomePackages();
             $homeCategories = $this->buildHomeCategories();
             $homeTrustStats = $this->buildHomeTrustStats($homeInstructors->count());
 
@@ -78,7 +79,6 @@ class LandingController extends Controller
                 'oneToOneCourses',
                 'homeInstructors',
                 'trialInstructors',
-                'homePackages',
                 'homeCategories',
                 'homeTrustStats',
                 'homeTestimonials',
@@ -89,7 +89,27 @@ class LandingController extends Controller
 
         $payload = config('app.debug')
             ? $buildHomePayload()
-            : Cache::remember('landing.home.v17.'.$locale, 180, $buildHomePayload);
+            : Cache::remember('landing.home.v18.'.$locale, 180, $buildHomePayload);
+
+        $packageCatalog = Schema::hasTable('service_packages')
+            ? app(PackageCatalogFilterService::class)->catalog(
+                yearId: $request->filled('year') ? $request->integer('year') : null,
+                subjectId: $request->filled('subject') ? $request->integer('subject') : null,
+                curriculumType: $request->query('curriculum_type'),
+                limit: 12,
+            )
+            : [
+                'years' => collect(),
+                'subjects' => collect(),
+                'tracks' => [],
+                'selected_year_id' => null,
+                'selected_subject_id' => null,
+                'selected_curriculum_type' => 'saudi',
+                'packages' => collect(),
+            ];
+
+        $payload['packageCatalog'] = $packageCatalog;
+        $payload['homePackages'] = $packageCatalog['packages'];
 
         return view('welcome', $payload);
     }
@@ -141,6 +161,7 @@ class LandingController extends Controller
     }
 
     /**
+     * @deprecated Prefer PackageCatalogFilterService via index().
      * @return Collection<int, ServicePackage>
      */
     private function buildHomePackages(): Collection
@@ -149,7 +170,6 @@ class LandingController extends Controller
             return collect();
         }
 
-        // نفس كتالوج الإدارة النشط المعروض للطالب وصفحة التسعير
         return ServicePackage::storefrontCatalog(12);
     }
 

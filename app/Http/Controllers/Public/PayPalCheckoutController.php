@@ -107,34 +107,67 @@ class PayPalCheckoutController extends Controller
 
         abort_unless($servicePackage->is_active && ! $servicePackage->tutoring_group_id, 404);
 
-        $amount = (float) $servicePackage->price;
-        if ($amount < 0.01) {
+        $user = Auth::user();
+        $yearId = $request->filled('academic_year_id') ? $request->integer('academic_year_id') : null;
+        $subjectId = $request->filled('academic_subject_id') ? $request->integer('academic_subject_id') : null;
+        $curriculumType = $request->input('curriculum_type');
+        $quote = app(\App\Services\ServiceSessionRateService::class)->quotePackage(
+            $servicePackage,
+            $yearId,
+            is_string($curriculumType) ? $curriculumType : null,
+        );
+
+        if ((float) $quote['total'] < 0.01) {
             return back()->with('error', 'هذه الباقة لا تتطلب دفعاً عبر البوابة.');
         }
 
-        $user = Auth::user();
         $existing = Order::query()
             ->where('user_id', $user->id)
             ->where('service_package_id', $servicePackage->id)
             ->where('order_type', Order::TYPE_SERVICE_PACKAGE)
             ->where('status', Order::STATUS_PENDING)
-            ->first();
+            ->latest('id')
+            ->get()
+            ->first(function (Order $order) {
+                $meta = is_array($order->custom_package_data) ? $order->custom_package_data : [];
+
+                return empty($meta['is_gift']);
+            });
 
         if ($existing) {
             if ($existing->payment_method !== 'online' || $existing->payment_proof !== null) {
                 return back()->with('error', 'لديك طلب قيد المراجعة لهذه الباقة.');
             }
+            $meta = is_array($existing->custom_package_data) ? $existing->custom_package_data : [];
+            $meta = array_merge($meta, [
+                'quoted_unit_price' => $quote['unit'],
+                'quoted_total' => $quote['total'],
+                'curriculum_type' => $quote['curriculum_type'],
+                'academic_year_id' => $quote['academic_year_id'] ?? $yearId,
+                'academic_subject_id' => $subjectId ?: ($meta['academic_subject_id'] ?? $servicePackage->academic_subject_id),
+                'quote_source' => $quote['source'],
+                'is_gift' => false,
+            ]);
+            $original = $servicePackage->original_price !== null
+                ? (float) $servicePackage->original_price
+                : (float) $quote['total'];
             $existing->update([
-                'original_amount' => $servicePackage->original_price ?? $servicePackage->price,
-                'discount_amount' => max(0, (float) ($servicePackage->original_price ?? $servicePackage->price) - (float) $servicePackage->price),
-                'amount' => $servicePackage->price,
-                'currency' => $this->normalizeChargeCurrency($servicePackage->currency ?? null),
+                'original_amount' => $original,
+                'discount_amount' => max(0, $original - (float) $quote['total']),
+                'amount' => $quote['total'],
+                'currency' => $this->normalizeChargeCurrency($quote['currency'] ?? $servicePackage->currency ?? null),
+                'academic_year_id' => $quote['academic_year_id'] ?? $yearId,
+                'custom_package_data' => $meta,
                 'wallet_id' => null,
                 'payment_method' => 'online',
             ]);
             $order = $existing->fresh();
         } else {
-            $order = StudentEntitlementService::createOrder($user, $servicePackage, 'online', null);
+            $order = StudentEntitlementService::createOrder($user, $servicePackage, 'online', null, [
+                'academic_year_id' => $yearId,
+                'academic_subject_id' => $subjectId,
+                'curriculum_type' => is_string($curriculumType) ? $curriculumType : null,
+            ]);
         }
 
         return $this->sendToPaypal($request, $order, (string) ($servicePackage->name ?? 'باقة'));

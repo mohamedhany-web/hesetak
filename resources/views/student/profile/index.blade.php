@@ -23,8 +23,9 @@
         ? $user->last_login_at->copy()->locale($locale)->diffForHumans()
         : null;
 
-    $memberId = '#'.str_pad((string) $user->id, 5, '0', STR_PAD_LEFT);
-    $classUserId = (int) $user->id;
+    $memberId = (string) ($user->uuid ?: '');
+    $progressShareToken = $user->ensureProgressShareToken();
+    $progressShareUrl = $user->progressShareUrl();
 @endphp
 
 @include('partials.student-timeline-top', [
@@ -62,13 +63,20 @@
 <section class="st-class-id" aria-label="{{ __('student_timeline.class_user_id') }}">
     <div class="st-class-id__copy">
         <p class="st-class-id__kicker">{{ __('student_timeline.class_user_id') }}</p>
-        <p class="st-class-id__value" dir="ltr" id="stClassUserId">{{ $classUserId }}</p>
+        <p class="st-class-id__value" dir="ltr" id="stClassUserId" style="font-size:0.85rem;word-break:break-all">{{ $progressShareToken }}</p>
         <p class="st-class-id__hint">{{ __('student_timeline.class_user_id_hint') }}</p>
+        <p class="st-class-id__hint" dir="ltr" style="margin-top:0.35rem;font-size:0.75rem;opacity:0.85;word-break:break-all">{{ $progressShareUrl }}</p>
     </div>
-    <button type="button" class="st-pill st-pill--solid" id="stCopyClassUserId" data-copy="{{ $classUserId }}">
-        <i class="fas fa-copy" aria-hidden="true"></i>
-        {{ __('student_timeline.copy_user_id') }}
-    </button>
+    <div style="display:flex;flex-wrap:wrap;gap:0.5rem">
+        <button type="button" class="st-pill st-pill--solid" id="stCopyClassUserId" data-copy="{{ $progressShareToken }}">
+            <i class="fas fa-copy" aria-hidden="true"></i>
+            {{ __('student_timeline.copy_user_id') }}
+        </button>
+        <button type="button" class="st-pill st-pill--outline" id="stCopyParentShareLink" data-copy="{{ $progressShareUrl }}">
+            <i class="fas fa-link" aria-hidden="true"></i>
+            {{ __('student_timeline.copy_share_link') }}
+        </button>
+    </div>
 </section>
 
 <section class="st-msg-intro">
@@ -81,11 +89,11 @@
 <section class="st-profile-meta" aria-label="{{ __('student_timeline.profile_summary') }}">
     <div class="st-profile-meta__item st-profile-meta__item--accent">
         <span>{{ __('student_timeline.class_user_id') }}</span>
-        <strong dir="ltr">{{ $classUserId }}</strong>
+        <strong dir="ltr" style="font-size:0.75rem;word-break:break-all">{{ \Illuminate\Support\Str::limit($progressShareToken, 16, '…') }}</strong>
     </div>
     <div class="st-profile-meta__item">
         <span>{{ __('student_timeline.member_id') }}</span>
-        <strong dir="ltr">{{ $memberId }}</strong>
+        <strong dir="ltr" style="font-size:0.75rem;word-break:break-all">{{ \Illuminate\Support\Str::limit($memberId, 13, '…') }}</strong>
     </div>
     <div class="st-profile-meta__item">
         <span>{{ __('student_timeline.account_type') }}</span>
@@ -251,8 +259,7 @@
         });
     }
 
-    var copyBtn = document.getElementById('stCopyClassUserId');
-    if (copyBtn) {
+    document.querySelectorAll('[data-copy]').forEach(function (copyBtn) {
         var original = copyBtn.innerHTML;
         copyBtn.addEventListener('click', function () {
             var value = copyBtn.getAttribute('data-copy') || '';
@@ -268,7 +275,7 @@
                 window.prompt(@json(__('student_timeline.copy_user_id')), value);
             }
         });
-    }
+    });
 })();
 </script>
 @endpush

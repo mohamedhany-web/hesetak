@@ -15,6 +15,10 @@ class CoursesController extends Controller
     {
         $q = trim((string) $request->query('q', ''));
         $categoryId = (int) $request->query('category', 0);
+        $track = (string) $request->query('track', '');
+        if (! in_array($track, ['recorded', 'book'], true)) {
+            $track = '';
+        }
         $sort = (string) $request->query('sort', 'featured');
         if (! in_array($sort, ['featured', 'newest', 'price_asc', 'price_desc'], true)) {
             $sort = 'featured';
@@ -56,6 +60,10 @@ class CoursesController extends Controller
             $query->where('course_category_id', $categoryId);
         }
 
+        if ($track !== '' && Schema::hasColumn('advanced_courses', 'product_track')) {
+            $query->where('product_track', $track);
+        }
+
         match ($sort) {
             'newest' => $query->orderByDesc('id'),
             'price_asc' => $query->orderBy('price')->orderByDesc('id'),
@@ -75,6 +83,7 @@ class CoursesController extends Controller
                 'q' => $q,
                 'category' => $categoryId > 0 ? $categoryId : null,
                 'sort' => $sort,
+                'track' => $track !== '' ? $track : null,
             ],
             'activeCategory' => $activeCategory,
             'mcActive' => 'courses',

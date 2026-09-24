@@ -1,71 +1,60 @@
-# تشغيل LiveKit لـ حصتك على VPS 187.124.36.228
+# تشغيل LiveKit لـ حصتك على VPS 187.127.87.170
 
-## الهدف
-- `live.glottical.com` هو نطاق LiveKit لمنصة حصتك.
-- كل غرف البث وClassroom تعمل عبر LiveKit فقط.
+## النطاق
+- `live.hissatak.online` — نطاق LiveKit لمنصة حصتك.
 
-## 1) DNS (Hostinger — dns.hostinger.com)
-في لوحة DNS لنطاق `glottical.com` أضف:
+## 1) DNS عند Hostinger (`hissatak.online`)
 
 | Type | Name | Value | TTL |
 |------|------|-------|-----|
-| A | live | 187.124.36.228 | 300 |
+| A | live | 187.127.87.170 | 300 |
 
-تحقق:
 ```bash
-nslookup live.glottical.com
+dig +short live.hissatak.online A
+# يجب أن يظهر: 187.127.87.170
 ```
-يجب أن يظهر `187.124.36.228`.
 
-## 2) VPS (SSH إلى 187.124.36.228)
-ارفع/انسخ ثم نفّذ:
+## 2) VPS (SSH إلى 187.127.87.170)
+
 ```bash
-sudo bash scripts/setup-live-hesetak-livekit.sh
+export LIVEKIT_API_KEY='...'
+export LIVEKIT_API_SECRET='...'
+sudo -E bash scripts/setup-live-hesetak-livekit.sh
 ```
-السكربت:
-- يضيف nginx لـ `live.glottical.com` → `127.0.0.1:7880`
+
+- يضيف nginx لـ `live.hissatak.online` → `127.0.0.1:7880`
 - يصدر شهادة Let's Encrypt
-- يضبط مفاتيح LiveKit في `livekit.yaml`
+- ينسخ الشهادات إلى `/opt/livekit/certs/` لـ TURN
 
-## 3) منصة حصتك
-في `.env` (محلياً وعلى الإنتاج):
-```
-LIVEKIT_URL=wss://live.glottical.com
-LIVEKIT_PUBLIC_HOST=live.glottical.com
-LIVEKIT_HTTP_URL=http://187.124.36.228:7880
+## 3) Laravel على Hostinger
+
+```env
+LIVEKIT_URL=wss://live.hissatak.online
+LIVEKIT_PUBLIC_HOST=live.hissatak.online
+LIVEKIT_HTTP_URL=http://187.127.87.170:7880
 LIVEKIT_API_KEY=your_livekit_api_key
 LIVEKIT_API_SECRET=your_livekit_api_secret
+LIVEKIT_TOKEN_TTL=21600
 ```
 
-ثم:
 ```bash
 php artisan config:clear
 php artisan livekit:provision-hesetak --set-default
 ```
 
 ## 4) تحقق
-- `curl -I https://live.glottical.com/` → 200
-- `curl http://187.124.36.228:7880/` → `OK`
-- غرفة بث معلم/طالب وClassroom تحمّل عميل LiveKit من jsDelivr
 
-## 5) جدار ناري Hostinger (مهم جداً للصوت)
-في لوحة VPS → Firewall افتح:
+- `curl -I https://live.hissatak.online/` → 200
+- `curl http://187.127.87.170:7880/` → `OK`
+- Container `mx-livekit` = healthy
+- حصة تجريبية: معلم ينشر + طالب يشاهد
 
-| البروتوكول | المنفذ | الغرض |
-|------------|--------|--------|
-| TCP | 443, 7880, 7881 | WebSocket + ICE-TCP |
-| UDP | 50000–60000 | وسائط WebRTC (صوت/فيديو) |
-| UDP | 34789 | TURN LiveKit |
-| TCP | 5351 | TURN TLS LiveKit |
-| UDP | 30000–40000 | TURN relay (احتياطي عند ضعف UDP المباشر) |
+## TURN
 
-بدون UDP 50000–60000 يبدأ الصوت جيداً ثم يتباطأ ويقطع بعد 10–15 دقيقة.
-
-## 6) TURN
-LiveKit يوزّع بيانات TURN تلقائياً على العملاء عند `turn.enabled: true` في `livekit.yaml`.
-شهادات `live.glottical.com` تُنسخ إلى `/opt/livekit/certs/` وتُربط في docker-compose.
+LiveKit يوزّع بيانات TURN تلقائياً عند `turn.enabled: true`.
+شهادات `live.hissatak.online` في `/opt/livekit/certs/`.
 
 ## ملاحظات
-- LiveKit يعمل حالياً على المنفذ `7880` على الـ VPS.
-- بدون سجل DNS + شهادة SSL لن يعمل `wss://live.glottical.com` من المتصفح على HTTPS.
-- من لوحة الإدارة → سيرفرات البث: أضف سيرفر LiveKit واضغط «استخدام كنطاق افتراضي».
+
+- بدون سجل DNS + شهادة SSL لن يعمل `wss://live.hissatak.online` من المتصفح على HTTPS.
+- افتح نفس المنافذ في Firewall لوحة الـ VPS (UDP media + TURN).

@@ -138,6 +138,20 @@ class AcademyInstructorController extends Controller
             return back()->withInput()->withErrors(['instructor_id' => 'المستخدم المحدد ليس مدرّباً.']);
         }
 
+        $profile = $instructor->instructorProfile;
+        if ($profile && ! empty($data['academic_year_id'])) {
+            if (! \App\Services\TeacherSpecialtyMatcher::matches(
+                $profile,
+                null,
+                (int) $data['academic_year_id'],
+                null
+            )) {
+                return back()->withInput()->withErrors([
+                    'academic_year_id' => 'مرحلة التوصيف لا تطابق تخصص المعلم المعتمد.',
+                ]);
+            }
+        }
+
         StudentInstructorAssignment::updateOrCreate(
             [
                 'student_id' => $data['student_id'],

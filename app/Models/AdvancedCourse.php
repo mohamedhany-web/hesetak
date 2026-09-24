@@ -101,6 +101,7 @@ class AdvancedCourse extends Model
         'is_featured',
         'is_free',
         'delivery_type',
+        'product_track',
         'billing_mode',
         'monthly_price',
         'monthly_price_after_discount',
@@ -401,6 +402,25 @@ class AdvancedCourse extends Model
     public function isOneToOne(): bool
     {
         return ($this->delivery_type ?? 'group') === \App\Services\CourseSubscriptionService::DELIVERY_ONE_TO_ONE;
+    }
+
+    public function isRecordedTrack(): bool
+    {
+        return ($this->product_track ?? null) === \App\Services\AdaptiveLearningService::TRACK_RECORDED;
+    }
+
+    public function isBookTrack(): bool
+    {
+        return ($this->product_track ?? null) === \App\Services\AdaptiveLearningService::TRACK_BOOK;
+    }
+
+    public function productTrackLabel(): string
+    {
+        return match ($this->product_track) {
+            \App\Services\AdaptiveLearningService::TRACK_RECORDED => app()->getLocale() === 'ar' ? 'كورس مسجّل' : 'Recorded',
+            \App\Services\AdaptiveLearningService::TRACK_BOOK => app()->getLocale() === 'ar' ? 'كتاب للقراءة' : 'Book',
+            default => app()->getLocale() === 'ar' ? 'مباشر' : 'Live',
+        };
     }
 
     public function monthlyListPrice(): float

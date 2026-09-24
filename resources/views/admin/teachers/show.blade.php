@@ -43,7 +43,7 @@
                 {{ $teacher->is_active ? 'مفعّل' : 'معطّل' }}
             </span>
             @if(Route::has('admin.users.edit'))
-                <a href="{{ route('admin.users.edit', $teacher->id) }}" class="btn-press inline-flex h-9 items-center rounded-xl border border-line px-4 text-sm">ملف المستخدم</a>
+                <a href="{{ route('admin.users.edit', $teacher) }}" class="btn-press inline-flex h-9 items-center rounded-xl border border-line px-4 text-sm">ملف المستخدم</a>
             @endif
         </div>
     </section>

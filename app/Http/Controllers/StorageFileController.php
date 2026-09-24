@@ -24,6 +24,8 @@ class StorageFileController extends Controller
             abort(404);
         }
 
+        $this->assertPubliclyServable($request, $path);
+
         $mimeFromExtension = static function (string $filePath): string {
             $extension = strtolower(pathinfo($filePath, PATHINFO_EXTENSION));
 
@@ -62,6 +64,72 @@ class StorageFileController extends Controller
         ]);
 
         abort(404, 'File not found');
+    }
+
+    /**
+     * مسارات تحتوي مستندات هوية/عقود/إثباتات — ليست للعرض العام عبر /media.
+     * صور/فيديو تقديم المعلمين المعتمدين تُعرض علناً في صفحات المدرّسين.
+     *
+     * @return list<string>
+     */
+    private function sensitivePrefixes(): array
+    {
+        return [
+            'tutor-applications/ids/',
+            'tutor-applications/certificates/',
+            'payment-proofs/',
+            'hr_cvs/',
+            'receipts/',
+            'expenses/',
+            'crm/',
+            'attendance/teams/',
+        ];
+    }
+
+    private function assertPubliclyServable(Request $request, string $path): void
+    {
+        $normalized = ltrim($path, '/');
+        if (str_starts_with($normalized, 'public/')) {
+            $normalized = substr($normalized, strlen('public/'));
+        }
+
+        // أي مسار تحت tutor-applications غير photos/videos يبقى حسّاساً
+        if (str_starts_with($normalized, 'tutor-applications/')
+            && ! str_starts_with($normalized, 'tutor-applications/photos/')
+            && ! str_starts_with($normalized, 'tutor-applications/videos/')) {
+            $this->abortUnlessStaff($request);
+
+            return;
+        }
+
+        $isSensitive = false;
+        foreach ($this->sensitivePrefixes() as $prefix) {
+            if (str_starts_with($normalized, $prefix)) {
+                $isSensitive = true;
+                break;
+            }
+        }
+
+        if (! $isSensitive) {
+            return;
+        }
+
+        $this->abortUnlessStaff($request);
+    }
+
+    private function abortUnlessStaff(Request $request): void
+    {
+        $user = $request->user();
+        if (! $user) {
+            abort(404);
+        }
+
+        $role = (string) ($user->role ?? '');
+        if (in_array($role, ['super_admin', 'admin', 'employee'], true) || $user->is_employee) {
+            return;
+        }
+
+        abort(404);
     }
 
     /**

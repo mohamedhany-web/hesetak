@@ -11,8 +11,8 @@ use Illuminate\Support\Facades\Http;
 class ProvisionHesetakLiveKitCommand extends Command
 {
     protected $signature = 'livekit:provision-hesetak
-                            {--domain=live.glottical.com : Public LiveKit host for حصتك}
-                            {--ip=187.124.36.228 : VPS IP}
+                            {--domain=live.hissatak.online : Public LiveKit host for حصتك}
+                            {--ip=187.127.87.170 : VPS IP}
                             {--set-default : Mark LiveKit server as default provider}';
 
     protected $description = 'Register حصتك LiveKit live server and set platform defaults';
@@ -42,7 +42,7 @@ class ProvisionHesetakLiveKitCommand extends Command
             'ip_address' => $ip,
             'status' => 'active',
             'max_participants' => $server->max_participants ?: 200,
-            'notes' => 'حصتك LiveKit on shared VPS',
+            'notes' => 'حصتك LiveKit dedicated VPS',
         ]);
         $server->save();
 
@@ -67,7 +67,7 @@ class ProvisionHesetakLiveKitCommand extends Command
         }
 
         $this->newLine();
-        $this->warn('DNS required at Hostinger for glottical.com:');
+        $this->warn('DNS required at Hostinger for hissatak.online:');
         $this->line("  A  live  ->  {$ip}   (= {$domain})");
         $this->line('Then on VPS run: sudo bash scripts/setup-live-hesetak-livekit.sh');
 

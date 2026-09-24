@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Public;
 
 use App\Http\Controllers\Controller;
 use App\Models\FreeTrialBooking;
+use App\Models\InstructorProfile;
 use App\Models\User;
 use App\Services\FreeTrialBookingService;
 use App\Services\OneToOneAvailabilityService;
@@ -16,8 +17,8 @@ class FreeTrialBookingController extends Controller
 {
     public function slots(Request $request): JsonResponse
     {
-        $instructorId = (int) $request->input('instructor_id', 0);
-        if ($instructorId < 1) {
+        $instructor = $this->resolveBookableInstructor($request);
+        if (! $instructor) {
             return response()->json([
                 'message' => 'اختر معلماً لعرض مواعيده الفاضية.',
                 'duration_minutes' => \App\Models\OneToOneSession::defaultDurationMinutes(),
@@ -28,6 +29,7 @@ class FreeTrialBookingController extends Controller
             ], 422);
         }
 
+        $instructorId = (int) $instructor->id;
         $days = min(21, max(7, (int) $request->input('days', 14)));
         $viewerTz = AppTimezone::normalize($request->input('timezone'))
             ?? AppTimezone::timezoneForUsState($request->input('us_state'))
@@ -56,6 +58,7 @@ class FreeTrialBookingController extends Controller
             'viewer_timezone' => $viewerTz,
             'academy_timezone' => AppTimezone::academy(),
             'instructor_id' => $instructorId,
+            'instructor_uuid' => (string) $instructor->uuid,
             'dates' => array_keys($byDate),
             'slots_by_date' => $byDate,
             'total' => $slots->count(),
@@ -79,9 +82,22 @@ class FreeTrialBookingController extends Controller
             'starts_at' => ['nullable', 'string', 'max:64'],
             'timezone' => AppTimezone::inputRules(false),
             'us_state' => ['nullable', 'string', 'max:64'],
-            'instructor_id' => ['nullable', 'integer', 'exists:users,id'],
+            'instructor_uuid' => ['nullable', 'uuid'],
+            'instructor_id' => ['nullable', 'integer', 'min:1'],
             'as_request' => ['nullable', 'boolean'],
         ]);
+
+        $instructor = $this->resolveBookableInstructor($request);
+        if ($instructor) {
+            $data['instructor_id'] = (int) $instructor->id;
+        } elseif ($request->filled('instructor_id') || $request->filled('instructor_uuid')) {
+            return response()->json([
+                'message' => 'المعلم غير متاح للحجز حالياً.',
+            ], 422);
+        } else {
+            unset($data['instructor_id']);
+        }
+        unset($data['instructor_uuid']);
 
         $user = $request->user();
         $goal = (string) $data['goal'];
@@ -100,13 +116,12 @@ class FreeTrialBookingController extends Controller
                         'message' => 'الحصة المجانية متاحة فقط لمن لديهم باقة نشطة على المنصة.',
                     ], 422);
                 }
-                if (empty($data['instructor_id'])) {
+                if (! $instructor) {
                     return response()->json([
                         'message' => 'اختر معلماً لحجز الحصة المجانية.',
                     ], 422);
                 }
 
-                $instructor = User::query()->findOrFail((int) $data['instructor_id']);
                 $duration = \App\Models\OneToOneSession::defaultDurationMinutes();
                 $viewerTz = AppTimezone::normalize($data['timezone'] ?? null) ?? AppTimezone::forUser($user);
                 $starts = AppTimezone::parseAppointmentInput((string) $data['starts_at'], $viewerTz);
@@ -184,5 +199,29 @@ class FreeTrialBookingController extends Controller
                 'is_request' => $isPendingRequest,
             ],
         ], 201);
+    }
+
+    /**
+     * معلّم معتمد فقط — لا نؤكد وجود أي user id عشوائي.
+     */
+    private function resolveBookableInstructor(Request $request): ?User
+    {
+        $uuid = trim((string) $request->input('instructor_uuid', ''));
+        $id = (int) $request->input('instructor_id', 0);
+
+        $query = User::query()
+            ->where('is_active', true)
+            ->whereIn('role', ['instructor', 'teacher'])
+            ->whereHas('instructorProfile', fn ($q) => $q->where('status', InstructorProfile::STATUS_APPROVED));
+
+        if ($uuid !== '') {
+            return (clone $query)->where('uuid', $uuid)->first();
+        }
+
+        if ($id > 0) {
+            return (clone $query)->where('id', $id)->first();
+        }
+
+        return null;
     }
 }

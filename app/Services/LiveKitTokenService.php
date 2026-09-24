@@ -31,7 +31,7 @@ class LiveKitTokenService
             return $url;
         }
 
-        $host = trim((string) config('livekit.livekit.host', 'live.glottical.com'));
+        $host = trim((string) config('livekit.livekit.host', 'live.hissatak.online'));
 
         return 'wss://'.$host;
     }
@@ -45,7 +45,7 @@ class LiveKitTokenService
             }
         }
 
-        return trim((string) config('livekit.livekit.host', 'live.glottical.com'));
+        return trim((string) config('livekit.livekit.host', 'live.hissatak.online'));
     }
 
     /**
