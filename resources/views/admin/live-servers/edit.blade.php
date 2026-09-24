@@ -29,8 +29,8 @@
             <div>
                 <label class="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-1">النوع</label>
                 <input type="hidden" name="provider" value="livekit">
-                <div class="w-full rounded-lg border border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white px-3 py-2 font-semibold text-cyan-700 dark:text-cyan-300">LiveKit</div>
-                <p class="text-xs text-slate-500 mt-1">المنصة تعمل عبر LiveKit فقط.</p>
+                <div class="w-full rounded-lg border border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white px-3 py-2 font-semibold text-cyan-700 dark:text-cyan-300">Hissatak Meeting</div>
+                <p class="text-xs text-slate-500 mt-1">المنصة تعمل عبر Hissatak Meeting فقط.</p>
             </div>
             <div>
                 <label class="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-1">الحالة</label>

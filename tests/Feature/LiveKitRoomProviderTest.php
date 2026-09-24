@@ -89,7 +89,7 @@ class LiveKitRoomProviderTest extends TestCase
         ]);
 
         $server = LiveServer::create([
-            'name' => 'حصتك LiveKit',
+            'name' => 'Hissatak Meeting',
             'domain' => 'live.hissatak.online',
             'provider' => 'livekit',
             'status' => 'active',
@@ -100,7 +100,7 @@ class LiveKitRoomProviderTest extends TestCase
         $session = LiveSession::create([
             'instructor_id' => $instructor->id,
             'server_id' => $server->id,
-            'title' => 'اختبار LiveKit',
+            'title' => 'اختبار Hissatak Meeting',
             'room_name' => 'hesetak-livekit-test',
             'status' => 'live',
             'started_at' => now(),
@@ -111,7 +111,7 @@ class LiveKitRoomProviderTest extends TestCase
             ->get(route('instructor.live-sessions.room', $session));
 
         $response->assertOk();
-        $response->assertSee('livekit-client', false);
+        $response->assertSee('hissatak-meeting-client', false);
         $response->assertSee('live.hissatak.online', false);
         $response->assertSee('مشاركة الشاشة', false);
         $response->assertDontSee('id="lk-chat-panel"', false);
@@ -168,7 +168,7 @@ class LiveKitRoomProviderTest extends TestCase
             'password' => Hash::make('secret'),
         ]);
         $server = LiveServer::create([
-            'name' => 'حصتك LiveKit',
+            'name' => 'Hissatak Meeting',
             'domain' => 'live.hissatak.online',
             'provider' => 'livekit',
             'status' => 'active',
@@ -215,7 +215,7 @@ class LiveKitRoomProviderTest extends TestCase
             'password' => Hash::make('secret'),
         ]);
         $server = LiveServer::create([
-            'name' => 'حصتك LiveKit',
+            'name' => 'Hissatak Meeting',
             'domain' => 'live.hissatak.online',
             'provider' => 'livekit',
             'status' => 'active',
@@ -249,7 +249,7 @@ class LiveKitRoomProviderTest extends TestCase
             'password' => Hash::make('secret'),
         ]);
         LiveServer::create([
-            'name' => 'حصتك LiveKit',
+            'name' => 'Hissatak Meeting',
             'domain' => 'live.hissatak.online',
             'provider' => 'livekit',
             'status' => 'active',

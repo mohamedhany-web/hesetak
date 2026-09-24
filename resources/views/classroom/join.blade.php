@@ -14,7 +14,7 @@
     <link rel="stylesheet" href="{{ route('assets.hesetak-live-meeting.css') }}?v=hstk-live-3">
     <link rel="stylesheet" href="{{ asset('css/classroom-curriculum-presenter.css') }}">
     <script src="{{ asset('js/classroom-curriculum-presenter.js') }}" defer></script>
-    <script src="https://cdn.jsdelivr.net/npm/livekit-client@2.9.1/dist/livekit-client.umd.min.js"></script>
+    <script src="{{ route('assets.hissatak-meeting-client.js') }}?v=hmc-1"></script>
     <style>
         :root { --st-brand: #1E4E8C; --st-blue: #152A4A; --st-gold: #C9952A; }
         * { font-family: 'IBM Plex Sans Arabic', 'Lato', 'Rubik', system-ui, sans-serif; box-sizing: border-box; }
@@ -88,7 +88,7 @@
                 <p class="text-slate-500 text-xs mb-4 text-center">الحد الأقصى: <span class="font-bold text-amber-600">{{ $maxParticipants }}</span></p>
                 @if(empty($livekitConfigured))
                     <div class="mb-4 rounded-xl border border-amber-200 bg-amber-50 text-amber-800 text-xs p-3 font-semibold">
-                        إعدادات LiveKit غير مكتملة على الخادم. تواصل مع الإدارة.
+                        إعدادات Hissatak Meeting غير مكتملة على الخادم. تواصل مع الإدارة.
                     </div>
                 @endif
                 <div class="space-y-3">
@@ -201,15 +201,15 @@
             }
         }
 
-        async function connectLiveKit(livekit, preacquiredTracks) {
+        async function connectHissatakMeeting(livekit, preacquiredTracks) {
             if (!window.LivekitClient) {
-                setStatus('تعذر تحميل مكتبة LiveKit', true);
+                setStatus('تعذر تحميل مكتبة Hissatak Meeting', true);
                 return;
             }
             const url = livekit && livekit.livekitUrl;
             const token = livekit && livekit.livekitToken;
             if (!url || !token) {
-                setStatus('توكن LiveKit غير متاح', true);
+                setStatus('رمز دخول Hissatak Meeting غير متاح', true);
                 return;
             }
             const { Room, RoomEvent, Track, createLocalTracks, createLocalScreenTracks, VideoPresets, AudioPresets } = window.LivekitClient;
@@ -458,7 +458,7 @@
                 document.getElementById('join-screen').classList.add('hidden');
                 document.getElementById('meeting-screen').classList.remove('hidden');
 
-                await connectLiveKit(enterData.livekit || {}, warmedTracks);
+                await connectHissatakMeeting(enterData.livekit || {}, warmedTracks);
 
                 var drawGuestBtn = document.getElementById('btn-mx-share-draw-guest');
                 if (drawGuestBtn && typeof window.__mxShareAnnOpenToolbar === 'function') {

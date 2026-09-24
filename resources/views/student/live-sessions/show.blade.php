@@ -5,7 +5,7 @@
 @section('content')
 <section class="st-join-hero" aria-label="{{ $liveSession->title }}">
     <div class="st-join-hero__copy">
-        <p class="st-join-hero__kicker">Live · LiveKit</p>
+        <p class="st-join-hero__kicker">Live · Hissatak Meeting</p>
         <h1 class="st-join-hero__title">{{ $liveSession->title }}</h1>
         <p class="st-join-hero__meta">
             @if($liveSession->isLive())

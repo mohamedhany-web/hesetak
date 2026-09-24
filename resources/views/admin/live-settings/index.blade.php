@@ -5,12 +5,12 @@
 <div class="space-y-6">
     <div>
         <h1 class="text-2xl font-bold text-slate-800 dark:text-white"><i class="fas fa-sliders-h text-violet-500 ml-2"></i>إعدادات نظام البث المباشر</h1>
-        <p class="text-sm text-slate-500 mt-1">تكوين إعدادات LiveKit والبث العامة</p>
+        <p class="text-sm text-slate-500 mt-1">تكوين إعدادات Hissatak Meeting والبث العامة</p>
     </div>
 
     <div class="bg-cyan-50 dark:bg-cyan-900/20 border border-cyan-200 dark:border-cyan-800 rounded-xl p-4 text-sm text-cyan-800 dark:text-cyan-200">
         <i class="fas fa-info-circle ml-1"></i>
-        نطاق البث الافتراضي يُدار من <a href="{{ route('admin.live-servers.index') }}" class="font-bold underline">سيرفرات البث</a> عبر «استخدام كنطاق افتراضي». تأكد من ضبط <code class="text-xs bg-cyan-100 dark:bg-cyan-950 px-1 rounded">LIVEKIT_API_KEY</code> و<code class="text-xs bg-cyan-100 dark:bg-cyan-950 px-1 rounded">LIVEKIT_API_SECRET</code> في بيئة السيرفر.
+        نطاق البث الافتراضي يُدار من <a href="{{ route('admin.live-servers.index') }}" class="font-bold underline">سيرفرات البث</a> عبر «استخدام كنطاق افتراضي». تأكد من ضبط مفاتيح <strong>Hissatak Meeting</strong> في ملف البيئة على السيرفر.
     </div>
 
     @if(session('success'))

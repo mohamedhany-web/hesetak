@@ -312,6 +312,13 @@ Route::get('/css/hesetak-live-meeting.css', function () use ($serveAtheerAsset) 
     );
 })->name('assets.hesetak-live-meeting.css');
 
+Route::get('/js/hissatak-meeting-client.js', function () use ($serveAtheerAsset) {
+    return $serveAtheerAsset(
+        [public_path('js/hissatak-meeting-client.js')],
+        'application/javascript; charset=UTF-8'
+    );
+})->name('assets.hissatak-meeting-client.js');
+
 Route::get('/js/platform-protection.js', function () use ($serveAtheerAsset) {
     return $serveAtheerAsset(
         [public_path('js/platform-protection.js'), resource_path('js/platform-protection.js')],

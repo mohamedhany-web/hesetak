@@ -38,11 +38,11 @@ class ProvisionHesetakLiveKitCommand extends Command
             'provider' => 'livekit',
         ]);
         $server->fill([
-            'name' => $server->exists ? $server->name : 'حصتك LiveKit',
+            'name' => $server->exists ? $server->name : 'Hissatak Meeting',
             'ip_address' => $ip,
             'status' => 'active',
             'max_participants' => $server->max_participants ?: 200,
-            'notes' => 'حصتك LiveKit dedicated VPS',
+            'notes' => 'Hissatak Meeting dedicated VPS',
         ]);
         $server->save();
 

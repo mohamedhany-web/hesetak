@@ -91,7 +91,7 @@
                     <div class="hstk-live-empty">
                         <div class="hstk-live-empty__icon"><i class="fas fa-exclamation-triangle"></i></div>
                         <p class="hstk-live-empty__title">إعدادات البث غير مكتملة</p>
-                        <p class="hstk-live-empty__text">تحقق من مفاتيح LiveKit من لوحة الإدارة → سيرفرات البث.</p>
+                        <p class="hstk-live-empty__text">تحقق من مفاتيح Hissatak Meeting من لوحة الإدارة → سيرفرات البث.</p>
                         <a href="{{ $roomExitUrl }}" class="hstk-live-btn hstk-live-btn--gold">العودة</a>
                     </div>
                 @endif

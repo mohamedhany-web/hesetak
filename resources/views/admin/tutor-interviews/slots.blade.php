@@ -31,7 +31,7 @@
             <div>
                 <label class="text-xs text-muted">نوع الرابط</label>
                 <select name="meeting_mode" class="w-full rounded-xl border border-line px-3 py-2 text-sm">
-                    <option value="livekit">LiveKit داخل حصتك</option>
+                    <option value="livekit">Hissatak Meeting</option>
                     <option value="external">رابط خارجي</option>
                 </select>
             </div>

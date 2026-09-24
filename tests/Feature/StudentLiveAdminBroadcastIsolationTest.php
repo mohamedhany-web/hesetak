@@ -93,7 +93,7 @@ class StudentLiveAdminBroadcastIsolationTest extends TestCase
             'password' => Hash::make('secret'),
         ]);
         $server = LiveServer::create([
-            'name' => 'حصتك LiveKit',
+            'name' => 'Hissatak Meeting',
             'domain' => 'live.glottical.com',
             'provider' => 'livekit',
             'status' => 'active',

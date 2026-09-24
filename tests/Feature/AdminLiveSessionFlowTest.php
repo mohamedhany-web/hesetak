@@ -122,7 +122,7 @@ class AdminLiveSessionFlowTest extends TestCase
         $admin = $this->admin();
 
         LiveServer::create([
-            'name' => 'حصتك LiveKit',
+            'name' => 'Hissatak Meeting',
             'domain' => 'live.glottical.com',
             'provider' => 'livekit',
             'status' => 'active',
@@ -151,7 +151,7 @@ class AdminLiveSessionFlowTest extends TestCase
 
         $room = $this->actingAs($admin)->get(route('admin.live-sessions.room', $session));
         $room->assertOk();
-        $room->assertSee('livekit-client', false);
+        $room->assertSee('hissatak-meeting-client', false);
         $room->assertSee('بث إداري', false);
         $room->assertDontSee('JitsiMeetExternalAPI', false);
     }
@@ -160,7 +160,7 @@ class AdminLiveSessionFlowTest extends TestCase
     {
         $admin = $this->admin();
         $server = LiveServer::create([
-            'name' => 'حصتك LiveKit',
+            'name' => 'Hissatak Meeting',
             'domain' => 'live.glottical.com',
             'provider' => 'livekit',
             'status' => 'active',

@@ -14,7 +14,7 @@
         position: absolute;
         inset-inline: 0;
         top: 0;
-        /* اترك شريط LiveKit (ميك/كاميرا/مغادرة) قابلاً للضغط وغير مغطى */
+        /* اترك شريط Hissatak Meeting (ميك/كاميرا/مغادرة) قابلاً للضغط وغير مغطى */
         bottom: var(--mx-ann-above-media, 5.35rem);
         z-index: 25;
     }

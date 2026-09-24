@@ -58,7 +58,7 @@
                     <div class="hstk-live-empty">
                         <div class="hstk-live-empty__icon"><i class="fas fa-exclamation-triangle"></i></div>
                         <p class="hstk-live-empty__title">إعدادات البث غير مكتملة</p>
-                        <p class="hstk-live-empty__text">تحقق من مفاتيح LiveKit ونطاق البث من لوحة الإدارة.</p>
+                        <p class="hstk-live-empty__text">تحقق من مفاتيح Hissatak Meeting ونطاق البث من لوحة الإدارة.</p>
                         <a href="{{ route('student.live-sessions.index') }}" class="hstk-live-btn hstk-live-btn--gold">العودة للجلسات</a>
                     </div>
                 @endif

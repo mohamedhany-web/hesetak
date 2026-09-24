@@ -83,7 +83,7 @@
             @else
                 <div class="hstk-live-empty">
                     <div class="hstk-live-empty__icon"><i class="fas fa-exclamation-triangle"></i></div>
-                    <p class="hstk-live-empty__title">إعدادات LiveKit غير مكتملة</p>
+                    <p class="hstk-live-empty__title">إعدادات Hissatak Meeting غير مكتملة</p>
                     <p class="hstk-live-empty__text">تأكد من ضبط مفاتيح البث على السيرفر، ثم أعد فتح الغرفة.</p>
                     <a href="{{ route('admin.live-sessions.show', $liveSession) }}" class="hstk-live-btn hstk-live-btn--gold">العودة للتفاصيل</a>
                 </div>

@@ -73,7 +73,7 @@ class LiveKitTokenService
     public function createIdentityToken(string $roomName, string $identity, string $displayName, array $grants = []): string
     {
         if (! $this->isConfigured()) {
-            throw new InvalidArgumentException('مفاتيح LiveKit غير مضبوطة في ملف البيئة.');
+            throw new InvalidArgumentException('مفاتيح Hissatak Meeting غير مضبوطة في ملف البيئة.');
         }
 
         $apiKey = (string) config('livekit.livekit.api_key');

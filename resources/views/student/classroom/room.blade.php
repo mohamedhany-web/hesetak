@@ -402,8 +402,8 @@
         @else
             <main id="meeting-video-root" class="flex-1 min-h-0 relative w-full flex flex-col items-center justify-center gap-3 p-8 text-center text-slate-300" role="application" aria-label="غرفة الاجتماع">
                 <i class="fas fa-exclamation-triangle text-amber-400 text-3xl"></i>
-                <p class="font-bold text-white">إعدادات LiveKit غير مكتملة</p>
-                <p class="text-sm text-slate-400">اضبط مفاتيح LiveKit ونطاق السيرفر من لوحة الإدارة → سيرفرات البث.</p>
+                <p class="font-bold text-white">إعدادات Hissatak Meeting غير مكتملة</p>
+                <p class="text-sm text-slate-400">اضبط مفاتيح Hissatak Meeting ونطاق السيرفر من لوحة الإدارة → سيرفرات البث.</p>
             </main>
         @endif
         @unless(!empty($academicObserverMode))
@@ -2033,7 +2033,7 @@
                 var wbPopupEl = document.getElementById('wb-popup');
                 var wbOpen = !!(wbPopupEl && !wbPopupEl.classList.contains('hidden'));
 
-                // 1) شير LiveKit المركّب (شاشة + قلم) — أولوية عند وجوده
+                // 1) شير Hissatak Meeting المركّب (شاشة + قلم) — أولوية عند وجوده
                 if (lk && lk.canvas && lk.canvas.width > 0) {
                     drawn = drawLectureFrameFromSource(lk.canvas, w, h);
                 }
@@ -2172,7 +2172,7 @@
                 lectureAudioSources = [];
                 lectureAudioTrackIds = {};
 
-                // 1) أولوية لمسارات LiveKit (الميكروفون غالباً مشغول بها — لا نطلب getUserMedia أولاً)
+                // 1) أولوية لمسارات Hissatak Meeting (الميكروفون غالباً مشغول بها — لا نطلب getUserMedia أولاً)
                 var lk = (typeof window.__mxLkGetRecordCapture === 'function')
                     ? window.__mxLkGetRecordCapture()
                     : null;
@@ -2186,7 +2186,7 @@
                     });
                 }
 
-                // 2) احتياط: ميكروفون المتصفح إن لم يتوفر صوت من LiveKit بعد
+                // 2) احتياط: ميكروفون المتصفح إن لم يتوفر صوت من Hissatak Meeting بعد
                 if (!lectureAudioDest.stream.getAudioTracks().length) {
                     try {
                         micStream = await navigator.mediaDevices.getUserMedia({
@@ -2224,7 +2224,7 @@
                 return out;
             }
 
-            function mxRefreshLectureAudioFromLiveKit() {
+            function mxRefreshLectureAudioFromMeeting() {
                 if (recordingKind !== 'lecture' || !lectureAudioDest || !lectureAudioCtx) return;
                 var lk = (typeof window.__mxLkGetRecordCapture === 'function')
                     ? window.__mxLkGetRecordCapture()
@@ -2348,7 +2348,7 @@
                 lectureCompositeTick();
                 // التقط الشير الحالي فوراً إن كان شغال
                 lectureCompositeDraw();
-                mxRefreshLectureAudioFromLiveKit();
+                mxRefreshLectureAudioFromMeeting();
 
                 var recorderOpts = pickMediaRecorderOptions();
                 try {
@@ -2928,7 +2928,7 @@
                     });
                 }
 
-                // ابدأ المحاولة بعد مهلة قصيرة؛ الدالة تنتظر جاهزية LiveKit داخلياً
+                // ابدأ المحاولة بعد مهلة قصيرة؛ الدالة تنتظر جاهزية Hissatak Meeting داخلياً
                 mxScheduleSilentRecording(1500);
 
                 // إن اتصلت الغرفة لاحقاً وما زال التسجيل متوقفاً — أعد المحاولة (debounced)
@@ -2942,13 +2942,13 @@
             window.addEventListener('mx-lk-record-capture-changed', function () {
                 if (recordingKind !== 'lecture' || !isRecording) return;
                 lectureCompositeDraw();
-                mxRefreshLectureAudioFromLiveKit();
+                mxRefreshLectureAudioFromMeeting();
             });
             // إعادة مزامنة دورية أثناء التسجيل حتى لو فات حدث الشير
             setInterval(function () {
                 if (recordingKind !== 'lecture' || !isRecording) return;
                 lectureCompositeDraw();
-                mxRefreshLectureAudioFromLiveKit();
+                mxRefreshLectureAudioFromMeeting();
             }, 1500);
         })();
     </script>

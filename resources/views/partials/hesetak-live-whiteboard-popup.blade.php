@@ -3,7 +3,7 @@
     $hstkWbUiMode = $hstkWbUiMode ?? 'full';
 @endphp
 <style>
-    /* فوق كاميرات LiveKit العائمة (z-index: 99990) وأشرطة التحكم */
+    /* فوق كاميرات Hissatak Meeting العائمة (z-index: 99990) وأشرطة التحكم */
     #wb-popup { z-index: 100120 !important; }
     #wb-popup.is-open {
         display: flex !important;

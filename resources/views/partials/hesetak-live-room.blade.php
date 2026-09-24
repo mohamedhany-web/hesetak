@@ -330,11 +330,10 @@
         return false;
     }
 
-    function loadLivekitClient() {
+    function loadHissatakMeetingClient() {
         if (window.LivekitClient) return Promise.resolve();
         const urls = [
-            'https://cdn.jsdelivr.net/npm/livekit-client@2.9.1/dist/livekit-client.umd.min.js',
-            'https://unpkg.com/livekit-client@2.9.1/dist/livekit-client.umd.min.js',
+            @json(route('assets.hissatak-meeting-client.js')).concat('?v=hmc-1'),
         ];
         return urls.reduce(function (chain, src) {
             return chain.catch(function () {
@@ -344,7 +343,7 @@
                     s.async = true;
                     s.onload = function () {
                         if (window.LivekitClient) resolve();
-                        else reject(new Error('LivekitClient missing after ' + src));
+                        else reject(new Error('meeting client missing after ' + src));
                     };
                     s.onerror = function () { reject(new Error('failed ' + src)); };
                     document.head.appendChild(s);
@@ -354,17 +353,17 @@
     }
 
     // ننتظر تحميل SDK ثم نكمل التهيئة — لا نصل أوتوماتيك
-    loadLivekitClient().then(bootLivekitRoom).catch(function () {
-        setStatus('تعذر تحميل مكتبة LiveKit — تحقق من الإنترنت أو افتح من Chrome/Safari', true);
+    loadHissatakMeetingClient().then(bootHissatakMeetingRoom).catch(function () {
+        setStatus('تعذر تحميل مكتبة Hissatak Meeting — تحقق من الإنترنت أو افتح من Chrome/Safari', true);
         if (prejoinBtn) {
             prejoinBtn.disabled = true;
             prejoinBtn.innerHTML = '<i class="fas fa-exclamation-triangle"></i> تعذر التحميل';
         }
     });
 
-    function bootLivekitRoom() {
-    if (!window.LivekitClient) { setStatus('تعذر تحميل مكتبة LiveKit', true); return; }
-    if (!url || !token) { setStatus('إعدادات LiveKit غير مكتملة (رابط أو توكن)', true); return; }
+    function bootHissatakMeetingRoom() {
+    if (!window.LivekitClient) { setStatus('تعذر تحميل مكتبة Hissatak Meeting', true); return; }
+    if (!url || !token) { setStatus('إعدادات Hissatak Meeting غير مكتملة (رابط أو توكن)', true); return; }
 
     const { Room, RoomEvent, Track, createLocalTracks, createLocalScreenTracks, LocalVideoTrack, LocalAudioTrack, VideoQuality, VideoPresets, AudioPresets, ConnectionQuality } = window.LivekitClient;
     const mxLkAudioCapture = {
@@ -373,7 +372,7 @@
         autoGainControl: true,
     };
     const room = new Room({
-        // إيقاف adaptiveStream/pause يمنع LiveKit من تقليل أو إيقاف الصوت بعد دقائق
+        // إيقاف adaptiveStream/pause يمنع Hissatak Meeting من تقليل أو إيقاف الصوت بعد دقائق
         adaptiveStream: false,
         dynacast: true,
         subscriberAllowPause: false,
@@ -1039,7 +1038,7 @@
                 audio.play().catch(function () {});
             }
         });
-        if (reason) console.info('[LiveKit] audio recovery:', reason);
+        if (reason) console.info('[Hissatak Meeting] audio recovery:', reason);
     }
 
     let audioHealthTimer = null;
@@ -1432,7 +1431,7 @@
         } catch (err) {
             console.error(err);
             localTracks.forEach(function (t) { try { t.stop(); } catch (eStop) {} });
-            setStatus(errMsg(err, 'فشل الاتصال بـ LiveKit'), true);
+            setStatus(errMsg(err, 'فشل الاتصال بـ Hissatak Meeting'), true);
             if (prejoinEl) prejoinEl.classList.remove('hidden');
             if (prejoinBtn) {
                 prejoinBtn.disabled = false;
@@ -2522,7 +2521,7 @@
         } catch (e) {}
     };
 
-    /** نشر بيانات خفيفة للغرفة (سبورة / إشارات) عبر LiveKit Data Channel */
+    /** نشر بيانات خفيفة للغرفة (سبورة / إشارات) عبر قناة بيانات Hissatak Meeting */
     window.__mxLkPublishData = function (data, opts) {
         opts = opts || {};
         if (!connected || !room?.localParticipant) return false;
@@ -2546,7 +2545,7 @@
                     destinationIdentities: dest,
                 });
             } catch (eOpt) {
-                // توافق مع واجهات أقدم من LiveKit
+                // توافق مع واجهات أقدم من Hissatak Meeting
                 const kind = (window.LivekitClient && window.LivekitClient.DataPacket_Kind)
                     ? (reliable ? window.LivekitClient.DataPacket_Kind.RELIABLE : window.LivekitClient.DataPacket_Kind.LOSSY)
                     : undefined;
@@ -2568,6 +2567,6 @@
     };
 
     // لا تتصل تلقائياً — الانتظار لضغطة «دخول الحصة» (موبايل/تابلت/سطح مكتب)
-    } // end bootLivekitRoom
+    } // end bootHissatakMeetingRoom
 })();
 </script>

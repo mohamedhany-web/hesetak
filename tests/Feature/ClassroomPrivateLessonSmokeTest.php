@@ -93,7 +93,7 @@ class ClassroomPrivateLessonSmokeTest extends TestCase
     protected function seedMeeting(): array
     {
         LiveServer::query()->create([
-            'name' => 'حصتك LiveKit',
+            'name' => 'Hissatak Meeting',
             'domain' => 'live.glottical.com',
             'provider' => 'livekit',
             'status' => 'active',

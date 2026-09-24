@@ -23,7 +23,7 @@
 <div class="space-y-5">
     <section class="flex flex-wrap items-end justify-between gap-4">
         <div class="min-w-0">
-            <p class="text-xs font-medium text-muted">البث المباشر · LiveKit</p>
+            <p class="text-xs font-medium text-muted">البث المباشر · Hissatak Meeting</p>
             <h2 class="mt-1 text-2xl font-semibold tracking-tight text-ink md:text-[28px]">جلسات البث المباشر</h2>
         </div>
         <div class="admin-hero-actions flex flex-wrap gap-2">

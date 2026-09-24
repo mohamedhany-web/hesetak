@@ -107,7 +107,7 @@ class LiveServerController extends Controller
     }
 
     /**
-     * اختبار الاتصال الفعلي بالسيرفر (طلب HTTP لنطاق LiveKit).
+     * اختبار الاتصال الفعلي بالسيرفر (طلب HTTP لنطاق Hissatak Meeting).
      */
     public function testConnection(LiveServer $liveServer)
     {
@@ -140,11 +140,11 @@ class LiveServerController extends Controller
             }
         }
 
-        return back()->with('error', 'لا يمكن الوصول إلى السيرفر. تحقق من النطاق واتصال الشبكة و SSL، وأن خدمة LiveKit تعمل.');
+        return back()->with('error', 'لا يمكن الوصول إلى السيرفر. تحقق من النطاق واتصال الشبكة و SSL، وأن خدمة Hissatak Meeting تعمل.');
     }
 
     /**
-     * تعيين هذا السيرفر كنطاق LiveKit الافتراضي.
+     * تعيين هذا السيرفر كنطاق Hissatak Meeting الافتراضي.
      */
     public function setAsDefault(LiveServer $liveServer)
     {
@@ -155,7 +155,7 @@ class LiveServerController extends Controller
         LiveSetting::set('live_provider', 'livekit');
         LiveSetting::set('livekit_host', $domain);
 
-        return back()->with('success', "تم تعيين «{$liveServer->name}» كنطاق LiveKit الافتراضي.");
+        return back()->with('success', "تم تعيين «{$liveServer->name}» كنطاق Hissatak Meeting الافتراضي.");
     }
 
     /** بناء مصفوفة config مع بيانات SSH (كلمة المرور مشفّرة). */

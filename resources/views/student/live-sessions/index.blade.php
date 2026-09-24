@@ -5,7 +5,7 @@
 @section('content')
 <section class="st-join-hero" aria-label="جلسات البث المباشر">
     <div class="st-join-hero__copy">
-        <p class="st-join-hero__kicker">Live · LiveKit</p>
+        <p class="st-join-hero__kicker">Live · Hissatak Meeting</p>
         <h1 class="st-join-hero__title">جلسات البث المباشر</h1>
         <p class="st-join-hero__meta">بث المنصة الجماعي والكورسات — الحصص الخاصة 1:1 من صفحة الحصص الخاصة وليس من هنا</p>
     </div>

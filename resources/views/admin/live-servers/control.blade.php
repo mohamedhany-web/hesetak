@@ -21,7 +21,7 @@
     @if($defaultLiveHost ?? null)
     <div class="bg-slate-100 dark:bg-slate-700/50 rounded-xl border border-slate-200 dark:border-slate-600 px-4 py-2 text-sm text-slate-600 dark:text-slate-300">
         <i class="fas fa-link text-cyan-500 ml-1"></i>
-        <strong>نطاق LiveKit الافتراضي:</strong> <code class="bg-slate-200 dark:bg-slate-600 px-1.5 py-0.5 rounded">{{ $defaultLiveHost }}</code>
+        <strong>نطاق Hissatak Meeting الافتراضي:</strong> <code class="bg-slate-200 dark:bg-slate-600 px-1.5 py-0.5 rounded">{{ $defaultLiveHost }}</code>
     </div>
     @endif
 

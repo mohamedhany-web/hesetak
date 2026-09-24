@@ -68,7 +68,7 @@ class TutorInterviewSlot extends Model
     {
         return match ($this->meeting_mode) {
             self::MODE_EXTERNAL => 'رابط خارجي',
-            default => 'LiveKit (حصتك)',
+            default => 'Hissatak Meeting',
         };
     }
 }
