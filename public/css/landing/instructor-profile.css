@@ -3,6 +3,85 @@
  * Visual language = mycourses.css (homepage mc-*).
  */
 
+/* —— Profile hero: contained photo (no homepage bleed overflow) —— */
+.mc-body--teacher-profile .mc-tp-hero {
+  position: relative;
+  z-index: 1;
+  overflow: hidden;
+  padding-block: clamp(1.5rem, 4vw, 2.75rem) clamp(1.75rem, 4vw, 2.5rem);
+}
+.mc-tp-hero__grid {
+  display: grid;
+  gap: 1.5rem;
+  align-items: center;
+}
+@media (min-width: 960px) {
+  .mc-tp-hero__grid {
+    grid-template-columns: minmax(0, 1.15fr) minmax(260px, 380px);
+    gap: 2rem;
+  }
+}
+.mc-tp-hero__copy .mc-hero__title {
+  max-width: none;
+}
+.mc-tp-hero__pills {
+  margin: 0 0 1rem;
+}
+.mc-tp-hero__media {
+  margin: 0;
+  position: relative;
+  z-index: 0;
+  width: 100%;
+  max-width: 380px;
+  aspect-ratio: 1 / 1;
+  border-radius: 1.25rem;
+  overflow: hidden;
+  background: var(--mc-surface-2, #f4f6f9);
+  box-shadow: var(--mc-shadow, 0 12px 40px rgba(21, 42, 74, 0.12));
+  border: 1px solid color-mix(in srgb, var(--mc-navy, #1e4e8c) 10%, transparent);
+  justify-self: center;
+}
+@media (min-width: 960px) {
+  .mc-tp-hero__media {
+    max-width: none;
+    justify-self: stretch;
+  }
+}
+.mc-tp-hero__media img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+  border-radius: 0;
+  -webkit-mask-image: none;
+  mask-image: none;
+}
+.mc-tp-hero__media .mc-tp-photo-fallback {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  border-radius: 0;
+  font-size: clamp(3.5rem, 8vw, 5.5rem);
+  font-weight: 800;
+  color: var(--mc-navy-deep);
+  background:
+    radial-gradient(ellipse 70% 60% at 70% 20%, color-mix(in srgb, var(--mc-secondary) 28%, white), transparent 55%),
+    linear-gradient(145deg, var(--mc-navy-soft), color-mix(in srgb, var(--mc-primary) 18%, white));
+}
+
+/* Trust strip sits fully below hero — no photo bleed */
+.mc-body--teacher-profile .mc-trust {
+  position: relative;
+  z-index: 2;
+  margin-top: 0;
+  clear: both;
+  background: color-mix(in srgb, var(--mc-navy, #1e4e8c) 4%, white);
+  border-block: 1px solid var(--mc-line, rgba(15, 23, 42, 0.08));
+}
+
 .mc-tp-crumb {
   display: flex;
   flex-wrap: wrap;
@@ -16,22 +95,6 @@
 .mc-tp-crumb a { color: var(--mc-primary-80); }
 .mc-tp-crumb a:hover { color: var(--mc-primary-100); }
 .mc-tp-crumb span[aria-hidden] { opacity: 0.45; }
-
-.mc-hero__media .mc-tp-photo-fallback {
-  display: grid;
-  place-items: center;
-  width: 100%;
-  height: 100%;
-  min-height: inherit;
-  border-radius: 1.25rem;
-  font-size: clamp(3.5rem, 8vw, 5.5rem);
-  font-weight: 800;
-  color: var(--mc-navy-deep);
-  background:
-    radial-gradient(ellipse 70% 60% at 70% 20%, color-mix(in srgb, var(--mc-secondary) 28%, white), transparent 55%),
-    linear-gradient(145deg, var(--mc-navy-soft), color-mix(in srgb, var(--mc-primary) 18%, white));
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--mc-navy) 8%, transparent);
-}
 
 .mc-tp-layout {
   display: grid;
@@ -91,13 +154,20 @@
   flex-shrink: 0;
 }
 
-.mc-tp-aside { position: relative; }
+.mc-tp-aside {
+  position: relative;
+  z-index: 3;
+  isolation: isolate;
+}
 @media (min-width: 992px) {
   .mc-tp-aside { position: sticky; top: calc(var(--mc-nav-h, 72px) + 1rem); }
 }
 .mc-tp-book.mc-package {
   display: grid;
   gap: 0.85rem;
+  position: relative;
+  z-index: 1;
+  overflow: hidden;
 }
 .mc-tp-actions {
   display: grid;

@@ -106,12 +106,12 @@
   <link rel="stylesheet" href="{{ route('assets.landing.css', ['sheet' => 'instructor-profile']) }}?v={{ $tpVer }}">
   @include('partials.figma-capture-head')
 </head>
-<body class="mc-body">
+<body class="mc-body mc-body--teacher-profile">
 @include('partials.landing.mycourses.nav')
 
 <main>
-  {{-- Hero — same language as homepage --}}
-  <section class="mc-hero" aria-labelledby="mc-tp-title">
+  {{-- Hero — contained profile (not homepage bleed) --}}
+  <section class="mc-hero mc-tp-hero" aria-labelledby="mc-tp-title">
     <div class="mc-container">
       <nav class="mc-tp-crumb" aria-label="{{ $isRtl ? 'مسار التنقل' : 'Breadcrumb' }}">
         <a href="{{ url('/') }}">{{ $isRtl ? 'الرئيسية' : 'Home' }}</a>
@@ -121,8 +121,8 @@
         <span>{{ $name }}</span>
       </nav>
     </div>
-    <div class="mc-container mc-hero__grid">
-      <div class="mc-hero__copy">
+    <div class="mc-container mc-tp-hero__grid">
+      <div class="mc-hero__copy mc-tp-hero__copy">
         <p class="mc-eyebrow">{{ __('public.instructors_verified') }} <strong class="mc-brand-word">{{ $brand }}</strong></p>
         <h1 class="mc-hero__title" id="mc-tp-title">{{ $name }}</h1>
         @if($headline !== '' && $headline !== $name)
@@ -132,7 +132,7 @@
         @endif
 
         @if(count($heroPills) > 0)
-          <div class="mc-cats" style="margin:0 0 1rem">
+          <div class="mc-cats mc-tp-hero__pills">
             @foreach($heroPills as $pill)
               <span class="mc-cat"><span class="mc-cat__dot" aria-hidden="true"></span>{{ $pill }}</span>
             @endforeach
@@ -151,9 +151,9 @@
         </div>
       </div>
 
-      <figure class="mc-hero__media">
+      <figure class="mc-tp-hero__media">
         @if($profile->photo_url)
-          <img src="{{ $profile->photo_url }}" width="1152" height="864" alt="{{ $name }}" loading="eager" decoding="async">
+          <img src="{{ $profile->photo_url }}" width="640" height="640" alt="{{ $name }}" loading="eager" decoding="async">
         @else
           <div class="mc-tp-photo-fallback" aria-hidden="true">{{ mb_substr($name, 0, 1) }}</div>
         @endif
