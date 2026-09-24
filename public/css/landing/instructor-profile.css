@@ -7,18 +7,20 @@
 .mc-body--teacher-profile .mc-tp-hero {
   position: relative;
   z-index: 1;
-  overflow: hidden;
-  padding-block: clamp(1.5rem, 4vw, 2.75rem) clamp(1.75rem, 4vw, 2.5rem);
+  overflow: clip;
+  padding-block: clamp(1.5rem, 4vw, 2.75rem) clamp(2.25rem, 5vw, 3.25rem);
+  isolation: isolate;
 }
 .mc-tp-hero__grid {
   display: grid;
   gap: 1.5rem;
-  align-items: center;
+  align-items: start;
 }
 @media (min-width: 960px) {
   .mc-tp-hero__grid {
-    grid-template-columns: minmax(0, 1.15fr) minmax(260px, 380px);
+    grid-template-columns: minmax(0, 1.15fr) minmax(240px, 340px);
     gap: 2rem;
+    align-items: start;
   }
 }
 .mc-tp-hero__copy .mc-hero__title {
@@ -32,30 +34,36 @@
   position: relative;
   z-index: 0;
   width: 100%;
-  max-width: 380px;
+  max-width: 320px;
   aspect-ratio: 1 / 1;
+  max-height: 340px;
   border-radius: 1.25rem;
   overflow: hidden;
   background: var(--mc-surface-2, #f4f6f9);
-  box-shadow: var(--mc-shadow, 0 12px 40px rgba(21, 42, 74, 0.12));
+  box-shadow: 0 10px 28px rgba(21, 42, 74, 0.1);
   border: 1px solid color-mix(in srgb, var(--mc-navy, #1e4e8c) 10%, transparent);
   justify-self: center;
 }
 @media (min-width: 960px) {
   .mc-tp-hero__media {
-    max-width: none;
-    justify-self: stretch;
+    max-width: 340px;
+    max-height: 340px;
+    justify-self: end;
+  }
+  [dir="rtl"] .mc-tp-hero__media {
+    justify-self: start;
   }
 }
 .mc-tp-hero__media img {
   display: block;
   width: 100%;
   height: 100%;
+  max-height: 100%;
   object-fit: cover;
   object-position: center top;
   border-radius: 0;
-  -webkit-mask-image: none;
-  mask-image: none;
+  -webkit-mask-image: none !important;
+  mask-image: none !important;
 }
 .mc-tp-hero__media .mc-tp-photo-fallback {
   display: grid;
@@ -80,6 +88,31 @@
   clear: both;
   background: color-mix(in srgb, var(--mc-navy, #1e4e8c) 4%, white);
   border-block: 1px solid var(--mc-line, rgba(15, 23, 42, 0.08));
+}
+.mc-body--teacher-profile .mc-trust__list {
+  position: relative;
+  z-index: 1;
+}
+.mc-body--teacher-profile .mc-section {
+  position: relative;
+  z-index: 2;
+}
+@media (max-width: 959px) {
+  .mc-tp-hero__media {
+    order: -1;
+    max-width: 260px;
+    max-height: 260px;
+  }
+  .mc-tp-hero__grid {
+    justify-items: center;
+    text-align: center;
+  }
+  .mc-tp-hero__copy .mc-hero__actions {
+    justify-content: center;
+  }
+  .mc-tp-hero__pills {
+    justify-content: center;
+  }
 }
 
 .mc-tp-crumb {
