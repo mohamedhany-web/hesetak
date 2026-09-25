@@ -8,8 +8,8 @@ use App\Models\QuestionCategory;
 use App\Models\QuestionBank;
 use App\Models\AcademicYear;
 use App\Models\AcademicSubject;
+use App\Services\PublicMediaStorage;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 
 class QuestionBankController extends Controller
 {
@@ -187,17 +187,11 @@ class QuestionBankController extends Controller
         // معالجة الصور
         if ($request->has('remove_image') && $request->remove_image == '1') {
             // حذف الصورة الحالية
-            if ($question->image_url && Storage::disk('public')->exists($question->image_url)) {
-                Storage::disk('public')->delete($question->image_url);
-            }
+            PublicMediaStorage::delete($question->image_url);
             $data['image_url'] = null;
         } elseif ($request->hasFile('image')) {
             // رفع صورة جديدة
-            if ($question->image_url && Storage::disk('public')->exists($question->image_url)) {
-                Storage::disk('public')->delete($question->image_url);
-            }
-            
-            $data['image_url'] = $this->handleImageUpload($request->file('image'));
+            $data['image_url'] = $this->handleImageUpload($request->file('image'), $question->image_url);
         }
 
         // معالجة الخيارات والإجابات
@@ -220,9 +214,7 @@ class QuestionBankController extends Controller
         }
 
         // حذف الصورة
-        if ($question->image_url && Storage::disk('public')->exists($question->image_url)) {
-            Storage::disk('public')->delete($question->image_url);
-        }
+        PublicMediaStorage::delete($question->image_url);
 
         $question->delete();
 
@@ -329,95 +321,13 @@ class QuestionBankController extends Controller
     }
 
     /**
-     * معالجة رفع الصور مع تحسين الجودة والحجم
+     * معالجة رفع الصور
      */
-    private function handleImageUpload($imageFile)
+    private function handleImageUpload($imageFile, ?string $oldPath = null)
     {
-        // إنشاء اسم فريد للملف
         $fileName = uniqid('question_') . '.' . $imageFile->getClientOriginalExtension();
-        
-        // مسار التخزين
         $storagePath = 'questions/' . date('Y/m');
-        $fullPath = 'storage/' . $storagePath . '/' . $fileName;
-        
-        // إنشاء المجلد إذا لم يكن موجوداً
-        if (!Storage::disk('public')->exists($storagePath)) {
-            Storage::disk('public')->makeDirectory($storagePath);
-        }
-        
-        // حفظ الصورة الأصلية
-        $imageFile->storeAs($storagePath, $fileName, 'public');
-        
-        // تحسين الصورة باستخدام Intervention Image إذا كانت متوفرة
-        try {
-            $fullStoragePath = storage_path('app/public/' . $storagePath . '/' . $fileName);
-            
-            // قراءة الصورة
-            $imageData = getimagesize($fullStoragePath);
-            $mimeType = $imageData['mime'];
-            
-            // تحديد نوع الصورة وتحسينها
-            switch ($mimeType) {
-                case 'image/jpeg':
-                    $image = imagecreatefromjpeg($fullStoragePath);
-                    $this->optimizeImage($image, $fullStoragePath, 85); // جودة 85%
-                    imagejpeg($image, $fullStoragePath, 85);
-                    imagedestroy($image);
-                    break;
-                    
-                case 'image/png':
-                    $image = imagecreatefrompng($fullStoragePath);
-                    $this->optimizeImage($image, $fullStoragePath, 9); // ضغط 9 للـ PNG
-                    imagepng($image, $fullStoragePath, 9);
-                    imagedestroy($image);
-                    break;
-                    
-                case 'image/gif':
-                    // الاحتفاظ بـ GIF كما هو لأنه قد يكون متحرك
-                    break;
-            }
-        } catch (\Exception $e) {
-            // في حالة فشل التحسين، نتجاهل الخطأ ونحتفظ بالصورة الأصلية
-            \Log::warning('فشل في تحسين الصورة: ' . $e->getMessage());
-        }
-        
-        return $storagePath . '/' . $fileName;
-    }
 
-    /**
-     * تحسين الصورة (تقليل الحجم إذا كانت كبيرة)
-     */
-    private function optimizeImage($image, $filePath, $quality)
-    {
-        $width = imagesx($image);
-        $height = imagesy($image);
-        
-        // إذا كانت الصورة كبيرة جداً، قم بتقليل حجمها
-        $maxWidth = 1200;
-        $maxHeight = 1200;
-        
-        if ($width > $maxWidth || $height > $maxHeight) {
-            // حساب النسبة المناسبة
-            $ratio = min($maxWidth / $width, $maxHeight / $height);
-            $newWidth = intval($width * $ratio);
-            $newHeight = intval($height * $ratio);
-            
-            // إنشاء صورة جديدة بالحجم المحسن
-            $resizedImage = imagecreatetruecolor($newWidth, $newHeight);
-            
-            // الحفاظ على الشفافية للـ PNG
-            imagealphablending($resizedImage, false);
-            imagesavealpha($resizedImage, true);
-            $transparent = imagecolorallocatealpha($resizedImage, 255, 255, 255, 127);
-            imagefilledrectangle($resizedImage, 0, 0, $newWidth, $newHeight, $transparent);
-            
-            // تغيير حجم الصورة
-            imagecopyresampled($resizedImage, $image, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
-            
-            // تحديث المتغير
-            $image = $resizedImage;
-        }
-        
-        return $image;
+        return PublicMediaStorage::storeFileAs($imageFile, $storagePath, $fileName, $oldPath);
     }
 }

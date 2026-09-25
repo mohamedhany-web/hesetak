@@ -12,7 +12,6 @@ use Illuminate\Support\Facades\Storage;
 
 class CommunityDatasetController extends Controller
 {
-    private const DISK = 'local';
     private const DIRECTORY = 'community_datasets';
 
     public function __construct()
@@ -46,7 +45,7 @@ class CommunityDatasetController extends Controller
 
         if ($request->hasFile('file')) {
             $name = $this->uniqueFilenameForDirectory(self::DIRECTORY, $request->file('file')->getClientOriginalName(), null);
-            $path = $request->file('file')->storeAs(self::DIRECTORY, $name, self::DISK);
+            $path = $request->file('file')->storeAs(self::DIRECTORY, $name, community_disk());
             $validated['file_path'] = $path;
             $validated['file_size'] = $this->humanFileSize($request->file('file')->getSize());
         }
@@ -73,11 +72,12 @@ class CommunityDatasetController extends Controller
         $validated['is_active'] = $request->boolean('is_active');
 
         if ($request->hasFile('file')) {
-            if ($dataset->file_path && Storage::disk(self::DISK)->exists($dataset->file_path)) {
-                Storage::disk(self::DISK)->delete($dataset->file_path);
+            $disk = community_disk();
+            if ($dataset->file_path && Storage::disk($disk)->exists($dataset->file_path)) {
+                Storage::disk($disk)->delete($dataset->file_path);
             }
             $name = $this->uniqueFilenameForDirectory(self::DIRECTORY, $request->file('file')->getClientOriginalName(), $dataset->file_path ? basename($dataset->file_path) : null);
-            $path = $request->file('file')->storeAs(self::DIRECTORY, $name, self::DISK);
+            $path = $request->file('file')->storeAs(self::DIRECTORY, $name, $disk);
             $validated['file_path'] = $path;
             $validated['file_size'] = $this->humanFileSize($request->file('file')->getSize());
         }
@@ -88,8 +88,9 @@ class CommunityDatasetController extends Controller
 
     public function destroy(CommunityDataset $dataset): RedirectResponse
     {
-        if ($dataset->file_path && Storage::disk(self::DISK)->exists($dataset->file_path)) {
-            Storage::disk(self::DISK)->delete($dataset->file_path);
+        $disk = community_disk();
+        if ($dataset->file_path && Storage::disk($disk)->exists($dataset->file_path)) {
+            Storage::disk($disk)->delete($dataset->file_path);
         }
         $dataset->delete();
         return redirect()->route('admin.community.datasets.index')->with('success', 'تم حذف مجموعة البيانات.');
@@ -104,12 +105,13 @@ class CommunityDatasetController extends Controller
         $safe = basename($originalName);
         $safe = preg_replace('/[\\\\\/:\*\?"<>|]/', '_', $safe) ?: 'file';
         $fullPath = $directory . '/' . $safe;
+        $disk = community_disk();
 
-        if ($currentFilename === $safe && Storage::disk(self::DISK)->exists($fullPath)) {
+        if ($currentFilename === $safe && Storage::disk($disk)->exists($fullPath)) {
             return $safe;
         }
 
-        if (!Storage::disk(self::DISK)->exists($fullPath)) {
+        if (!Storage::disk($disk)->exists($fullPath)) {
             return $safe;
         }
 

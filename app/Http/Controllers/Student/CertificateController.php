@@ -61,16 +61,18 @@ class CertificateController extends Controller
             abort(404);
         }
 
-        $disk = Storage::disk('public');
-        if (!$disk->exists($certificate->pdf_path)) {
+        $path = \App\Services\PublicMediaStorage::normalizePath((string) $certificate->pdf_path);
+        $diskName = \App\Services\PublicMediaStorage::diskHolding($path);
+        if ($diskName === null) {
             abort(404);
         }
 
-        $ext = strtolower(pathinfo($certificate->pdf_path, PATHINFO_EXTENSION));
+        $disk = Storage::disk($diskName);
+        $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION));
         $downloadName = 'certificate-' . ($certificate->certificate_number ?? $certificate->id) . '.' . ($ext ?: 'pdf');
 
         // inline preview in browser (PDF/images) + download supported by the browser UI
-        return $disk->response($certificate->pdf_path, $downloadName, [
+        return $disk->response($path, $downloadName, [
             'Content-Disposition' => 'inline; filename="' . $downloadName . '"',
         ]);
     }

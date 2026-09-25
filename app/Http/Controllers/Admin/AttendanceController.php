@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\AttendanceRecord;
 use App\Models\Lecture;
 use App\Models\TeamsAttendanceFile;
+use App\Services\PublicMediaStorage;
 use App\Services\TeamsAttendanceImportService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -38,7 +39,8 @@ class AttendanceController extends Controller
 
         $file = $request->file('file');
         $fileName = time() . '_' . $file->getClientOriginalName();
-        $filePath = $file->storeAs('attendance/teams', $fileName, 'public');
+        $localImportPath = $file->getRealPath();
+        $filePath = PublicMediaStorage::storeFileAs($file, 'attendance/teams', $fileName);
 
         $teamsFile = TeamsAttendanceFile::create([
             'lecture_id' => $lecture->id,
@@ -52,7 +54,7 @@ class AttendanceController extends Controller
         try {
             $teamsFile->update(['status' => 'processing']);
             $importer = new TeamsAttendanceImportService();
-            $result = $importer->importFromFile($lecture, public_path('storage/' . $filePath));
+            $result = $importer->importFromFile($lecture, $localImportPath);
             $teamsFile->update([
                 'status' => 'completed',
                 'total_records' => (int) ($result['total'] ?? 0),

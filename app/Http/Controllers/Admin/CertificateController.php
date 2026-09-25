@@ -10,6 +10,7 @@ use App\Models\CourseEnrollment;
 use App\Models\StudentCourseEnrollment;
 use App\Models\User;
 use App\Services\PlatformCourseCertificateService;
+use App\Services\PublicMediaStorage;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -327,7 +328,11 @@ class CertificateController extends Controller
         if ($request->hasFile('certificate_file')) {
             $file = $request->file('certificate_file');
             $fileName = 'cert-' . Str::uuid()->toString() . '.pdf';
-            $storedPath = $file->storeAs('certificates/' . (int) $validated['user_id'], $fileName, 'public');
+            $storedPath = PublicMediaStorage::storeFileAs(
+                $file,
+                'certificates/' . (int) $validated['user_id'],
+                $fileName
+            );
         }
 
         $createData = [
@@ -450,20 +455,32 @@ class CertificateController extends Controller
             abort(404, 'لا يوجد ملف مرفوع لهذه الشهادة.');
         }
 
-        $disk = Storage::disk('public');
-        if (! $disk->exists($certificate->pdf_path)) {
+        $path = $certificate->pdf_path;
+        $disk = null;
+        foreach (PublicMediaStorage::disksToProbe(null) as $diskName) {
+            try {
+                if (Storage::disk($diskName)->exists($path)) {
+                    $disk = Storage::disk($diskName);
+                    break;
+                }
+            } catch (\Throwable) {
+                continue;
+            }
+        }
+
+        if (! $disk) {
             abort(404, 'ملف الشهادة غير موجود على الخادم.');
         }
 
-        $ext = strtolower(pathinfo($certificate->pdf_path, PATHINFO_EXTENSION) ?: 'pdf');
+        $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION) ?: 'pdf');
         $base = 'حصتك-certificate-' . preg_replace('/[^A-Za-z0-9._-]+/', '_', (string) ($certificate->certificate_number ?? $certificate->id));
         $downloadName = $base . '.' . ($ext ?: 'pdf');
 
         if ($asAttachment) {
-            return $disk->download($certificate->pdf_path, $downloadName);
+            return $disk->download($path, $downloadName);
         }
 
-        return $disk->response($certificate->pdf_path, $downloadName, [
+        return $disk->response($path, $downloadName, [
             'Content-Disposition' => 'inline; filename="' . $downloadName . '"',
         ]);
     }
@@ -518,16 +535,12 @@ class CertificateController extends Controller
         if ($request->hasFile('certificate_file')) {
             $file = $request->file('certificate_file');
             $fileName = 'cert-' . Str::uuid()->toString() . '.pdf';
-            $newPath = $file->storeAs('certificates/' . (int) $validated['user_id'], $fileName, 'public');
-
-            if ($certificate->pdf_path) {
-                try {
-                    Storage::disk('public')->delete($certificate->pdf_path);
-                } catch (\Throwable $e) {
-                    // ignore delete failures
-                }
-            }
-            $updateData['pdf_path'] = $newPath;
+            $updateData['pdf_path'] = PublicMediaStorage::storeFileAs(
+                $file,
+                'certificates/' . (int) $validated['user_id'],
+                $fileName,
+                $certificate->pdf_path
+            );
         }
 
         // Preserve extended fields in metadata if columns do not exist
@@ -570,12 +583,7 @@ class CertificateController extends Controller
 
     public function destroy(Certificate $certificate)
     {
-        if ($certificate->pdf_path) {
-            try {
-                Storage::disk('public')->delete($certificate->pdf_path);
-            } catch (\Throwable $e) {
-            }
-        }
+        PublicMediaStorage::delete($certificate->pdf_path);
         $certificate->delete();
 
         return redirect()->route('admin.certificates.index')

@@ -5,9 +5,9 @@ namespace App\Http\Controllers\Employee;
 use App\Http\Controllers\Controller;
 use App\Models\EmployeeTask;
 use App\Models\EmployeeTaskDeliverable;
+use App\Services\PublicMediaStorage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
 
 class EmployeeTaskController extends Controller
 {
@@ -137,7 +137,7 @@ class EmployeeTaskController extends Controller
             $fileType = $file->getClientMimeType();
             $fileSize = $file->getSize();
             $folder = $deliveryType === 'image' ? 'employee-deliverables/images' : 'employee-deliverables/files';
-            $filePath = $file->store($folder, 'public');
+            $filePath = PublicMediaStorage::storeFile($file, $folder);
         }
         if ($deliveryType === 'link') {
             $linkUrl = $validated['link_url'];

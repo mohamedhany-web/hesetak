@@ -22,7 +22,7 @@ class CrmReportService
         $fileName = null;
         if ($file) {
             $fileName = $file->getClientOriginalName();
-            $path = $file->store('crm/reports', 'local');
+            $path = \App\Services\PublicMediaStorage::storeFile($file, 'crm/reports');
         }
 
         $report = CrmReport::create([

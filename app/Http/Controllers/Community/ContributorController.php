@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\CommunityDataset;
 use App\Models\CommunityModel;
 use App\Models\ContributorProfile;
+use App\Services\PublicMediaStorage;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -263,10 +264,11 @@ class ContributorController extends Controller
         $profile = $user->contributorProfile ?? new ContributorProfile(['user_id' => $user->id]);
 
         if ($request->hasFile('photo')) {
-            if ($profile->photo_path && Storage::disk('public')->exists($profile->photo_path)) {
-                Storage::disk('public')->delete($profile->photo_path);
-            }
-            $path = $request->file('photo')->store('contributor-profiles', 'public');
+            $path = PublicMediaStorage::store(
+                $request->file('photo'),
+                'contributor-profiles',
+                $profile->photo_path
+            );
             $validated['photo_path'] = $path;
         }
 

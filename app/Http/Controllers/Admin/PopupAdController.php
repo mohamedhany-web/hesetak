@@ -4,9 +4,9 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\PopupAd;
+use App\Services\PublicMediaStorage;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 
 class PopupAdController extends Controller
 {
@@ -38,7 +38,9 @@ class PopupAdController extends Controller
         $startsAt = Carbon::parse($validated['starts_at']);
         $endsAt = $startsAt->copy()->addDays((int) $validated['duration_days']);
 
-        $imagePath = $request->hasFile('image') ? $request->file('image')->store('popup_ads', 'public') : null;
+        $imagePath = $request->hasFile('image')
+            ? PublicMediaStorage::store($request->file('image'), 'popup_ads')
+            : null;
 
         PopupAd::create([
             'title' => $validated['title'],
@@ -91,10 +93,11 @@ class PopupAdController extends Controller
         ];
 
         if ($request->hasFile('image')) {
-            if ($popupAd->image) {
-                Storage::disk('public')->delete($popupAd->image);
-            }
-            $data['image'] = $request->file('image')->store('popup_ads', 'public');
+            $data['image'] = PublicMediaStorage::store(
+                $request->file('image'),
+                'popup_ads',
+                $popupAd->image
+            );
         }
 
         $popupAd->update($data);
@@ -105,9 +108,7 @@ class PopupAdController extends Controller
 
     public function destroy(PopupAd $popupAd)
     {
-        if ($popupAd->image) {
-            Storage::disk('public')->delete($popupAd->image);
-        }
+        PublicMediaStorage::delete($popupAd->image);
         $popupAd->delete();
         return redirect()->route('admin.popup-ads.index')
             ->with('success', 'تم حذف الإعلان بنجاح');

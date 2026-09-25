@@ -52,27 +52,46 @@ class PublicMediaStorage
 
     public static function exists(string $path): bool
     {
+        return self::diskHolding($path) !== null;
+    }
+
+    /**
+     * أول قرص يملك الملف (R2 ثم public …) — للقراءة/التحميل بعد توحيد الرفع على Cloudflare.
+     */
+    public static function diskHolding(string $path): ?string
+    {
         $path = self::normalizePath($path);
+        if ($path === '') {
+            return null;
+        }
 
         foreach (self::disksToProbe(null) as $disk) {
             try {
                 if ($disk === 'public') {
                     if (PublicStorageUrl::publicDiskHasFile($path)) {
-                        return true;
+                        return 'public';
                     }
 
                     continue;
                 }
 
                 if (Storage::disk($disk)->exists($path)) {
-                    return true;
+                    return $disk;
                 }
             } catch (\Throwable) {
                 continue;
             }
         }
 
-        return false;
+        // مرفقات CRM القديمة كانت على local
+        try {
+            if (Storage::disk('local')->exists($path)) {
+                return 'local';
+            }
+        } catch (\Throwable) {
+        }
+
+        return null;
     }
 
     /**
@@ -117,6 +136,82 @@ class PublicMediaStorage
     public static function storeUploaded(UploadedFile $file, string $directory): string
     {
         return self::store($file, $directory, null);
+    }
+
+    /**
+     * رفع أي ملف (صورة / فيديو / مستند / مرفق) على قرص الوسائط — R2 عند اكتمال AWS_*.
+     *
+     * @return string المسار النسبي داخل القرص
+     */
+    public static function storeFile(UploadedFile $file, string $directory, ?string $oldPath = null): string
+    {
+        $ext = strtolower((string) ($file->getClientOriginalExtension() ?: $file->guessExtension() ?: 'bin'));
+        $ext = preg_replace('/[^a-z0-9]+/', '', $ext) ?: 'bin';
+        $name = Str::uuid()->toString().'.'.$ext;
+
+        return self::storeNamed($file, $directory, $name, $oldPath);
+    }
+
+    /**
+     * رفع بملف باسم محدد (شهادات، حضور، …) على نفس قرص الوسائط.
+     */
+    public static function storeFileAs(UploadedFile $file, string $directory, string $filename, ?string $oldPath = null): string
+    {
+        $filename = basename(str_replace(['\\', "\0"], ['/', ''], $filename));
+        if ($filename === '' || $filename === '.' || $filename === '..') {
+            throw new \InvalidArgumentException('اسم الملف غير صالح.');
+        }
+
+        return self::storeNamed($file, $directory, $filename, $oldPath);
+    }
+
+    /**
+     * كتابة محتوى ثنائي/نصي مباشرة (مثل PDF مولَّد) على قرص الوسائط.
+     */
+    public static function putContents(string $path, string|array $contents, array $options = []): string
+    {
+        $disk = self::resolvedDisk();
+        $path = self::normalizePath($path);
+        $dir = trim(dirname($path), '.');
+        if ($dir !== '' && $dir !== '/') {
+            try {
+                Storage::disk($disk)->makeDirectory($dir);
+            } catch (\Throwable) {
+            }
+        }
+
+        $ok = Storage::disk($disk)->put($path, $contents, $options);
+        if ($ok === false) {
+            throw new \RuntimeException('فشل حفظ الملف على التخزين.');
+        }
+
+        return $path;
+    }
+
+    /**
+     * @return string المسار النسبي داخل القرص
+     */
+    private static function storeNamed(UploadedFile $file, string $directory, string $name, ?string $oldPath = null): string
+    {
+        $disk = self::resolvedDisk();
+        $directory = trim(str_replace('\\', '/', $directory), '/');
+
+        if ($disk === 'public') {
+            Storage::disk('public')->makeDirectory($directory);
+            $stored = $file->storeAs($directory, $name, 'public');
+        } else {
+            $stored = Storage::disk($disk)->putFileAs($directory, $file, $name);
+        }
+
+        if (! is_string($stored) || $stored === '') {
+            throw new \RuntimeException('فشل رفع الملف على التخزين.');
+        }
+
+        if (is_string($oldPath) && $oldPath !== '' && $oldPath !== $stored) {
+            self::delete($oldPath);
+        }
+
+        return str_replace('\\', '/', $stored);
     }
 
     public static function delete(?string $path): void

@@ -5,8 +5,8 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\AdvancedCourse;
 use App\Models\CourseLesson;
+use App\Services\PublicMediaStorage;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 
 class CourseLessonController extends Controller
 {
@@ -82,10 +82,10 @@ class CourseLessonController extends Controller
         if ($request->hasFile('attachments')) {
             $attachments = [];
             foreach ($request->file('attachments') as $file) {
-                $path = $file->store('course-attachments', 'public');
+                $path = PublicMediaStorage::storeFile($file, 'course-attachments');
                 $attachments[] = [
                     'name' => $file->getClientOriginalName(),
-                    'path' => Storage::url($path),
+                    'path' => PublicMediaStorage::publicUrl($path) ?? $path,
                     'size' => $file->getSize(),
                     'type' => $file->getMimeType(),
                 ];
@@ -149,10 +149,10 @@ class CourseLessonController extends Controller
         if ($request->hasFile('attachments')) {
             $attachments = [];
             foreach ($request->file('attachments') as $file) {
-                $path = $file->store('course-attachments', 'public');
+                $path = PublicMediaStorage::storeFile($file, 'course-attachments');
                 $attachments[] = [
                     'name' => $file->getClientOriginalName(),
-                    'path' => Storage::url($path),
+                    'path' => PublicMediaStorage::publicUrl($path) ?? $path,
                     'size' => $file->getSize(),
                     'type' => $file->getMimeType(),
                 ];
@@ -175,9 +175,16 @@ class CourseLessonController extends Controller
         if ($lesson->attachments) {
             $attachments = json_decode($lesson->attachments, true);
             foreach ($attachments as $attachment) {
-                if (Storage::disk('public')->exists(str_replace('/storage/', '', $attachment['path']))) {
-                    Storage::disk('public')->delete(str_replace('/storage/', '', $attachment['path']));
+                $raw = (string) ($attachment['path'] ?? '');
+                if ($raw === '') {
+                    continue;
                 }
+                if (PublicMediaStorage::isExternalUrl($raw)) {
+                    $relative = ltrim((string) (parse_url($raw, PHP_URL_PATH) ?: ''), '/');
+                } else {
+                    $relative = ltrim(str_replace('/storage/', '', $raw), '/');
+                }
+                PublicMediaStorage::delete($relative);
             }
         }
 

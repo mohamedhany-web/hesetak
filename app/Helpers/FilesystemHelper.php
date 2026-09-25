@@ -2,18 +2,22 @@
 
 if (! function_exists('community_disk')) {
     /**
-     * قرص تخزين ملفات المجتمع (تقديمات المساهمين).
+     * قرص تخزين ملفات المجتمع (تقديمات المساهمين) — Cloudflare R2 عند الجاهزية.
      *
-     * @return string 'r2' أو 'local'
+     * @return string 'r2' أو 'local' (محلي فقط إن طُلب صراحةً أو R2 غير جاهز)
      */
     function community_disk(): string
     {
-        $envDisk = env('FILESYSTEM_DISK_COMMUNITY');
-        if ($envDisk !== null && $envDisk !== '' && in_array($envDisk, ['r2', 'local'], true)) {
-            return $envDisk;
+        $preferred = strtolower(trim((string) (
+            env('FILESYSTEM_DISK_COMMUNITY')
+            ?: config('filesystems.community_disk', 'r2')
+        )));
+
+        if ($preferred === 'local') {
+            return 'local';
         }
 
-        return config('filesystems.community_disk', 'local');
+        return \App\Services\CloudflareR2::resolveDisk('r2');
     }
 }
 

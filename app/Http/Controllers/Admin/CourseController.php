@@ -6,8 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\Course;
 use App\Models\Subject;
 use App\Models\Classroom;
+use App\Services\CourseThumbnailStorage;
+use App\Services\PublicMediaStorage;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 
 class CourseController extends Controller
 {
@@ -68,7 +69,10 @@ class CourseController extends Controller
 
         // رفع الصورة
         if ($request->hasFile('thumbnail')) {
-            $data['thumbnail'] = $request->file('thumbnail')->store('courses', 'public');
+            $data['thumbnail'] = PublicMediaStorage::store(
+                $request->file('thumbnail'),
+                CourseThumbnailStorage::DIRECTORY
+            );
         }
 
         Course::create($data);
@@ -136,13 +140,13 @@ class CourseController extends Controller
         $data['duration_hours'] = $data['duration_hours'] ?? 0;
         $data['price'] = $data['price'] ?? 0;
 
-        // رفع الصورة الجديدة
+        // رفع الصورة الجديدة (يحذف القديمة تلقائياً)
         if ($request->hasFile('thumbnail')) {
-            // حذف الصورة القديمة
-            if ($course->thumbnail) {
-                Storage::disk('public')->delete($course->thumbnail);
-            }
-            $data['thumbnail'] = $request->file('thumbnail')->store('courses', 'public');
+            $data['thumbnail'] = PublicMediaStorage::store(
+                $request->file('thumbnail'),
+                CourseThumbnailStorage::DIRECTORY,
+                $course->thumbnail
+            );
         }
 
         $course->update($data);
@@ -164,9 +168,7 @@ class CourseController extends Controller
         }
 
         // حذف الصورة
-        if ($course->thumbnail) {
-            Storage::disk('public')->delete($course->thumbnail);
-        }
+        CourseThumbnailStorage::deleteIfStored($course->thumbnail);
 
         $course->delete();
 

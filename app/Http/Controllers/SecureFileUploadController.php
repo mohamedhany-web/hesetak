@@ -3,9 +3,9 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
-use App\Services\SecurityService;
 use Illuminate\Support\Facades\Log;
+use App\Services\PublicMediaStorage;
+use App\Services\SecurityService;
 
 class SecureFileUploadController extends Controller
 {
@@ -52,10 +52,10 @@ class SecureFileUploadController extends Controller
             $safeFileName = $this->securityService->generateSafeFileName($file->getClientOriginalName());
             
             // حفظ الملف
-            $path = $file->storeAs(
+            $path = PublicMediaStorage::storeFileAs(
+                $file,
                 "secure/{$request->type}",
-                $safeFileName,
-                'public'
+                $safeFileName
             );
 
             // تسجيل رفع الملف
@@ -72,7 +72,7 @@ class SecureFileUploadController extends Controller
 
             return response()->json([
                 'success' => true,
-                'path' => Storage::url($path),
+                'path' => PublicMediaStorage::publicUrl($path) ?? $path,
                 'file_name' => $safeFileName,
             ]);
 

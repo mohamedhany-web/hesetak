@@ -8,6 +8,7 @@ use App\Models\AdvancedCourse;
 use App\Models\CourseLesson;
 use App\Models\TeamsAttendanceFile;
 use App\Models\User;
+use App\Services\PublicMediaStorage;
 use App\Services\TeamsAttendanceImportService;
 use App\Support\AppTimezone;
 use Illuminate\Http\Request;
@@ -163,7 +164,8 @@ class LectureController extends Controller
 
         $file = $request->file('file');
         $fileName = time() . '_' . $file->getClientOriginalName();
-        $filePath = $file->storeAs('attendance/teams', $fileName, 'public');
+        $localImportPath = $file->getRealPath();
+        $filePath = PublicMediaStorage::storeFileAs($file, 'attendance/teams', $fileName);
 
         $teamsFile = TeamsAttendanceFile::create([
             'lecture_id' => $lecture->id,
@@ -175,7 +177,7 @@ class LectureController extends Controller
         ]);
 
         try {
-            $result = app(TeamsAttendanceImportService::class)->importFromFile($lecture, public_path('storage/' . $filePath));
+            $result = app(TeamsAttendanceImportService::class)->importFromFile($lecture, $localImportPath);
             $teamsFile->update([
                 'status' => 'completed',
                 'total_records' => (int) ($result['total'] ?? 0),

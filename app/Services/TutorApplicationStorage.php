@@ -204,17 +204,6 @@ class TutorApplicationStorage
 
         $stored = str_replace('\\', '/', $stored);
 
-        if ($disk !== 'public') {
-            try {
-                Storage::disk('public')->makeDirectory($directory);
-                $copy = Storage::disk($disk)->get($stored);
-                if (is_string($copy) && $copy !== '') {
-                    Storage::disk('public')->put($stored, $copy);
-                }
-            } catch (\Throwable) {
-            }
-        }
-
         if (is_string($oldPath) && $oldPath !== '' && $oldPath !== $stored) {
             PublicMediaStorage::delete($oldPath);
         }

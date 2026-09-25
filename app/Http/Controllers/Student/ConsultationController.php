@@ -8,6 +8,7 @@ use App\Models\ConsultationSetting;
 use App\Models\InstructorProfile;
 use App\Models\User;
 use App\Models\Wallet;
+use App\Services\PublicMediaStorage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -112,7 +113,7 @@ class ConsultationController extends Controller
         $priceEgp = $profile->effectiveConsultationPriceEgp();
         $durationMinutes = $profile->effectiveConsultationDurationMinutes();
 
-        $paymentProofPath = $request->file('payment_proof')->store('payment-proofs', 'public');
+        $paymentProofPath = PublicMediaStorage::storeFile($request->file('payment_proof'), 'payment-proofs');
 
         $consultation = ConsultationRequest::create([
             'instructor_id' => $instructor->id,

@@ -112,14 +112,14 @@ return [
     | استخدم 'r2' لرفع الملفات على Cloudflare R2، أو 'local' للتطوير المحلي.
     | بعد تغيير .env نفّذ: php artisan config:clear
     */
-    'community_disk' => env('FILESYSTEM_DISK_COMMUNITY', 'local'),
+    'community_disk' => env('FILESYSTEM_DISK_COMMUNITY', 'r2'),
 
     /*
     |--------------------------------------------------------------------------
     | وسائط الموقع العامة (كورسات، باقات، مسارات، سلايدر، …)
     |--------------------------------------------------------------------------
-    | public = storage/app/public + /storage/...
-    | r2     = Cloudflare R2 (AWS_* ويفضّل R2_PUBLIC_URL أو AWS_URL للرابط المباشر)
+    | r2     = Cloudflare R2 (افتراضي — AWS_* + يفضّل R2_PUBLIC_URL)
+    | public = تخزين محلي للتطوير فقط عند غياب مفاتيح R2
     */
     'public_media_disk' => env('PUBLIC_MEDIA_DISK', 'r2'),
 
@@ -136,52 +136,41 @@ return [
     |--------------------------------------------------------------------------
     | شعار لوحة التحكم (Admin)
     |--------------------------------------------------------------------------
-    | public = storage/app/public + رابط /storage (محلياً: نفّذ php artisan storage:link)
-    | r2     = Cloudflare R2 (نفس مفاتيح AWS_* و AWS_URL في .env)
     */
-    'admin_branding_disk' => env('ADMIN_BRANDING_DISK', env('PUBLIC_MEDIA_DISK', 'public')),
+    'admin_branding_disk' => env('ADMIN_BRANDING_DISK', env('PUBLIC_MEDIA_DISK', 'r2')),
 
     /*
     |--------------------------------------------------------------------------
     | صور خدمات الموقع العامة (/services)
     |--------------------------------------------------------------------------
-    | public = storage/app/public + /storage/...
-    | r2     = Cloudflare R2 (نفس AWS_* و AWS_URL و AWS_ENDPOINT)
     */
-    'site_services_disk' => env('SITE_SERVICES_DISK', env('PUBLIC_MEDIA_DISK', 'public')),
+    'site_services_disk' => env('SITE_SERVICES_DISK', env('PUBLIC_MEDIA_DISK', 'r2')),
 
     /*
     |--------------------------------------------------------------------------
     | صور آراء الموقع (الصفحة الرئيسية)
     |--------------------------------------------------------------------------
-    | إن لم تُضبط SITE_TESTIMONIALS_DISK يُستخدم SITE_SERVICES_DISK ثم public.
     */
-    'site_testimonials_disk' => env('SITE_TESTIMONIALS_DISK') ?: env('SITE_SERVICES_DISK', env('PUBLIC_MEDIA_DISK', 'public')),
+    'site_testimonials_disk' => env('SITE_TESTIMONIALS_DISK') ?: env('SITE_SERVICES_DISK', env('PUBLIC_MEDIA_DISK', 'r2')),
 
     /*
     |--------------------------------------------------------------------------
     | صور بورتفوليو الطلاب (my-portfolio)
     |--------------------------------------------------------------------------
-    | public = storage/app/public + /storage/... (php artisan storage:link)
-    | r2     = Cloudflare R2 (نفس AWS_* و AWS_URL و AWS_ENDPOINT)
     */
-    'portfolio_disk' => env('PORTFOLIO_DISK', env('PUBLIC_MEDIA_DISK', 'public')),
+    'portfolio_disk' => env('PORTFOLIO_DISK', env('PUBLIC_MEDIA_DISK', 'r2')),
 
     /*
     |--------------------------------------------------------------------------
     | مرفقات الواجبات (ملفات المدرب + تسليم الطالب)
     |--------------------------------------------------------------------------
-    | public = storage/app/public + /storage/...  |  r2 = Cloudflare R2 (AWS_* في .env)
-    | إن تُرك ASSIGNMENT_FILES_DISK فارغاً يُستخدم PORTFOLIO_DISK ثم public.
     */
-    'assignment_files_disk' => env('ASSIGNMENT_FILES_DISK') ?: env('PORTFOLIO_DISK', 'public'),
+    'assignment_files_disk' => env('ASSIGNMENT_FILES_DISK') ?: env('PORTFOLIO_DISK', env('PUBLIC_MEDIA_DISK', 'r2')),
 
     /*
     |--------------------------------------------------------------------------
     | مكتبة الماتريال (ملفات المحاضرات / lecture-materials)
     |--------------------------------------------------------------------------
-    | r2     = Cloudflare R2 (افتراضي — يتبع PUBLIC_MEDIA_DISK إن تُرك فارغاً)
-    | public = تخزين محلي للتطوير فقط
     */
     'lecture_materials_disk' => env('LECTURE_MATERIALS_DISK') ?: env('PUBLIC_MEDIA_DISK', 'r2'),
 
@@ -189,18 +178,15 @@ return [
     |--------------------------------------------------------------------------
     | مواد المناهج التفاعلية (PPTX / PDF في هيكل المنهج)
     |--------------------------------------------------------------------------
-    | r2     = Cloudflare R2 (افتراضي)
-    | public = تخزين محلي للتطوير فقط عند غياب مفاتيح AWS_*
     */
-    'curriculum_library_disk' => env('CURRICULUM_LIBRARY_DISK', 'r2'),
+    'curriculum_library_disk' => env('CURRICULUM_LIBRARY_DISK', env('PUBLIC_MEDIA_DISK', 'r2')),
 
     /*
     |--------------------------------------------------------------------------
     | صور الملف الشخصي للمستخدمين (profile_image)
     |--------------------------------------------------------------------------
-    | إن تُرك USER_PROFILE_DISK فارغاً يُستخدم PORTFOLIO_DISK ثم public — لتوحيد R2 مع معرض المحتوى.
     */
-    'user_profile_disk' => env('USER_PROFILE_DISK', env('PORTFOLIO_DISK', 'public')),
+    'user_profile_disk' => env('USER_PROFILE_DISK', env('PORTFOLIO_DISK', env('PUBLIC_MEDIA_DISK', 'r2'))),
 
     /*
     |--------------------------------------------------------------------------

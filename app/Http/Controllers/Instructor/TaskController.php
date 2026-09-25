@@ -6,9 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\Task;
 use App\Models\TaskDeliverable;
 use App\Models\AdvancedCourse;
+use App\Services\PublicMediaStorage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
 
 class TaskController extends Controller
 {
@@ -246,7 +246,7 @@ class TaskController extends Controller
             $fileType = $file->getClientMimeType();
             $fileSize = $file->getSize();
             $folder = $validated['delivery_type'] === 'image' ? 'task-deliverables/images' : 'task-deliverables/files';
-            $filePath = $file->store($folder, 'public');
+            $filePath = PublicMediaStorage::storeFile($file, $folder);
         }
         if ($validated['delivery_type'] === 'link') {
             $linkUrl = $validated['link_url'];

@@ -85,8 +85,10 @@ class CrmReportController extends Controller
         abort_unless($report->user_id === $request->user()->id
             || $request->user()->role === 'super_admin'
             || $request->user()->hasPermission('manage.leads'), 403);
-        abort_unless($report->file_path && Storage::disk('local')->exists($report->file_path), 404);
+        abort_unless($report->file_path, 404);
+        $diskName = \App\Services\PublicMediaStorage::diskHolding((string) $report->file_path);
+        abort_unless($diskName, 404);
 
-        return Storage::disk('local')->download($report->file_path, $report->file_name ?? 'crm-report');
+        return Storage::disk($diskName)->download($report->file_path, $report->file_name ?? 'crm-report');
     }
 }

@@ -92,8 +92,10 @@ class CrmMessageController extends Controller
             || CrmMessageService::inboxQuery($request->user())->where('id', $message->id)->exists(),
             403
         );
-        abort_unless($message->attachment_path && Storage::disk('local')->exists($message->attachment_path), 404);
+        abort_unless($message->attachment_path, 404);
+        $diskName = \App\Services\PublicMediaStorage::diskHolding((string) $message->attachment_path);
+        abort_unless($diskName, 404);
 
-        return Storage::disk('local')->download($message->attachment_path, $message->attachment_name ?? 'attachment');
+        return Storage::disk($diskName)->download($message->attachment_path, $message->attachment_name ?? 'attachment');
     }
 }

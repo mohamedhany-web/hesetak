@@ -8,7 +8,7 @@ use App\Models\EmployeeAgreement;
 use App\Models\EmployeeSalaryDeduction;
 use App\Models\EmployeeSalaryPayment;
 use App\Models\User;
-use Illuminate\Support\Facades\Storage;
+use App\Services\PublicMediaStorage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -336,7 +336,7 @@ class EmployeeAgreementController extends Controller
         ]);
 
         $file = $request->file('transfer_receipt');
-        $path = $file->store('receipts/employee-salary-payments', 'public');
+        $path = PublicMediaStorage::storeFile($file, 'receipts/employee-salary-payments');
 
         $payment->update([
             'status' => 'paid',

@@ -29,7 +29,7 @@ class CrmMessageService
         $fileName = null;
         if ($attachment) {
             $fileName = $attachment->getClientOriginalName();
-            $path = $attachment->store('crm/messages', 'local');
+            $path = \App\Services\PublicMediaStorage::storeFile($attachment, 'crm/messages');
         }
 
         return CrmMessage::create([

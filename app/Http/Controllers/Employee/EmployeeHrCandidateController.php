@@ -4,9 +4,9 @@ namespace App\Http\Controllers\Employee;
 
 use App\Http\Controllers\Controller;
 use App\Models\HrCandidate;
+use App\Services\PublicMediaStorage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 
 class EmployeeHrCandidateController extends Controller
@@ -64,7 +64,7 @@ class EmployeeHrCandidateController extends Controller
         $validated['created_by'] = Auth::id();
         $cvPath = null;
         if ($request->hasFile('cv')) {
-            $cvPath = $request->file('cv')->store('hr_cvs', 'public');
+            $cvPath = PublicMediaStorage::storeFile($request->file('cv'), 'hr_cvs');
         }
 
         $candidate = HrCandidate::create([
@@ -132,10 +132,11 @@ class EmployeeHrCandidateController extends Controller
         ];
 
         if ($request->hasFile('cv')) {
-            if ($candidate->cv_path) {
-                Storage::disk('public')->delete($candidate->cv_path);
-            }
-            $data['cv_path'] = $request->file('cv')->store('hr_cvs', 'public');
+            $data['cv_path'] = PublicMediaStorage::storeFile(
+                $request->file('cv'),
+                'hr_cvs',
+                $candidate->cv_path
+            );
         }
 
         $candidate->update($data);
@@ -150,9 +151,7 @@ class EmployeeHrCandidateController extends Controller
 
         abort_if($candidate->applications()->exists(), 403, 'لا يمكن حذف مرشح مرتبط بطلبات توظيف.');
 
-        if ($candidate->cv_path) {
-            Storage::disk('public')->delete($candidate->cv_path);
-        }
+        PublicMediaStorage::delete($candidate->cv_path);
 
         $candidate->delete();
 

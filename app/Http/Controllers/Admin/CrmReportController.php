@@ -60,8 +60,10 @@ class CrmReportController extends Controller
     public function download(CrmReport $report): StreamedResponse
     {
         abort_unless(auth()->user()->hasPermission('manage.leads') || auth()->user()->role === 'super_admin', 403);
-        abort_unless($report->file_path && Storage::disk('local')->exists($report->file_path), 404);
+        abort_unless($report->file_path, 404);
+        $diskName = \App\Services\PublicMediaStorage::diskHolding((string) $report->file_path);
+        abort_unless($diskName, 404);
 
-        return Storage::disk('local')->download($report->file_path, $report->file_name ?? 'crm-report');
+        return Storage::disk($diskName)->download($report->file_path, $report->file_name ?? 'crm-report');
     }
 }

@@ -6,8 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\AgreementPayment;
 use App\Models\InstructorAgreement;
 use App\Models\User;
+use App\Services\PublicMediaStorage;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 
 class SalaryController extends Controller
 {
@@ -154,7 +154,7 @@ class SalaryController extends Controller
         ]);
 
         $file = $request->file('transfer_receipt');
-        $path = $file->store('receipts/agreement-payments', 'public');
+        $path = PublicMediaStorage::storeFile($file, 'receipts/agreement-payments');
         $payment->update([
             'status' => AgreementPayment::STATUS_PAID,
             'paid_at' => now(),

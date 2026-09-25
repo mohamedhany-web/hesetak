@@ -20,6 +20,7 @@ use App\Services\KashierService;
 use App\Services\KashierSettings;
 use App\Services\OrderWalletAndCouponFinalizer;
 use App\Services\PaymentGatewaySettings;
+use App\Services\PublicMediaStorage;
 use App\Services\CourseSubscriptionService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -1261,7 +1262,7 @@ class CheckoutController extends Controller
         try {
             $paymentProofPath = null;
             if ($request->hasFile('payment_proof')) {
-                $paymentProofPath = $request->file('payment_proof')->store('payment-proofs', 'public');
+                $paymentProofPath = PublicMediaStorage::storeFile($request->file('payment_proof'), 'payment-proofs');
             }
 
             $extraNotes = [];

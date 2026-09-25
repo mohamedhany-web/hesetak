@@ -10,8 +10,6 @@ use App\Services\PublicMediaStorage;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 
 class LessonController extends Controller
 {
@@ -288,23 +286,6 @@ class LessonController extends Controller
 
     private function storeLessonAttachment(UploadedFile $file): string
     {
-        $disk = PublicMediaStorage::resolvedDisk();
-        $dir = 'lesson-attachments';
-        $ext = strtolower((string) ($file->getClientOriginalExtension() ?: $file->guessExtension() ?: 'bin'));
-        $ext = preg_replace('/[^a-z0-9]/', '', $ext) ?: 'bin';
-        $name = Str::uuid()->toString().'.'.$ext;
-
-        if ($disk === 'public') {
-            Storage::disk('public')->makeDirectory($dir);
-            $stored = $file->storeAs($dir, $name, 'public');
-        } else {
-            $stored = Storage::disk($disk)->putFileAs($dir, $file, $name, ['visibility' => 'public']);
-        }
-
-        if (! is_string($stored) || $stored === '') {
-            throw new \RuntimeException('فشل رفع مرفق الدرس.');
-        }
-
-        return str_replace('\\', '/', $stored);
+        return PublicMediaStorage::storeFile($file, 'lesson-attachments');
     }
 }

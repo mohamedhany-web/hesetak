@@ -5,8 +5,8 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Expense;
 use App\Models\Wallet;
+use App\Services\PublicMediaStorage;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 
 class ExpenseController extends Controller
 {
@@ -113,7 +113,7 @@ class ExpenseController extends Controller
             // رفع المرفق إذا كان موجوداً
             $attachmentPath = null;
             if ($request->hasFile('attachment')) {
-                $attachmentPath = $request->file('attachment')->store('expenses', 'public');
+                $attachmentPath = PublicMediaStorage::storeFile($request->file('attachment'), 'expenses');
             }
 
             // إنشاء المصروف
@@ -188,11 +188,11 @@ class ExpenseController extends Controller
         try {
             // رفع المرفق الجديد إذا كان موجوداً
             if ($request->hasFile('attachment')) {
-                // حذف المرفق القديم
-                if ($expense->attachment) {
-                    Storage::disk('public')->delete($expense->attachment);
-                }
-                $attachmentPath = $request->file('attachment')->store('expenses', 'public');
+                $attachmentPath = PublicMediaStorage::storeFile(
+                    $request->file('attachment'),
+                    'expenses',
+                    $expense->attachment
+                );
                 $validated['attachment'] = $attachmentPath;
             }
 
@@ -270,9 +270,7 @@ class ExpenseController extends Controller
     {
         try {
             // حذف المرفق
-            if ($expense->attachment) {
-                Storage::disk('public')->delete($expense->attachment);
-            }
+            PublicMediaStorage::delete($expense->attachment);
 
             $expense->delete();
 

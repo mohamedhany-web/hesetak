@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\AdvancedCourse;
 use App\Models\Coupon;
 use App\Models\Order;
+use App\Services\PublicMediaStorage;
 use App\Services\ReferralService;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -101,7 +102,7 @@ class OrderController extends Controller
         }
 
         // رفع صورة الإيصال
-        $paymentProofPath = $request->file('payment_proof')->store('payment-proofs', 'public');
+        $paymentProofPath = PublicMediaStorage::storeFile($request->file('payment_proof'), 'payment-proofs');
 
         // حساب السعر النهائي (بعد خصم الإحالة إذا كان موجوداً)
         $originalAmount = $advancedCourse->effectivePurchasePrice();

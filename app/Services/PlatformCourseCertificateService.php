@@ -9,7 +9,6 @@ use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Mpdf\Mpdf;
 use Throwable;
@@ -147,7 +146,7 @@ class PlatformCourseCertificateService
         $mpdf->WriteHTML($html);
 
         $relativePath = 'certificates/'.$user->id.'/platform-'.Str::uuid().'.pdf';
-        Storage::disk('public')->put($relativePath, $mpdf->Output('', 'S'));
+        PublicMediaStorage::putContents($relativePath, $mpdf->Output('', 'S'));
 
         $academy = trim((string) config('certificates.academy_name', '')) ?: (string) config('app.name');
         $instructor = $course->instructor;
