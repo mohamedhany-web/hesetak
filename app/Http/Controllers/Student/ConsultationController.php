@@ -17,6 +17,17 @@ class ConsultationController extends Controller
     public function __construct()
     {
         $this->middleware(['auth', 'role:student']);
+        $this->middleware(function ($request, $next) {
+            if (! student_ui('show_consultations', false)) {
+                return redirect()
+                    ->route('dashboard')
+                    ->with('info', app()->getLocale() === 'ar'
+                        ? 'خدمة الاستشارات غير متاحة حالياً.'
+                        : 'Consultations are not available right now.');
+            }
+
+            return $next($request);
+        });
     }
 
     public function index()

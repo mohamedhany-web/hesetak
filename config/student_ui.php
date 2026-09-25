@@ -35,7 +35,7 @@ return [
     'show_assignments' => true,
     'show_exams' => true,
     'show_achievements' => false,
-    'show_consultations' => true,
+    'show_consultations' => false,
     'show_legacy_calendar' => false,
 
     // تذكير قبل الموعد (دقائق)

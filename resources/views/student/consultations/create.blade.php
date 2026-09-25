@@ -1,229 +1,209 @@
 @extends('layouts.student-timeline')
 
-@section('title', 'طلب استشارة — '.$instructor->name)
+@section('title', (app()->getLocale() === 'ar' ? 'طلب استشارة — ' : 'Consultation — ').$instructor->name)
+@section('page_title', app()->getLocale() === 'ar' ? 'طلب استشارة' : 'Request consultation')
 
 @section('content')
-<div class="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6 pb-10">
-    <div class="flex flex-wrap items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-        <a href="{{ route('dashboard') }}" class="hover:text-sky-600 dark:hover:text-sky-400 font-medium">{{ __('auth.dashboard') }}</a>
-        <i class="fas fa-chevron-left text-[10px] opacity-50"></i>
-        <a href="{{ route('consultations.index') }}" class="hover:text-sky-600 dark:hover:text-sky-400 font-medium">طلبات الاستشارة</a>
-        <i class="fas fa-chevron-left text-[10px] opacity-50"></i>
-        <span class="text-gray-900 dark:text-gray-200 font-semibold truncate">طلب جديد</span>
+@php
+    $locale = app()->getLocale();
+    $isRtl = $locale === 'ar';
+    $title = $isRtl ? 'طلب استشارة ودفع' : 'Request & pay';
+@endphp
+
+@include('partials.student-timeline-top', [
+    'locale' => $locale,
+    'pageTitle' => $title,
+    'crumbs' => [
+        ['label' => __('student_timeline.school_gate'), 'url' => route('dashboard')],
+        ['label' => $isRtl ? 'الاستشارات' : 'Consultations', 'url' => route('consultations.index')],
+        ['label' => $instructor->name, 'url' => null],
+    ],
+])
+
+@if(session('error'))
+    <div class="st-flash st-flash--err">{{ session('error') }}</div>
+@endif
+@if($errors->any())
+    <div class="st-flash st-flash--err">{{ $errors->first() }}</div>
+@endif
+
+<section class="st-msg-intro">
+    <div>
+        <h2>{{ $title }}</h2>
+        <p>{{ $isRtl
+            ? 'حوّل على حسابات المنصة وارفع صورة الإيصال — بعد التأكيد يُحدد الموعد.'
+            : 'Transfer to platform accounts and upload the receipt — after verification the session is scheduled.' }}</p>
     </div>
+    <a href="{{ route('consultations.index') }}" class="st-pill st-pill--outline">{{ $isRtl ? 'طلباتي' : 'My requests' }}</a>
+</section>
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-10 items-start">
-        {{-- ملخص الطلب — عرض كامل شبيه بصفحة الدفع --}}
-        <div class="lg:col-span-1 order-2 lg:order-1">
-            <div class="sticky top-24 rounded-2xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-lg p-6 space-y-5">
-                <h2 class="text-lg font-black text-gray-900 dark:text-white flex items-center gap-2">
-                    <i class="fas fa-receipt text-sky-500"></i>
-                    ملخص الطلب
-                </h2>
-                <div class="flex items-start gap-3 pb-4 border-b border-gray-100 dark:border-gray-700">
-                    <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-sky-500 to-cyan-600 flex items-center justify-center text-white shadow-md flex-shrink-0">
-                        <i class="fas fa-user-tie"></i>
-                    </div>
-                    <div class="min-w-0">
-                        <p class="font-bold text-gray-900 dark:text-white truncate">{{ $instructor->name }}</p>
-                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">استشارة فردية</p>
-                        <a href="{{ route('public.instructors.show', $instructor) }}" class="text-xs text-sky-600 dark:text-sky-400 font-semibold hover:underline mt-2 inline-block">الملف العام للمدرب</a>
-                    </div>
-                </div>
-                <div class="space-y-2 text-sm">
-                    <div class="flex justify-between">
-                        <span class="text-gray-600 dark:text-gray-400">قيمة الاستشارة</span>
-                        <span class="font-bold text-sky-600 dark:text-sky-400">{{ number_format($priceEgp, 2) }} {{ __('public.currency_egp') }}</span>
-                    </div>
-                    <div class="flex justify-between pt-2 border-t border-gray-100 dark:border-gray-700">
-                        <span class="font-bold text-gray-900 dark:text-white">مدة الجلسة</span>
-                        <span class="font-bold text-gray-900 dark:text-white">{{ (int) $durationMinutes }} دقيقة</span>
-                    </div>
-                </div>
-                <ol class="space-y-2 text-xs text-gray-600 dark:text-gray-400">
-                    <li class="flex gap-2"><span class="font-bold text-sky-600">١</span> التحويل على <strong class="text-gray-800 dark:text-gray-200">حسابات المنصة</strong> وإرفاق الإيصال</li>
-                    <li class="flex gap-2"><span class="font-bold text-sky-600">٢</span> مراجعة الإدارة وتأكيد استلام المبلغ</li>
-                    <li class="flex gap-2"><span class="font-bold text-sky-600">٣</span> جدولة الموعد وإرسال رابط الغرفة</li>
-                </ol>
-            </div>
+<section class="st-teacher-facts" aria-label="{{ $title }}">
+    <article class="st-teacher-fact">
+        <span class="st-teacher-fact__icon" aria-hidden="true"><i class="fas fa-user-tie"></i></span>
+        <div>
+            <strong>{{ $instructor->name }}</strong>
+            <small>{{ $isRtl ? 'المعلم' : 'Teacher' }}</small>
         </div>
+    </article>
+    <article class="st-teacher-fact">
+        <span class="st-teacher-fact__icon" aria-hidden="true"><i class="fas fa-coins"></i></span>
+        <div>
+            <strong>{{ number_format((float) $priceEgp, 2) }} {{ currency_symbol() }}</strong>
+            <small>{{ $isRtl ? 'قيمة الاستشارة' : 'Consultation fee' }}</small>
+        </div>
+    </article>
+    <article class="st-teacher-fact">
+        <span class="st-teacher-fact__icon" aria-hidden="true"><i class="fas fa-clock"></i></span>
+        <div>
+            <strong>{{ (int) $durationMinutes }}</strong>
+            <small>{{ $isRtl ? 'دقيقة' : 'minutes' }}</small>
+        </div>
+    </article>
+</section>
 
-        <div class="lg:col-span-2 order-1 lg:order-2">
-            <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-lg overflow-hidden">
-                <div class="px-5 sm:px-8 py-5 border-b border-gray-100 dark:border-gray-700 bg-gray-50/80 dark:bg-gray-900/40">
-                    <h1 class="text-xl sm:text-2xl font-black text-gray-900 dark:text-white">طلب استشارة ودفع</h1>
-                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">نفس آلية دفع الكورسات: تحويل على حسابات المنصة المعروضة ثم رفع صورة الإيصال.</p>
-                </div>
+@if($settings->payment_instructions)
+    <div class="st-flash" style="margin-top:1rem;white-space:pre-line">{{ $settings->payment_instructions }}</div>
+@endif
 
-                <div class="p-5 sm:p-8 space-y-6">
-                    @if(session('error'))
-                        <div class="p-4 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-800 dark:text-red-200 text-sm">{{ session('error') }}</div>
-                    @endif
-                    @if($errors->any())
-                        <div class="p-4 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
-                            <ul class="list-disc list-inside text-sm text-red-800 dark:text-red-200 space-y-1">
-                                @foreach($errors->all() as $err)<li>{{ $err }}</li>@endforeach
-                            </ul>
-                        </div>
-                    @endif
-
-                    @if($settings->payment_instructions)
-                    <div class="rounded-xl bg-amber-50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-900/40 p-4">
-                        <h3 class="font-bold text-amber-900 dark:text-amber-200 text-sm mb-2">تعليمات من المنصة</h3>
-                        <div class="text-sm text-amber-950 dark:text-amber-100 whitespace-pre-line leading-relaxed">{{ $settings->payment_instructions }}</div>
-                    </div>
-                    @endif
-
-                    <form method="POST" action="{{ route('consultations.store', $instructor) }}" enctype="multipart/form-data" class="space-y-5">
-                        @csrf
-
-                        <div>
-                            <label class="block text-sm font-bold text-gray-800 dark:text-gray-200 mb-2">موضوع أو استفسارك (اختياري)</label>
-                            <textarea name="student_message" rows="4" class="w-full rounded-xl border-2 border-gray-200 dark:border-gray-600 dark:bg-gray-900 px-4 py-3 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:ring-2 focus:ring-sky-500/30 focus:border-sky-500 outline-none transition-shadow" placeholder="صف بإيجاز ما تحتاجه من الاستشارة...">{{ old('student_message') }}</textarea>
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-black text-gray-800 dark:text-gray-200 mb-2 flex items-center gap-2">
-                                <i class="fas fa-credit-card text-sky-500"></i>
-                                طريقة الدفع
-                            </label>
-                            <select name="payment_method" id="payment_method" required
-                                    class="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all bg-white dark:bg-gray-900 font-medium text-gray-900 dark:text-gray-100">
-                                <option value="">اختر طريقة الدفع</option>
-                                <option value="bank_transfer" @selected(old('payment_method')==='bank_transfer')>تحويل بنكي / محفظة إلكترونية</option>
-                                <option value="cash" @selected(old('payment_method')==='cash')>نقدي</option>
-                                <option value="other" @selected(old('payment_method')==='other')>أخرى</option>
-                            </select>
-                        </div>
-
-                        @if(isset($availableWallets) && $availableWallets->count() > 0)
-                        <div id="wallet_selection" class="hidden">
-                            <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
-                                <i class="fas fa-university text-sky-600 ml-2"></i>
-                                حساب المنصة للتحويل
-                            </label>
-                            <select name="wallet_id" id="wallet_id"
-                                    class="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all bg-white dark:bg-gray-900">
-                                <option value="">اختر الحساب</option>
-                                @foreach($availableWallets as $wallet)
-                                    <option value="{{ $wallet->id }}"
-                                            @selected((string)old('wallet_id')===(string)$wallet->id)
-                                            data-type="{{ $wallet->type }}"
-                                            data-name="{{ $wallet->name }}"
-                                            data-account-number="{{ $wallet->account_number }}"
-                                            data-bank-name="{{ $wallet->bank_name }}"
-                                            data-account-holder="{{ $wallet->account_holder }}"
-                                            data-notes="{{ $wallet->notes }}">
-                                        {{ $wallet->name ?? \App\Models\Wallet::typeLabel($wallet->type) }}
-                                        @if($wallet->account_number) — {{ $wallet->account_number }} @endif
-                                    </option>
-                                @endforeach
-                            </select>
-
-                            <div id="wallet_details" class="hidden mt-4 p-4 bg-sky-50 dark:bg-sky-900/20 rounded-xl border-2 border-sky-200 dark:border-sky-800">
-                                <h4 class="text-sm font-bold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
-                                    <i class="fas fa-info-circle text-sky-600"></i>
-                                    تفاصيل التحويل
-                                </h4>
-                                <div class="space-y-2 text-sm">
-                                    <div class="flex justify-between gap-2"><span class="text-gray-600 dark:text-gray-400">النوع</span><span class="font-semibold text-gray-900 dark:text-gray-100" id="wallet_type_text"></span></div>
-                                    <div id="wallet_name_detail" class="hidden flex justify-between gap-2"><span class="text-gray-600 dark:text-gray-400">الاسم</span><span class="font-semibold text-gray-900 dark:text-gray-100" id="wallet_name_text"></span></div>
-                                    <div id="wallet_account_detail" class="hidden flex justify-between gap-2"><span class="text-gray-600 dark:text-gray-400">رقم الحساب</span><span class="font-mono font-semibold text-gray-900 dark:text-gray-100" id="wallet_account_text"></span></div>
-                                    <div id="wallet_bank_detail" class="hidden flex justify-between gap-2"><span class="text-gray-600 dark:text-gray-400">البنك</span><span class="font-semibold text-gray-900 dark:text-gray-100" id="wallet_bank_text"></span></div>
-                                    <div id="wallet_holder_detail" class="hidden flex justify-between gap-2"><span class="text-gray-600 dark:text-gray-400">صاحب الحساب</span><span class="font-semibold text-gray-900 dark:text-gray-100" id="wallet_holder_text"></span></div>
-                                    <div id="wallet_notes_detail" class="hidden mt-2 pt-2 border-t border-sky-200 dark:border-sky-700"><span class="text-gray-600 dark:text-gray-400 text-xs block mb-1">ملاحظات</span><span class="text-sm text-gray-800 dark:text-gray-200" id="wallet_notes_text"></span></div>
-                                </div>
-                                <div class="mt-3 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg text-xs text-amber-900 dark:text-amber-100">
-                                    <i class="fas fa-exclamation-triangle ml-1"></i>
-                                    حوّل المبلغ <strong>{{ number_format($priceEgp, 2) }} {{ __('public.currency_egp') }}</strong> ثم ارفع صورة الإيصال أدناه.
-                                </div>
-                            </div>
-                        </div>
-                        @endif
-
-                        <div>
-                            <label class="block text-sm font-black text-gray-800 dark:text-gray-200 mb-2 flex items-center gap-2">
-                                <i class="fas fa-image text-emerald-500"></i>
-                                صورة الإيصال <span class="text-red-500">*</span>
-                            </label>
-                            <input type="file" name="payment_proof" accept="image/*" required
-                                   class="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-900 text-sm">
-                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">jpeg أو png أو jpg — بحد أقصى 40 ميجابايت (مثل طلبات الكورسات).</p>
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">مرجع التحويل (اختياري)</label>
-                            <input type="text" name="payment_reference" value="{{ old('payment_reference') }}"
-                                   class="w-full rounded-xl border-2 border-gray-200 dark:border-gray-600 dark:bg-gray-900 px-4 py-3 text-sm text-gray-900 dark:text-gray-100"
-                                   placeholder="رقم العملية أو أي مرجع يساعد الإدارة">
-                        </div>
-
-                        <div class="flex flex-col sm:flex-row gap-3 pt-2">
-                            <button type="submit" class="inline-flex flex-1 items-center justify-center gap-2 px-6 py-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-sm shadow-lg shadow-emerald-600/25 transition-all">
-                                <i class="fas fa-paper-plane"></i>
-                                إرسال الطلب والإيصال
-                            </button>
-                            <a href="{{ route('consultations.index') }}" class="inline-flex items-center justify-center gap-2 px-6 py-4 rounded-xl border-2 border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-bold text-sm hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
-                                إلغاء
-                            </a>
-                        </div>
-                    </form>
-                </div>
-            </div>
+<section class="st-settings-block" style="margin-top:1rem">
+    <div class="st-settings-block__head">
+        <span class="st-settings-block__icon" aria-hidden="true"><i class="fas fa-receipt"></i></span>
+        <div>
+            <h3>{{ $isRtl ? 'بيانات الدفع' : 'Payment details' }}</h3>
+            <p>{{ $isRtl ? 'اختر طريقة التحويل وارفع الإيصال' : 'Choose a transfer method and upload the receipt' }}</p>
         </div>
     </div>
-</div>
+
+    <form method="POST" action="{{ route('consultations.store', $instructor) }}" enctype="multipart/form-data" class="st-form" style="display:grid;gap:1rem;margin-top:1rem">
+        @csrf
+
+        <label class="st-field">
+            <span class="st-field__label">{{ $isRtl ? 'موضوع أو استفسارك (اختياري)' : 'Topic or question (optional)' }}</span>
+            <textarea name="student_message" rows="4" class="st-input" placeholder="{{ $isRtl ? 'صف بإيجاز ما تحتاجه…' : 'Briefly describe what you need…' }}">{{ old('student_message') }}</textarea>
+        </label>
+
+        <label class="st-field">
+            <span class="st-field__label">{{ $isRtl ? 'طريقة الدفع' : 'Payment method' }}</span>
+            <select name="payment_method" id="payment_method" class="st-input" required>
+                <option value="">{{ $isRtl ? 'اختر طريقة الدفع' : 'Select method' }}</option>
+                <option value="bank_transfer" @selected(old('payment_method')==='bank_transfer')>{{ $isRtl ? 'تحويل بنكي / محفظة' : 'Bank / e-wallet' }}</option>
+                <option value="cash" @selected(old('payment_method')==='cash')>{{ $isRtl ? 'نقدي' : 'Cash' }}</option>
+                <option value="other" @selected(old('payment_method')==='other')>{{ $isRtl ? 'أخرى' : 'Other' }}</option>
+            </select>
+        </label>
+
+        @if(isset($availableWallets) && $availableWallets->count() > 0)
+            <div id="wallet_selection" class="hidden" style="display:grid;gap:0.75rem">
+                <label class="st-field">
+                    <span class="st-field__label">{{ $isRtl ? 'حساب المنصة للتحويل' : 'Platform transfer account' }}</span>
+                    <select name="wallet_id" id="wallet_id" class="st-input">
+                        <option value="">{{ $isRtl ? 'اختر الحساب' : 'Select account' }}</option>
+                        @foreach($availableWallets as $wallet)
+                            <option value="{{ $wallet->id }}"
+                                    @selected((string) old('wallet_id') === (string) $wallet->id)
+                                    data-type="{{ $wallet->type }}"
+                                    data-name="{{ $wallet->name }}"
+                                    data-account-number="{{ $wallet->account_number }}"
+                                    data-bank-name="{{ $wallet->bank_name }}"
+                                    data-account-holder="{{ $wallet->account_holder }}"
+                                    data-notes="{{ $wallet->notes }}">
+                                {{ $wallet->name ?? \App\Models\Wallet::typeLabel($wallet->type) }}
+                                @if($wallet->account_number) — {{ $wallet->account_number }} @endif
+                            </option>
+                        @endforeach
+                    </select>
+                </label>
+
+                <div id="wallet_details" class="hidden st-flash st-flash--ok" style="display:none">
+                    <p style="margin:0 0 0.5rem;font-weight:800">{{ $isRtl ? 'تفاصيل التحويل' : 'Transfer details' }}</p>
+                    <p style="margin:0"><span class="muted">{{ $isRtl ? 'النوع' : 'Type' }}:</span> <span id="wallet_type_text"></span></p>
+                    <p id="wallet_name_detail" class="hidden" style="margin:0.25rem 0 0"><span class="muted">{{ $isRtl ? 'الاسم' : 'Name' }}:</span> <span id="wallet_name_text"></span></p>
+                    <p id="wallet_account_detail" class="hidden" style="margin:0.25rem 0 0"><span class="muted">{{ $isRtl ? 'رقم الحساب' : 'Account' }}:</span> <span id="wallet_account_text" dir="ltr"></span></p>
+                    <p id="wallet_bank_detail" class="hidden" style="margin:0.25rem 0 0"><span class="muted">{{ $isRtl ? 'البنك' : 'Bank' }}:</span> <span id="wallet_bank_text"></span></p>
+                    <p id="wallet_holder_detail" class="hidden" style="margin:0.25rem 0 0"><span class="muted">{{ $isRtl ? 'صاحب الحساب' : 'Holder' }}:</span> <span id="wallet_holder_text"></span></p>
+                    <p id="wallet_notes_detail" class="hidden" style="margin:0.5rem 0 0"><span id="wallet_notes_text"></span></p>
+                    <p style="margin:0.75rem 0 0;font-size:13px;font-weight:700">
+                        {{ $isRtl ? 'حوّل' : 'Transfer' }}
+                        <strong>{{ number_format((float) $priceEgp, 2) }} {{ currency_symbol() }}</strong>
+                        {{ $isRtl ? 'ثم ارفع الإيصال.' : 'then upload the receipt.' }}
+                    </p>
+                </div>
+            </div>
+        @endif
+
+        <label class="st-field">
+            <span class="st-field__label">{{ $isRtl ? 'صورة الإيصال' : 'Receipt image' }} *</span>
+            <input type="file" name="payment_proof" accept="image/*" class="st-input" required>
+            <span class="st-field__hint">jpeg / png / jpg</span>
+        </label>
+
+        <label class="st-field">
+            <span class="st-field__label">{{ $isRtl ? 'مرجع التحويل (اختياري)' : 'Payment reference (optional)' }}</span>
+            <input type="text" name="payment_reference" value="{{ old('payment_reference') }}" class="st-input" placeholder="{{ $isRtl ? 'رقم العملية' : 'Transaction id' }}">
+        </label>
+
+        <div style="display:flex;flex-wrap:wrap;gap:0.65rem">
+            <button type="submit" class="st-pill st-pill--solid">
+                <i class="fas fa-paper-plane" aria-hidden="true"></i>
+                {{ $isRtl ? 'إرسال الطلب والإيصال' : 'Submit request' }}
+            </button>
+            <a href="{{ route('consultations.index') }}" class="st-pill st-pill--outline">{{ $isRtl ? 'إلغاء' : 'Cancel' }}</a>
+        </div>
+    </form>
+</section>
 
 @push('scripts')
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const paymentMethod = document.getElementById('payment_method');
-    const walletSelection = document.getElementById('wallet_selection');
-    const walletId = document.getElementById('wallet_id');
-    const walletDetails = document.getElementById('wallet_details');
+document.addEventListener('DOMContentLoaded', function () {
+    var paymentMethod = document.getElementById('payment_method');
+    var walletSelection = document.getElementById('wallet_selection');
+    var walletId = document.getElementById('wallet_id');
+    var walletDetails = document.getElementById('wallet_details');
+    if (!paymentMethod || !walletSelection) return;
 
-    if (paymentMethod && walletSelection) {
-        paymentMethod.addEventListener('change', function() {
-            if (this.value === 'bank_transfer' || this.value === 'other') {
-                walletSelection.classList.remove('hidden');
-            } else {
-                walletSelection.classList.add('hidden');
-                if (walletDetails) walletDetails.classList.add('hidden');
-                if (walletId) walletId.value = '';
+    function syncWalletVisibility() {
+        var show = paymentMethod.value === 'bank_transfer' || paymentMethod.value === 'other';
+        walletSelection.classList.toggle('hidden', !show);
+        walletSelection.style.display = show ? 'grid' : 'none';
+        if (!show) {
+            if (walletDetails) {
+                walletDetails.classList.add('hidden');
+                walletDetails.style.display = 'none';
             }
-        });
-        if (paymentMethod.value === 'bank_transfer' || paymentMethod.value === 'other') {
-            walletSelection.classList.remove('hidden');
+            if (walletId) walletId.value = '';
         }
     }
+    paymentMethod.addEventListener('change', syncWalletVisibility);
+    syncWalletVisibility();
 
     if (walletId && walletDetails) {
-        walletId.addEventListener('change', function() {
-            const opt = this.options[this.selectedIndex];
+        walletId.addEventListener('change', function () {
+            var opt = this.options[this.selectedIndex];
             if (!this.value || !opt) {
                 walletDetails.classList.add('hidden');
+                walletDetails.style.display = 'none';
                 return;
             }
-            const type = opt.getAttribute('data-type');
-            const typeLabels = { vodafone_cash: 'فودافون كاش', instapay: 'إنستا باي', bank_transfer: 'تحويل بنكي', cash: 'كاش', other: 'أخرى' };
+            var type = opt.getAttribute('data-type');
+            var typeLabels = { vodafone_cash: 'فودافون كاش', instapay: 'إنستا باي', bank_transfer: 'تحويل بنكي', cash: 'كاش', other: 'أخرى' };
             document.getElementById('wallet_type_text').textContent = typeLabels[type] || type || '—';
-
-            function toggleLine(idPrefix, val) {
-                const row = document.getElementById(idPrefix + '_detail');
-                const text = document.getElementById(idPrefix + '_text');
-                if (val) { row.classList.remove('hidden'); text.textContent = val; }
-                else { row.classList.add('hidden'); }
+            function toggleLine(prefix, val) {
+                var row = document.getElementById(prefix + '_detail');
+                var text = document.getElementById(prefix + '_text');
+                if (!row || !text) return;
+                if (val) { row.classList.remove('hidden'); row.style.display = ''; text.textContent = val; }
+                else { row.classList.add('hidden'); row.style.display = 'none'; }
             }
             toggleLine('wallet_name', opt.getAttribute('data-name'));
             toggleLine('wallet_account', opt.getAttribute('data-account-number'));
             toggleLine('wallet_bank', opt.getAttribute('data-bank-name'));
             toggleLine('wallet_holder', opt.getAttribute('data-account-holder'));
-            const notes = opt.getAttribute('data-notes');
-            const notesRow = document.getElementById('wallet_notes_detail');
-            if (notes) { notesRow.classList.remove('hidden'); document.getElementById('wallet_notes_text').textContent = notes; }
-            else { notesRow.classList.add('hidden'); }
-
+            var notes = opt.getAttribute('data-notes');
+            var notesRow = document.getElementById('wallet_notes_detail');
+            if (notes) { notesRow.classList.remove('hidden'); notesRow.style.display = ''; document.getElementById('wallet_notes_text').textContent = notes; }
+            else { notesRow.classList.add('hidden'); notesRow.style.display = 'none'; }
             walletDetails.classList.remove('hidden');
+            walletDetails.style.display = 'block';
         });
     }
 });

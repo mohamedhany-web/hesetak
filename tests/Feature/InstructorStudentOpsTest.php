@@ -288,9 +288,9 @@ class InstructorStudentOpsTest extends TestCase
         $this->assertFalse(OneToOneSessionRatingService::studentMustRate($session->fresh(), $student));
     }
 
-    public function test_consultations_ui_flag_is_enabled(): void
+    public function test_consultations_ui_flag_is_hidden_for_students(): void
     {
-        $this->assertTrue((bool) config('student_ui.show_consultations'));
+        $this->assertFalse((bool) config('student_ui.show_consultations'));
         $this->assertTrue(route('consultations.index') !== '');
         $this->assertTrue(route('instructor.consultations.schedule', ['consultation' => 1]) !== '');
     }

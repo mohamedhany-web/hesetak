@@ -102,7 +102,7 @@
             <small>{{ __('student_timeline.learn_week_days') }}</small>
         </div>
     </article>
-    @if($consultationDuration || $consultationPrice !== null)
+    @if(student_ui('show_consultations', false) && ($consultationDuration || $consultationPrice !== null))
         <article class="st-teacher-fact">
             <span class="st-teacher-fact__icon" aria-hidden="true"><i class="fas fa-comments"></i></span>
             <div>

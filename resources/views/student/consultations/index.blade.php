@@ -1,51 +1,89 @@
 @extends('layouts.student-timeline')
 
-@section('title', 'طلبات الاستشارة')
+@section('title', app()->getLocale() === 'ar' ? 'طلبات الاستشارة' : 'Consultations')
+@section('page_title', app()->getLocale() === 'ar' ? 'الاستشارات' : 'Consultations')
 
 @section('content')
-<div class="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6 pb-10">
-    <div class="flex flex-wrap items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-        <a href="{{ route('dashboard') }}" class="hover:text-sky-600 dark:hover:text-sky-400 font-medium">{{ __('auth.dashboard') }}</a>
-        <i class="fas fa-chevron-left text-[10px] opacity-50"></i>
-        <span class="text-gray-900 dark:text-gray-200 font-semibold">طلبات الاستشارة</span>
-    </div>
+@php
+    $locale = app()->getLocale();
+    $isRtl = $locale === 'ar';
+    $title = $isRtl ? 'طلبات الاستشارة' : 'Consultation requests';
+    $subtitle = $isRtl
+        ? 'الدفع على حسابات المنصة، مراجعة الإدارة، ثم تحديد الموعد.'
+        : 'Pay via platform accounts, admin verifies, then the session is scheduled.';
+    $browseUrl = Route::has('public.instructors.index')
+        ? route('public.instructors.index')
+        : route('dashboard');
+@endphp
 
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-            <h1 class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">طلبات الاستشارة</h1>
-            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">الدفع على حسابات المنصة، مراجعة الإدارة، ثم الموعد</p>
-        </div>
-        <a href="{{ route('public.instructors.index') }}" class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-sky-600 hover:bg-sky-700 text-white text-sm font-bold shadow-sm">تصفح المدربين</a>
-    </div>
+@include('partials.student-timeline-top', [
+    'locale' => $locale,
+    'pageTitle' => $title,
+    'crumbs' => [
+        ['label' => __('student_timeline.school_gate'), 'url' => route('dashboard')],
+        ['label' => $title, 'url' => null],
+    ],
+])
 
-    <div class="rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 overflow-hidden shadow-sm">
-        <div class="overflow-x-auto">
-            <table class="min-w-full text-sm">
-                <thead class="bg-gray-50 dark:bg-gray-900/50 text-xs text-gray-600 dark:text-gray-400 uppercase">
-                    <tr>
-                        <th class="px-4 py-3 text-right">المدرب</th>
-                        <th class="px-4 py-3 text-right">المبلغ</th>
-                        <th class="px-4 py-3 text-right">الحالة</th>
-                        <th class="px-4 py-3 text-right">الموعد</th>
-                        <th class="px-4 py-3 text-right"></th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
-                    @forelse($requests as $r)
-                        <tr class="hover:bg-gray-50/50 dark:hover:bg-gray-900/30">
-                            <td class="px-4 py-3 font-semibold text-gray-900 dark:text-white">{{ $r->instructor->name ?? '—' }}</td>
-                            <td class="px-4 py-3 text-gray-700 dark:text-gray-300">{{ number_format($r->price_amount, 2) }} {{ __('public.currency_egp') }}</td>
-                            <td class="px-4 py-3"><span class="px-2 py-1 rounded-md bg-gray-100 dark:bg-gray-700 text-xs font-medium">{{ $r->statusLabel() }}</span></td>
-                            <td class="px-4 py-3 text-xs text-gray-500">{{ $r->scheduled_at?->format('Y-m-d H:i') ?? '—' }}</td>
-                            <td class="px-4 py-3"><a href="{{ route('consultations.show', $r) }}" class="text-sky-600 dark:text-sky-400 font-semibold hover:underline">تفاصيل</a></td>
-                        </tr>
-                    @empty
-                        <tr><td colspan="5" class="px-4 py-12 text-center text-gray-500">لا توجد طلبات بعد</td></tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-        <div class="px-4 py-3 border-t border-gray-100 dark:border-gray-700">{{ $requests->links() }}</div>
+@if(session('success'))
+    <div class="st-flash st-flash--ok">{{ session('success') }}</div>
+@endif
+@if(session('error'))
+    <div class="st-flash st-flash--err">{{ session('error') }}</div>
+@endif
+
+<section class="st-msg-intro">
+    <div>
+        <h2>{{ $title }}</h2>
+        <p>{{ $subtitle }}</p>
     </div>
-</div>
+    <a href="{{ $browseUrl }}" class="st-pill st-pill--solid">
+        <i class="fas fa-chalkboard-teacher" aria-hidden="true"></i>
+        {{ $isRtl ? 'تصفح المعلمين' : 'Browse teachers' }}
+    </a>
+</section>
+
+<section class="st-lesson-list" aria-label="{{ $title }}">
+    @forelse($requests as $r)
+        @php
+            $instructor = $r->instructor;
+            $avatar = $instructor?->avatarDisplayUrl() ?? \App\Models\User::placeholderAvatarUrl();
+        @endphp
+        <article class="st-lesson-card st-lesson-card--blue">
+            <div class="st-lesson-card__main">
+                <img class="st-lesson-card__avatar" src="{{ $avatar }}" alt="" width="48" height="48">
+                <div class="st-lesson-card__copy">
+                    <div class="st-lesson-card__badges">
+                        <span class="st-lesson-card__badge">{{ $r->statusLabel() }}</span>
+                        <span class="st-lesson-card__mins">{{ number_format((float) $r->price_amount, 2) }} {{ currency_symbol() }}</span>
+                    </div>
+                    <h3>{{ $instructor->name ?? ($isRtl ? 'معلم' : 'Teacher') }}</h3>
+                    <p class="st-lesson-card__meta">
+                        @if($r->scheduled_at)
+                            <x-app-datetime :at="$r->scheduled_at" pattern="Y-m-d · g:i A" />
+                        @else
+                            {{ $isRtl ? 'بانتظار تحديد الموعد' : 'Awaiting schedule' }}
+                        @endif
+                        · {{ (int) $r->duration_minutes }} {{ $isRtl ? 'دقيقة' : 'min' }}
+                    </p>
+                </div>
+            </div>
+            <div class="st-lesson-card__foot">
+                <a href="{{ route('consultations.show', $r) }}" class="st-pill st-pill--outline">
+                    {{ $isRtl ? 'التفاصيل' : 'Details' }}
+                </a>
+            </div>
+        </article>
+    @empty
+        <div class="st-empty-panel">
+            <span class="st-empty-panel__mark" aria-hidden="true"><i class="fas fa-comments-dollar"></i></span>
+            <p>{{ $isRtl ? 'لا توجد طلبات استشارة بعد.' : 'No consultation requests yet.' }}</p>
+            <a href="{{ $browseUrl }}" class="st-pill st-pill--solid">{{ $isRtl ? 'تصفح المعلمين' : 'Browse teachers' }}</a>
+        </div>
+    @endforelse
+</section>
+
+@if(method_exists($requests, 'links') && $requests->hasPages())
+    <div class="st-pager">{{ $requests->links() }}</div>
+@endif
 @endsection
