@@ -378,6 +378,7 @@ class FreeTrialBookingService
 
             $session = null;
             if ($student && $student->isStudent()) {
+                // قبول المعلم يثبت الموعد مباشرة — لا يشترط نشر توافر أسبوعي مسبقاً.
                 $session = OneToOneSessionService::bookComplimentaryWithInstructor(
                     $student,
                     $instructor,
@@ -385,10 +386,10 @@ class FreeTrialBookingService
                     $instructor,
                     $notes ?: 'حصة مجانية — قبول المعلم لطلب #'.$booking->id,
                     $duration,
-                    true
+                    false
                 );
-            } elseif (! OneToOneAvailabilityService::isSlotAvailable((int) $instructor->id, $starts, $duration)) {
-                throw new InvalidArgumentException('الموعد غير متاح في جدولك. اختر وقتاً آخر أو حدّث التوافر.');
+            } elseif (OneToOneAvailabilityService::hasConflict((int) $instructor->id, $starts, $starts->copy()->addMinutes($duration))) {
+                throw new InvalidArgumentException('الموعد متعارض مع حصة أخرى في جدولك. اختر وقتاً آخر.');
             }
 
             $payload = [

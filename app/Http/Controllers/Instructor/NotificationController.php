@@ -58,7 +58,46 @@ class NotificationController extends Controller
         return back()->with('success', 'تم تعليم الإشعار كمقروء.');
     }
 
-    public function markAllAsRead(): RedirectResponse
+    public function unreadCount(): JsonResponse
+    {
+        $base = Auth::user()->customNotifications()
+            ->where(function ($q) {
+                $q->whereNull('audience')->orWhere('audience', 'instructor');
+            })
+            ->where(function ($q) {
+                $q->whereNull('expires_at')->orWhere('expires_at', '>', now());
+            });
+
+        $count = (clone $base)->where('is_read', false)->count();
+        $items = (clone $base)
+            ->orderByDesc('created_at')
+            ->limit(8)
+            ->get()
+            ->map(function (Notification $n) {
+                return [
+                    'id' => $n->id,
+                    'title' => $n->title,
+                    'message' => \Illuminate\Support\Str::limit((string) $n->message, 110),
+                    'is_read' => (bool) $n->is_read,
+                    'href' => $n->action_url
+                        ? route('instructor.notifications.go', $n)
+                        : route('instructor.notifications.index'),
+                    'time' => optional($n->created_at)->diffForHumans(),
+                    'icon' => $n->type_icon,
+                ];
+            })
+            ->values()
+            ->all();
+
+        return response()->json([
+            'count' => $count,
+            'unread_count' => $count,
+            'items' => $items,
+            'email' => Auth::user()->email,
+        ]);
+    }
+
+    public function markAllAsRead(Request $request): RedirectResponse|JsonResponse
     {
         Auth::user()->customNotifications()
             ->where(function ($q) {
@@ -67,19 +106,11 @@ class NotificationController extends Controller
             ->where('is_read', false)
             ->update(['is_read' => true, 'read_at' => now()]);
 
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json(['success' => true]);
+        }
+
         return back()->with('success', 'تم تعليم كل الإشعارات كمقروءة.');
-    }
-
-    public function unreadCount(): JsonResponse
-    {
-        $count = Auth::user()->customNotifications()
-            ->where(function ($q) {
-                $q->whereNull('audience')->orWhere('audience', 'instructor');
-            })
-            ->where('is_read', false)
-            ->count();
-
-        return response()->json(['count' => $count]);
     }
 
     private function authorizeOwned(Notification $notification): void

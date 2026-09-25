@@ -1,11 +1,25 @@
 @php
     $bellUnread = 0;
     $bellItems = [];
+    $bellIsInstructor = auth()->check() && (auth()->user()->isInstructor() || auth()->user()->isTeacher());
+    $bellGoRoute = $bellIsInstructor && Route::has('instructor.notifications.go')
+        ? 'instructor.notifications.go'
+        : 'notifications.go';
+    $bellShowRoute = $bellIsInstructor && Route::has('instructor.notifications.index')
+        ? 'instructor.notifications.index'
+        : (Route::has('notifications.show') ? 'notifications.show' : 'notifications');
+    $bellInboxRoute = $bellIsInstructor && Route::has('instructor.notifications.index')
+        ? 'instructor.notifications.index'
+        : 'notifications';
+    $bellPollRoute = $bellIsInstructor && Route::has('instructor.notifications.unread-count')
+        ? 'instructor.notifications.unread-count'
+        : (Route::has('notifications.nav-poll') ? 'notifications.nav-poll' : null);
+    $bellMarkAllRoute = $bellIsInstructor && Route::has('instructor.notifications.mark-all-read')
+        ? 'instructor.notifications.mark-all-read'
+        : 'notifications.mark-all-read';
     if (auth()->check()) {
         try {
-            $bellAudience = (auth()->user()->isInstructor() || auth()->user()->isTeacher())
-                ? 'instructor'
-                : 'student';
+            $bellAudience = $bellIsInstructor ? 'instructor' : 'student';
             $bellBase = auth()->user()->customNotifications()
                 ->where(function ($q) use ($bellAudience) {
                     $q->whereNull('audience')->orWhere('audience', $bellAudience);
@@ -18,13 +32,24 @@
                 ->orderByDesc('created_at')
                 ->limit(8)
                 ->get()
-                ->map(function ($n) {
+                ->map(function ($n) use ($bellGoRoute, $bellShowRoute) {
+                    $href = '#';
+                    if ($n->action_url) {
+                        $href = Route::has($bellGoRoute)
+                            ? route($bellGoRoute, $n)
+                            : $n->action_url;
+                    } elseif (Route::has($bellShowRoute)) {
+                        $href = $bellShowRoute === 'instructor.notifications.index'
+                            ? route($bellShowRoute)
+                            : route($bellShowRoute, $n);
+                    }
+
                     return [
                         'id' => $n->id,
                         'title' => $n->title,
                         'message' => \Illuminate\Support\Str::limit((string) $n->message, 110),
                         'is_read' => (bool) $n->is_read,
-                        'href' => $n->action_url ? route('notifications.go', $n) : route('notifications.show', $n),
+                        'href' => $href,
                         'time' => optional($n->created_at)->diffForHumans(),
                         'icon' => $n->type_icon,
                     ];
@@ -37,9 +62,9 @@
         }
     }
     $bellConfig = [
-        'pollUrl' => route('notifications.nav-poll'),
-        'markAllUrl' => route('notifications.mark-all-read'),
-        'inboxUrl' => route('notifications'),
+        'pollUrl' => $bellPollRoute && Route::has($bellPollRoute) ? route($bellPollRoute) : null,
+        'markAllUrl' => Route::has($bellMarkAllRoute) ? route($bellMarkAllRoute) : null,
+        'inboxUrl' => Route::has($bellInboxRoute) ? route($bellInboxRoute) : '#',
         'unread' => $bellUnread,
         'items' => $bellItems,
         'email' => auth()->user()?->email,
@@ -68,7 +93,7 @@
             </div>
             <div class="st-bell-panel__actions">
                 <button type="button" class="st-bell-panel__link" data-st-bell-mark-all>{{ app()->getLocale() === 'ar' ? 'قراءة الكل' : 'Read all' }}</button>
-                <a href="{{ route('notifications') }}" class="st-bell-panel__link">{{ __('student_timeline.see_all') }}</a>
+                <a href="{{ $bellConfig['inboxUrl'] }}" class="st-bell-panel__link">{{ __('student_timeline.see_all') }}</a>
                 <button type="button" class="st-bell-panel__close" data-st-bell-close aria-label="{{ app()->getLocale() === 'ar' ? 'إغلاق' : 'Close' }}">
                     <i class="fas fa-xmark" aria-hidden="true"></i>
                 </button>

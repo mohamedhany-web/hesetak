@@ -5,12 +5,8 @@ namespace Tests\Feature;
 use App\Models\FreeTrialBooking;
 use App\Models\OneToOneSession;
 use App\Models\OneToOneSessionRating;
-use App\Models\OneToOneWeeklyAvailability;
 use App\Models\User;
-use App\Services\FreeTrialBookingService;
 use App\Services\OneToOneSessionRatingService;
-use App\Services\OneToOneSessionService;
-use Carbon\Carbon;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Schema;
@@ -169,13 +165,13 @@ class InstructorStudentOpsTest extends TestCase
         $student = $this->makeUser('student');
 
         $starts = now()->addDays(2)->startOfHour()->addHours(2);
-        OneToOneWeeklyAvailability::query()->create([
-            'instructor_id' => $instructor->id,
-            'day_of_week' => (int) $starts->copy()->timezone(config('app.timezone'))->isoWeekday(),
-            'start_time' => '00:00:00',
-            'end_time' => '23:59:00',
-            'is_active' => true,
-        ]);
+
+        // قبول التجربة لا يشترط توافر أسبوعي منشور مسبقاً.
+        $this->assertFalse(
+            \App\Models\OneToOneWeeklyAvailability::query()
+                ->where('instructor_id', $instructor->id)
+                ->exists()
+        );
 
         $pending = FreeTrialBooking::query()->create([
             'name' => $student->name,
@@ -221,6 +217,42 @@ class InstructorStudentOpsTest extends TestCase
             ->assertRedirect(route('instructor.free-trial-bookings.index'));
 
         $this->assertSame(FreeTrialBooking::STATUS_CANCELLED, $rejectable->fresh()->status);
+    }
+
+    public function test_instructor_notification_go_reaches_free_trial_show_not_student_route(): void
+    {
+        $instructor = $this->makeUser('instructor');
+        $booking = FreeTrialBooking::query()->create([
+            'name' => 'طالب تجريبي',
+            'email' => 'trial-bell@example.com',
+            'goal' => FreeTrialBooking::GOAL_TRIAL,
+            'instructor_id' => $instructor->id,
+            'starts_at' => now()->addDays(3)->startOfHour(),
+            'ends_at' => now()->addDays(3)->startOfHour()->addMinutes(30),
+            'duration_minutes' => 30,
+            'status' => FreeTrialBooking::STATUS_PENDING,
+        ]);
+
+        $notification = \App\Models\Notification::query()->create([
+            'user_id' => $instructor->id,
+            'type' => 'general',
+            'title' => 'طلب حصة مجانية',
+            'message' => 'اختبار جرس المعلم',
+            'action_url' => route('instructor.free-trial-bookings.show', $booking),
+            'priority' => 'high',
+            'audience' => 'instructor',
+            'is_read' => false,
+        ]);
+
+        $this->actingAs($instructor)
+            ->get(route('notifications.go', $notification))
+            ->assertRedirect(route('dashboard'));
+
+        $go = $this->actingAs($instructor)
+            ->get(route('instructor.notifications.go', $notification));
+
+        $go->assertRedirect(route('instructor.free-trial-bookings.show', $booking));
+        $this->assertTrue((bool) $notification->fresh()->is_read);
     }
 
     public function test_student_must_rate_completed_one_to_one_session(): void

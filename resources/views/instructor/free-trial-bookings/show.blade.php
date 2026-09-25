@@ -98,24 +98,26 @@
             <header class="id-panel__head">
                 <h2>قبول أو رفض الطلب</h2>
             </header>
-            <p class="id-field__hint" style="margin:0 0 1rem">اقبل الموعد المقترح أو اختر وقتاً من توافرك، أو ارفض مع سبب مختصر.</p>
+            <p class="id-field__hint" style="margin:0 0 1rem">اقبل الموعد المقترح مباشرة (بدون اشتراط جدول توافر)، أو عدّله، أو ارفض مع سبب مختصر.</p>
 
             <form method="POST" action="{{ route('instructor.free-trial-bookings.accept', $booking) }}" class="id-form" style="display:grid;gap:0.85rem;margin-bottom:1.25rem">
                 @csrf
                 <label class="id-field">
                     <span class="id-field__label">موعد التأكيد</span>
-                    @if($availableSlots->isNotEmpty())
-                        <select name="starts_at" class="id-input" required>
-                            <option value="{{ optional($booking->starts_at)?->toIso8601String() }}">الموعد المقترح من الطالب</option>
+                    <input type="datetime-local" name="starts_at" class="id-input" value="{{ optional($booking->starts_at)?->timezone(auth()->user()->timezoneCode() ?? config('app.timezone'))->format('Y-m-d\\TH:i') }}" required>
+                    <span class="id-field__hint">يمكنك تأكيد الموعد مباشرة حتى بدون نشر جدول توافر أسبوعي.</span>
+                </label>
+                @if($availableSlots->isNotEmpty())
+                    <label class="id-field">
+                        <span class="id-field__label">أو اختر من نوافذ توافرك (اختياري)</span>
+                        <select class="id-input" onchange="if(this.value){ this.form.starts_at.value = this.value; }">
+                            <option value="">— أبقِ الموعد أعلاه —</option>
                             @foreach($availableSlots as $slot)
-                                <option value="{{ $slot['starts_at']->toIso8601String() }}">{{ $slot['label'] }}</option>
+                                <option value="{{ $slot['starts_at']->timezone(auth()->user()->timezoneCode() ?? config('app.timezone'))->format('Y-m-d\\TH:i') }}">{{ $slot['label'] }}</option>
                             @endforeach
                         </select>
-                    @else
-                        <input type="datetime-local" name="starts_at" class="id-input" value="{{ optional($booking->starts_at)?->timezone(auth()->user()->timezoneCode() ?? config('app.timezone'))->format('Y-m-d\\TH:i') }}" required>
-                        <span class="id-field__hint">لا توجد نوافذ توافر منشورة — حدّث جدولك أو أدخل موعداً يدوياً.</span>
-                    @endif
-                </label>
+                    </label>
+                @endif
                 <label class="id-field">
                     <span class="id-field__label">ملاحظة للمعلم (اختياري)</span>
                     <textarea name="notes" class="id-input" rows="2" maxlength="2000" placeholder="مثال: تم التأكيد على الموعد"></textarea>
