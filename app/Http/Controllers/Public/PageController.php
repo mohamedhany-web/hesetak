@@ -110,8 +110,9 @@ class PageController extends Controller
                 'tracks' => [],
                 'selected_year_id' => null,
                 'selected_subject_id' => null,
-                'selected_curriculum_type' => 'saudi',
+                'selected_curriculum_type' => null,
                 'packages' => collect(),
+                'viewer_locked' => false,
             ];
 
         return view('public.marketing.pricing', [

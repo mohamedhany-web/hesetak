@@ -104,12 +104,23 @@ class LandingController extends Controller
                 'tracks' => [],
                 'selected_year_id' => null,
                 'selected_subject_id' => null,
-                'selected_curriculum_type' => 'saudi',
+                'selected_curriculum_type' => null,
                 'packages' => collect(),
+                'viewer_locked' => false,
             ];
 
         $payload['packageCatalog'] = $packageCatalog;
         $payload['homePackages'] = $packageCatalog['packages'];
+
+        $viewer = \App\Support\StudentLearningProfile::fromAuth();
+        if ($viewer->hasPreferences()) {
+            $payload['homeInstructors'] = $viewer->filterInstructorProfiles(
+                collect($payload['homeInstructors'] ?? [])
+            );
+            $payload['trialInstructors'] = $viewer->filterInstructorProfiles(
+                collect($payload['trialInstructors'] ?? [])
+            );
+        }
 
         return view('welcome', $payload);
     }

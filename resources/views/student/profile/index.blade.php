@@ -158,6 +158,33 @@
                 </small>
                 @error('timezone')<small class="st-field__err">{{ $message }}</small>@enderror
             </label>
+
+            @php
+                $academicYears = $academicYears ?? \App\Support\StudentLearningProfile::publicYears();
+                $curriculumTypes = $curriculumTypes ?? \App\Support\HesetakMatchCatalog::curriculumTypes();
+            @endphp
+            <label class="st-field">
+                <span>{{ __('auth.academic_stage') }}</span>
+                <select name="academic_year_id">
+                    <option value="">{{ __('auth.academic_stage_placeholder') }}</option>
+                    @foreach($academicYears as $year)
+                        <option value="{{ $year->id }}" @selected((string) old('academic_year_id', $user->academic_year_id) === (string) $year->id)>{{ $year->name }}</option>
+                    @endforeach
+                </select>
+                <small class="st-field__hint" style="opacity:.75;display:block;margin-top:.35rem">{{ __('auth.academic_stage_hint') }}</small>
+                @error('academic_year_id')<small class="st-field__err">{{ $message }}</small>@enderror
+            </label>
+            <label class="st-field">
+                <span>{{ __('auth.curriculum_type') }}</span>
+                <select name="preferred_curriculum_type">
+                    <option value="">{{ __('auth.curriculum_type_placeholder') }}</option>
+                    @foreach($curriculumTypes as $key => $meta)
+                        <option value="{{ $key }}" @selected((string) old('preferred_curriculum_type', $user->preferred_curriculum_type) === (string) $key)>{{ $meta['label'] ?? $key }}</option>
+                    @endforeach
+                </select>
+                <small class="st-field__hint" style="opacity:.75;display:block;margin-top:.35rem">{{ __('auth.curriculum_type_hint') }}</small>
+                @error('preferred_curriculum_type')<small class="st-field__err">{{ $message }}</small>@enderror
+            </label>
         </div>
     </section>
 

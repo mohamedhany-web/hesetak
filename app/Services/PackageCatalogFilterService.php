@@ -6,6 +6,7 @@ use App\Models\AcademicSubject;
 use App\Models\AcademicYear;
 use App\Models\ServicePackage;
 use App\Support\HesetakMatchCatalog;
+use App\Support\StudentLearningProfile;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Schema;
 
@@ -22,8 +23,9 @@ class PackageCatalogFilterService
      *   tracks: array<string, array>,
      *   selected_year_id: int|null,
      *   selected_subject_id: int|null,
-     *   selected_curriculum_type: string,
-     *   packages: Collection<int, array>
+     *   selected_curriculum_type: string|null,
+     *   packages: Collection<int, array>,
+     *   viewer_locked: bool
      * }
      */
     public function catalog(
@@ -31,22 +33,37 @@ class PackageCatalogFilterService
         ?int $subjectId = null,
         ?string $curriculumType = null,
         ?int $limit = null,
+        bool $applyViewerDefaults = true,
     ): array {
         $years = Schema::hasTable('academic_years')
             ? AcademicYear::query()->publicCatalog()->ordered()->get(['id', 'name', 'slug', 'level_number'])
             : collect();
 
         $tracks = HesetakMatchCatalog::curriculumTypes();
-        $trackKeys = array_keys($tracks);
-        $selectedTrack = $this->rates->normalizeCurriculumType($curriculumType)
-            ?: ($trackKeys[0] ?? 'saudi');
+        $viewer = $applyViewerDefaults ? StudentLearningProfile::fromAuth() : new StudentLearningProfile;
+        $viewerLocked = $viewer->hasPreferences();
+
+        // الطالب المسجّل بمرحلة/منهج → افتراضي من ملفه ما لم يُمرَّر فلتر صريح في الطلب.
+        if ($applyViewerDefaults) {
+            if ($yearId === null && $viewer->hasStage()) {
+                $yearId = $viewer->yearId;
+            }
+            if (($curriculumType === null || trim((string) $curriculumType) === '') && $viewer->hasCurriculum()) {
+                $curriculumType = $viewer->curriculumType;
+            }
+        }
+
+        $selectedTrack = $this->rates->normalizeCurriculumType($curriculumType);
+        if ($selectedTrack === '' || $selectedTrack === null) {
+            $selectedTrack = null;
+        }
 
         if ($yearId && $years->isNotEmpty() && ! $years->contains('id', $yearId)) {
             $yearId = null;
         }
-        if (! $yearId && $years->isNotEmpty()) {
-            $yearId = (int) $years->first()->id;
-        }
+
+        // الزائر بدون فلتر: لا نفرض أول مرحلة — يظهر كل الباقات.
+        // الطالب بمرحلة محفوظة: $yearId يكون مضبوطاً أعلاه.
 
         $subjects = $this->subjectsForYear($yearId);
         if ($subjectId && ! $subjects->contains('id', $subjectId)) {
@@ -109,6 +126,7 @@ class PackageCatalogFilterService
             'selected_subject_id' => $subjectId,
             'selected_curriculum_type' => $selectedTrack,
             'packages' => $priced,
+            'viewer_locked' => $viewerLocked,
         ];
     }
 

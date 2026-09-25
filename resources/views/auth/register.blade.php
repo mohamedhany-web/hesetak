@@ -63,6 +63,34 @@
       @error('name')<p class="lasles-auth-error">{{ $message }}</p>@enderror
     </div>
 
+    @php
+      $academicYears = $academicYears ?? collect();
+      $curriculumTypes = $curriculumTypes ?? [];
+    @endphp
+    <div class="lasles-auth-field">
+      <label for="academic_year_id">{{ __('auth.academic_stage') }}</label>
+      <select id="academic_year_id" name="academic_year_id" required class="lasles-auth-input @error('academic_year_id') has-error @enderror">
+        <option value="">{{ __('auth.academic_stage_placeholder') }}</option>
+        @foreach($academicYears as $year)
+          <option value="{{ $year->id }}" @selected((string) old('academic_year_id') === (string) $year->id)>{{ $year->name }}</option>
+        @endforeach
+      </select>
+      <p class="lasles-auth-hint">{{ __('auth.academic_stage_hint') }}</p>
+      @error('academic_year_id')<p class="lasles-auth-error">{{ $message }}</p>@enderror
+    </div>
+
+    <div class="lasles-auth-field">
+      <label for="preferred_curriculum_type">{{ __('auth.curriculum_type') }}</label>
+      <select id="preferred_curriculum_type" name="preferred_curriculum_type" required class="lasles-auth-input @error('preferred_curriculum_type') has-error @enderror">
+        <option value="">{{ __('auth.curriculum_type_placeholder') }}</option>
+        @foreach($curriculumTypes as $key => $meta)
+          <option value="{{ $key }}" @selected((string) old('preferred_curriculum_type') === (string) $key)>{{ $meta['label'] ?? $key }}</option>
+        @endforeach
+      </select>
+      <p class="lasles-auth-hint">{{ __('auth.curriculum_type_hint') }}</p>
+      @error('preferred_curriculum_type')<p class="lasles-auth-error">{{ $message }}</p>@enderror
+    </div>
+
     <div class="lasles-auth-field">
       <label>{{ __('auth.phone_number') }}</label>
       <div

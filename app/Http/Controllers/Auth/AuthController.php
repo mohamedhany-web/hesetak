@@ -48,7 +48,17 @@ class AuthController extends Controller
         $phoneCountries = config('phone_countries.countries', []);
         $defaultCountry = collect($phoneCountries)->firstWhere('code', config('phone_countries.default_country', 'SA'));
         $authBackgroundUrl = \App\Providers\AppServiceProvider::authBackgroundUrl();
-        return view('auth.register', compact('phoneCountries', 'defaultCountry', 'authBackgroundUrl', 'pendingReferralCode'));
+        $academicYears = \App\Support\StudentLearningProfile::publicYears();
+        $curriculumTypes = \App\Support\HesetakMatchCatalog::curriculumTypes();
+
+        return view('auth.register', compact(
+            'phoneCountries',
+            'defaultCountry',
+            'authBackgroundUrl',
+            'pendingReferralCode',
+            'academicYears',
+            'curriculumTypes'
+        ));
     }
 
     public function login(Request $request)
@@ -301,6 +311,8 @@ class AuthController extends Controller
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
             'timezone' => ['nullable', 'string', 'max:64'],
             'timezone_auto' => ['nullable', 'string', 'max:64'],
+            'academic_year_id' => ['required', 'integer', 'exists:academic_years,id'],
+            'preferred_curriculum_type' => ['required', 'string', 'max:40'],
         ], [
             'name.required' => 'الاسم مطلوب',
             'country_code.required' => 'كود الدولة مطلوب',
@@ -310,13 +322,38 @@ class AuthController extends Controller
             'email.unique' => 'البريد الإلكتروني مسجل مسبقاً',
             'password.required' => 'كلمة المرور مطلوبة',
             'password.confirmed' => 'تأكيد كلمة المرور غير متطابق',
+            'academic_year_id.required' => 'المرحلة الدراسية مطلوبة',
+            'academic_year_id.exists' => 'المرحلة الدراسية غير صالحة',
+            'preferred_curriculum_type.required' => 'نوع المنهج مطلوب',
         ]);
 
         $phoneCountries = $countries;
         $defaultCountry = collect($countries)->firstWhere('code', config('phone_countries.default_country', 'SA'));
+        $academicYears = \App\Support\StudentLearningProfile::publicYears();
+        $curriculumTypes = \App\Support\HesetakMatchCatalog::curriculumTypes();
 
         if ($validator->fails()) {
-            return back()->withErrors($validator)->withInput()->with(compact('phoneCountries', 'defaultCountry'));
+            return back()->withErrors($validator)->withInput()->with(compact(
+                'phoneCountries',
+                'defaultCountry',
+                'academicYears',
+                'curriculumTypes'
+            ));
+        }
+
+        $curriculumKey = \App\Support\HesetakMatchCatalog::allowedCurriculumTypeKeys();
+        $preferredCurriculum = strtolower(trim((string) $request->input('preferred_curriculum_type')));
+        if (! in_array($preferredCurriculum, $curriculumKey, true)) {
+            return back()->withErrors([
+                'preferred_curriculum_type' => 'نوع المنهج غير صالح.',
+            ])->withInput()->with(compact('phoneCountries', 'defaultCountry', 'academicYears', 'curriculumTypes'));
+        }
+
+        $yearOk = $academicYears->contains('id', (int) $request->input('academic_year_id'));
+        if (! $yearOk) {
+            return back()->withErrors([
+                'academic_year_id' => 'المرحلة الدراسية غير متاحة للتسجيل.',
+            ])->withInput()->with(compact('phoneCountries', 'defaultCountry', 'academicYears', 'curriculumTypes'));
         }
 
         // التحقق من صحة رقم الهاتف حسب الدولة (ISO أولاً ثم كود الاتصال)
@@ -332,7 +369,12 @@ class AuthController extends Controller
         }
         $phoneRegex = $country['validation']['regex'] ?? '/^\d{6,15}$/';
         if (! $country) {
-            return back()->withErrors(['phone' => 'كود الدولة غير مدعوم.'])->withInput()->with(compact('phoneCountries', 'defaultCountry'));
+            return back()->withErrors(['phone' => 'كود الدولة غير مدعوم.'])->withInput()->with(compact(
+                'phoneCountries',
+                'defaultCountry',
+                'academicYears',
+                'curriculumTypes'
+            ));
         }
         $nationalNumber = preg_replace('/\D/', '', $request->phone);
         $nationalNumber = ltrim($nationalNumber, '0');
@@ -342,12 +384,22 @@ class AuthController extends Controller
                 ? ('رقم الهاتف غير صحيح لهذه الدولة. مثال: ' . $example)
                 : 'رقم الهاتف غير صحيح لهذه الدولة.';
 
-            return back()->withErrors(['phone' => $message])->withInput()->with(compact('phoneCountries', 'defaultCountry'));
+            return back()->withErrors(['phone' => $message])->withInput()->with(compact(
+                'phoneCountries',
+                'defaultCountry',
+                'academicYears',
+                'curriculumTypes'
+            ));
         }
         $dial = $country['dial_code'] ?? '';
         $fullPhone = ($dial === '' || $dial === 'OTHER') ? ('OTHER_' . $nationalNumber) : ($dial . $nationalNumber);
         if (User::where('phone', $fullPhone)->exists()) {
-            return back()->withErrors(['phone' => 'رقم الهاتف مسجل مسبقاً'])->withInput()->with(compact('phoneCountries', 'defaultCountry'));
+            return back()->withErrors(['phone' => 'رقم الهاتف مسجل مسبقاً'])->withInput()->with(compact(
+                'phoneCountries',
+                'defaultCountry',
+                'academicYears',
+                'curriculumTypes'
+            ));
         }
 
         // التسجيل متاح فقط للطلاب
@@ -355,7 +407,7 @@ class AuthController extends Controller
             ?: \App\Support\AppTimezone::normalize($request->input('timezone_auto'))
             ?: \App\Support\AppTimezone::normalize(session('pending_timezone'));
 
-        $user = User::create([
+        $userPayload = [
             'name' => $request->name,
             'phone' => $fullPhone,
             'email' => $request->email,
@@ -363,7 +415,13 @@ class AuthController extends Controller
             'role' => 'student', // فقط طالب
             'is_active' => true,
             'timezone' => $timezone,
-        ]);
+            'academic_year_id' => (int) $request->input('academic_year_id'),
+        ];
+        if (\Illuminate\Support\Facades\Schema::hasColumn('users', 'preferred_curriculum_type')) {
+            $userPayload['preferred_curriculum_type'] = $preferredCurriculum;
+        }
+
+        $user = User::create($userPayload);
         session()->forget('pending_timezone');
 
         $referralCode = $request->input('referral_code');

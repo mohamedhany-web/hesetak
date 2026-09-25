@@ -16,8 +16,10 @@ class ProfileController extends Controller
     {
         $user = auth()->user();
         $profileImageUrl = $user->profile_image_url;
+        $academicYears = \App\Support\StudentLearningProfile::publicYears();
+        $curriculumTypes = \App\Support\HesetakMatchCatalog::curriculumTypes();
 
-        return view('student.profile.index', compact('user', 'profileImageUrl'));
+        return view('student.profile.index', compact('user', 'profileImageUrl', 'academicYears', 'curriculumTypes'));
     }
 
     /**
@@ -32,6 +34,8 @@ class ProfileController extends Controller
             'phone' => 'required|string|max:20|unique:users,phone,' . $user->id,
             'email' => 'nullable|email|max:255|unique:users,email,' . $user->id,
             'timezone' => 'required|string|max:64',
+            'academic_year_id' => 'nullable|integer|exists:academic_years,id',
+            'preferred_curriculum_type' => 'nullable|string|max:40',
             'current_password' => 'nullable|string',
             'password' => 'nullable|string|min:8|confirmed',
             'profile_image' => 'nullable|image|max:'.config('upload_limits.max_upload_kb'),
@@ -66,6 +70,23 @@ class ProfileController extends Controller
             'phone' => $request->phone,
             'timezone' => $timezone,
         ];
+
+        if ($request->filled('academic_year_id')) {
+            $data['academic_year_id'] = (int) $request->input('academic_year_id');
+        } elseif ($request->has('academic_year_id')) {
+            $data['academic_year_id'] = null;
+        }
+
+        if (\Illuminate\Support\Facades\Schema::hasColumn('users', 'preferred_curriculum_type')) {
+            $curriculum = strtolower(trim((string) $request->input('preferred_curriculum_type', '')));
+            if ($curriculum === '') {
+                $data['preferred_curriculum_type'] = null;
+            } elseif (in_array($curriculum, \App\Support\HesetakMatchCatalog::allowedCurriculumTypeKeys(), true)) {
+                $data['preferred_curriculum_type'] = $curriculum;
+            } else {
+                return back()->withErrors(['preferred_curriculum_type' => 'نوع المنهج غير صالح.'])->withInput();
+            }
+        }
 
         if ($request->filled('email')) {
             $data['email'] = $request->email;

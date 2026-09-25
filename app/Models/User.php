@@ -52,6 +52,7 @@ class User extends Authenticatable
         'portfolio_marketing_published',
         'private_teaching_meta',
         'academic_year_id',
+        'preferred_curriculum_type',
         'last_login_at',
         'referral_code',
         'referred_by',

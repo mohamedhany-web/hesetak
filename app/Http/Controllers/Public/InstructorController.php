@@ -37,6 +37,15 @@ class InstructorController extends Controller
             $curriculum = '';
         }
 
+        // طالب مسجّل بمرحلة/منهج → تطبيق افتراضي إن لم يُحدَّد فلتر في الرابط.
+        $viewer = \App\Support\StudentLearningProfile::fromAuth();
+        if ($stage === '' && $viewer->hasStage()) {
+            $stage = (string) $viewer->yearId;
+        }
+        if ($curriculum === '' && $viewer->hasCurriculum()) {
+            $curriculum = (string) $viewer->curriculumType;
+        }
+
         $stages = collect();
         if (Schema::hasTable('academic_years')) {
             $stages = AcademicYear::query()
