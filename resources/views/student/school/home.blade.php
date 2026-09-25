@@ -42,7 +42,7 @@
         asset('img/student-timeline/sqrt.svg'),
         asset('img/student-timeline/earth.svg'),
         asset('img/student-timeline/clock.png'),
-        asset('img/student-timeline/teacher.png'),
+        \App\Models\User::placeholderAvatarUrl(),
     ];
     $todoItems = collect($game['daily_missions'] ?? [])->take(3);
     $scheduleJoinUrl = function ($slot) {
@@ -505,7 +505,7 @@
             <p class="st-event-card__sub">{{ $card->subtitle }}</p>
             <div class="st-event-card__meta">
                 @if($card->person)
-                    <img src="{{ asset('img/student-timeline/teacher.png') }}" alt="" width="16" height="16">
+                    <img src="{{ \App\Models\User::placeholderAvatarUrl() }}" alt="" width="16" height="16">
                     <span>{{ $card->person }}</span>
                 @else
                     <img src="{{ asset('img/student-timeline/location.svg') }}" alt="" width="14" height="14">

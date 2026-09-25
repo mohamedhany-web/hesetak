@@ -6,7 +6,7 @@
     $brandLogo = \App\Services\AdminPanelBranding::logoPublicUrl();
     $avatarUrl = method_exists($user, 'avatarDisplayUrl')
         ? $user->avatarDisplayUrl()
-        : ($user->profile_image_url ?? asset('images/instructor-panel/figma/avatar.png'));
+        : ($user->profile_image_url ?? \App\Models\User::placeholderAvatarUrl());
 
     $teachingCourseIds = $user->teachingAdvancedCourseIds();
     $myCoursesCount = $teachingCourseIds->count();

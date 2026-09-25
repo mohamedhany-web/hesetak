@@ -8,7 +8,7 @@
     $isRtl = $locale === 'ar';
     $threads = $threads ?? collect();
     $searchQuery = $searchQuery ?? '';
-    $avatarFallback = asset('img/student-timeline/avatar.png');
+    $avatarFallback = \App\Models\User::placeholderAvatarUrl();
     $tones = ['pink', 'blue', 'purple', 'orange'];
 @endphp
 

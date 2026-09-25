@@ -296,7 +296,10 @@ html.st-ltr .st-events {
 }
 img.st-rail__avatar[src*="avatar-placeholder"],
 img.st-settings-hero__avatar[src*="avatar-placeholder"],
-.st-profile-photo img[src*="avatar-placeholder"] {
+.st-profile-photo img[src*="avatar-placeholder"],
+img.st-rail__avatar[src$="avatar.png"],
+img.st-settings-hero__avatar[src$="avatar.png"],
+.st-profile-photo img[src$="avatar.png"] {
   object-fit: contain;
   background: #1E4E8C;
 }

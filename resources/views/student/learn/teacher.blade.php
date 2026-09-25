@@ -14,7 +14,7 @@
     $groupCourses = collect();
     $oneToOneCourses = $one_to_one_courses ?? collect();
     $packagesUrl = $packages_url ?? (Route::has('public.pricing') ? route('public.pricing') : route('dashboard'));
-    $photoUrl = $photo_url ?: asset('img/student-timeline/avatar.png');
+    $photoUrl = $photo_url ?: \App\Models\User::placeholderAvatarUrl();
     $headline = $profile?->headline_clean ?: '';
     $bio = $profile?->bio_clean ?: '';
     $skills = $profile?->skills_list ?? [];

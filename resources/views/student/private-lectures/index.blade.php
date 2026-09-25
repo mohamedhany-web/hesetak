@@ -12,7 +12,7 @@
     $nextJoinable = $nextJoinable ?? null;
     $upcomingCount = $upcomingCount ?? 0;
     $searchQuery = $searchQuery ?? '';
-    $avatarFallback = asset('img/student-timeline/avatar.png');
+    $avatarFallback = \App\Models\User::placeholderAvatarUrl();
     $tones = ['pink', 'blue', 'purple', 'orange'];
     $browseUrl = Route::has('student.learn.index')
         ? route('student.learn.index', ['tab' => 'private'])

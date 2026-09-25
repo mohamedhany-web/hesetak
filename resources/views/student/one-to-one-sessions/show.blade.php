@@ -51,7 +51,7 @@
     if ($isPending && $availableSlots->isNotEmpty()) {
         $groupedSlots = $availableSlots->groupBy(fn ($s) => $s['starts_at']->copy()->timezone($viewerTz)->format('Y-m-d'));
     }
-    $avatar = $instructor?->avatarDisplayUrl() ?? asset('img/student-timeline/avatar.png');
+    $avatar = $instructor?->avatarDisplayUrl() ?? \App\Models\User::placeholderAvatarUrl();
 @endphp
 
 @include('partials.student-timeline-top', [

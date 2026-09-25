@@ -3,7 +3,7 @@
     $user = auth()->user();
     $avatarUrl = method_exists($user, 'avatarDisplayUrl')
         ? $user->avatarDisplayUrl()
-        : ($user?->profile_image_url ?? $figma.'/avatar.png');
+        : ($user?->profile_image_url ?? \App\Models\User::placeholderAvatarUrl());
     $switchLocale = app()->getLocale() === 'ar' ? 'en' : 'ar';
     $switchLabel = $switchLocale === 'ar' ? 'عربي' : 'EN';
     $bookingsUrl = Route::has('instructor.one-to-one-sessions.index')

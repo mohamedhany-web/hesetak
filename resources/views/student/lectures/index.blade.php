@@ -14,7 +14,7 @@
     $tones = ['blue', 'pink', 'orange', 'purple'];
     $showCourses = $filter === 'all' || $filter === 'courses';
     $showPrivate = $filter === 'all' || $filter === 'private';
-    $avatarFallback = asset('img/student-timeline/avatar.png');
+    $avatarFallback = \App\Models\User::placeholderAvatarUrl();
 @endphp
 
 @include('partials.student-timeline-top', [

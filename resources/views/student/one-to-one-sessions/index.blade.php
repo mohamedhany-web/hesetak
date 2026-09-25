@@ -8,7 +8,7 @@
     $isRtl = $locale === 'ar';
     $viewerTz = auth()->user()?->timezoneCode() ?? \App\Support\AppTimezone::academy();
     $tones = ['pink', 'blue', 'purple', 'orange'];
-    $avatarFallback = asset('img/student-timeline/avatar.png');
+    $avatarFallback = \App\Models\User::placeholderAvatarUrl();
     $browseUrl = Route::has('student.learn.index')
         ? route('student.learn.index', ['tab' => 'private'])
         : route('dashboard');

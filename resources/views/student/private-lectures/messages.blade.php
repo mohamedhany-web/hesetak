@@ -8,7 +8,7 @@
     $isRtl = $locale === 'ar';
     $instructor = $thread->instructor;
     $instructorName = $instructor?->name ?: __('student_timeline.teacher');
-    $avatarFallback = asset('img/student-timeline/avatar.png');
+    $avatarFallback = \App\Models\User::placeholderAvatarUrl();
     $instructorAvatar = ($instructor && $instructor->profile_image)
         ? $instructor->profile_image_url
         : $avatarFallback;

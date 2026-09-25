@@ -155,7 +155,7 @@ class StudentLearnHubService
         $oneToOneCourses = $courses->filter(fn ($c) => $c->isOneToOne())->values();
 
         $photo = $profile->photo_url
-            ?: ($instructor->profile_image_url ?: asset('img/student-timeline/avatar.png'));
+            ?: ($instructor->profile_image_url ?: \App\Models\User::placeholderAvatarUrl());
 
         $introVideoUrl = trim((string) ($instructor->portfolio_intro_video_url ?? ''));
         $introEmbedUrl = VideoHelper::getEmbedUrl($introVideoUrl);
@@ -292,7 +292,7 @@ class StudentLearnHubService
             $paginator->getCollection()->map(function (InstructorProfile $profile) use ($courseCounts, $privateUnits) {
                 $user = $profile->user;
                 $photo = $profile->photo_url
-                    ?: ($user?->profile_image_url ?: asset('img/student-timeline/avatar.png'));
+                    ?: ($user?->profile_image_url ?: \App\Models\User::placeholderAvatarUrl());
 
                 return [
                     'id' => (int) $profile->user_id,
@@ -373,7 +373,7 @@ class StudentLearnHubService
                     'type_label' => $group->typeLabel(),
                     'image' => $group->imageUrl(),
                     'instructor_name' => $instructor?->name ?? '—',
-                    'instructor_photo' => $instructor?->profile_image_url ?: asset('img/student-timeline/avatar.png'),
+                    'instructor_photo' => $instructor?->profile_image_url ?: \App\Models\User::placeholderAvatarUrl(),
                     'year' => $group->academicYear?->name,
                     'subject' => $group->academicSubject?->name,
                     'duration' => (int) ($group->duration_minutes ?? 60),

@@ -228,7 +228,7 @@ class PublicLearnCatalogService
             $paginator->getCollection()->map(function (InstructorProfile $profile) use ($courseCounts, $subjectNames, $weeklyByInstructor, $locale) {
                 $user = $profile->user;
                 $photo = $profile->photo_url
-                    ?: ($user?->profile_image_url ?: asset('img/student-timeline/avatar.png'));
+                    ?: ($user?->profile_image_url ?: \App\Models\User::placeholderAvatarUrl());
                 $calendar = $this->buildWeeklyCalendar($weeklyByInstructor[$profile->user_id] ?? collect());
                 $chips = $this->teachingMetaLabels($user, $locale);
                 $skills = array_slice($profile->skills_list ?? [], 0, 4);
@@ -296,7 +296,7 @@ class PublicLearnCatalogService
             $paginator->getCollection()->map(function (TutoringGroup $group) {
                 $instructor = $group->instructor;
                 $photo = $group->imageUrl()
-                    ?: ($instructor?->profile_image_url ?: asset('img/student-timeline/avatar.png'));
+                    ?: ($instructor?->profile_image_url ?: \App\Models\User::placeholderAvatarUrl());
 
                 return [
                     'id' => (int) $group->id,
