@@ -93,6 +93,37 @@
   position: relative;
   z-index: 1;
 }
+@media (min-width: 768px) {
+  .mc-body--teacher-profile .mc-trust__list {
+    grid-template-columns: repeat(var(--mc-tp-trust-cols, 4), minmax(0, 1fr));
+  }
+}
+.mc-body--teacher-profile .mc-trust__item {
+  min-height: 4.5rem;
+  justify-content: flex-start;
+  padding-block: 0.5rem;
+}
+.mc-body--teacher-profile .mc-trust__label {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  line-height: 1.45;
+  max-width: 14rem;
+}
+.mc-tp-trust-note {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin-top: 0.15rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--mc-primary-100, #1e4e8c);
+}
+.mc-tp-trust-note i {
+  font-size: 0.7rem;
+  color: var(--mc-success, #059669);
+}
 .mc-body--teacher-profile .mc-section {
   position: relative;
   z-index: 2;
@@ -200,7 +231,29 @@
   gap: 0.85rem;
   position: relative;
   z-index: 1;
-  overflow: hidden;
+  overflow: visible;
+  padding-top: 1.85rem;
+}
+.mc-tp-book .mc-package__badge {
+  top: 0.75rem;
+  inset-inline-end: 0.85rem;
+  inset-inline-start: auto;
+  z-index: 2;
+}
+.mc-tp-book > h3 {
+  padding-inline-end: 7.5rem;
+  line-height: 1.35;
+}
+@media (max-width: 420px) {
+  .mc-tp-book > h3 {
+    padding-inline-end: 0;
+    margin-top: 0.35rem;
+  }
+  .mc-tp-book .mc-package__badge {
+    position: static;
+    justify-self: start;
+    margin-bottom: 0.15rem;
+  }
 }
 .mc-tp-actions {
   display: grid;

@@ -55,10 +55,11 @@
         [
             'num' => '1:1',
             'label' => $isRtl ? 'حصة فردية' : 'Private session',
+            'note' => $isRtl ? 'معلم معتمد' : 'Verified teacher',
         ],
         filled($experienceSummary) ? [
             'num' => $isRtl ? 'خبرة' : 'Exp.',
-            'label' => \Illuminate\Support\Str::limit($experienceSummary, 42),
+            'label' => \Illuminate\Support\Str::limit($experienceSummary, 48),
         ] : null,
         count($skillChips) > 0 ? [
             'num' => (string) count($skillChips),
@@ -68,10 +69,6 @@
             'num' => (string) count($curriculumTypeLabels),
             'label' => $isRtl ? 'أنواع منهج' : 'curricula',
         ] : null,
-        [
-            'num' => '✓',
-            'label' => __('public.instructors_verified'),
-        ],
     ]));
     $mcCss = public_path('css/landing/mycourses.css');
     $mcVer = is_file($mcCss) ? (string) filemtime($mcCss) : (string) time();
@@ -164,11 +161,14 @@
   {{-- Trust strip — same component as homepage stats --}}
   <section class="mc-trust" aria-label="{{ $isRtl ? 'لمحة سريعة' : 'Quick facts' }}">
     <div class="mc-container">
-      <ul class="mc-trust__list">
+      <ul class="mc-trust__list" style="--mc-tp-trust-cols: {{ max(2, count($trustItems)) }}">
         @foreach($trustItems as $stat)
           <li class="mc-trust__item">
             <span class="mc-trust__num">{{ $stat['num'] }}</span>
             <span class="mc-trust__label">{{ $stat['label'] }}</span>
+            @if(!empty($stat['note']))
+              <span class="mc-tp-trust-note"><i class="fas fa-check-circle" aria-hidden="true"></i> {{ $stat['note'] }}</span>
+            @endif
           </li>
         @endforeach
       </ul>
