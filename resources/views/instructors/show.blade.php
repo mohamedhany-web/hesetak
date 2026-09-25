@@ -54,12 +54,11 @@
     $trustItems = array_values(array_filter([
         [
             'num' => '1:1',
-            'label' => $isRtl ? 'حصة فردية' : 'Private session',
-            'note' => $isRtl ? 'معلم معتمد' : 'Verified teacher',
+            'label' => $isRtl ? 'حصة فردية · معتمد' : 'Private · Verified',
         ],
         filled($experienceSummary) ? [
             'num' => $isRtl ? 'خبرة' : 'Exp.',
-            'label' => \Illuminate\Support\Str::limit($experienceSummary, 48),
+            'label' => \Illuminate\Support\Str::limit($experienceSummary, 36),
         ] : null,
         count($skillChips) > 0 ? [
             'num' => (string) count($skillChips),
@@ -166,9 +165,6 @@
           <li class="mc-trust__item">
             <span class="mc-trust__num">{{ $stat['num'] }}</span>
             <span class="mc-trust__label">{{ $stat['label'] }}</span>
-            @if(!empty($stat['note']))
-              <span class="mc-tp-trust-note"><i class="fas fa-check-circle" aria-hidden="true"></i> {{ $stat['note'] }}</span>
-            @endif
           </li>
         @endforeach
       </ul>
