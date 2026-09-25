@@ -224,6 +224,47 @@
                 @endif
             </div>
         @endif
+
+        @if($isCompleted)
+            <section class="st-panel" style="margin-top:1rem" aria-label="{{ $isRtl ? 'تقييم الحصة' : 'Session rating' }}">
+                <div class="st-section-head">
+                    <div>
+                        <h2>{{ $isRtl ? 'تقييم الحصة' : 'Rate this session' }}</h2>
+                        <p>{{ $isRtl ? 'تقييمك إلزامي بعد اكتمال الحصة ويساعد المعلم والمنصة.' : 'Your rating is required after the session and helps improve teaching quality.' }}</p>
+                    </div>
+                </div>
+                @if(!empty($sessionRating))
+                    <p style="margin:0;font-weight:800;color:#152A4A">
+                        {{ $isRtl ? 'تقييمك:' : 'Your rating:' }}
+                        {{ str_repeat('★', (int) $sessionRating->rating) }}{{ str_repeat('☆', 5 - (int) $sessionRating->rating) }}
+                        ({{ (int) $sessionRating->rating }}/5)
+                    </p>
+                    @if($sessionRating->comment)
+                        <p style="margin:0.5rem 0 0;color:#3A4A63;font-weight:600;line-height:1.6">{{ $sessionRating->comment }}</p>
+                    @endif
+                @else
+                    <form method="POST" action="{{ route('student.one-to-one-sessions.rate', $session) }}" style="display:grid;gap:0.75rem;max-width:28rem">
+                        @csrf
+                        <label style="display:grid;gap:0.35rem;font-weight:700;color:#152A4A">
+                            <span>{{ $isRtl ? 'النجوم (1–5)' : 'Stars (1–5)' }}</span>
+                            <select name="rating" required style="height:42px;border-radius:10px;border:1.5px solid #E2E8F0;padding:0 0.75rem;font-weight:700">
+                                <option value="">{{ $isRtl ? 'اختر' : 'Choose' }}</option>
+                                @for($i = 5; $i >= 1; $i--)
+                                    <option value="{{ $i }}" @selected(old('rating') == $i)>{{ $i }}</option>
+                                @endfor
+                            </select>
+                        </label>
+                        <label style="display:grid;gap:0.35rem;font-weight:700;color:#152A4A">
+                            <span>{{ $isRtl ? 'تعليق (اختياري)' : 'Comment (optional)' }}</span>
+                            <textarea name="comment" rows="3" maxlength="2000" style="border-radius:10px;border:1.5px solid #E2E8F0;padding:0.65rem 0.75rem;font-weight:600;font-family:inherit">{{ old('comment') }}</textarea>
+                        </label>
+                        <button type="submit" class="st-pill st-pill--solid" style="width:fit-content">
+                            {{ $isRtl ? 'إرسال التقييم' : 'Submit rating' }}
+                        </button>
+                    </form>
+                @endif
+            </section>
+        @endif
     </div>
 
     <aside class="st-class-detail__side">

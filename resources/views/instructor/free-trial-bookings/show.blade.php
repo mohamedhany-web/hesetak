@@ -4,9 +4,23 @@
 @section('page_title', 'تفاصيل الحصة المجانية')
 
 @section('content')
-@php $locale = app()->getLocale(); @endphp
+@php
+    $locale = app()->getLocale();
+    $isPending = $booking->status === \App\Models\FreeTrialBooking::STATUS_PENDING;
+    $availableSlots = $availableSlots ?? collect();
+@endphp
 
 <div class="id-page">
+    @if(session('success'))
+        <div class="id-alert id-alert--ok" style="margin-bottom:1rem">{{ session('success') }}</div>
+    @endif
+    @if(session('error'))
+        <div class="id-alert id-alert--err" style="margin-bottom:1rem">{{ session('error') }}</div>
+    @endif
+    @if($errors->any())
+        <div class="id-alert id-alert--err" style="margin-bottom:1rem">{{ $errors->first() }}</div>
+    @endif
+
     <section class="id-hero" aria-label="تفاصيل الحصة المجانية">
         <div class="id-hero__copy">
             <p class="id-hero__kicker">حجز #{{ $booking->id }}</p>
@@ -32,7 +46,7 @@
         <article class="id-kpi" style="cursor:default">
             <span class="id-kpi__icon" aria-hidden="true"><i class="fas fa-calendar"></i></span>
             <span class="id-kpi__body">
-                <span class="id-kpi__label">الموعد</span>
+                <span class="id-kpi__label">الموعد المقترح</span>
                 <span style="font-size:14px;font-weight:800;color:#152A4A;margin-top:4px;line-height:1.35">
                     <x-app-datetime :at="$booking->starts_at" :timezone="$booking->timezone" pattern="Y-m-d · g:i A" />
                 </span>
@@ -63,6 +77,9 @@
             <span class="id-kpi__body">
                 <span class="id-kpi__label">النوع</span>
                 <span style="font-size:14px;font-weight:800;color:#152A4A;margin-top:4px">حصة مجانية</span>
+                @if($booking->oneToOneSession)
+                    <a href="{{ route('instructor.one-to-one-sessions.show', $booking->oneToOneSession) }}" class="id-link" style="margin-top:6px">فتح الحصة المرتبطة</a>
+                @endif
             </span>
         </article>
     </section>
@@ -72,7 +89,54 @@
             <header class="id-panel__head">
                 <h2>ملاحظات</h2>
             </header>
-            <p style="margin:0;font-size:14px;font-weight:600;line-height:1.7;color:#3A4A63">{{ $booking->notes }}</p>
+            <p style="margin:0;font-size:14px;font-weight:600;line-height:1.7;color:#3A4A63;white-space:pre-line">{{ $booking->notes }}</p>
+        </section>
+    @endif
+
+    @if($isPending)
+        <section class="id-panel" style="margin-top:1rem">
+            <header class="id-panel__head">
+                <h2>قبول أو رفض الطلب</h2>
+            </header>
+            <p class="id-field__hint" style="margin:0 0 1rem">اقبل الموعد المقترح أو اختر وقتاً من توافرك، أو ارفض مع سبب مختصر.</p>
+
+            <form method="POST" action="{{ route('instructor.free-trial-bookings.accept', $booking) }}" class="id-form" style="display:grid;gap:0.85rem;margin-bottom:1.25rem">
+                @csrf
+                <label class="id-field">
+                    <span class="id-field__label">موعد التأكيد</span>
+                    @if($availableSlots->isNotEmpty())
+                        <select name="starts_at" class="id-input" required>
+                            <option value="{{ optional($booking->starts_at)?->toIso8601String() }}">الموعد المقترح من الطالب</option>
+                            @foreach($availableSlots as $slot)
+                                <option value="{{ $slot['starts_at']->toIso8601String() }}">{{ $slot['label'] }}</option>
+                            @endforeach
+                        </select>
+                    @else
+                        <input type="datetime-local" name="starts_at" class="id-input" value="{{ optional($booking->starts_at)?->timezone(auth()->user()->timezoneCode() ?? config('app.timezone'))->format('Y-m-d\\TH:i') }}" required>
+                        <span class="id-field__hint">لا توجد نوافذ توافر منشورة — حدّث جدولك أو أدخل موعداً يدوياً.</span>
+                    @endif
+                </label>
+                <label class="id-field">
+                    <span class="id-field__label">ملاحظة للمعلم (اختياري)</span>
+                    <textarea name="notes" class="id-input" rows="2" maxlength="2000" placeholder="مثال: تم التأكيد على الموعد"></textarea>
+                </label>
+                <button type="submit" class="id-btn id-btn--gold" style="width:fit-content">
+                    <i class="fas fa-check" aria-hidden="true"></i>
+                    قبول وتأكيد الموعد
+                </button>
+            </form>
+
+            <form method="POST" action="{{ route('instructor.free-trial-bookings.reject', $booking) }}" class="id-form" style="display:grid;gap:0.85rem;padding-top:1rem;border-top:1px dashed #E2E8F0" onsubmit="return confirm('تأكيد رفض الطلب؟');">
+                @csrf
+                <label class="id-field">
+                    <span class="id-field__label">سبب الرفض (اختياري)</span>
+                    <input type="text" name="reason" class="id-input" maxlength="1000" placeholder="مثال: الموعد غير مناسب هذا الأسبوع">
+                </label>
+                <button type="submit" class="id-btn id-btn--ghost" style="width:fit-content;color:#b91c1c;border-color:#fecaca">
+                    <i class="fas fa-times" aria-hidden="true"></i>
+                    رفض الطلب
+                </button>
+            </form>
         </section>
     @endif
 </div>

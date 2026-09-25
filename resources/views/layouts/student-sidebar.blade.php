@@ -87,6 +87,14 @@
             </a>
             @endif
 
+            @if(student_ui('show_consultations', false) && Route::has('consultations.index'))
+            <a href="{{ route('consultations.index') }}" @click="{{ $closeSidebar }}"
+               class="ins-nav {{ request()->routeIs('consultations.*') ? 'active' : '' }}">
+                <span class="ins-icon"><i class="fas fa-comments-dollar"></i></span>
+                <span class="flex-1 truncate">{{ $isRtl ? 'الاستشارات' : 'Consultations' }}</span>
+            </a>
+            @endif
+
             @if(student_ui('show_entitlements', true) && Route::has('student.service-entitlements.index'))
             <a href="{{ route('student.service-entitlements.index') }}" @click="{{ $closeSidebar }}"
                class="ins-nav {{ request()->routeIs('student.service-entitlements.*') ? 'active' : '' }}">

@@ -1037,6 +1037,7 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::get('/one-to-one-sessions', [\App\Http\Controllers\Student\OneToOneSessionController::class, 'index'])->name('student.one-to-one-sessions.index');
         Route::get('/one-to-one-sessions/{oneToOneSession}', [\App\Http\Controllers\Student\OneToOneSessionController::class, 'show'])->name('student.one-to-one-sessions.show');
         Route::post('/one-to-one-sessions/{oneToOneSession}/book', [\App\Http\Controllers\Student\OneToOneSessionController::class, 'book'])->name('student.one-to-one-sessions.book');
+        Route::post('/one-to-one-sessions/{oneToOneSession}/rate', [\App\Http\Controllers\Student\OneToOneSessionController::class, 'rate'])->name('student.one-to-one-sessions.rate');
         Route::post('/instructors/{instructor}/book-slot', [\App\Http\Controllers\Student\OneToOneSessionController::class, 'bookWithInstructor'])->name('student.one-to-one-sessions.book-instructor');
 
         // كورسات بريفيت — محاضرات خاصة + رسائل مع المعلم
@@ -2296,11 +2297,14 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::get('/api/calendar/events', [\App\Http\Controllers\Instructor\CalendarController::class, 'getEvents'])->name('calendar.events');
         Route::get('/consultations', [\App\Http\Controllers\Instructor\ConsultationController::class, 'index'])->name('consultations.index');
         Route::get('/consultations/{consultation}', [\App\Http\Controllers\Instructor\ConsultationController::class, 'show'])->name('consultations.show');
+        Route::post('/consultations/{consultation}/schedule', [\App\Http\Controllers\Instructor\ConsultationController::class, 'schedule'])->name('consultations.schedule');
         Route::get('/one-to-one-sessions', [\App\Http\Controllers\Instructor\OneToOneSessionController::class, 'index'])->name('one-to-one-sessions.index');
         Route::get('/one-to-one-availability', [\App\Http\Controllers\Instructor\OneToOneAvailabilityController::class, 'index'])->name('one-to-one-availability.index');
         Route::post('/one-to-one-availability', [\App\Http\Controllers\Instructor\OneToOneAvailabilityController::class, 'update'])->name('one-to-one-availability.update');
         Route::get('/free-trial-bookings', [\App\Http\Controllers\Instructor\FreeTrialBookingController::class, 'index'])->name('free-trial-bookings.index');
         Route::get('/free-trial-bookings/{freeTrialBooking}', [\App\Http\Controllers\Instructor\FreeTrialBookingController::class, 'show'])->name('free-trial-bookings.show');
+        Route::post('/free-trial-bookings/{freeTrialBooking}/accept', [\App\Http\Controllers\Instructor\FreeTrialBookingController::class, 'accept'])->name('free-trial-bookings.accept');
+        Route::post('/free-trial-bookings/{freeTrialBooking}/reject', [\App\Http\Controllers\Instructor\FreeTrialBookingController::class, 'reject'])->name('free-trial-bookings.reject');
 
         Route::get('/private-messages', [\App\Http\Controllers\Instructor\PrivateMessagesController::class, 'index'])->name('private-messages.index');
         Route::get('/private-messages/with/{student}', [\App\Http\Controllers\Instructor\PrivateMessagesController::class, 'openWith'])->name('private-messages.with');

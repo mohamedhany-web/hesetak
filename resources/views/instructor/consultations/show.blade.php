@@ -85,6 +85,24 @@
             </div>
         @endif
 
+        @if($consultation->status === \App\Models\ConsultationRequest::STATUS_PAID)
+            <div class="id-panel" style="margin-top:16px;padding:16px;box-shadow:none;background:#FFF8E8;border:1px solid #F5D98A">
+                <p style="margin:0 0 10px;font-size:14px;font-weight:800;color:#152A4A">جدولة الاستشارة بعد تأكيد الدفع</p>
+                <form method="POST" action="{{ route('instructor.consultations.schedule', $consultation) }}" class="id-form" style="display:grid;gap:0.75rem;max-width:22rem">
+                    @csrf
+                    <label class="id-field">
+                        <span class="id-field__label">الموعد</span>
+                        <input type="datetime-local" name="scheduled_at" class="id-input" required>
+                    </label>
+                    <label class="id-field">
+                        <span class="id-field__label">المدة (دقيقة)</span>
+                        <input type="number" name="duration_minutes" class="id-input" min="15" max="480" value="{{ (int) $consultation->duration_minutes }}">
+                    </label>
+                    <button type="submit" class="id-btn id-btn--gold" style="width:fit-content">تأكيد الجدولة</button>
+                </form>
+            </div>
+        @endif
+
         @if($consultation->status === \App\Models\ConsultationRequest::STATUS_SCHEDULED && $consultation->classroomMeeting)
             @php
                 $m = $consultation->classroomMeeting;

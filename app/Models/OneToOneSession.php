@@ -125,6 +125,11 @@ class OneToOneSession extends Model
         return $this->belongsTo(ClassroomMeeting::class, 'classroom_meeting_id');
     }
 
+    public function rating(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(OneToOneSessionRating::class, 'one_to_one_session_id');
+    }
+
     public function bookedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'booked_by_user_id');

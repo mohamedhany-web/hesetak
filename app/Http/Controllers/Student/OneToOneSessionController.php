@@ -8,11 +8,13 @@ use App\Models\User;
 use App\Services\OneToOneSessionUnlockService;
 use App\Services\OneToOneAvailabilityService;
 use App\Services\OneToOneSessionService;
+use App\Services\OneToOneSessionRatingService;
 use App\Support\AppTimezone;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use InvalidArgumentException;
 
 class OneToOneSessionController extends Controller
 {
@@ -33,7 +35,11 @@ class OneToOneSessionController extends Controller
     {
         abort_unless($oneToOneSession->student_id === auth()->id(), 403);
 
-        $oneToOneSession->load(['course', 'instructor', 'classroomMeeting', 'enrollment']);
+        $with = ['course', 'instructor', 'classroomMeeting', 'enrollment'];
+        if (OneToOneSessionRatingService::isReady()) {
+            $with[] = 'rating';
+        }
+        $oneToOneSession->load($with);
 
         $availableSlots = collect();
         if ($oneToOneSession->status === OneToOneSession::STATUS_PENDING) {
@@ -50,7 +56,29 @@ class OneToOneSessionController extends Controller
             'availableSlots' => $availableSlots,
             'canJoinSession' => OneToOneSessionUnlockService::canStudentJoin($oneToOneSession, auth()->user()),
             'sessionLockReason' => OneToOneSessionUnlockService::lockReason($oneToOneSession, auth()->user()),
+            'mustRate' => OneToOneSessionRatingService::studentMustRate($oneToOneSession, auth()->user()),
+            'sessionRating' => OneToOneSessionRatingService::isReady() ? $oneToOneSession->rating : null,
         ]);
+    }
+
+    public function rate(Request $request, OneToOneSession $oneToOneSession): RedirectResponse
+    {
+        abort_unless($oneToOneSession->student_id === auth()->id(), 403);
+
+        $data = $request->validate([
+            'rating' => ['required', 'integer', 'min:1', 'max:5'],
+            'comment' => ['nullable', 'string', 'max:2000'],
+        ]);
+
+        try {
+            OneToOneSessionRatingService::rate($oneToOneSession, $request->user(), $data);
+        } catch (InvalidArgumentException $e) {
+            return back()->withErrors(['rating' => $e->getMessage()]);
+        }
+
+        return redirect()
+            ->route('student.one-to-one-sessions.show', $oneToOneSession)
+            ->with('success', 'شكراً لتقييمك — تم حفظه بنجاح.');
     }
 
     public function book(Request $request, OneToOneSession $oneToOneSession): RedirectResponse

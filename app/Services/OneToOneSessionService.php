@@ -864,6 +864,8 @@ class OneToOneSessionService
             if ($meeting && ! $meeting->ended_at) {
                 $meeting->update(['ended_at' => now()]);
             }
+
+            OneToOneSessionRatingService::notifyStudentToRate($session->fresh());
         });
     }
 

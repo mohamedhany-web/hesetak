@@ -326,6 +326,171 @@ class FreeTrialBookingService
     }
 
     /**
+     * قبول طلب تجربة/حصة مجانية من المعلم — يثبت الموعد وينشئ حصة 1:1 عند وجود حساب طالب.
+     *
+     * @param  array{starts_at?:Carbon|string,timezone?:string,notes?:string,duration_minutes?:int}  $data
+     */
+    public static function confirmByInstructor(FreeTrialBooking $booking, User $instructor, array $data = []): FreeTrialBooking
+    {
+        if ((int) $booking->instructor_id !== (int) $instructor->id) {
+            throw new InvalidArgumentException('هذا الطلب غير مخصص لك.');
+        }
+        if ($booking->status !== FreeTrialBooking::STATUS_PENDING) {
+            throw new InvalidArgumentException('لا يمكن قبول طلب غير معلّق.');
+        }
+
+        $viewerTz = AppTimezone::normalize($data['timezone'] ?? null)
+            ?? AppTimezone::normalize($booking->timezone ?? null)
+            ?? AppTimezone::forInstructorId((int) $instructor->id);
+
+        $startsInput = $data['starts_at'] ?? $booking->starts_at;
+        $starts = $startsInput instanceof Carbon
+            ? $startsInput->copy()->utc()
+            : AppTimezone::parseAppointmentInput((string) $startsInput, $viewerTz);
+
+        if (! $starts || $starts->lte(now())) {
+            throw new InvalidArgumentException('اختر موعداً صالحاً في المستقبل لتأكيد الطلب.');
+        }
+        $starts = $starts->utc()->startOfMinute();
+
+        $duration = isset($data['duration_minutes'])
+            ? max(15, min(180, (int) $data['duration_minutes']))
+            : max(15, (int) ($booking->duration_minutes ?: self::DURATION_MINUTES));
+
+        $notes = isset($data['notes']) ? trim((string) $data['notes']) : null;
+        if ($notes === '') {
+            $notes = null;
+        }
+
+        return DB::transaction(function () use ($booking, $instructor, $starts, $duration, $viewerTz, $notes) {
+            $booking = FreeTrialBooking::query()->lockForUpdate()->findOrFail($booking->id);
+            if ($booking->status !== FreeTrialBooking::STATUS_PENDING) {
+                throw new InvalidArgumentException('لا يمكن قبول طلب غير معلّق.');
+            }
+
+            $student = null;
+            if ($booking->user_id) {
+                $student = User::query()->find($booking->user_id);
+            }
+            if (! $student && filled($booking->email)) {
+                $student = User::query()->where('email', $booking->email)->first();
+            }
+
+            $session = null;
+            if ($student && $student->isStudent()) {
+                $session = OneToOneSessionService::bookComplimentaryWithInstructor(
+                    $student,
+                    $instructor,
+                    $starts,
+                    $instructor,
+                    $notes ?: 'حصة مجانية — قبول المعلم لطلب #'.$booking->id,
+                    $duration,
+                    true
+                );
+            } elseif (! OneToOneAvailabilityService::isSlotAvailable((int) $instructor->id, $starts, $duration)) {
+                throw new InvalidArgumentException('الموعد غير متاح في جدولك. اختر وقتاً آخر أو حدّث التوافر.');
+            }
+
+            $payload = [
+                'status' => FreeTrialBooking::STATUS_CONFIRMED,
+                'starts_at' => $session?->scheduled_at ?? $starts,
+                'ends_at' => ($session?->scheduled_at ?? $starts)->copy()->addMinutes($duration),
+                'duration_minutes' => $duration,
+                'notes' => trim(implode("\n", array_filter([
+                    (string) $booking->notes,
+                    $notes,
+                    'تم القبول بواسطة المعلم '.$instructor->name,
+                ]))),
+            ];
+            if (Schema::hasColumn('free_trial_bookings', 'timezone')) {
+                $payload['timezone'] = $viewerTz;
+            }
+            if ($session && Schema::hasColumn('free_trial_bookings', 'one_to_one_session_id')) {
+                $payload['one_to_one_session_id'] = $session->id;
+            }
+            if ($student && ! $booking->user_id) {
+                $payload['user_id'] = $student->id;
+            }
+
+            $booking->update($payload);
+
+            if ($student && class_exists(\App\Models\Notification::class)) {
+                try {
+                    \App\Models\Notification::create([
+                        'user_id' => $student->id,
+                        'sender_id' => $instructor->id,
+                        'type' => 'reminder',
+                        'title' => 'تم قبول طلب الحصة المجانية',
+                        'message' => 'المعلم '.$instructor->name.' أكّد الموعد: '.$starts->timezone($viewerTz)->format('Y-m-d H:i'),
+                        'action_url' => $session
+                            ? route('student.one-to-one-sessions.show', $session)
+                            : route('dashboard'),
+                        'action_text' => 'عرض الحصة',
+                        'priority' => 'high',
+                        'audience' => 'student',
+                        'is_read' => false,
+                    ]);
+                } catch (\Throwable) {
+                }
+            }
+
+            return $booking->fresh(['user', 'instructor', 'oneToOneSession']);
+        });
+    }
+
+    /**
+     * رفض طلب تجربة من المعلم.
+     */
+    public static function rejectByInstructor(FreeTrialBooking $booking, User $instructor, ?string $reason = null): FreeTrialBooking
+    {
+        if ((int) $booking->instructor_id !== (int) $instructor->id) {
+            throw new InvalidArgumentException('هذا الطلب غير مخصص لك.');
+        }
+        if ($booking->status !== FreeTrialBooking::STATUS_PENDING) {
+            throw new InvalidArgumentException('لا يمكن رفض طلب غير معلّق.');
+        }
+
+        $reason = $reason !== null ? trim($reason) : null;
+
+        return DB::transaction(function () use ($booking, $instructor, $reason) {
+            $booking = FreeTrialBooking::query()->lockForUpdate()->findOrFail($booking->id);
+            if ($booking->status !== FreeTrialBooking::STATUS_PENDING) {
+                throw new InvalidArgumentException('لا يمكن رفض طلب غير معلّق.');
+            }
+
+            $booking->update([
+                'status' => FreeTrialBooking::STATUS_CANCELLED,
+                'notes' => trim(implode("\n", array_filter([
+                    (string) $booking->notes,
+                    'رفض المعلم '.$instructor->name.($reason ? ': '.$reason : ''),
+                ]))),
+            ]);
+
+            self::syncLinkedSessionStatus($booking, FreeTrialBooking::STATUS_CANCELLED);
+
+            if ($booking->user_id && class_exists(\App\Models\Notification::class)) {
+                try {
+                    \App\Models\Notification::create([
+                        'user_id' => $booking->user_id,
+                        'sender_id' => $instructor->id,
+                        'type' => 'general',
+                        'title' => 'تم رفض طلب الحصة المجانية',
+                        'message' => $reason ?: 'المعلم لم يتمكن من قبول الموعد المقترح. يمكنك طلب موعد آخر.',
+                        'action_url' => route('public.instructors.show', $instructor),
+                        'action_text' => 'اختيار موعد',
+                        'priority' => 'normal',
+                        'audience' => 'student',
+                        'is_read' => false,
+                    ]);
+                } catch (\Throwable) {
+                }
+            }
+
+            return $booking->fresh(['user', 'instructor']);
+        });
+    }
+
+    /**
      * مزامنة حالة الحجز مع الحصة المرتبطة (إلغاء / إكمال).
      */
     public static function syncLinkedSessionStatus(FreeTrialBooking $booking, string $status): void
