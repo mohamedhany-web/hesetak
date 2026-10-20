@@ -8,6 +8,7 @@ use App\Services\UserProfileImageStorage;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -29,6 +30,7 @@ class User extends Authenticatable
         'role',
         'uuid',
         'progress_share_token',
+        'student_public_code',
         'is_community_contributor',
         'community_contributor_type',
         'parent_id',
@@ -52,7 +54,9 @@ class User extends Authenticatable
         'portfolio_marketing_published',
         'private_teaching_meta',
         'academic_year_id',
+        'academic_grade_id',
         'preferred_curriculum_type',
+        'preferred_subject_ids',
         'last_login_at',
         'referral_code',
         'referred_by',
@@ -115,6 +119,7 @@ class User extends Authenticatable
             'portfolio_social_links' => 'array',
             'portfolio_marketing_published' => 'array',
             'private_teaching_meta' => 'array',
+            'preferred_subject_ids' => 'array',
             'portfolio_profile_submitted_at' => 'datetime',
             'portfolio_profile_reviewed_at' => 'datetime',
         ];
@@ -129,6 +134,9 @@ class User extends Authenticatable
             if (($user->role ?? null) === 'student' && blank($user->progress_share_token)) {
                 $user->progress_share_token = Str::random(48);
             }
+            if (($user->role ?? null) === 'student' && blank($user->student_public_code) && Schema::hasColumn($user->getTable(), 'student_public_code')) {
+                $user->student_public_code = static::makeStudentPublicCode();
+            }
         });
     }
 
@@ -139,16 +147,23 @@ class User extends Authenticatable
 
     public function getRouteKey()
     {
-        $uuid = trim((string) ($this->uuid ?? ''));
+        $uuid = trim((string) ($this->attributes['uuid'] ?? ''));
+        if ($uuid === '' && $this->exists && $this->getKey()) {
+            $uuid = trim((string) (static::query()->whereKey($this->getKey())->value('uuid') ?? ''));
+            if ($uuid !== '') {
+                $this->setRawAttributes(array_merge($this->getAttributes(), ['uuid' => $uuid]), true);
+            }
+        }
         if ($uuid === '') {
             // لا نُسقط إلى الرقم التسلسلي في الروابط العامة.
-            $this->uuid = (string) Str::uuid();
+            $uuid = (string) Str::uuid();
+            $this->uuid = $uuid;
             if ($this->exists) {
                 $this->saveQuietly();
             }
         }
 
-        return (string) $this->uuid;
+        return $uuid;
     }
 
     public function resolveRouteBinding($value, $field = null)
@@ -156,6 +171,41 @@ class User extends Authenticatable
         $field = $field ?: $this->getRouteKeyName();
 
         return static::query()->where($field, $value)->first();
+    }
+
+    /**
+     * رقم الطالب الذي يكتبه ولي الأمر. قصير وغير تسلسلي حتى لا يُخمَّن رقم الحساب.
+     */
+    public static function makeStudentPublicCode(): string
+    {
+        $alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+        $max = strlen($alphabet) - 1;
+
+        do {
+            $raw = '';
+            for ($i = 0; $i < 8; $i++) {
+                $raw .= $alphabet[random_int(0, $max)];
+            }
+            $code = 'HS-'.substr($raw, 0, 4).'-'.substr($raw, 4, 4);
+        } while (static::query()->where('student_public_code', $code)->exists());
+
+        return $code;
+    }
+
+    public function ensureStudentPublicCode(): string
+    {
+        if (! Schema::hasColumn($this->getTable(), 'student_public_code')) {
+            return '';
+        }
+
+        if (filled($this->student_public_code)) {
+            return (string) $this->student_public_code;
+        }
+
+        $code = static::makeStudentPublicCode();
+        $this->forceFill(['student_public_code' => $code])->save();
+
+        return $code;
     }
 
     /**
@@ -175,8 +225,15 @@ class User extends Authenticatable
 
     public function progressShareUrl(): string
     {
+        $code = $this->ensureStudentPublicCode();
+        if ($code === '') {
+            return route('public.parent-progress', [
+                'token' => $this->ensureProgressShareToken(),
+            ]);
+        }
+
         return route('public.parent-progress', [
-            'token' => $this->ensureProgressShareToken(),
+            'code' => $code,
         ]);
     }
 
@@ -401,6 +458,11 @@ class User extends Authenticatable
     public function academicYear()
     {
         return $this->belongsTo(AcademicYear::class);
+    }
+
+    public function academicGrade()
+    {
+        return $this->belongsTo(AcademicGrade::class);
     }
 
     /**
@@ -829,6 +891,7 @@ class User extends Authenticatable
 
     /**
      * هل يمكن للمستخدم الدخول إلى لوحة الإدارة (صلاحية admin.access أو سوبر أدمن بدون أدوار).
+     * موظفو قسم المبيعات/CRM يبقون على /employee دائماً حتى لو رُبط بهم دور RBAC واسع بالخطأ.
      */
     public function userHasAdminAccessCapability(): bool
     {
@@ -836,9 +899,11 @@ class User extends Authenticatable
             return true;
         }
 
-        // يتماشى مع EnsurePermission لـ permission:admin.access: موظف له دور RBAC يُسمح له بمجموعة admin ثم يُقيَّد لاحقاً
-        if ($this->is_employee && $this->roles()->exists()) {
-            return true;
+        // قسم المبيعات/CRM: لوحة الموظف فقط — لا دخول أدمن تلقائي
+        if ($this->is_employee && (
+            $this->usesCustomEmployeePermissions() || $this->isSalesDepartmentEmployee()
+        )) {
+            return false;
         }
 
         $names = self::permissionNamesToCheck('admin.access');
@@ -850,6 +915,39 @@ class User extends Authenticatable
         return $this->roles()->whereHas('permissions', function ($query) use ($names) {
             $query->whereIn('name', $names);
         })->exists();
+    }
+
+    /**
+     * قائمة صلاحيات RBAC المسموح بها للموظف عند تفعيل التخصيص أو وظيفة مبيعات.
+     * null = لا قيد إضافي (يُعتمد على الأدوار فقط).
+     *
+     * @return list<string>|null
+     */
+    public function employeePermissionAllowlist(): ?array
+    {
+        if (! $this->is_employee) {
+            return null;
+        }
+
+        if ($this->usesCustomEmployeePermissions()) {
+            return \App\Support\EmployeePermissionCatalog::rbacPermissionsImpliedBy(
+                $this->effectiveEmployeePermissions()
+            );
+        }
+
+        // قسم المبيعات: المنع افتراضياً خارج صلاحيات الوظيفة حتى لو الدور RBAC واسع
+        if ($this->isSalesDepartmentEmployee()) {
+            if (! $this->relationLoaded('employeeJob')) {
+                $this->load('employeeJob');
+            }
+            $jobPermissions = $this->employeeJob?->permissions;
+
+            return \App\Support\EmployeePermissionCatalog::rbacPermissionsImpliedBy(
+                is_array($jobPermissions) ? $jobPermissions : []
+            );
+        }
+
+        return null;
     }
 
     /**
@@ -881,6 +979,35 @@ class User extends Authenticatable
             if (! $this->roles()->exists()) {
                 return true;
             }
+        }
+
+        $allowlist = $this->employeePermissionAllowlist();
+        if ($allowlist !== null) {
+            // موظف مبيعات مخصص أو بوظيفة: لا صلاحيات مالية ضمنية
+            if (in_array($permissionName, \App\Support\EmployeePermissionCatalog::financialPermissionNames(), true)) {
+                return false;
+            }
+
+            if ($permissionName === 'admin.access') {
+                return false;
+            }
+
+            if ($permissionName === 'view.dashboard') {
+                // لوحة أدمن فقط لمن دخل الأدمن بصلاحية حقيقية؛ المبيعات المخصصة على /employee
+                return $this->userHasAdminAccessCapability();
+            }
+
+            $names = self::permissionNamesToCheck($permissionName);
+            if (empty(array_intersect($names, $allowlist))) {
+                return false;
+            }
+
+            // التخصيص الحرفي: القائمة فقط مصدر الحقيقة
+            if ($this->usesCustomEmployeePermissions()) {
+                return true;
+            }
+
+            // وظيفة مبيعات + RBAC: يجب أن يملك الدور الصلاحية أيضاً (تقاطع)
         }
 
         // لوحة التحكم: من يملك دخول الأدمن يُعتبر لديه view.dashboard تلقائياً (باقي الصلاحيات تُحدَّد لاحقاً)
@@ -1144,29 +1271,30 @@ class User extends Authenticatable
             return true;
         }
 
-        if ($this->usesCustomEmployeePermissions()) {
-            $perms = $this->effectiveEmployeePermissions();
-            if (in_array($permission, $perms, true)) {
-                return true;
-            }
-            // سايدبار المبيعات يستخدم manage.orders بينما الوظيفة/التخصيص تستخدم sales_desk
-            if ($permission === 'manage.orders' && (in_array('sales_desk', $perms, true) || in_array('sales_orders', $perms, true))) {
-                return true;
-            }
-            if ($permission === 'sales_orders' && in_array('sales_desk', $perms, true)) {
-                return true;
-            }
-            if ($permission === 'sales_desk' && in_array('sales_orders', $perms, true)) {
-                return true;
-            }
+        // صلاحيات مخصصة أو قسم المبيعات/CRM: مفاتيح القائمة من الكتالوج فقط
+        if ($this->usesCustomEmployeePermissions() || $this->isSalesDepartmentEmployee()) {
+            $held = $this->usesCustomEmployeePermissions()
+                ? $this->effectiveEmployeePermissions()
+                : (function () {
+                    if (! $this->relationLoaded('employeeJob')) {
+                        $this->load('employeeJob');
+                    }
 
-            return false;
+                    $jobPermissions = $this->employeeJob?->permissions;
+
+                    return is_array($jobPermissions) ? $jobPermissions : [];
+                })();
+
+            return \App\Support\EmployeePermissionCatalog::employeeKeyIsGranted($permission, $held);
         }
 
         // إذا كان للمستخدم أدوار RBAC مخصصة → اعتمد عليها فقط
         if ($this->roles()->exists()) {
             if ($permission === 'tasks') {
                 return $this->hasPermission('manage.tasks') || $this->hasPermission('view.tasks');
+            }
+            if ($permission === 'leaves') {
+                return $this->hasPermission('manage.leaves');
             }
             if ($permission === 'reports') {
                 return $this->hasPermission('view.statistics')
@@ -1177,46 +1305,41 @@ class User extends Authenticatable
             if ($permission === 'sales_desk' || $permission === 'sales_orders') {
                 return $this->hasPermission('manage.orders') || $this->hasPermission('sales_desk');
             }
+            if ($permission === 'calendar' || $permission === 'view.calendar') {
+                return $this->hasPermission('view.calendar');
+            }
+            if ($permission === 'admin_panel') {
+                return $this->userHasAdminAccessCapability();
+            }
+
+            foreach (\App\Support\EmployeePermissionCatalog::mapEmployeeKeyToRbac($permission) as $rbac) {
+                if ($this->hasPermission($rbac)) {
+                    return true;
+                }
+            }
 
             $rbacName = self::rbacPermissionForEmployeeMenuKey($permission);
+            if ($rbacName !== $permission && $this->hasPermission($rbacName)) {
+                return true;
+            }
 
-            return $this->hasPermission($rbacName);
+            return $this->hasPermission($permission);
         }
 
-        // لا يوجد دور RBAC → اعتمد على صلاحيات وظيفة الموظف (النظام القديم)
+        // لا يوجد دور RBAC → اعتمد على صلاحيات وظيفة الموظف
         if (! $this->relationLoaded('employeeJob')) {
             $this->load('employeeJob');
         }
         $job = $this->employeeJob;
         if (! $job) {
-            // بدون وظيفة ولا RBAC: اعرض كل شيء (مدير يدوي)
             return true;
         }
         $jobPermissions = $job->permissions;
         if (! is_array($jobPermissions) || empty($jobPermissions)) {
-            // وظيفة بدون صلاحيات محددة → لا تُعرَض الأقسام الإضافية
             return false;
         }
 
-        if (in_array($permission, $jobPermissions, true)) {
-            return true;
-        }
-
-        // توافق سايدبار المبيعات: manage.orders ≡ sales_desk في وظيفة السيلز
-        if ($permission === 'manage.orders'
-            && (in_array('sales_desk', $jobPermissions, true) || in_array('sales_orders', $jobPermissions, true))) {
-            return true;
-        }
-
-        // sales_orders و sales_desk متلازمان وظيفياً في مساحة المبيعات
-        if ($permission === 'sales_orders' && in_array('sales_desk', $jobPermissions, true)) {
-            return true;
-        }
-        if ($permission === 'sales_desk' && in_array('sales_orders', $jobPermissions, true)) {
-            return true;
-        }
-
-        return false;
+        return \App\Support\EmployeePermissionCatalog::employeeKeyIsGranted($permission, $jobPermissions);
     }
 
     /**

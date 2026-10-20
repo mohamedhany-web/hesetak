@@ -22,7 +22,6 @@ window.hesetakDateTimeLocal = function (iso, timeZone) {
         return '';
     }
 };
-window.glotticalDateTimeLocal = window.hesetakDateTimeLocal; // legacy alias
 (function () {
     try {
         var tz = (Intl.DateTimeFormat().resolvedOptions().timeZone || '').trim();
@@ -44,7 +43,7 @@ window.glotticalDateTimeLocal = window.hesetakDateTimeLocal; // legacy alias
 
         if (!syncUrl || !token) return;
 
-        var key = 'glottical_tz_synced';
+        var key = 'hesetak_tz_synced';
         var last = sessionStorage.getItem(key);
         if (last === tz) return;
 

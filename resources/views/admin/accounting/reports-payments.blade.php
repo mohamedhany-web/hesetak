@@ -124,8 +124,8 @@
                             </td>
                             <td class="px-4 py-3 text-ink-soft">{{ $payment->user->name ?? '—' }}</td>
                             <td class="px-4 py-3 font-semibold tabular-nums text-ink">
-                                {{ number_format($payment->amount, 2) }}
-                                <span class="text-xs font-normal text-muted">$</span>
+                                {{ format_money($payment->amount) }}
+                                <span class="text-xs font-normal text-muted">{{ currency_symbol() }}</span>
                             </td>
                             <td class="px-4 py-3">
                                 <span class="inline-flex rounded-lg px-2.5 py-1 text-xs font-medium {{ $badge['classes'] }}">{{ $badge['label'] }}</span>

@@ -128,7 +128,7 @@
                             <td class="px-4 py-3 text-ink-soft">{{ $o->course ? $o->course->title : ($o->learningPath ? $o->learningPath->name : '—') }}</td>
                             <td class="px-4 py-3 font-semibold tabular-nums text-ink">
                                 {{ number_format($o->amount, 2) }}
-                                <span class="text-xs font-normal text-muted">$</span>
+                                <span class="text-xs font-normal text-muted">{{ currency_symbol() }}</span>
                             </td>
                             <td class="px-4 py-3">
                                 <span class="inline-flex rounded-lg px-2.5 py-1 text-xs font-medium {{ $badge['classes'] }}">{{ $badge['label'] }}</span>

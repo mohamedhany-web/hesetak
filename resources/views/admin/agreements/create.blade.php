@@ -84,7 +84,7 @@
                 </div>
 
                 <div id="rate-field">
-                    <label class="{{ $labelClass }}">السعر/المعدل ($) <span class="text-danger">*</span></label>
+                    <label class="{{ $labelClass }}">السعر/المعدل {{ currency_unit() }} <span class="text-danger">*</span></label>
                     <input type="number" name="rate" id="rate" step="0.01" min="0" value="{{ old('rate') }}"
                            class="{{ $fieldClass }}" placeholder="0.00" />
                     <p class="mt-1.5 text-xs text-muted" id="rate-help">المبلغ المحدد لكل كورس</p>

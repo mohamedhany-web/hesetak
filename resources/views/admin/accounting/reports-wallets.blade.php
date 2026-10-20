@@ -92,9 +92,9 @@
                             <td class="px-4 py-3 font-mono text-xs text-muted">{{ $w->account_number ?? '—' }}</td>
                             <td class="px-4 py-3 font-semibold tabular-nums text-ink">
                                 {{ number_format($w->balance, 2) }}
-                                <span class="text-xs font-normal text-muted">$</span>
+                                <span class="text-xs font-normal text-muted">{{ currency_symbol() }}</span>
                             </td>
-                            <td class="px-4 py-3 tabular-nums text-ink-soft">{{ number_format($w->pending_balance ?? 0, 2) }} $</td>
+                            <td class="px-4 py-3 tabular-nums text-ink-soft">{{ number_format($w->pending_balance ?? 0, 2) }} {{ currency_symbol() }}</td>
                             <td class="px-4 py-3 tabular-nums text-muted">{{ $w->transactions_count ?? 0 }}</td>
                             <td class="px-4 py-3">
                                 <span class="inline-flex rounded-lg px-2.5 py-1 text-xs font-medium {{ $w->is_active ? 'bg-accent-soft text-accent' : 'bg-canvas-muted text-muted' }}">

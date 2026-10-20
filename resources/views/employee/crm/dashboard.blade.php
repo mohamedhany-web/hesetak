@@ -24,11 +24,11 @@
 
   @if(isset($stats['subscriptions']))
     <div class="rounded-xl border border-teal-200 bg-teal-50 p-4 flex flex-wrap items-center justify-between gap-3">
-      <div class="text-sm text-teal-900"><span class="font-bold">اشتركوا من عملائي:</span> {{ number_format($stats['subscriptions']) }} — عمولة: <strong>{{ number_format($stats['my_commissions'] ?? 0, 2) }} $</strong></div>
+      <div class="text-sm text-teal-900"><span class="font-bold">اشتركوا من عملائي:</span> {{ number_format($stats['subscriptions']) }} — عمولة: <strong>{{ number_format($stats['my_commissions'] ?? 0, 2) }} {{ currency_symbol() }}</strong></div>
       <a href="{{ route('employee.crm.marketing.desk') }}" class="text-sm font-bold text-teal-800 underline">لوحة المسوق بالعمولة ←</a>
     </div>
   @elseif(isset($stats['my_commissions']))
-    <div class="rounded-xl border bg-white p-4 text-sm"><span class="text-gray-500">إجمالي عمولاتي:</span> <strong>{{ number_format($stats['my_commissions'], 2) }} $</strong></div>
+    <div class="rounded-xl border bg-white p-4 text-sm"><span class="text-gray-500">إجمالي عمولاتي:</span> <strong>{{ number_format($stats['my_commissions'], 2) }} {{ currency_symbol() }}</strong></div>
   @endif
   @if(($role ?? null) === 'sales')
     <div class="rounded-xl border border-emerald-200 bg-emerald-50 p-4 flex flex-wrap justify-between gap-3 items-center text-sm">
@@ -44,12 +44,12 @@
   @endif
   @if(isset($stats['team_revenue']))
     <div class="grid grid-cols-2 gap-3">
-      <div class="rounded-xl border bg-white p-4 text-sm"><span class="text-gray-500">إيراد الفريق:</span> <strong>{{ number_format($stats['team_revenue'], 2) }} $</strong></div>
-      <div class="rounded-xl border bg-white p-4 text-sm"><span class="text-gray-500">عمولات الفريق:</span> <strong>{{ number_format($stats['team_commissions'], 2) }} $</strong></div>
+      <div class="rounded-xl border bg-white p-4 text-sm"><span class="text-gray-500">إيراد الفريق:</span> <strong>{{ number_format($stats['team_revenue'], 2) }} {{ currency_symbol() }}</strong></div>
+      <div class="rounded-xl border bg-white p-4 text-sm"><span class="text-gray-500">عمولات الفريق:</span> <strong>{{ number_format($stats['team_commissions'], 2) }} {{ currency_symbol() }}</strong></div>
     </div>
   @endif
   @if(isset($stats['revenue_month']))
-    <div class="rounded-xl border bg-white p-4 text-sm"><span class="text-gray-500">إيراد الشهر (كل الطلبات):</span> <strong>{{ number_format($stats['revenue_month'], 2) }} $</strong></div>
+    <div class="rounded-xl border bg-white p-4 text-sm"><span class="text-gray-500">إيراد الشهر (كل الطلبات):</span> <strong>{{ number_format($stats['revenue_month'], 2) }} {{ currency_symbol() }}</strong></div>
   @endif
   @if(isset($stats['total_leads']))
     <div class="grid grid-cols-2 gap-3">

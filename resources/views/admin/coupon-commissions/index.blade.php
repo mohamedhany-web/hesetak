@@ -56,8 +56,8 @@
                 <div class="inline-flex size-9 items-center justify-center rounded-xl bg-[#f2f5f4] text-accent">
                     <i class="fas fa-coins text-sm"></i>
                 </div>
-                <p class="mt-3 text-xs font-medium text-muted">مبالغ غير مسوّاة ($)</p>
-                <p class="mt-1 text-2xl font-semibold tabular-nums text-ink">{{ number_format($stats['amount_pending'] ?? 0, 2) }}</p>
+                <p class="mt-3 text-xs font-medium text-muted">مبالغ غير مسوّاة {{ currency_unit() }}</p>
+                <p class="mt-1 text-2xl font-semibold tabular-nums text-ink">{{ format_money($stats['amount_pending'] ?? 0) }}</p>
             </article>
         </section>
     @endif
@@ -132,7 +132,7 @@
                                 @endif
                             </td>
                             <td class="px-4 py-3 font-mono tabular-nums text-ink-soft">{{ number_format($row->base_amount_egp, 2) }} × {{ $row->commission_percent }}%</td>
-                            <td class="px-4 py-3 font-mono font-semibold tabular-nums text-ink">{{ number_format($row->commission_amount_egp, 2) }} $</td>
+                            <td class="px-4 py-3 font-mono font-semibold tabular-nums text-ink">{{ number_format($row->commission_amount_egp, 2) }} {{ currency_symbol() }}</td>
                             <td class="px-4 py-3">
                                 <span class="inline-flex rounded-lg border px-2.5 py-1 text-[11px] font-semibold
                                     @if($row->status === 'settled') border-emerald-100 bg-emerald-50 text-emerald-700

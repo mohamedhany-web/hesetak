@@ -38,8 +38,8 @@
               <td class="px-4 py-3">{{ $row['open_leads'] ?? 0 }}</td>
               <td class="px-4 py-3 text-emerald-700 font-bold">{{ $row['closed_won'] }}</td>
               <td class="px-4 py-3 text-amber-700">{{ $row['payment_pending'] ?? 0 }}</td>
-              <td class="px-4 py-3">{{ number_format($row['revenue'], 2) }} $</td>
-              <td class="px-4 py-3">{{ number_format($row['commissions'], 2) }} $</td>
+              <td class="px-4 py-3">{{ number_format($row['revenue'], 2) }} {{ currency_symbol() }}</td>
+              <td class="px-4 py-3">{{ number_format($row['commissions'], 2) }} {{ currency_symbol() }}</td>
             </tr>
           @endforeach
         </tbody>

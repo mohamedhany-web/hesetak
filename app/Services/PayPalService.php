@@ -53,7 +53,7 @@ class PayPalService
         $payload = [
             'intent' => 'CAPTURE',
             'purchase_units' => [[
-                'reference_id' => 'glottical-'.$customId,
+                'reference_id' => 'hesetak-'.$customId,
                 'custom_id' => $customId,
                 'invoice_id' => 'GLOT-'.$customId,
                 'description' => mb_substr($description, 0, 120),
@@ -73,7 +73,7 @@ class PayPalService
         ];
 
         $response = $this->request('post', '/v2/checkout/orders', $payload, [
-            'PayPal-Request-Id' => 'glottical-order-'.$customId,
+            'PayPal-Request-Id' => 'hesetak-order-'.$customId,
         ]);
 
         if (! $response->successful()) {

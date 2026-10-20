@@ -18,6 +18,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <meta name="robots" content="noindex, nofollow">
     <title>{{ config('app.name') }} - @yield('title', __('auth.dashboard'))</title>
 
     @include('partials.favicon-links')
@@ -416,17 +417,8 @@
             @endauth
 
             <main class="flex-1 overflow-auto bg-slate-50/80 min-w-0 w-full">
-                <div class="w-full max-w-full p-4 sm:p-6 lg:p-8">
-                    @if(session('success'))
-                        <div class="mb-4 bg-emerald-50 border border-emerald-200 text-emerald-700 px-4 py-3 rounded-xl text-sm font-medium flex items-center gap-2">
-                            <i class="fas fa-check-circle"></i> {{ session('success') }}
-                        </div>
-                    @endif
-                    @if(session('error'))
-                        <div class="mb-4 bg-rose-50 border border-rose-200 text-rose-700 px-4 py-3 rounded-xl text-sm font-medium flex items-center gap-2">
-                            <i class="fas fa-exclamation-circle"></i> {{ session('error') }}
-                        </div>
-                    @endif
+                <div class="w-full max-w-full space-y-4 p-4 sm:p-6 lg:p-8">
+                    @include('partials.admin-flash')
                     @yield('content')
                 </div>
             </main>

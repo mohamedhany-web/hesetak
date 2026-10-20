@@ -28,9 +28,9 @@ for ($i = 0; $i < $h; $i++) {
 imagefilledrectangle($im, 0, $h - 10, $w, $h, $gold);
 
 // Built-in font labels (reliable without TTF)
-imagestring($im, 5, 72, 200, 'GLOTTICAL', $gold);
-imagestring($im, 5, 72, 250, 'Learn languages the native way', $white);
-imagestring($im, 5, 72, 290, 'Speak. Work. Succeed.', $muted);
+imagestring($im, 5, 72, 200, 'HESETAK', $gold);
+imagestring($im, 5, 72, 250, 'Online 1:1 tutoring', $white);
+imagestring($im, 5, 72, 290, 'Students. Parents. Teachers.', $muted);
 
 $path = $dir . '/og-image.jpg';
 imagejpeg($im, $path, 88);

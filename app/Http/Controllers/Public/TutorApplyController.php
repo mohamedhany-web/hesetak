@@ -147,6 +147,7 @@ class TutorApplyController extends Controller
         }
 
         $form = HiringFormService::publishedForm();
+        $yearOptions = \App\Services\TeacherSpecialtyMatcher::yearOptions();
 
         return view('tutor.apply-profile', [
             'application' => $application,
@@ -154,7 +155,8 @@ class TutorApplyController extends Controller
             'form' => $form,
             'fields' => $form->activeFields,
             'subjectOptions' => \App\Services\TeacherSpecialtyMatcher::subjectOptions(),
-            'yearOptions' => \App\Services\TeacherSpecialtyMatcher::yearOptions(),
+            'yearOptions' => $yearOptions,
+            'gradesByYear' => \App\Services\TeacherSpecialtyMatcher::gradesByYearMap($yearOptions),
             'curriculumOptions' => \App\Support\HesetakMatchCatalog::curriculumTypes(),
         ]);
     }
@@ -193,7 +195,8 @@ class TutorApplyController extends Controller
             $normalized = \App\Services\TeacherSpecialtyMatcher::normalizePayload(
                 (array) $request->input('teaching_subject_ids', []),
                 (array) $request->input('academic_year_ids', []),
-                (array) $request->input('curriculum_types', [])
+                (array) $request->input('curriculum_types', []),
+                (array) $request->input('academic_grade_ids', [])
             );
             \App\Services\TeacherSpecialtyMatcher::applyToApplication($application, $normalized);
             \App\Services\TeacherSpecialtyMatcher::assertComplete($application->fresh());

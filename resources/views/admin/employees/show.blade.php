@@ -150,7 +150,7 @@
             @if($employee->salary)
             <div>
                 <p class="text-sm text-gray-600 mb-1">الراتب</p>
-                <p class="font-semibold text-gray-900 text-lg">{{ number_format($employee->salary, 2) }} $</p>
+                <p class="font-semibold text-gray-900 text-lg">{{ number_format($employee->salary, 2) }} {{ currency_symbol() }}</p>
             </div>
             @endif
             <div>

@@ -70,7 +70,7 @@
                             <label class="{{ $labelClass }}" for="image">صورة الشهادة <span class="text-danger">*</span></label>
                             <input id="image" type="file" name="image" accept="image/jpeg,image/png,image/webp,image/gif"
                                    class="block w-full text-sm text-muted file:ml-4 file:rounded-xl file:border-0 file:bg-accent-soft file:px-4 file:py-2 file:text-sm file:font-medium file:text-accent hover:file:bg-accent hover:file:text-white">
-                            <p class="mt-1.5 text-xs text-muted">jpg, png, webp, gif — حتى 10 ميغابايت تقريباً.</p>
+                            <p class="mt-1.5 text-xs text-muted">jpg, png, webp, gif — حتى 10 ميغابايت تقريباً. لا ترفع لقطات لوحة تحكم أو شاشات فيها بريد/بيانات داخلية.</p>
                         </div>
                         <div>
                             <label class="{{ $labelClass }}" for="body_image">وصف قصير تحت الصورة <span class="font-normal text-muted">(اختياري)</span></label>

@@ -157,7 +157,7 @@
                                     </div>
                                 </td>
                                 <td class="px-4 py-3">
-                                    <div class="text-lg font-semibold tabular-nums text-ink">{{ number_format($withdrawal->amount ?? 0, 2) }} <span class="text-xs font-normal text-muted">$</span></div>
+                                    <div class="text-lg font-semibold tabular-nums text-ink">{{ number_format($withdrawal->amount ?? 0, 2) }} <span class="text-xs font-normal text-muted">{{ currency_symbol() }}</span></div>
                                 </td>
                                 <td class="px-4 py-3">
                                     @php

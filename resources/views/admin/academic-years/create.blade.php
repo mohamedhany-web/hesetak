@@ -30,7 +30,7 @@
             <p class="text-xs font-medium text-muted">إدارة المحتوى · مطابقة المناهج</p>
             <h2 class="mt-1 text-2xl font-semibold tracking-tight text-ink md:text-[28px]">إنشاء مرحلة دراسية</h2>
             <p class="mt-1 max-w-2xl text-sm text-muted">
-                المرحلة طبقة تنظيمية لتجميع المواد والكورسات وفلاتر المطابقة (مثل ابتدائي أو ثانوي). بعد الحفظ اربط المواد والكورسات والمدربين من صفحة التعديل.
+                أنشئ المرحلة (ابتدائي / متوسط / ثانوي)، ثم أضف الصفوف داخلها. تظهر المرحلة ثم الصفوف في إنشاء حساب الطالب.
             </p>
         </div>
         <a href="{{ route('admin.academic-years.index') }}" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl border border-line bg-surface px-4 text-sm font-medium text-ink-soft transition hover:border-accent/30 hover:text-accent">
@@ -64,16 +64,16 @@
                         <div class="sm:col-span-1">
                             <label class="{{ $labelClass }}" for="name">اسم المرحلة <span class="text-danger">*</span></label>
                             <input id="name" type="text" name="name" value="{{ old('name') }}" required maxlength="255"
-                                   placeholder="مثال: الصف الأول الثانوي"
+                                   placeholder="مثال: المرحلة الابتدائية"
                                    class="{{ $fieldClass }}" autocomplete="off">
-                            <p class="mt-1.5 text-xs text-muted">الاسم الظاهر في لوحة التحكم وعند ربط المحتوى.</p>
+                            <p class="mt-1.5 text-xs text-muted">الاسم الظاهر في التسجيل ولوحة التحكم.</p>
                         </div>
                         <div class="sm:col-span-1">
                             <label class="{{ $labelClass }}" for="code">رمز السنة <span class="text-danger">*</span></label>
-                            <input id="code" type="text" name="code" value="{{ old('code') }}" required maxlength="10" dir="ltr"
+                            <input id="code" type="text" name="code" value="{{ old('code') }}" required maxlength="32" dir="ltr"
                                    placeholder="G10 أو SEC-1"
                                    class="{{ $fieldClass }} font-mono uppercase" autocomplete="off">
-                            <p class="mt-1.5 text-xs text-muted">رمز إنجليزي مختصر وفريد (حتى 10 أحرف) لربط الكورسات والمواد.</p>
+                            <p class="mt-1.5 text-xs text-muted">رمز إنجليزي مختصر وفريد (حتى 32 حرفاً).</p>
                         </div>
                         <div class="sm:col-span-1">
                             <label class="{{ $labelClass }}" for="slug">رابط الصفحة العامة</label>
@@ -95,8 +95,34 @@
                         <div class="sm:col-span-2">
                             <label class="{{ $labelClass }}" for="description">الوصف <span class="font-normal text-muted">(اختياري)</span></label>
                             <textarea id="description" name="description" rows="4" class="{{ $areaClass }}"
-                                      placeholder="وصف مختصر للمرحلة وما تغطيه من مواد أو كورسات.">{{ old('description') }}</textarea>
+                                      placeholder="وصف مختصر للمرحلة.">{{ old('description') }}</textarea>
                         </div>
+                    </div>
+                </article>
+
+                <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft" x-data="{
+                    rows: {{ Js::from(old('grades', [['name' => ''], ['name' => ''], ['name' => '']])) }}
+                }">
+                    <div class="border-b border-line px-4 py-4 sm:px-5">
+                        <h3 class="text-base font-semibold text-ink">الصفوف داخل المرحلة</h3>
+                        <p class="mt-0.5 text-xs text-muted">اختياري الآن — يمكنك إكمالها بعد الحفظ من صفحة التعديل.</p>
+                    </div>
+                    <div class="space-y-3 p-4 sm:p-5">
+                        <template x-for="(row, index) in rows" :key="index">
+                            <div class="flex items-center gap-2">
+                                <input type="text" :name="'grades[' + index + '][name]'" x-model="row.name"
+                                       class="{{ $fieldClass }}" placeholder="مثال: الصف الأول">
+                                <button type="button" class="btn-press inline-flex size-11 shrink-0 items-center justify-center rounded-xl border border-line text-muted hover:text-danger"
+                                        @click="rows.splice(index, 1)" x-show="rows.length > 1" aria-label="حذف الصف">
+                                    <i class="fas fa-times text-xs"></i>
+                                </button>
+                            </div>
+                        </template>
+                        <button type="button" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl border border-line bg-canvas px-3 text-xs font-medium text-ink hover:border-accent/40"
+                                @click="rows.push({ name: '' })">
+                            <i class="fas fa-plus text-[10px]"></i>
+                            صف إضافي
+                        </button>
                     </div>
                 </article>
 
@@ -139,21 +165,21 @@
                             <input type="hidden" name="is_active" value="0">
                             <label class="inline-flex h-11 w-full cursor-pointer items-center gap-2 rounded-xl border border-line bg-canvas px-4 sm:w-auto">
                                 <input type="checkbox" name="is_active" value="1" @checked((string) old('is_active', '1') !== '0') class="size-4 rounded border-line text-accent focus:ring-accent/20">
-                                <span class="text-sm font-medium text-ink">سنة نشطة — متاحة لربط المواد والكورسات</span>
+                                <span class="text-sm font-medium text-ink">مرحلة نشطة — تظهر في التسجيل عند تفعيل النشر العام</span>
                             </label>
                         </div>
                         <div class="sm:col-span-2">
                             <input type="hidden" name="is_public" value="0">
                             <label class="inline-flex h-11 w-full cursor-pointer items-center gap-2 rounded-xl border border-amber-100 bg-amber-50 px-4 sm:w-auto">
-                                <input type="checkbox" name="is_public" value="1" @checked((string) old('is_public', '0') === '1') class="size-4 rounded border-line text-accent focus:ring-accent/20">
-                                <span class="text-sm font-medium text-ink">نشر في صفحة المناهج العامة (`/curricula`)</span>
+                                <input type="checkbox" name="is_public" value="1" @checked((string) old('is_public', '1') === '1') class="size-4 rounded border-line text-accent focus:ring-accent/20">
+                                <span class="text-sm font-medium text-ink">نشر في صفحة المناهج العامة</span>
                             </label>
                         </div>
                     </div>
                     <div class="flex flex-wrap gap-3 border-t border-line px-4 py-4 sm:px-5">
                         <button type="submit" class="btn-press inline-flex h-11 items-center gap-2 rounded-xl bg-accent px-6 text-sm font-medium text-white">
                             <i class="fas fa-save text-xs"></i>
-                            حفظ السنة الأكاديمية
+                            حفظ المرحلة الدراسية
                         </button>
                         <a href="{{ route('admin.academic-years.index') }}" class="btn-press inline-flex h-11 items-center gap-2 rounded-xl border border-line px-6 text-sm font-medium text-ink hover:bg-canvas">
                             إلغاء
@@ -182,7 +208,7 @@
                             </div>
                             <div class="mt-4 flex flex-wrap gap-2">
                                 <span class="inline-flex items-center gap-1 rounded-full bg-surface px-2.5 py-1 text-[11px] font-medium text-ink-soft border border-line">
-                                    <i class="fas fa-layer-group text-[10px]"></i> مواد لاحقاً
+                                    <i class="fas fa-chalkboard text-[10px]"></i> صفوف داخل المرحلة
                                 </span>
                                 <span id="preview-status" class="inline-flex items-center gap-1 rounded-full bg-success/10 px-2.5 py-1 text-[11px] font-medium text-success">
                                     نشطة
@@ -200,14 +226,11 @@
                     <div class="grid grid-cols-1 gap-2 p-4 sm:p-5">
                         @php
                             $examples = [
-                                ['name' => 'الصف الأول الإعدادي', 'code' => 'PREP-1'],
-                                ['name' => 'الصف الثاني الإعدادي', 'code' => 'PREP-2'],
-                                ['name' => 'الصف الثالث الإعدادي', 'code' => 'PREP-3'],
-                                ['name' => 'الصف الأول الثانوي', 'code' => 'SEC-1'],
-                                ['name' => 'الصف الثاني الثانوي', 'code' => 'SEC-2'],
-                                ['name' => 'الصف الثالث الثانوي', 'code' => 'SEC-3'],
+                                ['name' => 'رياض الأطفال', 'code' => 'KG'],
                                 ['name' => 'المرحلة الابتدائية', 'code' => 'PRIM'],
-                                ['name' => 'التحضيري', 'code' => 'KG'],
+                                ['name' => 'المرحلة المتوسطة', 'code' => 'MID'],
+                                ['name' => 'المرحلة الإعدادية', 'code' => 'PREP'],
+                                ['name' => 'المرحلة الثانوية', 'code' => 'SEC'],
                             ];
                         @endphp
                         @foreach($examples as $ex)
@@ -224,7 +247,7 @@
 
                 <div class="rounded-2xl border border-line bg-canvas px-4 py-3 text-xs leading-relaxed text-muted">
                     <p class="font-medium text-ink-soft">بعد الحفظ</p>
-                    <p class="mt-1">من صفحة التعديل: أضف مواد/مجموعات، اربط الكورسات، وعيّن المدربين للسنة.</p>
+                    <p class="mt-1">من صفحة التعديل أضف صفوف المرحلة (الأول، الثاني…) لتظهر بعد اختيار المرحلة في التسجيل.</p>
                 </div>
             </aside>
         </div>

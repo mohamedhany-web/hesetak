@@ -44,21 +44,24 @@
     ], $extra), fn ($v) => $v !== null && $v !== '');
 @endphp
 <!DOCTYPE html>
-<html lang="{{ $locale }}" dir="{{ request()->boolean('figma') ? 'ltr' : ($isRtl ? 'rtl' : 'ltr') }}">
+<html lang="{{ $locale }}" dir="{{ $isRtl ? 'rtl' : 'ltr' }}">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes">
-  <title>{{ __('public.instructors_page_title') }} | {{ $brand }}</title>
-  <meta name="description" content="{{ __('public.instructors_subtitle') }}">
   <meta name="theme-color" content="#1E4E8C">
-  <link rel="canonical" href="{{ route('public.instructors.index') }}">
+  @include('components.seo-meta', [
+      'title' => __('seo.instructors.title'),
+      'description' => __('seo.instructors.description'),
+      'canonicalPath' => '/instructors',
+  ])
   @include('partials.favicon-links')
   @include('partials.seo-jsonld', ['jsonldType' => 'website'])
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Lato:wght@400;700;900&family=Rubik:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;600;700&family=Lato:wght@400;700&family=Rubik:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{{ route('assets.landing.css', ['sheet' => 'mycourses']) }}?v={{ $mcVer }}">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"></noscript>
   @include('partials.figma-capture-head')
 </head>
 <body class="mc-body mc-body--dir">
@@ -134,6 +137,8 @@
             <option value="newest" @selected($sort === 'newest')>{{ __('public.instructors_sort_newest') }}</option>
             <option value="name" @selected($sort === 'name')>{{ __('public.instructors_sort_name') }}</option>
             <option value="courses" @selected($sort === 'courses')>{{ __('public.instructors_sort_courses') }}</option>
+            <option value="price_asc" @selected($sort === 'price_asc')>{{ __('public.instructors_sort_price_asc') }}</option>
+            <option value="price_desc" @selected($sort === 'price_desc')>{{ __('public.instructors_sort_price_desc') }}</option>
           </select>
         </label>
 

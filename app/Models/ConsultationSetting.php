@@ -29,6 +29,7 @@ class ConsultationSetting extends Model
             return $row;
         }
 
+        // القيمة بوحدة عملة المنصة (ر.س افتراضياً) — ليست دولاراً ولا تحويل صرف تلقائي.
         return static::query()->create([
             'default_price' => 500,
             'default_duration_minutes' => 30,

@@ -89,8 +89,8 @@ class SecureClassroomJoinTest extends TestCase
         config([
             'livekit.livekit.api_key' => 'APItestkey',
             'livekit.livekit.api_secret' => 'test-secret-value-1234567890',
-            'livekit.livekit.url' => 'wss://live.glottical.com',
-            'livekit.livekit.host' => 'live.glottical.com',
+            'livekit.livekit.url' => 'wss://live.hissatak.online',
+            'livekit.livekit.host' => 'live.hissatak.online',
         ]);
     }
 

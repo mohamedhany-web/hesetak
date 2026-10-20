@@ -178,7 +178,29 @@
     </div>
 </section>
 
-{{-- KPI — same subject-card language --}}
+{{-- KPI — تُخفى قبل أي اشتراك حتى لا تظهر أرقام فارغة مضللة --}}
+@php
+    $hasLearning = ($classes->count() ?? 0) > 0
+        || (int) ($credits['total_left'] ?? 0) > 0
+        || ! empty($primaryClass);
+@endphp
+@if(! $hasLearning)
+<section class="st-event-card st-event-card--blue st-biz-banner">
+    <div class="st-biz-banner__row">
+        <div>
+            <p class="st-event-card__kicker">{{ app()->getLocale() === 'ar' ? 'ابدأ التعلّم' : 'Start learning' }}</p>
+            <h3>{{ app()->getLocale() === 'ar' ? 'لا يوجد اشتراك بعد' : 'No subscription yet' }}</h3>
+            <p class="st-event-card__sub">{{ app()->getLocale() === 'ar' ? 'بعد الاشتراك في باقة أو حجز حصة تظهر هنا الحصص والتقدّم والواجبات.' : 'After you subscribe or book a lesson, upcoming lessons, progress, and homework show up here.' }}</p>
+        </div>
+        <div class="st-biz-banner__actions">
+            <a href="{{ route('public.pricing') }}" class="st-pill st-pill--light">{{ app()->getLocale() === 'ar' ? 'تصفّح الباقات' : 'Browse packages' }}</a>
+            @if(Route::has('public.instructors.index'))
+                <a href="{{ route('public.instructors.index') }}" class="st-pill st-pill--ghost">{{ app()->getLocale() === 'ar' ? 'احجز حصة' : 'Book a lesson' }}</a>
+            @endif
+        </div>
+    </div>
+</section>
+@else
 <section class="st-stats" aria-label="{{ __('student_timeline.school_gate') }}">
     <article class="st-subject st-subject--blue st-stat-card">
         <img class="st-subject__blob" src="{{ $subjMask1 }}" alt="" width="132" height="132">
@@ -212,6 +234,7 @@
         <p class="st-stat-card__hint">⭐ {{ number_format($game['xp'] ?? 0) }} · Lv {{ $game['level'] ?? 1 }} · 🔥 {{ $game['streak']['current'] ?? 0 }}</p>
     </article>
 </section>
+@endif
 
 @if(!empty($todayMission))
     @php

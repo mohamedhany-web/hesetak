@@ -18,7 +18,7 @@ function check(bool $ok, string $label): void
 }
 
 // TL with job + group
-$tl = User::where('email', 'crm-page-tl@glottical.test')->first();
+$tl = User::where('email', 'crm-page-tl@hesetak.test')->first();
 check((bool) $tl, 'page TL exists');
 if ($tl) {
     check(CrmAccessService::crmRole($tl) === 'team_leader', 'page TL role=team_leader');
@@ -28,15 +28,15 @@ if ($tl) {
 }
 
 // TL without group
-$tl2 = User::where('email', 'crm-test-tl@glottical.test')->first();
+$tl2 = User::where('email', 'crm-test-tl@hesetak.test')->first();
 if ($tl2) {
     check(CrmAccessService::canAssignLead($tl2) === false, 'ungrouped TL cannot assign');
     check(CrmAccessService::assignableSalesUsers($tl2)->isEmpty(), 'ungrouped TL no sales list');
 }
 
 // Simulate sales employee appointed as group leader
-$sales = User::where('email', 'crm-test-sales@glottical.test')->first()
-    ?? User::where('email', 'crm-page-sales@glottical.test')->first();
+$sales = User::where('email', 'crm-test-sales@hesetak.test')->first()
+    ?? User::where('email', 'crm-page-sales@hesetak.test')->first();
 $group = CrmGroup::query()->where('is_active', true)->first();
 if ($sales && $group) {
     $originalTl = $group->team_leader_id;

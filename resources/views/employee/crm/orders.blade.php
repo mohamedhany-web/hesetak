@@ -94,7 +94,7 @@
 
             <td class="px-4 py-3">{{ $order->course?->title ?? '—' }}</td>
 
-            <td class="px-4 py-3 font-bold">{{ number_format((float) $order->amount, 2) }} $</td>
+            <td class="px-4 py-3 font-bold">{{ number_format((float) $order->amount, 2) }} {{ currency_symbol() }}</td>
 
             <td class="px-4 py-3">{{ $order->payment_method ?? '—' }}</td>
 

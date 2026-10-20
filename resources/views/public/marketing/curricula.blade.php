@@ -30,10 +30,11 @@
     </div>
 
     <div class="mc-curr-actions">
-      <a href="{{ route('public.instructors.index') }}" class="mc-btn mc-btn--md mc-btn--primary">{{ $p['cta_teachers'] }}</a>
-      <a href="{{ route('public.pricing') }}" class="mc-btn mc-btn--md mc-btn--outline">{{ $p['cta_packages'] }}</a>
+      <a href="{{ route('public.pricing', ['curriculum_type' => 'saudi']) }}" class="mc-btn mc-btn--md mc-btn--primary">{{ $p['cta_packages'] }}</a>
+      <a href="{{ route('public.instructors.index') }}" class="mc-btn mc-btn--md mc-btn--outline">{{ $p['cta_teachers'] }}</a>
       <a href="{{ route('public.courses') }}" class="mc-btn mc-btn--md mc-btn--soft">{{ $p['cta_courses'] }}</a>
     </div>
+    <p class="mc-curr-note" style="margin-top:.75rem">{{ $p['journey_hint'] ?? (app()->getLocale() === 'ar' ? 'المسار: نوع المنهج ← المرحلة ← المادة ← عدد الحصص.' : 'Path: curriculum → stage → subject → session count.') }}</p>
   </div>
 </section>
 
@@ -58,6 +59,31 @@
 </section>
 @endif
 
+@if($featuredTypes->isNotEmpty())
+<section class="mc-section mc-section--compact mc-curr-section" aria-labelledby="mc-curr-types" id="mc-curr-types-anchor">
+  <div class="mc-container">
+    <div class="mc-section-head">
+      <div>
+        <h2 id="mc-curr-types" class="mc-title">{{ $p['types_title'] }}</h2>
+        <p class="mc-lead">{{ $p['types_lead'] }}</p>
+      </div>
+    </div>
+    <div class="mc-curricula-grid">
+      @foreach($featuredTypes as $type)
+        <a
+          class="mc-curricula-card mc-curricula-card--link"
+          href="{{ route('public.pricing', ['curriculum_type' => $type['key']]) }}#mc-pricing-storefront"
+        >
+          <h3>{{ $type['label'] }}</h3>
+          <p>{{ $p['types_card_hint'] ?? (app()->getLocale() === 'ar' ? 'ثم اختر المرحلة والمادة وعدد الحصص.' : 'Then pick stage, subject, and session count.') }}</p>
+          <span class="mc-curricula-card__cta">{{ $p['cta_packages'] }} →</span>
+        </a>
+      @endforeach
+    </div>
+  </div>
+</section>
+@endif
+
 <section class="mc-section mc-section--compact mc-curr-section" aria-labelledby="mc-curr-catalog">
   <div class="mc-container">
     <div class="mc-section-head">
@@ -72,11 +98,11 @@
     @else
       <div class="mc-curr-stages">
         @foreach($years as $year)
-          <a class="mc-curr-stage" href="{{ route('public.curricula.show', $year) }}">
-            <h3>{{ $year->name }}</h3>
+          <a class="mc-curr-stage" href="{{ route('public.pricing', ['year' => $year->id, 'curriculum_type' => 'saudi']) }}#mc-pricing-storefront">
+            <h3>{{ \App\Support\LocalizedCatalogLabel::text($year->name) }}</h3>
             <p>
               @if(filled($year->tagline))
-                {{ $year->tagline }}
+                {{ \App\Support\LocalizedCatalogLabel::text($year->tagline) }}
               @elseif(filled($year->description))
                 {{ \Illuminate\Support\Str::limit(strip_tags($year->description), 90) }}
               @else
@@ -85,6 +111,7 @@
             </p>
             <span class="mc-curr-stage__meta">
               {{ (int) ($year->subjects_count ?? $year->subjects->count()) }} {{ $p['subjects_count'] }}
+              · {{ app()->getLocale() === 'ar' ? 'اختر المادة والحصص' : 'Pick subject & sessions' }}
             </span>
           </a>
         @endforeach
@@ -122,31 +149,6 @@
   </div>
 </section>
 
-@if($featuredTypes->isNotEmpty())
-<section class="mc-section mc-section--compact mc-curr-section" aria-labelledby="mc-curr-types">
-  <div class="mc-container">
-    <div class="mc-section-head">
-      <div>
-        <h2 id="mc-curr-types" class="mc-title">{{ $p['types_title'] }}</h2>
-        <p class="mc-lead">{{ $p['types_lead'] }}</p>
-      </div>
-    </div>
-    <div class="mc-curricula-grid">
-      @foreach($featuredTypes as $type)
-        <a
-          class="mc-curricula-card mc-curricula-card--link"
-          href="{{ route('public.instructors.index', ['curriculum' => $type['key']]) }}"
-        >
-          <h3>{{ $type['label'] }}</h3>
-          <p>{{ $p['types_card_hint'] }}</p>
-          <span class="mc-curricula-card__cta">{{ $p['cta_teachers'] }} →</span>
-        </a>
-      @endforeach
-    </div>
-  </div>
-</section>
-@endif
-
 <section class="mc-section mc-section--compact mc-curr-section" aria-labelledby="mc-curr-split">
   <div class="mc-container">
     <h2 id="mc-curr-split" class="mc-title mc-curr-split__title">{{ $p['split_title'] }}</h2>
@@ -154,7 +156,7 @@
       <article class="mc-curr-split__card is-active">
         <h3>{{ $p['split_curricula_title'] }}</h3>
         <p>{{ $p['split_curricula'] }}</p>
-        <a href="{{ route('public.instructors.index') }}" class="mc-btn mc-btn--md mc-btn--primary">{{ $p['cta_teachers'] }}</a>
+        <a href="{{ route('public.pricing') }}" class="mc-btn mc-btn--md mc-btn--primary">{{ $p['cta_packages'] }}</a>
       </article>
       <article class="mc-curr-split__card">
         <h3>{{ $p['split_courses_title'] }}</h3>

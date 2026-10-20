@@ -52,7 +52,7 @@ class DatabaseSeeder extends Seeder
         // 4. إنشاء مستخدمي أكاديمية حصتك
         $this->command->info('👥 4. إنشاء مستخدمي أكاديمية حصتك...');
         $this->call([
-            GlotticalAcademyUserSeeder::class,
+            HesetakAcademyUserSeeder::class,
         ]);
         $this->command->info('✅ تم إنشاء المستخدمين');
         $this->command->newLine();

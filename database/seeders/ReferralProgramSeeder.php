@@ -36,7 +36,7 @@ class ReferralProgramSeeder extends Seeder
             'discount_valid_days' => 30,
             'referrer_reward_type' => 'fixed',
             'referrer_reward_value' => 0,
-            'max_referrals_per_user' => null,
+            'max_referrals_per_user' => 10,
             'max_discount_uses_per_referred' => 1,
             'allow_self_referral' => false,
             'is_active' => true,

@@ -20,7 +20,7 @@
         <dl class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
             <div><dt class="text-slate-500">الطالب</dt><dd class="font-semibold">{{ $consultation->student->name ?? '—' }} — {{ $consultation->student->email ?? '' }}</dd></div>
             <div><dt class="text-slate-500">المدرب</dt><dd class="font-semibold">{{ $consultation->instructor->name ?? '—' }}</dd></div>
-            <div><dt class="text-slate-500">المبلغ</dt><dd class="font-semibold">{{ number_format($consultation->price_amount, 2) }} $</dd></div>
+            <div><dt class="text-slate-500">المبلغ</dt><dd class="font-semibold">{{ number_format($consultation->price_amount, 2) }} {{ currency_symbol() }}</dd></div>
             <div><dt class="text-slate-500">المدة</dt><dd class="font-semibold">{{ (int) $consultation->duration_minutes }} دقيقة</dd></div>
             @if($consultation->payment_reference)
             <div class="sm:col-span-2"><dt class="text-slate-500">مرجع التحويل</dt><dd class="font-mono text-xs">{{ $consultation->payment_reference }}</dd></div>
@@ -52,7 +52,7 @@
             <div class="sm:col-span-2 rounded-xl bg-violet-50 border border-violet-200 p-4">
                 <dt class="text-violet-800 font-bold text-sm mb-2">دفع من المحفظة</dt>
                 <dd class="text-sm text-slate-700 space-y-1">
-                    <p>معاملة المحفظة #{{ $consultation->walletTransaction->id }} — المبلغ {{ number_format($consultation->walletTransaction->amount, 2) }} $</p>
+                    <p>معاملة المحفظة #{{ $consultation->walletTransaction->id }} — المبلغ {{ number_format($consultation->walletTransaction->amount, 2) }} {{ currency_symbol() }}</p>
                     <p class="text-xs text-slate-500">{{ $consultation->walletTransaction->created_at?->format('Y-m-d H:i') }}</p>
                     @if($consultation->walletTransaction->notes)
                     <p class="text-xs font-mono bg-white/80 rounded px-2 py-1 border border-violet-100">{{ $consultation->walletTransaction->notes }}</p>

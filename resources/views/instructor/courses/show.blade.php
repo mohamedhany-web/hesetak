@@ -148,9 +148,9 @@
                                     <div class="tabular-nums">
                                         @if(!$course->is_free && $course->effectivePurchasePrice() > 0)
                                             @if($course->hasPromotionalPrice())
-                                                <span style="display:block;font-size:12px;color:var(--su-ink-40);text-decoration:line-through;font-weight:500">{{ number_format($course->listPriceAmount(), 2) }} $</span>
+                                                <span style="display:block;font-size:12px;color:var(--su-ink-40);text-decoration:line-through;font-weight:500">{{ number_format($course->listPriceAmount(), 2) }} {{ currency_symbol() }}</span>
                                             @endif
-                                            {{ number_format($course->effectivePurchasePrice(), 2) }} $
+                                            {{ number_format($course->effectivePurchasePrice(), 2) }} {{ currency_symbol() }}
                                         @else
                                             <span style="color:#15803d">{{ __('instructor.free') }}</span>
                                         @endif

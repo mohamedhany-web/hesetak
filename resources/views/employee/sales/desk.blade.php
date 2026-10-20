@@ -40,7 +40,7 @@
         </div>
         <div class="rounded-2xl border-2 border-blue-200/60 bg-gradient-to-br from-white to-blue-50/80 p-4 sm:p-5 shadow-sm">
             <p class="text-xs sm:text-sm font-semibold text-gray-600 mb-1">إيراد معتمد (الشهر)</p>
-            <p class="text-xl sm:text-2xl font-black text-blue-900 tabular-nums">{{ number_format($stats['revenue_month'], 2) }}</p>
+            <p class="text-xl sm:text-2xl font-black text-blue-900 tabular-nums">{{ format_money($stats['revenue_month']) }}</p>
         </div>
         <div class="rounded-2xl border-2 border-violet-200/60 bg-gradient-to-br from-white to-violet-50/80 p-4 sm:p-5 shadow-sm">
             <p class="text-xs sm:text-sm font-semibold text-gray-600 mb-1">معتمدة هذا الشهر (لي)</p>

@@ -122,7 +122,8 @@
                         </select>
                         @error('rbac_role')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
                         <p class="mt-1 text-xs text-gray-500">
-                            هذا الدور يحدد ما يظهر للموظف في لوحة الموظف حسب الصلاحيات المربوطة به.
+                            الدور المخصص يفتح <strong>لوحة الإدارة</strong> فقط إن كان يملك صلاحية <span dir="ltr">admin.access</span>.
+                            موظفو المبيعات بصلاحيات مخصصة يبقون على لوحة الموظف — لا يعتمدوا على دور واسع كـ«صلاحيات كاملة».
                         </p>
                     </div>
                 </div>

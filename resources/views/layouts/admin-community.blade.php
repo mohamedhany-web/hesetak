@@ -97,13 +97,8 @@
             </header>
 
             <main class="flex-1 overflow-auto bg-gray-50 min-w-0 w-full">
-                <div class="w-full max-w-full p-4 sm:p-6 lg:p-8">
-                    @if(session('success'))
-                        <div class="mb-4 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg text-sm">{{ session('success') }}</div>
-                    @endif
-                    @if(session('error'))
-                        <div class="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">{{ session('error') }}</div>
-                    @endif
+                <div class="w-full max-w-full space-y-4 p-4 sm:p-6 lg:p-8">
+                    @include('partials.admin-flash')
                     @yield('content')
                 </div>
             </main>

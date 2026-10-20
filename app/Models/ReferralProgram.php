@@ -22,6 +22,9 @@ class ReferralProgram extends Model
 
     public const GRANT_NONE = 'none';
 
+    /** حد افتراضي آمن لعدد الإحالات لكل مستخدم */
+    public const DEFAULT_MAX_REFERRALS_PER_USER = 10;
+
     protected $fillable = [
         'name',
         'description',
@@ -116,6 +119,37 @@ class ReferralProgram extends Model
         $labels = ServicePackage::scopes();
 
         return $labels[$scope] ?? $scope;
+    }
+
+    /**
+     * جملة واحدة تلخّص قواعد البرنامج (للأدمن قبل الحفظ / العرض).
+     */
+    public function rulesSummary(): string
+    {
+        $max = $this->max_referrals_per_user;
+        $maxLabel = $max ? ('حد '.$max.' إحالة/مستخدم') : 'إحالات غير محدودة';
+        $end = $this->expires_at
+            ? ('ينتهي '.$this->expires_at->format('Y-m-d'))
+            : 'بلا تاريخ انتهاء';
+
+        if ($this->usesCredits()) {
+            return sprintf(
+                'رصيد حصص: المدعو %d · المحيل %d (%s) — %s — %s — إحالة ذاتية ممنوعة.',
+                (int) $this->referred_credit_units,
+                (int) $this->referrer_credit_units,
+                $this->creditScopeLabel(),
+                $maxLabel,
+                $end
+            );
+        }
+
+        return sprintf(
+            'خصم قديم: %s %s — %s — %s — إحالة ذاتية ممنوعة.',
+            (string) $this->discount_value,
+            $this->discount_type === 'percentage' ? '%' : currency_symbol(),
+            $maxLabel,
+            $end
+        );
     }
 
     public function resolvedShareMessage(?string $locale = null): string

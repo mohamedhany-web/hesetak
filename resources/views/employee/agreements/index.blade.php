@@ -35,7 +35,7 @@
                         </div>
                         <div>
                             <p class="text-sm text-gray-600 mb-1">الراتب الأساسي</p>
-                            <p class="font-semibold text-green-600 text-lg">{{ number_format($agreement->salary, 2) }} $</p>
+                            <p class="font-semibold text-green-600 text-lg">{{ number_format($agreement->salary, 2) }} {{ currency_symbol() }}</p>
                         </div>
                         <div>
                             <p class="text-sm text-gray-600 mb-1">تاريخ البدء</p>

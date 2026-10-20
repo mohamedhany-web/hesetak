@@ -9,6 +9,7 @@ use App\Models\ServicePackage;
 use App\Models\TutoringGroup;
 use App\Models\User;
 use App\Services\StudentEntitlementService;
+use App\Support\HesetakMatchCatalog;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -44,7 +45,7 @@ class ServicePackageController extends Controller
         $stats = [
             'total' => $packages->count(),
             'active' => $packages->where('is_active', true)->count(),
-            'global' => $packages->where('scope', ServicePackage::SCOPE_GLOBAL)->count(),
+            'featured' => $packages->where('is_featured', true)->count(),
             'sold' => $packages->sum('entitlements_count'),
         ];
 
@@ -78,6 +79,22 @@ class ServicePackageController extends Controller
         $this->bustStorefrontCache();
 
         return redirect()->route('admin.service-packages.index')->with('success', 'تم إنشاء باقة الخدمات.');
+    }
+
+    public function show(ServicePackage $servicePackage): View
+    {
+        $servicePackage->load([
+            'academicYear:id,name',
+            'academicSubject:id,name',
+            'tutoringGroup:id,title',
+        ]);
+
+        return view('admin.service-packages.show', [
+            'package' => $servicePackage,
+            'trackLabel' => $servicePackage->curriculum_type
+                ? HesetakMatchCatalog::curriculumTypeLabel((string) $servicePackage->curriculum_type)
+                : null,
+        ]);
     }
 
     public function edit(ServicePackage $servicePackage): View
@@ -120,6 +137,16 @@ class ServicePackageController extends Controller
         $this->bustStorefrontCache();
 
         return back()->with('success', $servicePackage->is_active ? 'تم تفعيل الباقة.' : 'تم إيقاف الباقة.');
+    }
+
+    public function toggleFeatured(ServicePackage $servicePackage): RedirectResponse
+    {
+        $servicePackage->update(['is_featured' => ! $servicePackage->is_featured]);
+        $this->bustStorefrontCache();
+
+        return back()->with('success', $servicePackage->is_featured
+            ? 'ظهرت الباقة في الأكثر مبيعًا على الرئيسية.'
+            : 'أُزيلت الباقة من الأكثر مبيعًا على الرئيسية.');
     }
 
     public function grantForm(Request $request): View
@@ -200,14 +227,55 @@ class ServicePackageController extends Controller
         return [
             'package' => $package,
             'groups' => TutoringGroup::query()->orderBy('title')->get(['id', 'title', 'type', 'academic_year_id', 'academic_subject_id']),
-            'years' => Schema::hasTable('academic_years')
-                ? AcademicYear::query()->ordered()->get(['id', 'name', 'level_number'])
-                : collect(),
-            'subjects' => Schema::hasTable('academic_subjects')
-                ? AcademicSubject::query()->ordered()->get(['id', 'name', 'academic_year_id'])
-                : collect(),
+            'years' => $this->formYears($package),
+            'subjects' => $this->formSubjects($package),
+            'tracks' => HesetakMatchCatalog::curriculumTypes(),
             'mode' => $mode,
         ];
+    }
+
+    protected function formYears(ServicePackage $package)
+    {
+        if (! Schema::hasTable('academic_years')) {
+            return collect();
+        }
+
+        $years = AcademicYear::query()->publicCatalog()->ordered()->get(['id', 'name', 'level_number']);
+        $currentId = (int) $package->academic_year_id;
+        if ($currentId && ! $years->contains('id', $currentId)) {
+            $current = AcademicYear::query()->find($currentId, ['id', 'name', 'level_number']);
+            if ($current) {
+                $years->push($current);
+            }
+        }
+
+        return $years;
+    }
+
+    /**
+     * مواد المراحل العامة فقط (نفس شرائح صفحة الباقات) + المادة الحالية إن وُجدت خارج القائمة.
+     */
+    protected function formSubjects(ServicePackage $package)
+    {
+        if (! Schema::hasTable('academic_subjects')) {
+            return collect();
+        }
+
+        $yearIds = $this->formYears($package)->pluck('id')->filter()->all();
+        $subjects = AcademicSubject::query()
+            ->ordered()
+            ->when($yearIds !== [], fn ($q) => $q->whereIn('academic_year_id', $yearIds))
+            ->get(['id', 'name', 'academic_year_id']);
+
+        $currentId = (int) $package->academic_subject_id;
+        if ($currentId && ! $subjects->contains('id', $currentId)) {
+            $current = AcademicSubject::query()->find($currentId, ['id', 'name', 'academic_year_id']);
+            if ($current) {
+                $subjects->push($current);
+            }
+        }
+
+        return $subjects;
     }
 
     protected function normalizeSchoolLinks(array $data): array
@@ -219,6 +287,8 @@ class ServicePackageController extends Controller
                 $data[$key] = (int) $data[$key];
             }
         }
+
+        $data['curriculum_type'] = ! empty($data['curriculum_type']) ? (string) $data['curriculum_type'] : null;
 
         if ($data['tutoring_group_id']) {
             $group = TutoringGroup::query()->find($data['tutoring_group_id']);
@@ -296,11 +366,11 @@ class ServicePackageController extends Controller
     protected function validated(Request $request, ?int $ignoreId = null): array
     {
         return $request->validate([
-            'name' => ['required', 'string', 'max:255'],
+            'name' => ['required', 'string', 'max:255', new \App\Rules\NoDemoPlaceholder],
             'slug' => ['nullable', 'string', 'max:255', 'regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/'],
-            'description' => ['nullable', 'string', 'max:5000'],
-            'tagline' => ['nullable', 'string', 'max:255'],
-            'badge' => ['nullable', 'string', 'max:64'],
+            'description' => ['nullable', 'string', 'max:5000', new \App\Rules\NoDemoPlaceholder],
+            'tagline' => ['nullable', 'string', 'max:255', new \App\Rules\NoDemoPlaceholder],
+            'badge' => ['nullable', 'string', 'max:64', new \App\Rules\NoDemoPlaceholder],
             'scope' => ['required', 'in:global,tutoring_individual,tutoring_collective,private_lessons'],
             'plan_type' => ['nullable', 'in:school,private,premier'],
             'term_months' => ['nullable', 'integer', 'in:1,3,6'],
@@ -311,6 +381,7 @@ class ServicePackageController extends Controller
             'tutoring_group_id' => ['nullable', 'exists:tutoring_groups,id'],
             'academic_year_id' => ['nullable', 'exists:academic_years,id'],
             'academic_subject_id' => ['nullable', 'exists:academic_subjects,id'],
+            'curriculum_type' => ['nullable', 'string', 'in:'.implode(',', HesetakMatchCatalog::allowedCurriculumTypeKeys() ?: ['__none__'])],
             'units_count' => ['required', 'integer', 'min:1', 'max:500'],
             'session_minutes' => ['nullable', 'integer', 'min:15', 'max:480'],
             'duration_days' => ['nullable', 'integer', 'min:1', 'max:730'],
@@ -331,9 +402,9 @@ class ServicePackageController extends Controller
     private function bustStorefrontCache(): void
     {
         foreach (['ar', 'en'] as $locale) {
-            Cache::forget('landing.home.v17.'.$locale);
-            Cache::forget('landing.home.v16.'.$locale);
-            Cache::forget('landing.home.v13.'.$locale);
+            foreach (['v18', 'v17', 'v16', 'v13'] as $version) {
+                Cache::forget('landing.home.'.$version.'.'.$locale);
+            }
         }
     }
 }

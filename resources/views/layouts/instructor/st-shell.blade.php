@@ -139,14 +139,17 @@
             ])
         @endunless
 
-        @if(session('success'))
-            <div class="st-flash st-flash--ok">{{ session('success') }}</div>
+        @if(($flashSuccess = session()->pull('success')))
+            <div class="st-flash st-flash--ok">{{ $flashSuccess }}</div>
         @endif
-        @if(session('info'))
-            <div class="st-flash st-flash--ok">{{ session('info') }}</div>
+        @if(($flashInfo = session()->pull('info') ?: session()->pull('status')))
+            <div class="st-flash st-flash--ok">{{ $flashInfo }}</div>
         @endif
-        @if(session('error'))
-            <div class="st-flash st-flash--err">{{ session('error') }}</div>
+        @if(($flashWarning = session()->pull('warning')))
+            <div class="st-flash st-flash--ok">{{ $flashWarning }}</div>
+        @endif
+        @if(($flashError = session()->pull('error')))
+            <div class="st-flash st-flash--err">{{ $flashError }}</div>
         @endif
         @yield('content')
     </main>

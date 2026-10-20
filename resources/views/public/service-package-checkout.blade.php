@@ -12,7 +12,11 @@
   $fawaterakIntegration = $fawaterakIntegration ?? 'iframe';
   $paypalActive = ! empty($paypalUseGateway);
   $paypalMis = ! empty($paypalMisconfigured);
-  $canPayOnline = ($fawaterakActive && ! $fawaterakMis) || $paypalActive;
+  $stripeActive = ! empty($stripeUseGateway);
+  $stripeMis = ! empty($stripeMisconfigured);
+  $canPayOnline = ($fawaterakActive && ! $fawaterakMis) || $paypalActive || $stripeActive;
+  $manualCheckoutAllowed = ! empty($manualCheckoutAllowed);
+  $wallets = $wallets ?? collect();
   $mcCss = public_path('css/landing/mycourses.css');
   $mcVer = is_file($mcCss) ? (string) filemtime($mcCss) : (string) time();
   $mcActive = 'pricing';
@@ -23,7 +27,7 @@
 @endphp
 
 @push('head')
-<meta name="robots" content="noindex">
+<meta name="robots" content="noindex, nofollow">
 @endpush
 
 @section('content')
@@ -33,7 +37,7 @@
       <nav class="mc-co-crumb" aria-label="{{ $isRtl ? 'مسار التنقل' : 'Breadcrumb' }}">
         <a href="{{ route('home') }}">{{ $isRtl ? 'الرئيسية' : 'Home' }}</a>
         <span aria-hidden="true">/</span>
-        <a href="{{ route('public.pricing') }}">{{ $isRtl ? 'الباقات' : 'Packages' }}</a>
+        <a href="{{ $backPricingUrl ?? route('public.pricing') }}">{{ $isRtl ? 'الباقات' : 'Packages' }}</a>
         <span aria-hidden="true">/</span>
         <span>{{ $package->name }}</span>
       </nav>
@@ -160,9 +164,35 @@
 
           <ul class="mc-co-trust">
             <li><i class="fas fa-shield-halved" aria-hidden="true"></i>{{ $isRtl ? 'دفع آمن عبر البوابة' : 'Secure gateway payment' }}</li>
-            <li><i class="fas fa-bolt" aria-hidden="true"></i>{{ $isRtl ? 'تفعيل الرصيد بعد نجاح الدفع' : 'Credits after successful pay' }}</li>
-            <li><i class="fas fa-chalkboard-user" aria-hidden="true"></i>{{ $isRtl ? 'احجز مع أي معلم معتمد مناسب' : 'Book with any matching teacher' }}</li>
+            <li><i class="fas fa-bolt" aria-hidden="true"></i>{{ $isRtl ? 'لا يُنشأ الطلب ولا يُخصم المبلغ قبل نجاح الدفع' : 'No order or charge before payment succeeds' }}</li>
+            <li><i class="fas fa-chalkboard-user" aria-hidden="true"></i>{{ $isRtl ? 'يمكن تغيير المعلم دون خسارة الرصيد' : 'Switch teachers without losing credit' }}</li>
           </ul>
+
+          <div class="mc-co-policies">
+            <h2 class="mc-co-policies__title">{{ $isRtl ? 'قبل الدفع' : 'Before you pay' }}</h2>
+            <ul>
+              <li>
+                <span>{{ $isRtl ? 'الضريبة' : 'Tax' }}</span>
+                <strong>{{ $isRtl ? 'السعر المعروض يشمل الضريبة إن وُجدت؛ لا رسوم إضافية مخفية عند الدفع.' : 'Displayed price includes tax if applicable; no hidden fees at checkout.' }}</strong>
+              </li>
+              <li>
+                <span>{{ $isRtl ? 'صلاحية الرصيد' : 'Credit validity' }}</span>
+                <strong>{{ $package->validityLabel() }}</strong>
+              </li>
+              <li>
+                <span>{{ $isRtl ? 'الإلغاء والتأجيل' : 'Cancel / reschedule' }}</span>
+                <strong>{{ $isRtl ? 'يمكن تأجيل الحصة وفق سياسة الجدولة المعروضة عند الحجز. إلغاء الحصة قبل موعدها يعيد الرصيد عادةً إلى باقتك.' : 'Reschedule according to the booking policy shown when you pick a slot. Cancelling ahead of time typically returns the unit to your package.' }}</strong>
+              </li>
+              <li>
+                <span>{{ $isRtl ? 'الاسترجاع' : 'Refunds' }}</span>
+                <strong><a href="{{ route('public.refund') }}">{{ $isRtl ? 'راجع سياسة الاسترجاع' : 'Read the refund policy' }}</a></strong>
+              </li>
+              <li>
+                <span>{{ $isRtl ? 'تغيير المعلم' : 'Change teacher' }}</span>
+                <strong>{{ $isRtl ? 'نعم — رصيد الحصص يبقى في حسابك ويمكن حجزه مع أي معلم معتمد مناسب.' : 'Yes — session credit stays in your account and can be booked with any matching accredited teacher.' }}</strong>
+              </li>
+            </ul>
+          </div>
         </div>
       </aside>
 
@@ -180,10 +210,15 @@
           </header>
 
           <div class="mc-co-pay__body">
-            @if($fawaterakMis && ! $paypalActive)
+            @if($fawaterakMis && ! $paypalActive && ! $stripeActive)
               <div class="mc-co-alert is-err">
                 <strong>{{ $isRtl ? 'إعدادات الدفع غير مكتملة' : 'Payment settings incomplete' }}</strong>
                 <p>{{ $isRtl ? 'تم تفعيل فواتيرك لكن الربط غير مكتمل على الخادم.' : 'Fawaterak is enabled but server credentials are incomplete.' }}</p>
+              </div>
+            @elseif($stripeMis && ! $fawaterakActive && ! $paypalActive)
+              <div class="mc-co-alert is-err">
+                <strong>{{ $isRtl ? 'إعدادات Stripe غير مكتملة' : 'Stripe settings incomplete' }}</strong>
+                <p>{{ $isRtl ? 'تم تفعيل Stripe لكن بيانات الاتصال ناقصة.' : 'Stripe is enabled but connection data is missing.' }}</p>
               </div>
             @elseif($fawaterakActive && $fawaterakIntegration === 'api')
               <div class="mc-co-callout">
@@ -217,8 +252,30 @@
               <div id="fawaterkDivId" class="mc-co-gateway"></div>
             @endif
 
-            @if($paypalActive)
+            @if($stripeActive)
               @if($fawaterakActive)
+                <p class="mc-co-or">{{ $isRtl ? 'أو' : 'or' }}</p>
+              @endif
+              <form method="POST" action="{{ route('public.service-packages.stripe', $package) }}">
+                @csrf
+                @if(request('academic_year_id'))
+                  <input type="hidden" name="academic_year_id" value="{{ request('academic_year_id') }}">
+                @endif
+                @if(request('academic_subject_id'))
+                  <input type="hidden" name="academic_subject_id" value="{{ request('academic_subject_id') }}">
+                @endif
+                @if(request('curriculum_type'))
+                  <input type="hidden" name="curriculum_type" value="{{ request('curriculum_type') }}">
+                @endif
+                <button type="submit" class="mc-btn mc-btn--lg mc-btn--outline mc-co-pay-btn">
+                  <i class="fab fa-stripe-s" aria-hidden="true"></i>
+                  {{ $isRtl ? 'الدفع عبر Stripe' : 'Pay with Stripe' }} · {{ $package->formattedPrice() }}
+                </button>
+              </form>
+            @endif
+
+            @if($paypalActive)
+              @if($fawaterakActive || $stripeActive)
                 <p class="mc-co-or">{{ $isRtl ? 'أو' : 'or' }}</p>
               @endif
               <form method="POST" action="{{ route('public.service-packages.paypal', $package) }}">
@@ -228,30 +285,82 @@
                   {{ $isRtl ? 'الدفع عبر PayPal' : 'Pay with PayPal' }} · {{ $package->formattedPrice() }}
                 </button>
               </form>
-            @elseif(! $fawaterakActive && $paypalMis)
+            @elseif(! $fawaterakActive && ! $stripeActive && $paypalMis)
               <div class="mc-co-alert is-err">
                 <strong>{{ $isRtl ? 'إعدادات PayPal غير مكتملة' : 'PayPal settings incomplete' }}</strong>
                 <p>{{ $isRtl ? 'تم تفعيل PayPal لكن بيانات الاتصال ناقصة.' : 'PayPal is enabled but connection data is missing.' }}</p>
               </div>
-            @elseif(! $canPayOnline)
-              <div class="mc-co-offline">
-                <div class="mc-co-offline__icon" aria-hidden="true"><i class="fab fa-whatsapp"></i></div>
-                <h3>{{ $isRtl ? 'أكمل الشراء عبر واتساب' : 'Finish via WhatsApp' }}</h3>
-                <p>
-                  {{ $isRtl
-                    ? 'الدفع الإلكتروني غير مفعّل الآن. راسلنا باسم الباقة وسنُفعّل رصيد الحصص بعد التأكيد.'
-                    : 'Online payment is off for now. Message us with the package name and we will activate credits after confirmation.' }}
-                </p>
-                <p class="mc-co-offline__pkg">{{ $package->name }} · {{ $package->formattedPrice() }}</p>
-                <a href="{{ $waUrl }}" class="mc-btn mc-btn--lg mc-btn--secondary mc-co-pay-btn" target="_blank" rel="noopener">
-                  <i class="fab fa-whatsapp" aria-hidden="true"></i>
-                  {{ $isRtl ? 'إتمام الشراء واتساب' : 'Complete on WhatsApp' }}
+            @elseif($manualCheckoutAllowed)
+              <div class="mc-co-callout">
+                <i class="fas fa-university" aria-hidden="true"></i>
+                <div>
+                  <strong>{{ $isRtl ? 'ادفع بالتحويل البنكي ثم أكّد الشراء' : 'Pay by bank transfer, then confirm' }}</strong>
+                  <p>{{ $isRtl ? '1) اختر حساب حصتك 2) حوّل المبلغ 3) ارفع الإيصال 4) اضغط تأكيد الدفع. نفعّل رصيد الحصص بعد المراجعة.' : '1) Pick Hesetak account 2) Transfer 3) Upload receipt 4) Confirm payment. Credits activate after review.' }}</p>
+                </div>
+              </div>
+              <p class="mc-co-offline__pkg">{{ $package->name }} · {{ $package->formattedPrice() }}</p>
+              <form method="POST" action="{{ route('public.service-packages.store', $package) }}" enctype="multipart/form-data" x-data="{paymentMethod:'bank_transfer', isSubmitting:false}" @submit="isSubmitting = true" class="mc-cco-manual">
+                @csrf
+                @if(request('year'))<input type="hidden" name="academic_year_id" value="{{ request('year') }}">@endif
+                @if(request('subject'))<input type="hidden" name="academic_subject_id" value="{{ request('subject') }}">@endif
+                @if(request('curriculum_type'))<input type="hidden" name="curriculum_type" value="{{ request('curriculum_type') }}">@endif
+
+                <div class="mc-co-field">
+                  <label for="mc-pkg-method">{{ $isRtl ? 'طريقة الدفع' : 'Payment method' }}</label>
+                  <select name="payment_method" id="mc-pkg-method" x-model="paymentMethod" required>
+                    <option value="bank_transfer">{{ $isRtl ? 'تحويل بنكي / محفظة' : 'Bank / wallet transfer' }}</option>
+                    <option value="cash">{{ $isRtl ? 'نقدي (بعد التنسيق)' : 'Cash (after coordination)' }}</option>
+                    <option value="other">{{ $isRtl ? 'طريقة أخرى' : 'Other' }}</option>
+                  </select>
+                </div>
+
+                <div class="mc-co-field" x-show="paymentMethod === 'bank_transfer'" x-cloak>
+                  <label for="mc-pkg-wallet">{{ $isRtl ? 'إلى أي حساب نحوّل؟ (حسابات المنصة)' : 'Which platform account should you transfer to?' }}</label>
+                  <select name="wallet_id" id="mc-pkg-wallet" :required="paymentMethod === 'bank_transfer'">
+                    <option value="">{{ $isRtl ? 'اختر حساب التحويل' : 'Select transfer account' }}</option>
+                    @foreach($wallets as $wallet)
+                      <option value="{{ $wallet->id }}">
+                        {{ $wallet->name ?: ($isRtl ? 'حساب منصة' : 'Platform account') }}
+                        @if(filled($wallet->bank_name)) — {{ $wallet->bank_name }}@endif
+                        @if(filled($wallet->account_number)) — {{ $wallet->account_number }}@endif
+                      </option>
+                    @endforeach
+                  </select>
+                  <p class="mc-co-hint" style="margin-top:.35rem;font-size:.9rem;opacity:.85">
+                    {{ $isRtl ? 'هذا حساب حصتك المستلم — ليس رقم حسابك أنت.' : 'This is Hesetak’s receiving account — not your own account number.' }}
+                  </p>
+                </div>
+
+                <div class="mc-co-field">
+                  <label for="mc-pkg-proof">{{ $isRtl ? 'صورة إيصال التحويل (مطلوب)' : 'Transfer receipt photo (required)' }}</label>
+                  <input type="file" name="payment_proof" id="mc-pkg-proof" accept="image/*" required>
+                </div>
+
+                <div class="mc-co-field">
+                  <label for="mc-pkg-notes">{{ $isRtl ? 'ملاحظات (اختياري)' : 'Notes (optional)' }}</label>
+                  <textarea name="notes" id="mc-pkg-notes" rows="3" placeholder="{{ $isRtl ? 'مثال: حوّلت عبر STC Pay' : 'e.g. Sent via STC Pay' }}"></textarea>
+                </div>
+
+                <button type="submit" class="mc-btn mc-btn--lg mc-btn--secondary mc-co-pay-btn" :disabled="isSubmitting">
+                  <i class="fas fa-lock" aria-hidden="true"></i>
+                  <span x-text="isSubmitting ? '{{ $isRtl ? 'جاري تأكيد الدفع…' : 'Confirming…' }}' : '{{ $isRtl ? 'تأكيد الدفع وإرسال الطلب' : 'Confirm payment & submit' }}'"></span>
+                </button>
+              </form>
+              <a href="{{ $waUrl }}" class="mc-btn mc-btn--md mc-btn--outline" style="margin-top:.75rem" target="_blank" rel="noopener">
+                <i class="fab fa-whatsapp" aria-hidden="true"></i> {{ $isRtl ? 'مساعدة واتساب' : 'WhatsApp help' }}
+              </a>
+            @else
+              <div class="mc-co-alert is-err">
+                <strong>{{ $isRtl ? 'لا توجد طريقة دفع متاحة' : 'No payment method available' }}</strong>
+                <p>{{ $isRtl ? 'فعّل بوابة الدفع من الأدمن أو تواصل عبر واتساب.' : 'Enable a payment gateway in admin, or contact us on WhatsApp.' }}</p>
+                <a href="{{ $waUrl }}" class="mc-btn mc-btn--md mc-btn--outline" target="_blank" rel="noopener">
+                  <i class="fab fa-whatsapp" aria-hidden="true"></i> WhatsApp
                 </a>
               </div>
             @endif
 
             <div class="mc-co-secondary">
-              <a href="{{ route('public.pricing') }}" class="mc-btn mc-btn--md mc-btn--soft">{{ $isRtl ? 'باقة أخرى' : 'Other packages' }}</a>
+              <a href="{{ $backPricingUrl ?? route('public.pricing') }}" class="mc-btn mc-btn--md mc-btn--soft">{{ $isRtl ? '← العودة لنفس المرحلة/المادة' : '← Back to same stage/subject' }}</a>
               @if($canPayOnline)
                 <a href="{{ $waUrl }}" class="mc-btn mc-btn--md mc-btn--outline" target="_blank" rel="noopener">
                   <i class="fab fa-whatsapp" aria-hidden="true"></i> {{ $isRtl ? 'استفسار واتساب' : 'WhatsApp help' }}
@@ -280,12 +389,25 @@
     @if($canPayOnline)
       <a href="#mc-co-pay-title" class="mc-btn mc-btn--md mc-btn--secondary">{{ $isRtl ? 'إلى الدفع' : 'Go to pay' }}</a>
     @else
-      <a href="{{ $waUrl }}" class="mc-btn mc-btn--md mc-btn--secondary" target="_blank" rel="noopener">
-        <i class="fab fa-whatsapp" aria-hidden="true"></i> {{ $isRtl ? 'واتساب' : 'WhatsApp' }}
-      </a>
+      <a href="{{ $backPricingUrl ?? route('public.pricing') }}" class="mc-btn mc-btn--md mc-btn--secondary">{{ $isRtl ? 'الباقات' : 'Packages' }}</a>
     @endif
   </div>
 </div>
+
+@if(!empty($relatedPackages) && $relatedPackages->isNotEmpty())
+<section class="mc-section mc-section--compact" aria-labelledby="mc-related-pkg">
+  <div class="mc-container">
+    <h2 id="mc-related-pkg" class="mc-title">{{ $isRtl ? 'باقات مشابهة لنفس المرحلة/المادة' : 'Similar packages for this stage/subject' }}</h2>
+    <div class="mc-pric-subjects" style="margin-top:1rem">
+      @foreach($relatedPackages as $related)
+        <a class="mc-pric-chip" href="{{ route('public.service-packages.checkout', $related) }}?{{ http_build_query(array_filter(['year' => request('year', $related->academic_year_id), 'subject' => request('subject', $related->academic_subject_id)])) }}">
+          {{ $related->name }} · {{ (int) $related->units_count }} {{ $isRtl ? 'حصص' : 'sessions' }}
+        </a>
+      @endforeach
+    </div>
+  </div>
+</section>
+@endif
 <script>
 (function(){
   var dock = document.getElementById('mc-co-dock');

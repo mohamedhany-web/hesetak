@@ -22,7 +22,8 @@ class CurriculaController extends Controller
                     'subjects as subjects_count' => fn ($q) => $q->active(),
                     'instructors as teachers_count',
                 ])
-                ->get();
+                ->get()
+                ->values();
         }
 
         $teacherCount = 0;
@@ -38,16 +39,66 @@ class CurriculaController extends Controller
             $teacherCount = 0;
         }
 
+        // Public curricula browse stays open: do not collapse the catalog to the viewer's stage.
+
         $curriculumTypes = HesetakMatchCatalog::curriculumTypes();
 
         return view('public.marketing.curricula', [
             'mcActive' => 'curricula',
             'bodyClass' => 'mc-body--dir',
-            'pageTitle' => __('hesetak_pages.curricula.meta_title'),
-            'pageDescription' => __('hesetak_pages.curricula.meta_description'),
+            'pageTitle' => __('seo.curricula.title'),
+            'pageDescription' => __('seo.curricula.description'),
             'teacherCount' => $teacherCount,
             'years' => $years,
             'curriculumTypes' => $curriculumTypes,
+        ]);
+    }
+
+    public function stage(string $stage)
+    {
+        $descriptions = [
+            'primary' => __('seo.curricula_stages.primary'),
+            'middle' => __('seo.curricula_stages.middle'),
+            'secondary' => __('seo.curricula_stages.secondary'),
+            'international' => __('seo.curricula_stages.international'),
+            'university' => __('seo.curricula_stages.university'),
+            'qiyas' => __('seo.curricula_stages.qiyas'),
+            'skills' => __('seo.curricula_stages.skills'),
+        ];
+        $needles = [
+            'primary' => ['ابتدائي', 'primary'],
+            'middle' => ['متوسط', 'middle', 'اعدادي', 'إعدادي'],
+            'secondary' => ['ثانوي', 'secondary'],
+            'international' => ['دولي', 'international'],
+            'university' => ['جامع', 'university'],
+            'qiyas' => ['قياس', 'قدرات', 'qiyas'],
+            'skills' => ['مهار', 'skills'],
+        ];
+
+        $years = collect();
+        if (Schema::hasTable('academic_years')) {
+            $years = AcademicYear::query()->publicCatalog()->ordered()->with(['subjects' => fn ($q) => $q->active()->ordered()])->get()
+                ->filter(function ($year) use ($needles, $stage) {
+                    $hay = mb_strtolower($year->name.' '.$year->slug.' '.$year->tagline);
+                    foreach ($needles[$stage] ?? [] as $needle) {
+                        if (mb_strpos($hay, mb_strtolower($needle)) !== false) {
+                            return true;
+                        }
+                    }
+
+                    return false;
+                })
+                ->values();
+        }
+
+        return view('public.marketing.curricula', [
+            'mcActive' => 'curricula',
+            'bodyClass' => 'mc-body--dir',
+            'pageTitle' => __('seo.curricula_stage_titles.'.$stage),
+            'pageDescription' => $descriptions[$stage] ?? __('seo.curricula.description'),
+            'teacherCount' => 0,
+            'years' => $years,
+            'curriculumTypes' => HesetakMatchCatalog::curriculumTypes(),
         ]);
     }
 
@@ -75,7 +126,7 @@ class CurriculaController extends Controller
                     $query->whereIn('role', ['instructor', 'teacher'])
                         ->where('is_active', true);
                 })
-                ->with('user:id,name,role,is_active')
+                ->with(['user:'.implode(',', \App\Services\PublicInstructorDirectory::userSelect())])
                 ->limit(8)
                 ->get()
                 ->filter(function (InstructorProfile $profile) use ($year) {

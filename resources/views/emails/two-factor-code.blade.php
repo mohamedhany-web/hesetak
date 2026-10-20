@@ -1,28 +1,27 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>رمز الدخول</title>
-    <style>
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #f1f5f9; margin: 0; padding: 24px; color: #334155; }
-        .box { max-width: 400px; margin: 0 auto; background: #fff; border-radius: 16px; padding: 32px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); border: 1px solid #e2e8f0; }
-        h1 { font-size: 1.25rem; color: #0f172a; margin: 0 0 16px; }
-        .code { font-size: 1.75rem; letter-spacing: 0.5rem; font-weight: 700; color: #0369a1; text-align: center; padding: 16px; background: #f0f9ff; border-radius: 12px; margin: 16px 0; }
-        p { margin: 0 0 8px; font-size: 0.9375rem; line-height: 1.5; }
-        .note { font-size: 0.8125rem; color: #64748b; margin-top: 20px; }
-    </style>
-</head>
-<body>
-    <div class="box">
-        <h1>رمز المصادقة الثنائية</h1>
-        @if(!empty($forSystemSettings))
-            <p>استخدم الرمز التالي لتأكيد <strong>تفعيل إلزام المصادقة الثنائية لحسابات الأدمن</strong> من إعدادات النظام:</p>
-        @else
-            <p>استخدم الرمز التالي لإكمال تسجيل الدخول:</p>
-        @endif
-        <div class="code">{{ $code }}</div>
-        <p class="note">هذا الرمز صالح لمدة 10 دقائق. لم تطلب هذا الرمز؟ تجاهل هذه الرسالة وتأكد من تغيير كلمة المرور.</p>
+@extends('emails.layouts.brand')
+
+@php
+    $emailTitle = 'رمز الدخول';
+    $emailHeading = 'رمز المصادقة الثنائية';
+    $emailEyebrow = 'أمان حسابك';
+    $emailPreheader = 'رمز الدخول صالح لدقائق قليلة فقط.';
+    $c = \App\Support\EmailBranding::colors();
+@endphp
+
+@section('content')
+    @if(!empty($forSystemSettings))
+        <p style="margin:0 0 14px;font-size:15px;line-height:1.7;color:#334155;">
+            استخدم الرمز التالي لتأكيد تفعيل إلزام المصادقة الثنائية لحسابات الأدمن من إعدادات النظام:
+        </p>
+    @else
+        <p style="margin:0 0 14px;font-size:15px;line-height:1.7;color:#334155;">
+            استخدم الرمز التالي لإكمال تسجيل الدخول بأمان:
+        </p>
+    @endif
+    <div style="text-align:center;margin:18px 0;padding:18px;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:14px;">
+        <div style="font-size:28px;letter-spacing:0.35em;font-weight:800;color:{{ $c['navy'] }};font-family:Consolas,Monaco,monospace;">{{ $code }}</div>
     </div>
-</body>
-</html>
+    <p style="margin:0;font-size:13px;line-height:1.7;color:#64748b;">
+        الرمز صالح لمدة 10 دقائق. إن لم تطلبه، تجاهل الرسالة وغيّر كلمة المرور فوراً.
+    </p>
+@endsection

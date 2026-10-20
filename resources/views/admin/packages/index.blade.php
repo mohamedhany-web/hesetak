@@ -210,7 +210,7 @@
                 <p class="mt-1 text-2xl font-semibold tabular-nums text-emerald-700">{{ $courseStats['free'] ?? 0 }}</p>
             </article>
             <article class="rounded-2xl border border-line bg-surface p-4 shadow-soft">
-                <div class="inline-flex size-9 items-center justify-center rounded-xl bg-[#f2f5f4] text-accent"><i class="fas fa-dollar-sign text-sm"></i></div>
+                <div class="inline-flex size-9 items-center justify-center rounded-xl bg-[#f2f5f4] text-accent"><i class="{{ currency_icon_class() }} text-sm"></i></div>
                 <p class="mt-3 text-xs font-medium text-muted">مدفوعة</p>
                 <p class="mt-1 text-2xl font-semibold tabular-nums text-ink">{{ $courseStats['paid'] ?? 0 }}</p>
             </article>

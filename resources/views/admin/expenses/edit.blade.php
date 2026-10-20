@@ -71,7 +71,7 @@
                 </div>
 
                 <div>
-                    <label class="{{ $labelClass }}" for="amount">{{ __('المبلغ') }} <span class="text-danger">*</span> ($)</label>
+                    <label class="{{ $labelClass }}" for="amount">{{ __('المبلغ') }} <span class="text-danger">*</span> {{ currency_unit() }}</label>
                     <input id="amount" type="number" name="amount" step="0.01" min="0.01" value="{{ old('amount', $expense->amount) }}" required class="{{ $fieldClass }}" placeholder="0.00">
                     @error('amount')
                         <p class="mt-1 text-xs text-danger">{{ $message }}</p>

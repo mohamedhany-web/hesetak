@@ -91,10 +91,10 @@ function bodyHasError(string $body, array $patterns): ?string
 
 // ── حسابات + بيانات تجريبية لصفحات التفاصيل ─────────────────
 $admin = User::where('role', 'super_admin')->first() ?? User::where('role', 'admin')->first();
-$marketing = ensureTestEmployee('crm-page-mkt@glottical.test', 'crm_marketing', '01099002001');
-$sales = ensureTestEmployee('crm-page-sales@glottical.test', 'sales', '01099002002');
-$teamLeader = ensureTestEmployee('crm-page-tl@glottical.test', 'crm_team_leader', '01099002003');
-$finance = ensureTestEmployee('crm-page-fin@glottical.test', 'crm_finance', '01099002004');
+$marketing = ensureTestEmployee('crm-page-mkt@hesetak.test', 'crm_marketing', '01099002001');
+$sales = ensureTestEmployee('crm-page-sales@hesetak.test', 'sales', '01099002002');
+$teamLeader = ensureTestEmployee('crm-page-tl@hesetak.test', 'crm_team_leader', '01099002003');
+$finance = ensureTestEmployee('crm-page-fin@hesetak.test', 'crm_finance', '01099002004');
 $course = AdvancedCourse::where('is_active', true)->first();
 
 $demoLead = null;
@@ -119,7 +119,7 @@ if ($admin && $marketing && $sales && $teamLeader && $course) {
     if (! $demoLead) {
         $demoLead = CrmLeadService::createLead([
             'name' => '[PAGE TEST] Demo Lead',
-            'email' => 'page-test-lead@glottical.test',
+            'email' => 'page-test-lead@hesetak.test',
             'phone' => '01099002999',
             'source' => SalesLead::SOURCE_WEBSITE,
             'interested_advanced_course_id' => $course->id,

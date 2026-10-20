@@ -8,6 +8,8 @@ use App\Models\AdvancedCourse;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
@@ -15,44 +17,20 @@ class AcademicYearController extends Controller
 {
     public function index()
     {
-        $academicYears = AcademicYear::with(['academicSubjects'])
-            ->withCount('academicSubjects')
-            ->ordered()
-            ->get();
-
-        $allCourses = AdvancedCourse::where('is_active', true)
-            ->select([
-                'id',
-                'title',
-                'description',
-                'category',
-                'programming_language',
-                'framework',
-                'level',
-                'duration_hours',
-                'duration_minutes',
-                'price',
-                'is_free',
-                'rating',
-                'skills',
-                'created_at',
-            ])
-            ->get();
-
-        $tracks = $academicYears->map(function (AcademicYear $year) use ($allCourses) {
-            return $this->hydrateTrack($year, $allCourses);
-        });
+        $yearsQuery = AcademicYear::query()->ordered();
+        if (Schema::hasTable('academic_grades')) {
+            $yearsQuery->with(['grades' => fn ($q) => $q->ordered()])->withCount('grades');
+        }
+        $years = $yearsQuery->get();
 
         $summary = [
-            'total_tracks' => $tracks->count(),
-            'active_tracks' => $tracks->where('is_active', true)->count(),
-            'skill_clusters' => $tracks->sum('academic_subjects_count'),
-            'courses' => $tracks->sum(fn($track) => optional($track->track_metrics)['courses_count'] ?? 0),
-            'languages' => $tracks->flatMap(fn($track) => optional($track->track_metrics)['languages'] ?? [])->filter()->unique()->values(),
-            'frameworks' => $tracks->flatMap(fn($track) => optional($track->track_metrics)['frameworks'] ?? [])->filter()->unique()->values(),
+            'total_stages' => $years->count(),
+            'active_stages' => $years->where('is_active', true)->count(),
+            'public_stages' => $years->where('is_public', true)->count(),
+            'grades' => $years->sum('grades_count'),
         ];
 
-        return view('admin.academic-years.index', compact('tracks', 'summary'));
+        return view('admin.academic-years.index', compact('years', 'summary'));
     }
 
     public function create()
@@ -64,7 +42,7 @@ class AcademicYearController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255|unique:academic_years',
-            'code' => 'required|string|max:10|unique:academic_years',
+            'code' => 'required|string|max:32|unique:academic_years',
             'slug' => 'nullable|string|max:255|regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/|unique:academic_years,slug',
             'tagline' => 'nullable|string|max:255',
             'level_number' => 'nullable|integer|min:1|max:20|unique:academic_years,level_number',
@@ -77,6 +55,9 @@ class AcademicYearController extends Controller
             'order' => 'nullable|integer|min:0',
             'is_active' => 'boolean',
             'is_public' => 'boolean',
+            'grades' => 'nullable|array',
+            'grades.*.name' => 'nullable|string|max:255',
+            'grades.*.order' => 'nullable|integer|min:0|max:99',
         ], [
             'name.required' => 'اسم المرحلة الدراسية مطلوب',
             'name.unique' => 'اسم المرحلة الدراسية موجود مسبقاً',
@@ -111,88 +92,25 @@ class AcademicYearController extends Controller
             );
         }
 
-        AcademicYear::create($data);
+        $year = AcademicYear::create($data);
+        $this->storeIncomingGrades($year, $request->input('grades', []));
 
-        return redirect()->route('admin.academic-years.index')
-            ->with('success', 'تم إضافة المرحلة الدراسية بنجاح');
+        return redirect()->route('admin.academic-years.edit', $year->id)
+            ->with('success', 'تم إضافة المرحلة. يمكنك إضافة أو تعديل الصفوف من هنا.');
     }
 
     public function show(AcademicYear $academicYear)
     {
-        $academicYear->load(['academicSubjects']);
-
-        $academicYear->academicSubjects->each(function ($subject) {
-            $subject->advanced_courses_count = 0;
-            $subject->setRelation('advancedCourses', collect());
-        });
+        $academicYear->load(['grades' => fn ($q) => $q->ordered()]);
 
         return view('admin.academic-years.show', compact('academicYear'));
     }
 
     public function edit(AcademicYear $academicYear)
     {
-        $academicYear->load([
-            'academicSubjects' => function ($query) {
-                $query->orderBy('order')->orderBy('name');
-            },
-            'linkedCourses' => function($query) {
-                $query->where('is_active', true)
-                      ->with(['academicSubject', 'academicYear', 'instructor'])
-                      ->withCount('lessons');
-            },
-            'instructors'
-        ]);
+        $academicYear->load(['grades' => fn ($q) => $q->ordered()]);
 
-        $allCourses = AdvancedCourse::where('is_active', true)
-            ->select([
-                'id',
-                'title',
-                'description',
-                'category',
-                'programming_language',
-                'framework',
-                'level',
-                'duration_hours',
-                'duration_minutes',
-                'price',
-                'is_free',
-                'rating',
-                'skills',
-                'instructor_id',
-                'created_at',
-            ])
-            ->with(['instructor', 'academicSubject', 'academicYear'])
-            ->get();
-
-        $track = $this->hydrateTrack($academicYear, $allCourses);
-
-        $clusters = $academicYear->academicSubjects->map(function ($subject) use ($allCourses) {
-            return $this->hydrateClusterForTrack($subject, $allCourses);
-        });
-
-        $trackSummary = [
-            'courses_count' => optional($track->track_metrics)['courses_count'] ?? 0,
-            'languages' => collect(optional($track->track_metrics)['languages'] ?? []),
-            'frameworks' => collect(optional($track->track_metrics)['frameworks'] ?? []),
-            'levels' => collect(optional($track->track_metrics)['levels'] ?? []),
-            'avg_duration' => optional($track->track_metrics)['avg_duration'] ?? null,
-            'avg_rating' => optional($track->track_metrics)['avg_rating'] ?? null,
-        ];
-
-        // جلب المدربين المتاحين
-        $availableInstructors = \App\Models\User::where('role', 'instructor')
-            ->where('is_active', true)
-            ->orderBy('name')
-            ->get();
-
-        return view('admin.academic-years.edit', [
-            'academicYear' => $academicYear,
-            'track' => $track,
-            'clusters' => $clusters,
-            'trackSummary' => $trackSummary,
-            'allCourses' => $allCourses,
-            'availableInstructors' => $availableInstructors,
-        ]);
+        return view('admin.academic-years.edit', compact('academicYear'));
     }
 
     public function update(Request $request, AcademicYear $academicYear)
@@ -207,7 +125,7 @@ class AcademicYearController extends Controller
             'code' => [
                 'required',
                 'string',
-                'max:10',
+                'max:32',
                 Rule::unique('academic_years')->ignore($academicYear->id),
             ],
             'slug' => [
@@ -247,7 +165,7 @@ class AcademicYearController extends Controller
         $data = $request->only([
             'name', 'code', 'slug', 'tagline', 'level_number', 'description', 'video_url', 'price', 'icon', 'color', 'order',
         ]);
-        $data['is_active'] = $request->has('is_active');
+        $data['is_active'] = $request->boolean('is_active');
         $data['is_public'] = $request->boolean('is_public');
         $data['order'] = $data['order'] ?? 0;
         $data['price'] = $request->input('price', $academicYear->price ?? 0);
@@ -268,21 +186,53 @@ class AcademicYearController extends Controller
 
         $academicYear->update($data);
 
-        return redirect()->route('admin.academic-years.edit', $academicYear)
+        return redirect()->route('admin.academic-years.edit', $academicYear->id)
             ->with('success', 'تم تحديث المرحلة الدراسية بنجاح');
     }
 
     public function destroy(AcademicYear $academicYear)
     {
-        if ($academicYear->academicSubjects()->count() > 0) {
-            return redirect()->route('admin.academic-years.index')
-                ->with('error', 'لا يمكن حذف المسار لأنه يحتوي على مجموعات مهارية');
-        }
+        $yearId = (int) $academicYear->id;
 
-        $academicYear->delete();
+        DB::transaction(function () use ($academicYear, $yearId) {
+            if (Schema::hasTable('academic_year_courses')) {
+                $academicYear->linkedCourses()->detach();
+            }
+            if (Schema::hasTable('academic_year_instructors')) {
+                $academicYear->instructors()->detach();
+            }
+
+            $nullable = [
+                ['academic_subjects', 'academic_year_id'],
+                ['tutoring_groups', 'academic_year_id'],
+                ['service_packages', 'academic_year_id'],
+                ['service_session_rates', 'academic_year_id'],
+                ['student_service_entitlements', 'academic_year_id'],
+                ['free_trial_bookings', 'recommended_academic_year_id'],
+                ['question_categories', 'academic_year_id'],
+                ['users', 'academic_year_id'],
+                ['orders', 'academic_year_id'],
+                ['calendar_events', 'academic_year_id'],
+                ['library_folders', 'academic_year_id'],
+                ['advanced_courses', 'academic_year_id'],
+                ['homepage_sliders', 'academic_year_id'],
+                ['student_instructor_assignments', 'academic_year_id'],
+                ['offline_courses', 'academic_year_id'],
+                ['portfolio_projects', 'academic_year_id'],
+            ];
+            foreach ($nullable as [$table, $column]) {
+                $this->nullYearColumn($table, $column, $yearId);
+            }
+
+            if (Schema::hasTable('learning_path_enrollments') && Schema::hasColumn('learning_path_enrollments', 'academic_year_id')) {
+                DB::table('learning_path_enrollments')->where('academic_year_id', $yearId)->delete();
+            }
+
+            $academicYear->delete();
+        });
 
         return redirect()->route('admin.academic-years.index')
-            ->with('success', 'تم حذف مسار التعلم بنجاح');
+            ->with('success', 'تم حذف المرحلة. المواد المرتبطة بقيت ويمكن إعادة ربطها بمرحلة أخرى.');
     }
 
     /**
@@ -519,5 +469,42 @@ class AcademicYearController extends Controller
         }
 
         return $hours . ' س ' . $remaining . ' د';
+    }
+
+    private function nullYearColumn(string $table, string $column, int $yearId): void
+    {
+        if (! Schema::hasTable($table) || ! Schema::hasColumn($table, $column)) {
+            return;
+        }
+
+        $meta = collect(Schema::getColumns($table))->firstWhere('name', $column);
+        if (! ($meta['nullable'] ?? false)) {
+            return;
+        }
+
+        DB::table($table)->where($column, $yearId)->update([$column => null]);
+    }
+
+    private function storeIncomingGrades(AcademicYear $year, mixed $grades): void
+    {
+        if (! Schema::hasTable('academic_grades') || ! is_array($grades)) {
+            return;
+        }
+
+        $seen = [];
+        $order = 1;
+        foreach ($grades as $row) {
+            $name = trim((string) ($row['name'] ?? ''));
+            if ($name === '' || isset($seen[$name])) {
+                continue;
+            }
+            $seen[$name] = true;
+            $year->grades()->create([
+                'name' => $name,
+                'order' => isset($row['order']) && $row['order'] !== '' ? (int) $row['order'] : $order,
+                'is_active' => true,
+            ]);
+            $order++;
+        }
     }
 }

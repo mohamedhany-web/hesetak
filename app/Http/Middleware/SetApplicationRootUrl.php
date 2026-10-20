@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\URL;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * يضبط جذر روابط Laravel من مسار index.php الفعلي (مثلاً /glottical/public).
+ * يضبط جذر روابط Laravel من مسار index.php الفعلي (مثلاً /hesetak/public).
  */
 class SetApplicationRootUrl
 {

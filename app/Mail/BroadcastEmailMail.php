@@ -2,42 +2,44 @@
 
 namespace App\Mail;
 
+use App\Mail\Concerns\HesetakMailDefaults;
+use App\Models\EmailBroadcast;
+use App\Models\EmailBroadcastRecipient;
+use App\Support\EmailBranding;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
+use Illuminate\Mail\Mailables\Headers;
 use Illuminate\Queue\SerializesModels;
-use App\Models\EmailBroadcast;
-use App\Models\EmailBroadcastRecipient;
 
 class BroadcastEmailMail extends Mailable
 {
+    use HesetakMailDefaults;
     use Queueable, SerializesModels;
 
-    /**
-     * Create a new message instance.
-     */
     public function __construct(
         public EmailBroadcast $broadcast,
         public EmailBroadcastRecipient $recipient,
-    )
-    {
-    }
+    ) {}
 
-    /**
-     * Get the message envelope.
-     */
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: $this->broadcast->subject,
+            from: $this->hesetakFrom(),
+            replyTo: $this->hesetakReplyTo(),
+            subject: mb_substr(EmailBranding::brandName().' · '.$this->broadcast->subject, 0, 180),
         );
     }
 
-    /**
-     * Get the message content definition.
-     */
+    public function headers(): Headers
+    {
+        return $this->hesetakHeaders([
+            'entity' => 'broadcast-'.$this->broadcast->id.'-'.$this->recipient->id,
+            'Precedence' => 'bulk',
+        ]);
+    }
+
     public function content(): Content
     {
         return new Content(
@@ -47,15 +49,5 @@ class BroadcastEmailMail extends Mailable
                 'recipient' => $this->recipient,
             ],
         );
-    }
-
-    /**
-     * Get the attachments for the message.
-     *
-     * @return array<int, \Illuminate\Mail\Mailables\Attachment>
-     */
-    public function attachments(): array
-    {
-        return [];
     }
 }

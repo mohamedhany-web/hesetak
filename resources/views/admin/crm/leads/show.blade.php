@@ -166,7 +166,7 @@
                                     <p class="text-xs text-muted">{{ $c->typeLabel() }}</p>
                                 </div>
                                 <div class="text-end">
-                                    <p class="text-sm font-semibold tabular-nums text-accent">{{ number_format($c->commission_amount_egp, 2) }} $</p>
+                                    <p class="text-sm font-semibold tabular-nums text-accent">{{ number_format($c->commission_amount_egp, 2) }} {{ currency_symbol() }}</p>
                                     <p class="text-xs text-muted">{{ $c->statusLabel() }}</p>
                                 </div>
                             </div>

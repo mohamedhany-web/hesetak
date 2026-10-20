@@ -8,6 +8,7 @@
   $email = trim((string) ($footer['email'] ?? '')) ?: trim((string) ($content['email'] ?? ''));
   $phone = trim((string) ($footer['phone'] ?? '')) ?: trim((string) ($content['phone'] ?? ''));
   $waUrl = trim((string) ($footer['whatsapp_url'] ?? ''));
+  $socials = $footer['socials'] ?? [];
   $phoneTel = $phone !== '' ? preg_replace('/\s+/', '', $phone) : '';
   $brand = __('landing.nav.brand');
 @endphp
@@ -80,7 +81,29 @@
           <span class="mc-track__cta" dir="ltr">{{ $phone }}</span>
         </a>
       @endif
+
+      @auth
+        <a class="mc-track" href="{{ route('student.support.index') }}">
+          <span class="mc-track__icon" aria-hidden="true"><i class="fas fa-ticket"></i></span>
+          <h3>{{ $isRtl ? 'تتبع تذكرة الدعم' : 'Track support ticket' }}</h3>
+          <p>{{ $isRtl ? 'شاهد حالة رسالتك: مفتوحة، قيد المعالجة، أو مُغلقة.' : 'See whether your message is open, in progress, or closed.' }}</p>
+          <span class="mc-track__cta">{{ $isRtl ? 'مكتب الدعم ←' : 'Support desk →' }}</span>
+        </a>
+      @endauth
     </div>
+
+    @if(count($socials) > 0)
+      <div class="mc-contact-social" style="margin-top:1.5rem">
+        <h3 class="mc-title" style="font-size:1.1rem">{{ $isRtl ? 'حسابات التواصل الاجتماعي' : 'Social accounts' }}</h3>
+        <div style="display:flex;flex-wrap:wrap;gap:.75rem;margin-top:.75rem">
+          @foreach($socials as $social)
+            <a href="{{ $social['url'] }}" class="mc-btn mc-btn--md mc-btn--soft" target="_blank" rel="noopener noreferrer">
+              <i class="{{ $social['icon'] }}" aria-hidden="true"></i> {{ $social['label'] }}
+            </a>
+          @endforeach
+        </div>
+      </div>
+    @endif
   </div>
 </section>
 

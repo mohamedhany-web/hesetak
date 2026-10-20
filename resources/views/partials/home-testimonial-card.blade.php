@@ -13,7 +13,7 @@
 <article class="{{ $widthClass }} {{ $fluid ? '' : 'flex-shrink-0' }} overflow-hidden rounded-2xl flex flex-col border shadow-[0_14px_40px_-22px_rgba(11,61,145,.35)] {{ $featured ? 'border-[#0B3D91] bg-[#0B3D91] text-white' : 'border-[#D7DDE6] bg-white' }}">
     @if($t->isImageType() && $t->publicImageUrl())
         <div class="flex aspect-[4/3] min-h-[10.5rem] max-h-[15rem] w-full items-center justify-center overflow-hidden sm:max-h-[17rem] {{ $featured ? 'bg-white/10' : 'bg-[#F4F7FC]' }}">
-            <img src="{{ $t->publicImageUrl() }}" alt="" class="h-auto max-h-full w-auto max-w-full object-contain object-center" loading="lazy" decoding="async">
+            <img src="{{ $t->publicImageUrl() }}" alt="" class="h-full w-full object-cover object-center" loading="lazy" decoding="async">
         </div>
     @endif
     <div class="flex flex-1 flex-col p-5">

@@ -60,7 +60,7 @@ class LiveSetting extends Model
         }
 
         // Legacy infra host — override via LIVEKIT_PUBLIC_HOST / live servers table.
-        return static::normalizeLiveHost((string) env('LIVEKIT_PUBLIC_HOST', 'live.glottical.com'));
+        return static::normalizeLiveHost((string) env('LIVEKIT_PUBLIC_HOST', 'live.hissatak.online'));
     }
 
     public static function get(string $key, $default = null)

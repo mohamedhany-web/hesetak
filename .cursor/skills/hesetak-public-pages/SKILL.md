@@ -87,7 +87,7 @@ Home body class: `mc-body mc-body--shop`
 
 - مرجعي UX: فروع، فصول جماعية كمنتج أساسي، مخزون، HR  
 - هوية teacher-PD فقط على الهوم  
-- علامات قديمة: Glottical / Sana / MyCourse.io / تدريس لاب كبراند  
+- علامات منصات أخرى كبراند للمنتج (الهوية الوحيدة: حصتك)  
 - شرطات طويلة `—` في النسخ العربية (فضّل «،» أو جملة جديدة)  
 - إطار CSS جديد (Bootstrap/Tailwind UI kits) بدون موافقة  
 - بطاقات زينة بلا فعل؛ hero مليان stats/chips/overlays  

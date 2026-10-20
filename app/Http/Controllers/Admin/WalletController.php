@@ -20,11 +20,18 @@ class WalletController extends Controller
 {
     private function ownedWalletsQuery()
     {
-        return Wallet::query()->where('user_id', Auth::id());
+        // محافظ المنصة (بنكي / فودافون / …) تُخزَّن بـ user_id = null بعد تعدد المحافظ.
+        return Wallet::query()->where(function ($q) {
+            $q->whereNull('user_id')
+                ->orWhere('user_id', Auth::id());
+        });
     }
 
     private function ensureWalletOwnership(Wallet $wallet): void
     {
+        if ($wallet->user_id === null) {
+            return;
+        }
         if ((int) $wallet->user_id !== (int) Auth::id()) {
             abort(403, 'غير مصرح لك بالوصول إلى هذه المحفظة');
         }
@@ -326,7 +333,7 @@ class WalletController extends Controller
         ]);
 
         Wallet::create([
-            'user_id' => Auth::id(),
+            'user_id' => null, // محفظة منصة للتحويلات — ليست مرتبطة بمستخدم واحد
             'name' => $validated['name'],
             'type' => $validated['type'],
             'account_number' => $validated['account_number'] ?? null,

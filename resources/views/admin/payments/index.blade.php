@@ -144,7 +144,7 @@
                                 <p class="font-semibold text-ink">{{ $payment->user->name ?? '—' }}</p>
                                 <p class="mt-0.5 text-[11px] text-muted">{{ $payment->user->phone ?? $payment->user->email ?? '—' }}</p>
                             </td>
-                            <td class="px-4 py-3 font-semibold tabular-nums text-ink">{{ number_format($payment->amount, 2) }} <span class="text-xs font-normal text-muted">$</span></td>
+                            <td class="px-4 py-3 font-semibold tabular-nums text-ink">{{ number_format($payment->amount, 2) }} <span class="text-xs font-normal text-muted">{{ currency_symbol() }}</span></td>
                             <td class="px-4 py-3 text-ink-soft">{{ $paymentMethodLabels[$payment->payment_method] ?? $payment->payment_method }}</td>
                             <td class="px-4 py-3">
                                 <span class="inline-flex rounded-lg px-2.5 py-1 text-xs font-medium {{ $badge['classes'] }}">{{ $badge['label'] }}</span>

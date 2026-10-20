@@ -133,7 +133,7 @@
             @endif
             <div class="flex items-center justify-between gap-4 border-b border-line px-4 py-3 sm:px-5">
                 <dt class="text-sm text-muted">الخصم المطبق</dt>
-                <dd class="text-sm font-bold tabular-nums text-ink">{{ number_format($referral->discount_amount ?? 0, 2) }} $</dd>
+                <dd class="text-sm font-bold tabular-nums text-ink">{{ number_format($referral->discount_amount ?? 0, 2) }} {{ currency_symbol() }}</dd>
             </div>
             <div class="flex items-center justify-between gap-4 border-b border-line px-4 py-3 sm:px-5">
                 <dt class="text-sm text-muted">عدد مرات استخدام الخصم</dt>
@@ -149,7 +149,7 @@
             @endif
             <div class="flex items-center justify-between gap-4 border-b border-line px-4 py-3 sm:px-5">
                 <dt class="text-sm text-muted">المكافأة (مالية)</dt>
-                <dd class="text-sm font-bold tabular-nums text-emerald-700">{{ number_format($referral->reward_amount ?? 0, 2) }} $</dd>
+                <dd class="text-sm font-bold tabular-nums text-emerald-700">{{ number_format($referral->reward_amount ?? 0, 2) }} {{ currency_symbol() }}</dd>
             </div>
             @if(($referral->reward_points ?? 0) > 0)
                 <div class="flex items-center justify-between gap-4 border-b border-line px-4 py-3 sm:px-5">

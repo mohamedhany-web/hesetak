@@ -18,8 +18,11 @@
     $paypalMis = ! empty($paypalMisconfigured);
     $kashierActive = ! empty($kashierUseGateway);
     $kashierMis = ! empty($kashierMisconfigured);
-    $anyOnlineGateway = $fawaterakActive || $paypalActive || $kashierActive;
+    $stripeActive = ! empty($stripeUseGateway);
+    $stripeMis = ! empty($stripeMisconfigured);
+    $anyOnlineGateway = $fawaterakActive || $paypalActive || $kashierActive || $stripeActive;
     $canPayOnline = $anyOnlineGateway;
+    $showManualCheckout = ! empty($manualCheckoutAllowed) && ! $fawaterakMis && ! $paypalMis && ! $kashierMis && ! $stripeMis;
     $footer = \App\Services\PublicFooterSettings::payload();
     $waUrl = $footer['whatsapp_url'] ?? '#';
     $mcCss = public_path('css/landing/mycourses.css');
@@ -224,12 +227,17 @@
               </div>
             </div>
 
-            @if($fawaterakMis && ! $paypalActive && ! $kashierActive)
+            @if($fawaterakMis && ! $paypalActive && ! $kashierActive && ! $stripeActive)
               <div class="mc-co-alert is-err">
                 <strong>{{ $isRtl ? 'إعدادات الدفع غير مكتملة' : 'Payment settings incomplete' }}</strong>
                 <p>{{ $isRtl ? 'تم تفعيل فواتيرك لكن الربط غير مكتمل على الخادم.' : 'Fawaterak is enabled but server credentials are incomplete.' }}</p>
               </div>
-            @elseif($paypalMis && ! $fawaterakActive && ! $kashierActive)
+            @elseif($stripeMis && ! $fawaterakActive && ! $paypalActive && ! $kashierActive)
+              <div class="mc-co-alert is-err">
+                <strong>{{ $isRtl ? 'إعدادات Stripe غير مكتملة' : 'Stripe settings incomplete' }}</strong>
+                <p>{{ $isRtl ? 'تم تفعيل Stripe لكن بيانات الاتصال ناقصة.' : 'Stripe is enabled but connection credentials are missing.' }}</p>
+              </div>
+            @elseif($paypalMis && ! $fawaterakActive && ! $kashierActive && ! $stripeActive)
               <div class="mc-co-alert is-err">
                 <strong>{{ $isRtl ? 'إعدادات PayPal غير مكتملة' : 'PayPal settings incomplete' }}</strong>
                 <p>{{ $isRtl ? 'تم تفعيل PayPal لكن بيانات الاتصال ناقصة.' : 'PayPal is enabled but connection credentials are missing.' }}</p>
@@ -266,15 +274,31 @@
               <div id="fawaterkDivId" class="mc-co-gateway"></div>
             @endif
 
-            @if($kashierMis && ! $anyOnlineGateway && ! $fawaterakMis && ! $paypalMis)
+            @if($kashierMis && ! $anyOnlineGateway && ! $fawaterakMis && ! $paypalMis && ! $stripeMis)
               <div class="mc-co-alert is-err">
                 <strong>{{ $isRtl ? 'إعدادات كاشير غير مكتملة' : 'Kashier settings incomplete' }}</strong>
                 <p>{{ $isRtl ? 'تم تفعيل كاشير لكن بيانات الاتصال ناقصة.' : 'Kashier is enabled but connection credentials are missing.' }}</p>
               </div>
             @endif
 
-            @if($paypalActive)
+            @if($stripeActive)
               @if($fawaterakActive)
+                <p class="mc-co-or">{{ $isRtl ? 'أو' : 'or' }}</p>
+              @endif
+              <form method="POST" action="{{ route('public.course.checkout.stripe', $course->id) }}" id="stripe-checkout-form">
+                @csrf
+                <input type="hidden" name="coupon_code" id="stripe_coupon_code" value="">
+                <input type="hidden" name="wallet_credit" id="stripe_wallet_credit" value="0">
+                <input type="hidden" name="currency" id="stripe_currency" value="{{ platform_currency() }}">
+                <button type="submit" class="mc-btn mc-btn--lg mc-btn--outline mc-co-pay-btn">
+                  <i class="fab fa-stripe-s" aria-hidden="true"></i>
+                  {{ $isRtl ? 'الدفع عبر Stripe' : 'Pay with Stripe' }}
+                </button>
+              </form>
+            @endif
+
+            @if($paypalActive)
+              @if($fawaterakActive || $stripeActive)
                 <p class="mc-co-or">{{ $isRtl ? 'أو' : 'or' }}</p>
               @endif
               <form method="POST" action="{{ route('public.course.checkout.paypal', $course->id) }}" id="paypal-checkout-form">
@@ -290,7 +314,7 @@
             @endif
 
             @if($kashierActive)
-              @if($fawaterakActive || $paypalActive)
+              @if($fawaterakActive || $paypalActive || $stripeActive)
                 <p class="mc-co-or">{{ $isRtl ? 'أو' : 'or' }}</p>
               @endif
               <form method="POST" action="{{ route('public.course.checkout.kashier', $course->id) }}" id="kashier-checkout-form">
@@ -305,12 +329,15 @@
               </form>
             @endif
 
-            @if(! $anyOnlineGateway && ! $fawaterakMis && ! $paypalMis && ! $kashierMis)
+            @if($showManualCheckout)
+              @if($anyOnlineGateway)
+                <p class="mc-co-or">{{ $isRtl ? 'أو ادفع يدوياً' : 'or pay manually' }}</p>
+              @endif
               <div class="mc-co-callout">
-                <i class="fas fa-file-invoice" aria-hidden="true"></i>
+                <i class="fas fa-university" aria-hidden="true"></i>
                 <div>
-                  <strong>{{ $isRtl ? 'الدفع اليدوي' : 'Manual payment' }}</strong>
-                  <p>{{ $isRtl ? 'ارفع إيصال التحويل، نراجع الطلب ثم نفعّل الاشتراك.' : 'Upload your transfer receipt — we review, then activate.' }}</p>
+                  <strong>{{ $isRtl ? 'تحويل بنكي ثم تأكيد الشراء' : 'Bank transfer, then confirm purchase' }}</strong>
+                  <p>{{ $isRtl ? '1) اختر حساب المنصة للتحويل إليه 2) حوّل المبلغ 3) ارفع صورة الإيصال 4) اضغط تأكيد الدفع. نراجع خلال ساعات عمل ونفعّل الاشتراك.' : '1) Pick the platform account 2) Transfer the amount 3) Upload the receipt photo 4) Tap confirm payment. We review during business hours and activate.' }}</p>
                 </div>
               </div>
               <form action="{{ route('public.course.checkout.complete', $course->id) }}" method="POST" enctype="multipart/form-data" @submit="isSubmitting = true" x-data="{paymentMethod:'bank_transfer'}" id="manual-checkout-form" class="mc-cco-manual">
@@ -322,38 +349,53 @@
                 <div class="mc-co-field">
                   <label for="mc-cco-method">{{ $isRtl ? 'طريقة الدفع' : 'Payment method' }}</label>
                   <select name="payment_method" id="mc-cco-method" x-model="paymentMethod" required>
-                    <option value="bank_transfer">{{ $isRtl ? 'تحويل بنكي / محفظة' : 'Bank / wallet transfer' }}</option>
-                    <option value="cash">{{ $isRtl ? 'دفع نقدي' : 'Cash' }}</option>
+                    <option value="bank_transfer">{{ $isRtl ? 'تحويل بنكي / محفظة إلكترونية' : 'Bank / e-wallet transfer' }}</option>
+                    <option value="cash">{{ $isRtl ? 'دفع نقدي (بعد التنسيق)' : 'Cash (after coordination)' }}</option>
                     <option value="other">{{ $isRtl ? 'طريقة أخرى' : 'Other' }}</option>
                   </select>
                 </div>
 
                 <div class="mc-co-field" x-show="paymentMethod === 'bank_transfer'" x-cloak>
-                  <label for="mc-cco-wallet">{{ $isRtl ? 'حساب التحويل' : 'Transfer account' }}</label>
+                  <label for="mc-cco-wallet">{{ $isRtl ? 'إلى أي حساب نحوّل؟ (حسابات المنصة)' : 'Which platform account should you transfer to?' }}</label>
                   <select name="wallet_id" id="mc-cco-wallet" :required="paymentMethod === 'bank_transfer'">
-                    <option value="">{{ $isRtl ? 'اختر الحساب' : 'Select account' }}</option>
+                    <option value="">{{ $isRtl ? 'اختر حساب التحويل' : 'Select transfer account' }}</option>
                     @foreach(($wallets ?? []) as $wallet)
-                      <option value="{{ $wallet->id }}">{{ $wallet->name ?? ($isRtl ? 'حساب منصة' : 'Platform account') }} — {{ $wallet->account_number ?? $wallet->phone ?? '—' }}</option>
+                      <option value="{{ $wallet->id }}">
+                        {{ $wallet->name ?: ($isRtl ? 'حساب منصة' : 'Platform account') }}
+                        @if(filled($wallet->bank_name)) — {{ $wallet->bank_name }}@endif
+                        @if(filled($wallet->account_number)) — {{ $wallet->account_number }}@endif
+                      </option>
                     @endforeach
                   </select>
+                  <p class="mc-co-hint" style="margin-top:.35rem;font-size:.9rem;opacity:.85">
+                    {{ $isRtl ? 'هذا اختيار لحساب حصتك الذي تستلم عليه التحويل — ليس حقلًا لكتابة رقم حسابك أنت.' : 'This selects Hesetak’s receiving account — not a field to type your own account number.' }}
+                  </p>
                 </div>
 
                 <div class="mc-co-field">
-                  <label for="mc-cco-proof">{{ $isRtl ? 'إيصال الدفع' : 'Payment proof' }}</label>
+                  <label for="mc-cco-proof">{{ $isRtl ? 'صورة إيصال التحويل (مطلوب)' : 'Transfer receipt photo (required)' }}</label>
                   <input type="file" name="payment_proof" id="mc-cco-proof" accept="image/*" required>
+                  <p class="mc-co-hint" style="margin-top:.35rem;font-size:.9rem;opacity:.85">
+                    {{ $isRtl ? 'ارفع سكرين أو صورة واضحة للمبلغ واسم/رقم الحساب المحوَّل إليه.' : 'Upload a clear screenshot showing amount and the account you paid to.' }}
+                  </p>
                 </div>
 
                 <div class="mc-co-field">
                   <label for="mc-cco-notes">{{ $isRtl ? 'ملاحظات (اختياري)' : 'Notes (optional)' }}</label>
-                  <textarea name="notes" id="mc-cco-notes" rows="3" placeholder="{{ $isRtl ? 'تفاصيل التحويل' : 'Transfer details' }}"></textarea>
+                  <textarea name="notes" id="mc-cco-notes" rows="3" placeholder="{{ $isRtl ? 'مثال: حوّلت من بنك الراجحي الساعة 3 مساءً' : 'e.g. Transferred from my bank at 3pm' }}"></textarea>
                 </div>
 
                 <button type="submit" :disabled="isSubmitting" class="mc-btn mc-btn--lg mc-btn--secondary mc-co-pay-btn">
-                  <i class="fas fa-file-upload" x-show="!isSubmitting" aria-hidden="true"></i>
+                  <i class="fas fa-lock" x-show="!isSubmitting" aria-hidden="true"></i>
                   <i class="fas fa-spinner fa-spin" x-show="isSubmitting" x-cloak aria-hidden="true"></i>
-                  <span x-text="isSubmitting ? '{{ $isRtl ? 'جاري الإرسال…' : 'Submitting…' }}' : '{{ $isRtl ? 'إرسال الطلب' : 'Submit order' }}'"></span>
+                  <span x-text="isSubmitting ? '{{ $isRtl ? 'جاري تأكيد الدفع…' : 'Confirming payment…' }}' : '{{ $isRtl ? 'تأكيد الدفع وإرسال الطلب' : 'Confirm payment & submit' }}'"></span>
                 </button>
               </form>
+            @elseif(! $anyOnlineGateway && ! $fawaterakMis && ! $paypalMis && ! $kashierMis && ! $stripeMis)
+              <div class="mc-co-alert is-err">
+                <strong>{{ $isRtl ? 'لا توجد طريقة دفع متاحة' : 'No payment method available' }}</strong>
+                <p>{{ $isRtl ? 'تواصل مع الدعم عبر واتساب لإتمام الاشتراك.' : 'Contact support via WhatsApp to complete enrollment.' }}</p>
+              </div>
             @endif
 
             <div class="mc-co-secondary">
@@ -406,6 +448,24 @@
         if (pc) pc.value = c ? (c.value || '').trim() : '';
         if (pw) pw.value = w && w.value !== '' ? w.value : '0';
         if (pcur) pcur.value = @json(platform_currency());
+    });
+})();
+</script>
+@endif
+@if(!empty($stripeUseGateway))
+<script>
+(function(){
+    var form = document.getElementById('stripe-checkout-form');
+    if (!form) return;
+    form.addEventListener('submit', function(){
+        var c = document.getElementById('checkout_coupon_code');
+        var w = document.getElementById('checkout_wallet_credit');
+        var sc = document.getElementById('stripe_coupon_code');
+        var sw = document.getElementById('stripe_wallet_credit');
+        var scur = document.getElementById('stripe_currency');
+        if (sc) sc.value = c ? (c.value || '').trim() : '';
+        if (sw) sw.value = w && w.value !== '' ? w.value : '0';
+        if (scur) scur.value = @json(platform_currency());
     });
 })();
 </script>

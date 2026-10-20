@@ -2,23 +2,8 @@
 
 /**
  * خريطة السايدبار للموظفين.
- *
- * كل عنصر يحتوي على:
- *   permission => اسم صلاحية RBAC (من جدول permissions) مطلوبة لإظهار هذا العنصر.
- *                 إذا لم يُحدَّد، يُستخدَم المفتاح نفسه (key).
- *
- * الصلاحيات المتاحة في النظام:
- *   manage.orders      → قسم المبيعات
- *   manage.invoices    → قسم المحاسبة
- *   manage.users       → قسم الموارد البشرية
- *   manage.tasks       → قسم المهام والإجازات
- *   view.statistics    → قسم التقارير + الإشراف
- *   view.calendar      → قسم التقويم
- *   manage.messages    → إدارة الرسائل
- *   view.dashboard     → لوحة التحكم الرئيسية
- *   manage.coupons     → إدارة الكوبونات
- *   manage.referrals   → إدارة الإحالات
- *   manage.courses     → إدارة الكورسات
+ * الفحص عبر employeeCan(key) بنفس مفاتيح صلاحيات الوظيفة/التخصيص.
+ * حقل permission اختياري للتوافق مع RBAC.
  */
 return [
     'items' => [
@@ -44,7 +29,7 @@ return [
             'active_class' => 'bg-indigo-600 shadow-lg',
         ],
         'desk_accountant' => [
-            'permission' => 'manage.invoices',
+            'permission' => 'desk_accountant',
             'label' => 'لوحة المحاسب',
             'icon' => 'fas fa-calculator',
             'route' => 'employee.accountant-desk.index',
@@ -52,7 +37,7 @@ return [
             'active_class' => 'bg-amber-600 shadow-lg',
         ],
         'sales_desk' => [
-            'permission' => 'manage.orders',
+            'permission' => 'sales_desk',
             'label' => 'لوحة المبيعات',
             'icon' => 'fas fa-chart-line',
             'route' => 'employee.sales.desk',
@@ -60,7 +45,7 @@ return [
             'active_class' => 'bg-emerald-600 shadow-lg',
         ],
         'sales_orders' => [
-            'permission' => 'manage.orders',
+            'permission' => 'sales_orders',
             'label' => 'طلبات المبيعات',
             'icon' => 'fas fa-shopping-bag',
             'route' => 'employee.sales.orders.index',
@@ -156,7 +141,7 @@ return [
             'active_class' => 'bg-cyan-600 shadow-lg',
         ],
         'hr_desk' => [
-            'permission' => 'manage.users',
+            'permission' => 'hr_desk',
             'label' => 'لوحة الموارد البشرية',
             'icon' => 'fas fa-users',
             'route' => 'employee.hr-desk.index',
@@ -164,7 +149,7 @@ return [
             'active_class' => 'bg-rose-600 shadow-lg',
         ],
         'hr_leave_requests' => [
-            'permission' => 'manage.users',
+            'permission' => 'hr_leave_requests',
             'label' => 'مراجعة الإجازات',
             'icon' => 'fas fa-calendar-check',
             'route' => 'employee.hr.leaves.index',
@@ -172,7 +157,7 @@ return [
             'active_class' => 'bg-rose-700 shadow-lg',
         ],
         'hr_directory' => [
-            'permission' => 'manage.users',
+            'permission' => 'hr_directory',
             'label' => 'دليل الموظفين',
             'icon' => 'fas fa-address-book',
             'route' => 'employee.hr.employees.index',
@@ -180,7 +165,7 @@ return [
             'active_class' => 'bg-indigo-700 shadow-lg',
         ],
         'hr_recruitment' => [
-            'permission' => 'manage.users',
+            'permission' => 'hr_recruitment',
             'label' => 'التوظيف والمقابلات',
             'icon' => 'fas fa-user-tie',
             'route' => 'employee.hr.recruitment.index',
@@ -188,7 +173,7 @@ return [
             'active_class' => 'bg-violet-700 shadow-lg',
         ],
         'supervision_desk' => [
-            'permission' => 'view.statistics',
+            'permission' => 'supervision_desk',
             'label' => 'لوحة الإشراف',
             'icon' => 'fas fa-clipboard-check',
             'route' => 'employee.supervision-desk.index',
@@ -196,8 +181,7 @@ return [
             'active_class' => 'bg-indigo-600 shadow-lg',
         ],
         'academic_supervision_desk' => [
-            // صلاحية RBAC: إشراف أكاديمي (لوحة الموظف + مسارات admin.academic-supervision)
-            'permission' => 'academic_supervision.manage',
+            'permission' => 'academic_supervision_desk',
             'label' => 'الإشراف الأكاديمي',
             'icon' => 'fas fa-user-graduate',
             'route' => 'employee.academic-supervision.index',
@@ -205,7 +189,7 @@ return [
             'active_class' => 'bg-teal-600 shadow-lg',
         ],
         'public_catalog' => [
-            'permission' => 'manage.courses',
+            'permission' => 'public_catalog',
             'label' => 'تصفح الكورسات',
             'icon' => 'fas fa-graduation-cap',
             'route' => 'public.courses',
@@ -213,7 +197,7 @@ return [
             'active_class' => 'bg-teal-600 shadow-lg',
         ],
         'tasks' => [
-            'permission' => 'manage.tasks',
+            'permission' => 'tasks',
             'label' => 'مهامي',
             'icon' => 'fas fa-tasks',
             'route' => 'employee.tasks.index',
@@ -221,7 +205,7 @@ return [
             'active_class' => 'bg-sky-600 shadow-lg',
         ],
         'leaves' => [
-            'permission' => 'manage.tasks',
+            'permission' => 'leaves',
             'label' => 'إجازاتي',
             'icon' => 'fas fa-umbrella-beach',
             'route' => 'employee.leaves.index',
@@ -229,7 +213,7 @@ return [
             'active_class' => 'bg-cyan-600 shadow-lg',
         ],
         'accounting' => [
-            'permission' => 'manage.invoices',
+            'permission' => 'accounting',
             'label' => 'محاسبتي الشخصية',
             'icon' => 'fas fa-wallet',
             'route' => 'employee.accounting.index',
@@ -237,7 +221,7 @@ return [
             'active_class' => 'bg-slate-500 shadow-lg',
         ],
         'agreements' => [
-            'permission' => 'manage.invoices',
+            'permission' => 'agreements',
             'label' => 'اتفاقيات العمل',
             'icon' => 'fas fa-file-contract',
             'route' => 'employee.agreements.index',
@@ -245,7 +229,7 @@ return [
             'active_class' => 'bg-violet-600 shadow-lg',
         ],
         'reports' => [
-            'permission' => 'view.statistics',
+            'permission' => 'reports',
             'label' => 'تقاريري',
             'icon' => 'fas fa-chart-bar',
             'route' => 'employee.reports',
@@ -253,7 +237,7 @@ return [
             'active_class' => 'bg-purple-600 shadow-lg',
         ],
         'calendar' => [
-            'permission' => 'view.calendar',
+            'permission' => 'calendar',
             'label' => 'التقويم',
             'icon' => 'fas fa-calendar-alt',
             'route' => 'employee.calendar',

@@ -1,13 +1,17 @@
 @php
 /*
- * حصتك — JSON-LD Structured Data
+ * حصتك — JSON-LD Structured Data (+ GEO brand signals)
  * Usage: @include('partials.seo-jsonld', ['jsonldType' => 'website|course|instructor|about'])
  */
 $_jldType    = $jsonldType ?? 'website';
-$_siteUrl    = url('/');
+$_siteUrl    = rtrim(\App\Support\PublicSeo::absoluteUrl('/'), '/');
 $_logoUrl    = \App\Services\SeoAssets::ogImageUrl();
-$_siteName   = config('app.name');
+$_siteName   = \App\Support\PublicSeo::brandPrimaryName();
+$_latinBrand = \App\Support\PublicSeo::brandLatinName();
+$_altNames   = \App\Support\PublicSeo::brandAlternateNames();
 $_metaDesc   = __('landing.meta.description');
+$_supportEmail = (string) (config('mail.from.address') ?: 'info@hissatak.online');
+$_phone = preg_replace('/\s+/', '', (string) (config('platform.support_phone') ?: '+966573211242'));
 
 // ── Base: WebSite + EducationalOrganization ──────────────────────────────
 $_baseGraph = [
@@ -18,43 +22,80 @@ $_baseGraph = [
             '@id'           => $_siteUrl . '/#website',
             'url'           => $_siteUrl,
             'name'          => $_siteName,
+            'alternateName' => $_altNames,
             'description'   => $_metaDesc,
-            'inLanguage'    => ['ar', 'en'],
+            'inLanguage'    => [app()->getLocale() === 'en' ? 'en' : 'ar', 'en', 'ar'],
             'publisher'     => ['@id' => $_siteUrl . '/#organization'],
             'potentialAction' => [
                 '@type'        => 'SearchAction',
-                'target'       => ['@type' => 'EntryPoint', 'urlTemplate' => url('/courses') . '?q={search_term_string}'],
+                'target'       => ['@type' => 'EntryPoint', 'urlTemplate' => \App\Support\PublicSeo::absoluteUrl('/instructors') . '?q={search_term_string}'],
                 'query-input'  => 'required name=search_term_string',
             ],
         ],
         [
-            '@type'  => ['EducationalOrganization', 'Organization'],
+            '@type'  => ['EducationalOrganization', 'Organization', 'OnlineBusiness'],
             '@id'    => $_siteUrl . '/#organization',
             'name'   => $_siteName,
+            'legalName' => $_siteName,
+            'alternateName' => $_altNames,
+            'brand'  => [
+                '@type' => 'Brand',
+                'name' => $_siteName,
+                'alternateName' => [$_latinBrand, 'Hissatak'],
+                'logo' => $_logoUrl,
+            ],
             'url'    => $_siteUrl,
             'description' => $_metaDesc,
+            'slogan' => app()->getLocale() === 'en'
+                ? 'Online private tutoring with accredited teachers'
+                : 'دروس خصوصية أونلاين مع معلمين معتمدين',
             'logo'   => ['@type' => 'ImageObject', 'url' => $_logoUrl, 'width' => 1200, 'height' => 630],
             'image'  => $_logoUrl,
             'sameAs' => array_values(array_filter([
                 config('services.social.twitter'),
                 config('services.social.facebook'),
                 config('services.social.linkedin'),
+                config('services.social.instagram'),
                 config('services.social.youtube'),
+                config('services.social.tiktok'),
             ])),
-            'contactPoint' => ['@type' => 'ContactPoint', 'contactType' => 'customer support', 'availableLanguage' => ['Arabic', 'English']],
-            'areaServed' => ['EG', 'SA', 'AE', 'EU'],
-            'knowsAbout' => ['Language immersion', 'Live conversation practice', 'Private language tutoring', 'Online language courses'],
+            'email' => $_supportEmail,
+            'contactPoint' => array_filter([
+                '@type' => 'ContactPoint',
+                'contactType' => 'customer support',
+                'email' => $_supportEmail,
+                'telephone' => $_phone !== '' ? $_phone : null,
+                'availableLanguage' => ['Arabic', 'English'],
+                'areaServed' => ['SA', 'EG', 'US'],
+            ], static fn ($v) => $v !== null),
+            'areaServed' => [
+                ['@type' => 'Country', 'name' => 'Saudi Arabia'],
+                ['@type' => 'Country', 'name' => 'Egypt'],
+                ['@type' => 'Country', 'name' => 'United States'],
+            ],
+            'knowsAbout' => app()->getLocale() === 'en'
+                ? ['Online private tutoring', '1:1 live lessons', 'School curriculum support', 'Independent courses', 'Hesetak', 'Hissatak']
+                : ['دروس خصوصية أونلاين', 'حصص فردية 1:1', 'متابعة المناهج المدرسية', 'كورسات مستقلة', 'حصتك', 'Hesetak', 'Hissatak'],
+            'foundingDate' => '2020',
+            'parentOrganization' => [
+                '@type' => 'Organization',
+                'name' => 'IKONIX360',
+            ],
         ],
         [
             '@type' => 'WebPage',
             '@id' => $_siteUrl . '/#webpage',
-            'url' => $_siteUrl,
+            'url' => $_siteUrl.'/',
             'name' => __('landing.meta.title'),
             'description' => $_metaDesc,
             'isPartOf' => ['@id' => $_siteUrl . '/#website'],
             'about' => ['@id' => $_siteUrl . '/#organization'],
-            'inLanguage' => app()->getLocale(),
+            'inLanguage' => app()->getLocale() === 'en' ? 'en' : 'ar',
             'primaryImageOfPage' => ['@type' => 'ImageObject', 'url' => $_logoUrl],
+            'speakable' => [
+                '@type' => 'SpeakableSpecification',
+                'cssSelector' => ['h1', '.mc-hero__title', 'meta[name=description]'],
+            ],
         ],
     ],
 ];
@@ -74,8 +115,8 @@ if ($_jldType === 'course' && isset($course)) {
         'description' => \Illuminate\Support\Str::limit(strip_tags((string)($course->description ?? '')), 300),
         'url'       => url('/course/' . ($course->id ?? 0)),
         'image'     => $_thumbnail,
-        'inLanguage'=> 'ar',
-        'courseLanguage' => 'Arabic',
+        'inLanguage'=> app()->getLocale() === 'en' ? 'en' : 'ar',
+        'courseLanguage' => app()->getLocale() === 'en' ? 'English' : 'Arabic',
         'provider'  => ['@type' => 'EducationalOrganization', '@id' => $_siteUrl . '/#organization', 'name' => $_siteName],
         'hasCourseInstance' => ['@type' => 'CourseInstance', 'courseMode' => 'online', 'inLanguage' => 'ar'],
     ];
@@ -96,9 +137,9 @@ if ($_jldType === 'course' && isset($course)) {
     $_breadcrumbCourse = [
         '@context' => 'https://schema.org', '@type' => 'BreadcrumbList',
         'itemListElement' => [
-            ['@type' => 'ListItem', 'position' => 1, 'name' => 'الرئيسية', 'item' => $_siteUrl],
-            ['@type' => 'ListItem', 'position' => 2, 'name' => 'الكورسات',  'item' => url('/courses')],
-            ['@type' => 'ListItem', 'position' => 3, 'name' => (string)($course->title ?? 'كورس'), 'item' => url('/course/' . ($course->id ?? 0))],
+            ['@type' => 'ListItem', 'position' => 1, 'name' => __('landing.mc.nav.home'), 'item' => $_siteUrl],
+            ['@type' => 'ListItem', 'position' => 2, 'name' => __('landing.mc.nav.courses'),  'item' => url('/courses')],
+            ['@type' => 'ListItem', 'position' => 3, 'name' => (string)($course->title ?? __('landing.mc.nav.courses')), 'item' => url('/course/' . ($course->id ?? 0))],
         ],
     ];
 
@@ -134,15 +175,15 @@ if ($_jldType === 'instructor' && isset($profile)) {
         '@type'      => 'ProfilePage',
         '@id'        => $_instrUrl . '#profile',
         'url'        => $_instrUrl,
-        'name'       => $_instrName . '، مدرب على ' . $_siteName,
+        'name'       => $_instrName.' — '.$_siteName,
         'mainEntity' => $_personData,
     ];
 
     $_breadcrumbInstr = [
         '@context' => 'https://schema.org', '@type' => 'BreadcrumbList',
         'itemListElement' => [
-            ['@type' => 'ListItem', 'position' => 1, 'name' => 'الرئيسية', 'item' => $_siteUrl],
-            ['@type' => 'ListItem', 'position' => 2, 'name' => 'المدربون',  'item' => url('/instructors')],
+            ['@type' => 'ListItem', 'position' => 1, 'name' => __('landing.mc.nav.home'), 'item' => $_siteUrl],
+            ['@type' => 'ListItem', 'position' => 2, 'name' => __('landing.mc.nav.instructors'),  'item' => url('/instructors')],
             ['@type' => 'ListItem', 'position' => 3, 'name' => $_instrName,  'item' => $_instrUrl],
         ],
     ];
@@ -152,20 +193,27 @@ if ($_jldType === 'instructor' && isset($profile)) {
 }
 
 // ── FAQ Page ──────────────────────────────────────────────────────────────
-if ($_jldType === 'faq' && isset($faqs) && method_exists($faqs, 'count') && $faqs->count() > 0) {
+if ($_jldType === 'faq' && isset($faqs) && (is_countable($faqs) ? count($faqs) : 0) > 0) {
     $_faqItems = [];
     foreach ($faqs as $_faqItem) {
+        $q = is_array($_faqItem) ? ($_faqItem['q'] ?? $_faqItem['question'] ?? '') : ($_faqItem->question ?? $_faqItem->q ?? '');
+        $a = is_array($_faqItem) ? ($_faqItem['a'] ?? $_faqItem['answer'] ?? '') : ($_faqItem->answer ?? $_faqItem->a ?? '');
+        if (trim((string) $q) === '' || \App\Support\PublicDemoContent::isPlaceholder((string) $q)) {
+            continue;
+        }
         $_faqItems[] = [
             '@type' => 'Question',
-            'name'  => strip_tags((string)($_faqItem->question ?? '')),
+            'name'  => strip_tags((string) $q),
             'acceptedAnswer' => [
                 '@type' => 'Answer',
-                'text'  => \Illuminate\Support\Str::limit(strip_tags((string)($_faqItem->answer ?? '')), 400),
+                'text'  => \Illuminate\Support\Str::limit(strip_tags((string) $a), 400),
             ],
         ];
     }
-    $_faqData = ['@context' => 'https://schema.org', '@type' => 'FAQPage', 'mainEntity' => $_faqItems];
-    $_outputScripts .= '<script type="application/ld+json">' . json_encode($_faqData, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . '</script>';
+    if ($_faqItems !== []) {
+        $_faqData = ['@context' => 'https://schema.org', '@type' => 'FAQPage', 'mainEntity' => $_faqItems];
+        $_outputScripts .= '<script type="application/ld+json">' . json_encode($_faqData, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . '</script>';
+    }
 }
 
 // ── About Page ────────────────────────────────────────────────────────────
@@ -174,7 +222,7 @@ if ($_jldType === 'about') {
         '@context'    => 'https://schema.org',
         '@type'       => 'AboutPage',
         'url'         => url('/about'),
-        'name'        => 'من نحن، ' . $_siteName,
+        'name'        => __('landing.mc.nav.about').' — '.$_siteName,
         'description' => __('public.about_intro', ['brand' => $_siteName]),
         'mainEntity'  => [
             '@type'       => 'EducationalOrganization',
@@ -183,8 +231,10 @@ if ($_jldType === 'about') {
             'url'         => $_siteUrl,
             'foundingDate'=> '2023',
             'description' => __('landing.meta.description'),
-            'areaServed'  => ['@type' => 'Place', 'name' => 'مصر وأوروبا'],
-            'knowsAbout'  => ['تعليم ألماني', 'تعليم إنجليزي', 'كول سنتر', 'سوق العمل', 'السياحة', 'العمل في ألمانيا'],
+            'areaServed'  => ['@type' => 'Place', 'name' => app()->getLocale() === 'en' ? 'United States, Egypt, and Saudi Arabia' : 'الولايات المتحدة ومصر والسعودية'],
+            'knowsAbout'  => app()->getLocale() === 'en'
+                ? ['Online private tutoring', 'Curriculum support', '1:1 lessons']
+                : ['دروس خصوصية أونلاين', 'متابعة المناهج', 'حصص فردية'],
         ],
     ];
     $_outputScripts .= '<script type="application/ld+json">' . json_encode($_aboutData, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . '</script>';

@@ -80,7 +80,7 @@ class CouponCommissionService
             $coupon = $accrual->coupon;
             $beneficiary = $accrual->beneficiary;
             $title = 'عمولة كوبون تسويق: ' . ($coupon->code ?? '') . ' — ' . ($beneficiary->name ?? 'مستفيد');
-            $desc = 'مستحق عمولة بنسبة ' . $accrual->commission_percent . '% على قاعدة ' . number_format($accrual->base_amount_egp, 2) . ' $ — طلب #' . $accrual->order_id;
+            $desc = 'مستحق عمولة بنسبة ' . $accrual->commission_percent . '% على قاعدة ' . number_format($accrual->base_amount_egp, 2) . ' ' . currency_symbol() . ' — طلب #' . $accrual->order_id;
 
             $expenseNumber = 'EXP-' . str_pad(Expense::count() + 1, 8, '0', STR_PAD_LEFT);
 

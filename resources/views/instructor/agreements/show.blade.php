@@ -46,7 +46,7 @@
             <span class="id-kpi__icon id-kpi__icon--gold" aria-hidden="true"><i class="fas fa-sack-dollar"></i></span>
             <span class="id-kpi__body">
                 <span class="id-kpi__label">{{ __('instructor.total_earned') }}</span>
-                <span class="id-kpi__value" style="font-size:1.15rem">{{ number_format($stats['total_earned'], 2) }}</span>
+                <span class="id-kpi__value" style="font-size:1.15rem">{{ number_format($stats['total_earned'], 2) }} {{ $currency }}</span>
                 <span class="id-field__hint" style="margin-top:2px">{{ $currency }}</span>
             </span>
         </article>
@@ -54,7 +54,7 @@
             <span class="id-kpi__icon" aria-hidden="true"><i class="fas fa-clock"></i></span>
             <span class="id-kpi__body">
                 <span class="id-kpi__label">{{ __('instructor.pending') }}</span>
-                <span class="id-kpi__value" style="font-size:1.15rem">{{ number_format($stats['pending_amount'], 2) }}</span>
+                <span class="id-kpi__value" style="font-size:1.15rem">{{ number_format($stats['pending_amount'], 2) }} {{ $currency }}</span>
                 <span class="id-field__hint" style="margin-top:2px">{{ $currency }}</span>
             </span>
         </article>
@@ -185,7 +185,7 @@
                                         <tr>
                                             <td class="tabular-nums"><span class="muted">{{ $p->created_at?->format('Y-m-d') ?? '—' }}</span></td>
                                             <td>{{ $p->enrollment?->student?->name ?? '—' }}</td>
-                                            <td class="tabular-nums">{{ $p->enrollment ? number_format($p->enrollment->final_price ?? 0, 2) : '—' }}</td>
+                                            <td class="tabular-nums">{{ $p->enrollment ? number_format($p->enrollment->final_price ?? 0, 2).' '.$currency : '—' }}</td>
                                             <td class="tabular-nums">{{ number_format($agreement->course_percentage ?? 0, 2) }}%</td>
                                             <td class="tabular-nums"><strong>{{ number_format($p->amount, 2) }} {{ $currency }}</strong></td>
                                             <td>

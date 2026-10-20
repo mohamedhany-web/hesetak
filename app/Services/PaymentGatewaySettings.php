@@ -11,6 +11,9 @@ class PaymentGatewaySettings
     /** نسبة عمولة بوابة الدفع على المبلغ المحصّل (0–100)، تُخزَّن في إعدادات النظام */
     public const FEE_PERCENT_SETTING_KEY = 'payment_gateway_fee_percent';
 
+    /** السماح بالدفع اليدوي (رفع إيصال) حتى مع وجود بوابة إلكترونية مفعّلة */
+    public const ALLOW_MANUAL_WITH_GATEWAYS_KEY = 'allow_manual_checkout_with_gateways';
+
     public static function isFawaterakEnabled(): bool
     {
         return Setting::getValue(self::SETTING_KEY) === '1';
@@ -26,10 +29,45 @@ class PaymentGatewaySettings
         return KashierSettings::isEnabled();
     }
 
-    /** أي بوابة أونلاين مفعّلة تمنع الدفع اليدوي من صفحة إتمام الطلب. */
+    public static function isStripeEnabled(): bool
+    {
+        return StripeSettings::isEnabled();
+    }
+
+    public static function allowsManualWithGateways(): bool
+    {
+        return Setting::getValue(self::ALLOW_MANUAL_WITH_GATEWAYS_KEY) === '1';
+    }
+
+    public static function setAllowManualWithGateways(bool $allow): void
+    {
+        Setting::setValue(self::ALLOW_MANUAL_WITH_GATEWAYS_KEY, $allow ? '1' : null);
+    }
+
+    /** أي بوابة أونلاين مفعّلة تمنع الدفع اليدوي — ما لم يُفعَّل خيار السماح اليدوي مع البوابات. */
     public static function blocksManualCheckout(): bool
     {
-        return self::isFawaterakEnabled() || PayPalSettings::isEnabled() || KashierSettings::isEnabled();
+        if (self::allowsManualWithGateways()) {
+            return false;
+        }
+
+        return self::hasAnyOnlineGatewayEnabled();
+    }
+
+    public static function hasAnyOnlineGatewayEnabled(): bool
+    {
+        return self::isFawaterakEnabled()
+            || PayPalSettings::isEnabled()
+            || KashierSettings::isEnabled()
+            || StripeSettings::isEnabled();
+    }
+
+    /** عدد البوابات المعروضة في المركز (فواتيرك · Stripe · كاشير) — PayPal مؤرشف. */
+    public static function hubEnabledCount(): int
+    {
+        return (int) self::isFawaterakEnabled()
+            + (int) StripeSettings::isEnabled()
+            + (int) KashierSettings::isEnabled();
     }
 
     /**

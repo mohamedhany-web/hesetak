@@ -7604,6 +7604,7 @@ body.learn-focus-mode .learn-page {
   gap: 14px;
   padding-bottom: 28px;
 }
+[x-cloak] { display: none !important; }
 .st-course-learn[x-cloak] { display: none !important; }
 
 .st-course-learn__hero.st-join-hero {

@@ -8,10 +8,12 @@ use App\Models\AcademicYear;
 use App\Models\Order;
 use App\Models\ServicePackage;
 use App\Models\ServicePackagePricingRule;
+use App\Models\Wallet;
 use App\Services\CustomServicePackagePricingService;
 use App\Services\FawaterakApiService;
 use App\Services\FawaterakService;
 use App\Services\PaymentGatewaySettings;
+use App\Services\PublicMediaStorage;
 use App\Services\StudentEntitlementService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -20,6 +22,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class ServicePackageCheckoutController extends Controller
@@ -75,6 +78,7 @@ class ServicePackageCheckoutController extends Controller
 
         [$fawaterakUseGateway, $fawaterakMisconfigured, $fawaterakIntegration] = $this->fawaterakFlags();
         [$paypalUseGateway, $paypalMisconfigured] = $this->paypalFlags();
+        [$stripeUseGateway, $stripeMisconfigured] = $this->stripeFlags();
 
         return view('public.service-packages', [
             'planMatrix' => $planMatrix,
@@ -93,6 +97,8 @@ class ServicePackageCheckoutController extends Controller
             'fawaterakIntegration' => $fawaterakIntegration,
             'paypalUseGateway' => $paypalUseGateway,
             'paypalMisconfigured' => $paypalMisconfigured,
+            'stripeUseGateway' => $stripeUseGateway,
+            'stripeMisconfigured' => $stripeMisconfigured,
         ]);
     }
 
@@ -101,20 +107,74 @@ class ServicePackageCheckoutController extends Controller
         abort_unless($servicePackage->is_active && ! $servicePackage->tutoring_group_id, 404);
 
         if (! auth()->check()) {
-            return redirect()->route('login')->with('error', 'سجّل الدخول لشراء الباقة.');
+            return redirect()
+                ->guest(route('login'))
+                ->with('info', 'سجّل الدخول لشراء الباقة — سنعيدك مباشرة لإتمام الدفع.');
         }
 
         $servicePackage->load(['academicYear:id,name', 'academicSubject:id,name']);
         [$fawaterakUseGateway, $fawaterakMisconfigured, $fawaterakIntegration] = $this->fawaterakFlags();
         [$paypalUseGateway, $paypalMisconfigured] = $this->paypalFlags();
+        [$stripeUseGateway, $stripeMisconfigured] = $this->stripeFlags();
+
+        $yearId = request()->filled('year')
+            ? request()->integer('year')
+            : ($servicePackage->academic_year_id ? (int) $servicePackage->academic_year_id : null);
+        $subjectId = request()->filled('subject')
+            ? request()->integer('subject')
+            : ($servicePackage->academic_subject_id ? (int) $servicePackage->academic_subject_id : null);
+
+        $relatedPackages = ServicePackage::query()
+            ->storefront()
+            ->where('id', '!=', $servicePackage->id)
+            ->when($yearId, function ($q) use ($yearId) {
+                $q->where(function ($inner) use ($yearId) {
+                    $inner->where('academic_year_id', $yearId)->orWhereNull('academic_year_id');
+                });
+            })
+            ->when($subjectId, function ($q) use ($subjectId) {
+                $q->where(function ($inner) use ($subjectId) {
+                    $inner->where('academic_subject_id', $subjectId)->orWhereNull('academic_subject_id');
+                });
+            })
+            ->orderByDesc('units_count')
+            ->limit(6)
+            ->get(['id', 'name', 'slug', 'units_count', 'price', 'currency', 'academic_year_id', 'academic_subject_id']);
+
+        $manualCheckoutAllowed = ! PaymentGatewaySettings::blocksManualCheckout();
+        $wallets = $manualCheckoutAllowed
+            ? Wallet::query()
+                ->where('is_active', true)
+                ->where(function ($q) {
+                    $q->whereIn('type', ['vodafone_cash', 'instapay', 'bank_transfer', 'other'])
+                        ->orWhereNull('type')
+                        ->orWhere('type', '');
+                })
+                ->where(function ($query) {
+                    $query->whereNotNull('account_number')
+                        ->orWhereNotNull('name');
+                })
+                ->orderBy('name')
+                ->get()
+            : collect();
 
         return view('public.service-package-checkout', [
             'package' => $servicePackage,
+            'indexable' => false,
             'fawaterakUseGateway' => $fawaterakUseGateway,
             'fawaterakMisconfigured' => $fawaterakMisconfigured,
             'fawaterakIntegration' => $fawaterakIntegration,
             'paypalUseGateway' => $paypalUseGateway,
             'paypalMisconfigured' => $paypalMisconfigured,
+            'stripeUseGateway' => $stripeUseGateway,
+            'stripeMisconfigured' => $stripeMisconfigured,
+            'relatedPackages' => $relatedPackages,
+            'manualCheckoutAllowed' => $manualCheckoutAllowed,
+            'wallets' => $wallets,
+            'backPricingUrl' => route('public.pricing', array_filter([
+                'year' => $yearId,
+                'subject' => $subjectId,
+            ])).'#mc-pricing-storefront',
         ]);
     }
 
@@ -122,15 +182,93 @@ class ServicePackageCheckoutController extends Controller
     {
         abort_unless($servicePackage->is_active && ! $servicePackage->tutoring_group_id, 404);
 
-        if (PaymentGatewaySettings::isFawaterakEnabled()) {
+        if (! Auth::check()) {
             return redirect()
-                ->route('public.service-packages.checkout', $servicePackage)
-                ->with('error', 'الدفع متاح عبر بوابة فواتيرك فقط من هذه الصفحة.');
+                ->guest(route('login'))
+                ->with('info', 'سجّل الدخول لشراء الباقة — سنعيدك مباشرة لإتمام الدفع.');
         }
 
-        return redirect()
-            ->route('public.service-packages.checkout', $servicePackage)
-            ->with('error', 'بوابة الدفع الإلكترونية (فواتيرك) غير مفعّلة حالياً. تواصل مع الدعم.');
+        if (PaymentGatewaySettings::blocksManualCheckout()) {
+            return redirect()
+                ->route('public.service-packages.checkout', $servicePackage)
+                ->with('error', app()->getLocale() === 'ar'
+                    ? 'الدفع اليدوي غير متاح حالياً لأن بوابة إلكترونية مفعّلة. استخدم زر الدفع الإلكتروني أعلاه.'
+                    : 'Manual payment is disabled while an online gateway is enabled. Use the online pay button above.');
+        }
+
+        $validated = $request->validate([
+            'payment_method' => 'required|in:bank_transfer,cash,other',
+            'wallet_id' => [
+                'nullable',
+                'required_if:payment_method,bank_transfer',
+                Rule::exists('wallets', 'id')->where('is_active', true),
+            ],
+            'payment_proof' => 'required|image|mimes:jpeg,png,jpg|max:'.config('upload_limits.max_upload_kb'),
+            'notes' => 'nullable|string|max:1000',
+            'academic_year_id' => 'nullable|integer',
+            'academic_subject_id' => 'nullable|integer',
+            'curriculum_type' => 'nullable|string|max:40',
+        ], [
+            'payment_method.required' => 'طريقة الدفع مطلوبة',
+            'wallet_id.required_if' => 'اختر حساب المنصة الذي حوّلت إليه',
+            'payment_proof.required' => 'صورة إيصال الدفع مطلوبة',
+            'payment_proof.image' => 'يجب أن يكون الملف صورة',
+        ]);
+
+        $existingOrder = Order::query()
+            ->where('user_id', Auth::id())
+            ->where('service_package_id', $servicePackage->id)
+            ->where('order_type', Order::TYPE_SERVICE_PACKAGE)
+            ->where('status', Order::STATUS_PENDING)
+            ->whereNotNull('payment_proof')
+            ->latest('id')
+            ->first();
+        if ($existingOrder) {
+            return redirect()
+                ->route('public.service-packages.checkout', $servicePackage)
+                ->with('info', app()->getLocale() === 'ar'
+                    ? 'لديك طلب قيد المراجعة لهذه الباقة.'
+                    : 'You already have a pending review order for this package.');
+        }
+
+        try {
+            $proofPath = PublicMediaStorage::storeFile($request->file('payment_proof'), 'payment-proofs');
+            $order = StudentEntitlementService::createOrder(
+                Auth::user(),
+                $servicePackage,
+                $validated['payment_method'] === 'bank_transfer' ? 'bank_transfer' : $validated['payment_method'],
+                $validated['payment_method'] === 'bank_transfer' ? (int) $validated['wallet_id'] : null,
+                [
+                    'academic_year_id' => $request->integer('academic_year_id') ?: null,
+                    'academic_subject_id' => $request->integer('academic_subject_id') ?: null,
+                    'curriculum_type' => $request->input('curriculum_type'),
+                ],
+            );
+            $extra = trim((string) ($validated['notes'] ?? ''));
+            $order->update([
+                'payment_proof' => $proofPath,
+                'notes' => trim((string) $order->notes.($extra !== '' ? "\n".$extra : '')),
+            ]);
+
+            return redirect()
+                ->route('dashboard')
+                ->with('success', app()->getLocale() === 'ar'
+                    ? 'تم استلام طلب شراء الباقة. سنراجع الإيصال ونفعّل رصيد الحصص بعد التأكيد.'
+                    : 'Package order received. We will review the receipt and activate session credits after confirmation.');
+        } catch (\Throwable $e) {
+            report($e);
+            Log::error('Service package manual checkout failed', [
+                'user_id' => Auth::id(),
+                'package_id' => $servicePackage->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return back()
+                ->with('error', app()->getLocale() === 'ar'
+                    ? 'تعذر إرسال طلب الدفع. حاول مرة أخرى أو تواصل مع الدعم.'
+                    : 'Could not submit payment order. Try again or contact support.')
+                ->withInput();
+        }
     }
 
     public function customQuote(Request $request)
@@ -153,7 +291,9 @@ class ServicePackageCheckoutController extends Controller
     public function storeCustom(Request $request): RedirectResponse
     {
         if (! $request->user()) {
-            return redirect()->route('login')->with('error', 'سجّل الدخول لشراء الباقة الخاصة.');
+            return redirect()
+                ->guest(route('login'))
+                ->with('info', 'سجّل الدخول لشراء الباقة الخاصة — سنعيدك لإتمام الدفع.');
         }
 
         if (! PaymentGatewaySettings::isFawaterakEnabled()) {
@@ -199,6 +339,7 @@ class ServicePackageCheckoutController extends Controller
 
         [$fawaterakUseGateway, $fawaterakMisconfigured, $fawaterakIntegration] = $this->fawaterakFlags();
         [$paypalUseGateway, $paypalMisconfigured] = $this->paypalFlags();
+        [$stripeUseGateway, $stripeMisconfigured] = $this->stripeFlags();
         $request->session()->put('fawaterak_order_id', $order->id);
 
         $isRtl = app()->getLocale() === 'ar';
@@ -211,10 +352,13 @@ class ServicePackageCheckoutController extends Controller
             'fawaterakIntegration' => $fawaterakIntegration,
             'paypalUseGateway' => $paypalUseGateway,
             'paypalMisconfigured' => $paypalMisconfigured,
+            'stripeUseGateway' => $stripeUseGateway,
+            'stripeMisconfigured' => $stripeMisconfigured,
             'prepareRoute' => route('public.service-packages.custom.fawaterak.prepare', $order),
             'methodsRoute' => route('public.service-packages.custom.fawaterak.methods', $order),
             'payRoute' => route('public.service-packages.custom.fawaterak.pay', $order),
             'paypalRoute' => route('public.service-packages.custom.paypal', $order),
+            'stripeRoute' => route('public.service-packages.custom.stripe', $order),
         ]);
     }
 
@@ -426,6 +570,17 @@ class ServicePackageCheckoutController extends Controller
         return [
             \App\Services\PayPalSettings::isReady(),
             \App\Services\PayPalSettings::isMisconfigured(),
+        ];
+    }
+
+    /**
+     * @return array{0: bool, 1: bool}
+     */
+    private function stripeFlags(): array
+    {
+        return [
+            \App\Services\StripeSettings::isReady(),
+            \App\Services\StripeSettings::isMisconfigured(),
         ];
     }
 

@@ -215,7 +215,7 @@
 
             <div class="grid grid-cols-1 gap-5 p-4 md:grid-cols-2 sm:p-5">
                 <div>
-                    <label class="{{ $labelClass }}">السعر ($)</label>
+                    <label class="{{ $labelClass }}">السعر {{ currency_unit() }}</label>
                     <input type="number" step="0.01" min="0" max="999999.99" name="consultation_price_egp"
                            value="{{ old('consultation_price_egp', $personal_branding->consultation_price_egp) }}"
                            class="{{ $fieldClass }}" dir="ltr">

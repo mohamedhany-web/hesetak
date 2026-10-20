@@ -83,12 +83,12 @@
                             @if(!$course->is_free && $course->effectivePurchasePrice() > 0)
                                 @if($course->hasPromotionalPrice())
                                     <span class="inline-flex flex-col items-end gap-0.5 px-3 py-1.5 rounded-lg bg-emerald-500 text-white text-xs font-bold shadow-lg tabular-nums">
-                                        <span class="line-through opacity-85 text-[10px]">{{ number_format($course->listPriceAmount(), 0) }} $</span>
-                                        <span class="text-sm">{{ number_format($course->effectivePurchasePrice(), 0) }} $</span>
+                                        <span class="line-through opacity-85 text-[10px]">{{ number_format($course->listPriceAmount(), 0) }} {{ currency_symbol() }}</span>
+                                        <span class="text-sm">{{ number_format($course->effectivePurchasePrice(), 0) }} {{ currency_symbol() }}</span>
                                     </span>
                                 @else
                                     <span class="inline-flex items-center px-3 py-1 rounded-lg bg-emerald-500 text-white text-sm font-bold shadow-lg tabular-nums">
-                                        {{ number_format($course->effectivePurchasePrice(), 0) }} $
+                                        {{ number_format($course->effectivePurchasePrice(), 0) }} {{ currency_symbol() }}
                                     </span>
                                 @endif
                             @else

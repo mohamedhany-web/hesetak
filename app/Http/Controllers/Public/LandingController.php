@@ -9,6 +9,7 @@ use App\Models\AdvancedCourse;
 use App\Models\CourseCategory;
 use App\Models\InstructorProfile;
 use App\Models\ServicePackage;
+use App\Models\PopupAd;
 use App\Models\SiteService;
 use App\Models\SiteTestimonial;
 use App\Models\User;
@@ -55,11 +56,16 @@ class LandingController extends Controller
             $homeTrustStats = $this->buildHomeTrustStats($homeInstructors->count());
 
             $homeTestimonials = Schema::hasTable('site_testimonials')
-                ? SiteTestimonial::query()->active()->ordered()->limit(12)->get()
+                ? SiteTestimonial::query()->active()->ordered()->limit(24)->get()
+                    ->reject(fn (SiteTestimonial $t) => \App\Support\PublicDemoContent::recordLooksLikeDemo([
+                        $t->author_name, $t->role_label, $t->body,
+                    ]))
+                    ->take(12)
+                    ->values()
                 : collect();
 
             $schoolYears = Schema::hasTable('academic_years')
-                ? AcademicYear::query()->active()->ordered()->get(['id', 'name', 'slug', 'level_number', 'tagline', 'icon', 'color'])
+                ? AcademicYear::query()->publicCatalog()->ordered()->get(['id', 'name', 'slug', 'level_number', 'tagline', 'icon', 'color'])
                 : collect();
 
             $schoolSubjects = Schema::hasTable('academic_subjects')
@@ -89,14 +95,14 @@ class LandingController extends Controller
 
         $payload = config('app.debug')
             ? $buildHomePayload()
-            : Cache::remember('landing.home.v18.'.$locale, 180, $buildHomePayload);
+            : Cache::remember('landing.home.v20.'.$locale, 180, $buildHomePayload);
 
+        $catalogService = app(PackageCatalogFilterService::class);
         $packageCatalog = Schema::hasTable('service_packages')
-            ? app(PackageCatalogFilterService::class)->catalog(
+            ? $catalogService->catalog(
                 yearId: $request->filled('year') ? $request->integer('year') : null,
                 subjectId: $request->filled('subject') ? $request->integer('subject') : null,
                 curriculumType: $request->query('curriculum_type'),
-                limit: 12,
             )
             : [
                 'years' => collect(),
@@ -110,16 +116,34 @@ class LandingController extends Controller
             ];
 
         $payload['packageCatalog'] = $packageCatalog;
-        $payload['homePackages'] = $packageCatalog['packages'];
+        $payload['homePackages'] = Schema::hasTable('service_packages')
+            ? $catalogService->homeShowcase(6)
+            : collect();
 
         $viewer = \App\Support\StudentLearningProfile::fromAuth();
         if ($viewer->hasPreferences()) {
-            $payload['homeInstructors'] = $viewer->filterInstructorProfiles(
-                collect($payload['homeInstructors'] ?? [])
-            );
-            $payload['trialInstructors'] = $viewer->filterInstructorProfiles(
-                collect($payload['trialInstructors'] ?? [])
-            );
+            $filteredHome = $viewer->filterInstructorProfiles(collect($payload['homeInstructors'] ?? []));
+            $filteredTrial = $viewer->filterInstructorProfiles(collect($payload['trialInstructors'] ?? []));
+            if ($filteredHome->isNotEmpty()) {
+                $payload['homeInstructors'] = $filteredHome;
+            }
+            if ($filteredTrial->isNotEmpty()) {
+                $payload['trialInstructors'] = $filteredTrial;
+            }
+        }
+
+        $payload['activePopupAd'] = null;
+        if (Schema::hasTable('popup_ads')) {
+            $cookieKey = 'popup_ad_seen';
+            $seenId = (int) $request->cookie($cookieKey, 0);
+            $ad = PopupAd::query()->activeNow()->first();
+            if ($ad && \App\Support\PublicDemoContent::recordLooksLikeDemo([$ad->title, $ad->body, $ad->cta_text])) {
+                $ad = null;
+            }
+            if ($ad && (int) $ad->id !== $seenId) {
+                $payload['activePopupAd'] = $ad;
+                cookie()->queue(cookie($cookieKey, (string) $ad->id, 60 * 24)); // يوم واحد
+            }
         }
 
         return view('welcome', $payload);
@@ -140,11 +164,15 @@ class LandingController extends Controller
                 $q->whereIn('role', ['instructor', 'teacher'])
                     ->where('is_active', true);
             })
-            ->with(['user:id,name,role,is_active,bio,profile_image'])
+            ->with(['user:'.implode(',', \App\Services\PublicInstructorDirectory::userSelect()), 'user.teachingLearningPaths'])
             ->orderByDesc('reviewed_at')
             ->orderByDesc('id')
-            ->limit(4)
-            ->get();
+            ->limit(12)
+            ->get()
+            ->filter(fn (InstructorProfile $profile) => \App\Services\PublicInstructorDirectory::isPublishableListing($profile))
+            ->reject(fn (InstructorProfile $profile) => \App\Services\PublicInstructorDirectory::profileLooksLikeDemo($profile))
+            ->take(4)
+            ->values();
     }
 
     /**
@@ -164,11 +192,13 @@ class LandingController extends Controller
                 $q->whereIn('role', ['instructor', 'teacher'])
                     ->where('is_active', true);
             })
-            ->with(['user:id,name,role,is_active,bio,profile_image'])
+            ->with(['user:'.implode(',', \App\Services\PublicInstructorDirectory::userSelect())])
             ->orderByDesc('reviewed_at')
             ->orderByDesc('id')
             ->limit(16)
-            ->get();
+            ->get()
+            ->reject(fn (InstructorProfile $profile) => \App\Services\PublicInstructorDirectory::profileLooksLikeDemo($profile))
+            ->values();
     }
 
     /**

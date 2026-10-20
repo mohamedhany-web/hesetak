@@ -56,6 +56,7 @@
     <nav class="sidebar-nav flex-1 px-3 py-4 overflow-y-auto min-h-0">
         <ul class="space-y-0.5">
             {{-- 0) تحليلات الأكاديمية — أقوى قسم قرار --}}
+            @if($isFull || $u->hasPermission('view.statistics') || $u->hasPermission('view.reports') || $u->hasPermission('admin.access'))
             <li class="sidebar-section-label">ذكاء الأكاديمية</li>
             @php $insightsActive = request()->routeIs('admin.academy-insights.*'); @endphp
             <li>
@@ -67,6 +68,7 @@
                     <span class="sidebar-badge bg-accent text-white" style="font-size:9px;letter-spacing:.02em;">LIVE</span>
                 </a>
             </li>
+            @endif
 
             {{-- 1) الرئيسية --}}
             <li class="sidebar-section-label">الرئيسية</li>
@@ -364,7 +366,7 @@
                     </li>
                     @endif
 
-                    @if(($isFull || $u->hasPermission('manage.tutoring-groups') || $u->hasPermission('manage.courses') || $u->hasPermission('manage.one-to-one')) && Route::has('admin.one-to-one-report-queue.index'))
+                    @if(($isFull || $u->hasPermission('manage.tutoring-groups') || $u->hasPermission('manage.courses')) && Route::has('admin.one-to-one-report-queue.index'))
                     <li>
                         <a href="{{ route('admin.one-to-one-report-queue.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.one-to-one-report-queue.*') ? 'active' : '' }}">
                             <i class="fas fa-file-alt"></i><span>تقارير الحصص (قبل الصرف)</span>
@@ -634,7 +636,12 @@
             @if($isFull || $u->hasPermission('manage.coupons') || $u->hasPermission('manage.referrals') || $u->hasPermission('manage.popup-ads') || $u->hasPermission('manage.personal-branding'))
             {{-- إدارة التسويق --}}
             @php
-                $marketingOpen = request()->routeIs('admin.coupons.*') || request()->routeIs('admin.coupon-commissions.*') || request()->routeIs('admin.referral-programs.*') || request()->routeIs('admin.referrals.*') || request()->routeIs('admin.popup-ads.*');
+                $marketingOpen = request()->routeIs('admin.coupons.*')
+                    || request()->routeIs('admin.coupon-commissions.*')
+                    || request()->routeIs('admin.referral-programs.*')
+                    || request()->routeIs('admin.referrals.*')
+                    || request()->routeIs('admin.popup-ads.*')
+                    || request()->routeIs('admin.personal-branding.*');
             @endphp
             <li class="sidebar-section-label">التسويق</li>
             <li x-data="{ open: {{ $marketingOpen ? 'true' : 'false' }} }">
@@ -643,6 +650,9 @@
                     <i class="fas fa-chevron-down chevron" :class="open ? 'rotate-180' : ''"></i>
                 </button>
                 <ul x-show="open" x-cloak class="mt-1 mr-3 space-y-0.5 border-r border-white/10 pr-3">
+                    @if($isFull || $u->hasPermission('manage.personal-branding'))
+                    <li><a href="{{ route('admin.personal-branding.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.personal-branding.*') ? 'active' : '' }}"><i class="fas fa-user-tie"></i><span>{{ __('admin.personal_branding') }}</span></a></li>
+                    @endif
                     @if($isFull || $u->hasPermission('manage.popup-ads'))
                     <li><a href="{{ route('admin.popup-ads.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.popup-ads.*') ? 'active' : '' }}"><i class="fas fa-bullhorn"></i><span>{{ __('admin.popup_ads') }}</span></a></li>
                     @endif
@@ -672,11 +682,11 @@
                 <ul x-show="open" x-cloak class="mt-1 mr-3 space-y-0.5 border-r border-white/10 pr-3">
                     @if($isFull || $u->hasPermission('manage.packages'))
                     <li><a href="{{ route('admin.packages.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.packages.*') ? 'active' : '' }}"><i class="fas fa-tags"></i><span>{{ __('admin.pricing_packages') }}</span></a></li>
-                    @endif
-                    <li><a href="{{ route('admin.service-packages.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.service-packages.index') || request()->routeIs('admin.service-packages.create') || request()->routeIs('admin.service-packages.edit') ? 'active' : '' }}"><i class="fas fa-box-open"></i><span>باقات الحصص</span></a></li>
+                    <li><a href="{{ route('admin.service-packages.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.service-packages.index') || request()->routeIs('admin.service-packages.create') || request()->routeIs('admin.service-packages.edit') || request()->routeIs('admin.service-packages.show') ? 'active' : '' }}"><i class="fas fa-box-open"></i><span>باقات الحصص</span></a></li>
                     <li><a href="{{ route('admin.service-packages.grant') }}" class="sidebar-sub-link {{ request()->routeIs('admin.service-packages.grant*') ? 'active' : '' }}"><i class="fas fa-user-plus"></i><span>منح باقة يدوياً</span></a></li>
                     <li><a href="{{ route('admin.service-session-rates.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.service-session-rates.*') ? 'active' : '' }}"><i class="fas fa-table"></i><span>سعر الحصة (مرحلة×مسار)</span></a></li>
-                    <li><a href="{{ route('admin.service-package-pricing-rules.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.service-package-pricing-rules.*') ? 'active' : '' }}"><i class="fas fa-sliders"></i><span>تسعير خصص باقتك</span></a></li>
+                    <li><a href="{{ route('admin.service-package-pricing-rules.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.service-package-pricing-rules.*') ? 'active' : '' }}"><i class="fas fa-sliders"></i><span>{{ __('admin.custom_package_pricing_sidebar') }}</span></a></li>
+                    @endif
                 </ul>
             </li>
 
@@ -709,7 +719,7 @@
                     <li><a href="{{ route('admin.curriculum-types.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.curriculum-types.*') ? 'active' : '' }}"><i class="fas fa-globe"></i><span>{{ __('admin.curriculum_types') }}</span></a></li>
                     @endif
                     @if($isFull || $u->hasPermission('manage.personal-branding'))
-                    <li><a href="{{ route('admin.personal-branding.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.personal-branding.*') ? 'active' : '' }}"><i class="fas fa-user-tie"></i><span>ملفات المعلمين (المطابقة)</span></a></li>
+                    <li><a href="{{ route('admin.personal-branding.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.personal-branding.*') ? 'active' : '' }}"><i class="fas fa-user-tie"></i><span>{{ __('admin.personal_branding') }}</span></a></li>
                     @endif
                 </ul>
             </li>

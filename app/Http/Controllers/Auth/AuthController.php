@@ -49,16 +49,27 @@ class AuthController extends Controller
         $defaultCountry = collect($phoneCountries)->firstWhere('code', config('phone_countries.default_country', 'SA'));
         $authBackgroundUrl = \App\Providers\AppServiceProvider::authBackgroundUrl();
         $academicYears = \App\Support\StudentLearningProfile::publicYears();
+        $gradesByYear = \App\Support\StudentLearningProfile::gradesByYearMap($academicYears);
+        $subjectsByYear = $this->subjectsByYearMap($academicYears);
         $curriculumTypes = \App\Support\HesetakMatchCatalog::curriculumTypes();
 
-        return view('auth.register', compact(
+        $response = response()->view('auth.register', compact(
             'phoneCountries',
             'defaultCountry',
             'authBackgroundUrl',
             'pendingReferralCode',
             'academicYears',
+            'gradesByYear',
+            'subjectsByYear',
             'curriculumTypes'
         ));
+
+        $referralService = app(\App\Services\ReferralService::class);
+        $deviceFingerprint = $referralService->resolveDeviceFingerprint(
+            $request->cookie(\App\Services\ReferralService::DEVICE_COOKIE)
+        );
+
+        return $response->withCookie($referralService->queueDeviceFingerprintCookie($deviceFingerprint));
     }
 
     public function login(Request $request)
@@ -307,29 +318,38 @@ class AuthController extends Controller
             'country_code' => 'required|string|max:12',
             'country_iso' => 'nullable|string|size:2',
             'phone' => 'required|string|max:20',
-            'email' => 'required|email|unique:users',
+            'email' => 'required|email|unique:users,email',
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
             'timezone' => ['nullable', 'string', 'max:64'],
             'timezone_auto' => ['nullable', 'string', 'max:64'],
+            'account_kind' => ['required', 'in:student,parent'],
             'academic_year_id' => ['required', 'integer', 'exists:academic_years,id'],
+            'academic_grade_id' => ['nullable', 'integer'],
             'preferred_curriculum_type' => ['required', 'string', 'max:40'],
+            'preferred_subject_ids' => ['nullable', 'array'],
+            'preferred_subject_ids.*' => ['integer', 'exists:academic_subjects,id'],
         ], [
             'name.required' => 'الاسم مطلوب',
             'country_code.required' => 'كود الدولة مطلوب',
             'phone.required' => 'رقم الهاتف مطلوب',
             'email.required' => 'البريد الإلكتروني مطلوب',
             'email.email' => 'البريد الإلكتروني غير صحيح',
-            'email.unique' => 'البريد الإلكتروني مسجل مسبقاً',
+            'email.unique' => 'هذا البريد مرتبط بحساب موجود. استخدمه لتسجيل الدخول، أو أضف الأبناء من حساب ولي الأمر بدل إنشاء حساب آخر بنفس البريد.',
+            'account_kind.required' => 'اختر نوع الحساب: طالب أو ولي أمر.',
+            'account_kind.in' => 'نوع الحساب غير صالح.',
             'password.required' => 'كلمة المرور مطلوبة',
             'password.confirmed' => 'تأكيد كلمة المرور غير متطابق',
             'academic_year_id.required' => 'المرحلة الدراسية مطلوبة',
             'academic_year_id.exists' => 'المرحلة الدراسية غير صالحة',
+            'academic_grade_id.required' => 'الصف الدراسي مطلوب',
             'preferred_curriculum_type.required' => 'نوع المنهج مطلوب',
         ]);
 
         $phoneCountries = $countries;
         $defaultCountry = collect($countries)->firstWhere('code', config('phone_countries.default_country', 'SA'));
         $academicYears = \App\Support\StudentLearningProfile::publicYears();
+        $gradesByYear = \App\Support\StudentLearningProfile::gradesByYearMap($academicYears);
+        $subjectsByYear = $this->subjectsByYearMap($academicYears);
         $curriculumTypes = \App\Support\HesetakMatchCatalog::curriculumTypes();
 
         if ($validator->fails()) {
@@ -337,23 +357,41 @@ class AuthController extends Controller
                 'phoneCountries',
                 'defaultCountry',
                 'academicYears',
+                'gradesByYear',
+                'subjectsByYear',
                 'curriculumTypes'
             ));
         }
+
+        $accountKind = (string) $request->input('account_kind');
+        $isParent = $accountKind === 'parent';
 
         $curriculumKey = \App\Support\HesetakMatchCatalog::allowedCurriculumTypeKeys();
         $preferredCurriculum = strtolower(trim((string) $request->input('preferred_curriculum_type')));
         if (! in_array($preferredCurriculum, $curriculumKey, true)) {
             return back()->withErrors([
                 'preferred_curriculum_type' => 'نوع المنهج غير صالح.',
-            ])->withInput()->with(compact('phoneCountries', 'defaultCountry', 'academicYears', 'curriculumTypes'));
+            ])->withInput()->with(compact('phoneCountries', 'defaultCountry', 'academicYears', 'gradesByYear', 'subjectsByYear', 'curriculumTypes'));
         }
 
-        $yearOk = $academicYears->contains('id', (int) $request->input('academic_year_id'));
-        if (! $yearOk) {
+        $yearId = (int) $request->input('academic_year_id');
+        if (! $academicYears->contains('id', $yearId)) {
             return back()->withErrors([
                 'academic_year_id' => 'المرحلة الدراسية غير متاحة للتسجيل.',
-            ])->withInput()->with(compact('phoneCountries', 'defaultCountry', 'academicYears', 'curriculumTypes'));
+            ])->withInput()->with(compact('phoneCountries', 'defaultCountry', 'academicYears', 'gradesByYear', 'subjectsByYear', 'curriculumTypes'));
+        }
+
+        $gradeOptions = $gradesByYear[(string) $yearId] ?? [];
+        $gradeId = $request->filled('academic_grade_id') ? (int) $request->input('academic_grade_id') : null;
+        if (! $isParent && $gradeOptions !== []) {
+            $gradeIds = array_map(static fn ($row) => (int) ($row['id'] ?? 0), $gradeOptions);
+            if (! $gradeId || ! in_array($gradeId, $gradeIds, true)) {
+                return back()->withErrors([
+                    'academic_grade_id' => 'اختر الصف الدراسي لهذه المرحلة.',
+                ])->withInput()->with(compact('phoneCountries', 'defaultCountry', 'academicYears', 'gradesByYear', 'subjectsByYear', 'curriculumTypes'));
+            }
+        } else {
+            $gradeId = null;
         }
 
         // التحقق من صحة رقم الهاتف حسب الدولة (ISO أولاً ثم كود الاتصال)
@@ -373,6 +411,8 @@ class AuthController extends Controller
                 'phoneCountries',
                 'defaultCountry',
                 'academicYears',
+                'gradesByYear',
+                'subjectsByYear',
                 'curriculumTypes'
             ));
         }
@@ -388,6 +428,8 @@ class AuthController extends Controller
                 'phoneCountries',
                 'defaultCountry',
                 'academicYears',
+                'gradesByYear',
+                'subjectsByYear',
                 'curriculumTypes'
             ));
         }
@@ -398,6 +440,8 @@ class AuthController extends Controller
                 'phoneCountries',
                 'defaultCountry',
                 'academicYears',
+                'gradesByYear',
+                'subjectsByYear',
                 'curriculumTypes'
             ));
         }
@@ -412,13 +456,26 @@ class AuthController extends Controller
             'phone' => $fullPhone,
             'email' => $request->email,
             'password' => Hash::make($request->password),
-            'role' => 'student', // فقط طالب
+            'role' => $isParent ? 'parent' : 'student',
             'is_active' => true,
             'timezone' => $timezone,
-            'academic_year_id' => (int) $request->input('academic_year_id'),
+            'academic_year_id' => $yearId,
         ];
+        if (\Illuminate\Support\Facades\Schema::hasColumn('users', 'academic_grade_id')) {
+            $userPayload['academic_grade_id'] = $gradeId;
+        }
         if (\Illuminate\Support\Facades\Schema::hasColumn('users', 'preferred_curriculum_type')) {
             $userPayload['preferred_curriculum_type'] = $preferredCurriculum;
+        }
+        if (\Illuminate\Support\Facades\Schema::hasColumn('users', 'preferred_subject_ids')) {
+            $subjectIds = collect($request->input('preferred_subject_ids', []))
+                ->map(fn ($id) => (int) $id)
+                ->filter(fn ($id) => $id > 0)
+                ->unique()
+                ->values()
+                ->all();
+            $allowedForYear = collect($subjectsByYear[(string) $yearId] ?? [])->pluck('id')->map(fn ($id) => (int) $id)->all();
+            $userPayload['preferred_subject_ids'] = array_values(array_intersect($subjectIds, $allowedForYear));
         }
 
         $user = User::create($userPayload);
@@ -434,41 +491,83 @@ class AuthController extends Controller
         $referralCode = $referralCode ? strtoupper(preg_replace('/\s+/', '', (string) $referralCode)) : null;
         session()->forget('pending_referral_code');
 
+        $referralService = app(\App\Services\ReferralService::class);
+        $deviceFingerprint = $referralService->resolveDeviceFingerprint(
+            $request->cookie(\App\Services\ReferralService::DEVICE_COOKIE)
+        );
+
         // معالجة كود الإحالة في Queue لتقليل الضغط على السيرفر
         \App\Jobs\ProcessStudentRegistration::dispatch(
             $user->id,
-            $referralCode
+            $referralCode,
+            $deviceFingerprint
         )->onQueue('registrations');
 
         Auth::login($user);
+
+        $cookie = $referralService->queueDeviceFingerprintCookie($deviceFingerprint);
 
         // التحقق من وجود redirect URL في session (من صفحة التسجيل)
         $redirectUrl = session('register_redirect');
         if ($redirectUrl) {
             session()->forget('register_redirect');
-            // التحقق من أن URL صحيح
-            if (filter_var($redirectUrl, FILTER_VALIDATE_URL) || str_starts_with($redirectUrl, '/')) {
-                return redirect($redirectUrl);
+            if (filter_var($redirectUrl, FILTER_VALIDATE_URL) || str_starts_with((string) $redirectUrl, '/')) {
+                session()->forget('url.intended');
+
+                return redirect($redirectUrl)->withCookie($cookie);
             }
         }
 
-        // التحقق من وجود redirect parameter في request
         if ($request->has('redirect')) {
             $redirectUrl = $request->input('redirect');
-            if (filter_var($redirectUrl, FILTER_VALIDATE_URL) || str_starts_with($redirectUrl, '/')) {
-                return redirect($redirectUrl);
+            if (filter_var($redirectUrl, FILTER_VALIDATE_URL) || str_starts_with((string) $redirectUrl, '/')) {
+                session()->forget('url.intended');
+
+                return redirect($redirectUrl)->withCookie($cookie);
             }
         }
 
-        // بعد إنشاء الحساب نوجّه مباشرة للداشبورد (بدون استخدام intended لتجنب التوجيه لرابط API أو صفحة قديمة)
+        $intended = session('url.intended');
+        if (is_string($intended) && $intended !== '' && preg_match('#/(service-packages/.+/checkout|gift-package|pricing)(/|\?|$)#', $intended)) {
+            session()->forget('url.intended');
+
+            return redirect($intended)->withCookie($cookie);
+        }
+
         session()->forget('url.intended');
         if ($user->isEmployee()) {
-            return redirect()->route('employee.dashboard');
+            return redirect()->route('employee.dashboard')->withCookie($cookie);
         }
         if ($user->isAdmin()) {
-            return redirect()->route('admin.dashboard');
+            return redirect()->route('admin.dashboard')->withCookie($cookie);
         }
-        return redirect()->route('dashboard');
+
+        return redirect()->route('dashboard')->withCookie($cookie);
+    }
+
+    /**
+     * @param  \Illuminate\Support\Collection<int, \App\Models\AcademicYear>  $years
+     * @return array<string, list<array{id:int,name:string}>>
+     */
+    protected function subjectsByYearMap($years): array
+    {
+        if (! \Illuminate\Support\Facades\Schema::hasTable('academic_subjects')) {
+            return [];
+        }
+
+        $map = [];
+        foreach ($years as $year) {
+            $map[(string) $year->id] = \App\Models\AcademicSubject::query()
+                ->active()
+                ->where('academic_year_id', $year->id)
+                ->ordered()
+                ->get(['id', 'name'])
+                ->map(fn ($s) => ['id' => (int) $s->id, 'name' => (string) $s->name])
+                ->values()
+                ->all();
+        }
+
+        return $map;
     }
 
     public function logout(Request $request)

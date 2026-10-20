@@ -28,7 +28,13 @@ class GiftPackageController extends Controller
             yearId: $request->filled('year') ? $request->integer('year') : null,
             subjectId: $request->filled('subject') ? $request->integer('subject') : null,
             curriculumType: $request->query('curriculum_type'),
+            applyViewerDefaults: false,
         );
+
+        $yearId = $catalogData['selected_year_id'] ?? null;
+        $catalogData['subjects'] = collect($catalogData['subjects'] ?? [])
+            ->filter(fn ($subject) => $yearId && (int) $subject->academic_year_id === (int) $yearId)
+            ->values();
 
         $selectedPackage = null;
         if ($packageId) {
@@ -36,6 +42,17 @@ class GiftPackageController extends Controller
         }
         if (! $selectedPackage) {
             $selectedPackage = $catalogData['packages']->first()['model'] ?? ServicePackage::query()->storefront()->ordered()->first();
+        }
+
+        if ($selectedPackage && $catalogData['packages']->every(fn ($row) => (int) ($row['id'] ?? 0) !== (int) $selectedPackage->id)) {
+            $extraQuote = $rates->quotePackage(
+                $selectedPackage,
+                $catalogData['selected_year_id'],
+                $catalogData['selected_curriculum_type']
+            );
+            $catalogData['packages'] = collect([$this->giftPackageRow($selectedPackage, $extraQuote)])
+                ->concat($catalogData['packages'])
+                ->values();
         }
 
         $quote = $selectedPackage
@@ -51,22 +68,52 @@ class GiftPackageController extends Controller
             'bodyClass' => 'mc-body--dir',
             'pageTitle' => (app()->getLocale() === 'ar' ? 'إهداء باقة' : 'Gift a package').' — '.__('landing.nav.brand'),
             'pageDescription' => app()->getLocale() === 'ar'
-                ? 'أهدِ باقة حصص لصديق — نفتح حسابه ونفعّل الباقة تلقائياً بعد الدفع.'
-                : 'Gift lesson credits to a friend — we create their account and activate the package after payment.',
+                ? 'أهدِ باقة حصص لصديق. نفتح حسابه ونفعّل الباقة تلقائياً بعد الدفع.'
+                : 'Gift lesson credits to a friend. We create their account and activate the package after payment.',
             'catalog' => $catalogData,
             'selectedPackage' => $selectedPackage,
             'quote' => $quote,
             'fawaterakEnabled' => PaymentGatewaySettings::isFawaterakEnabled(),
+            'giftReturnUrl' => $request->fullUrl(),
         ]);
+    }
+
+    /**
+     * @param  array{unit: float, total: float, currency: string}|null  $quote
+     * @return array<string, mixed>
+     */
+    private function giftPackageRow(ServicePackage $package, ?array $quote): array
+    {
+        $quote = $quote ?? [
+            'unit' => $package->pricePerUnit(),
+            'total' => (float) $package->price,
+            'currency' => $package->currencyCode(),
+        ];
+
+        return [
+            'id' => $package->id,
+            'slug' => $package->slug,
+            'name' => $package->name,
+            'tagline' => $package->tagline,
+            'badge' => $package->badge,
+            'description' => $package->description,
+            'units_count' => (int) $package->units_count,
+            'session_minutes' => (int) $package->session_minutes,
+            'is_featured' => (bool) $package->is_featured,
+            'features' => $package->featureList(),
+            'display_price' => $quote['total'],
+            'display_unit' => $quote['unit'],
+            'currency' => $quote['currency'],
+            'model' => $package,
+        ];
     }
 
     public function store(Request $request, PackageGiftService $gifts): RedirectResponse
     {
         $user = $request->user();
         if (! $user) {
-            return redirect()->route('login')
-                ->with('error', 'سجّل الدخول لإهداء باقة.')
-                ->with('url.intended', route('public.gift-package.show'));
+            return redirect()->route('login', ['redirect' => $request->headers->get('referer') ?: route('public.gift-package.show')])
+                ->with('error', 'سجّل الدخول لإهداء باقة.');
         }
 
         $data = $request->validate([

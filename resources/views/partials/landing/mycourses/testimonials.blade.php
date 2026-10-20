@@ -6,6 +6,7 @@
         <h2 class="mc-title">{{ __('landing.mc.testimonials.title') }}</h2>
         <p class="mc-lead">{{ __('landing.mc.testimonials.lead') }}</p>
       </div>
+      <a class="mc-link-more" href="{{ route('public.contact') }}?topic=review">{{ app()->getLocale() === 'ar' ? 'شاركنا رأيك' : 'Share your review' }}</a>
     </div>
     @php $quotes = $homeTestimonials ?? collect(); @endphp
     @if($quotes->isEmpty())
@@ -22,7 +23,9 @@
           @endphp
           @if($t->isImageType() && $photo)
             <blockquote class="mc-quote mc-quote--image">
-              <img src="{{ $photo }}" alt="{{ $name }}" loading="lazy" decoding="async">
+              <div class="mc-quote__media">
+                <img src="{{ $photo }}" alt="{{ $name }}" width="640" height="480" loading="lazy" decoding="async">
+              </div>
               <div class="mc-quote__who">
                 <strong>{{ $name }}</strong>
                 @if($role !== '')<span>{{ $role }}</span>@endif

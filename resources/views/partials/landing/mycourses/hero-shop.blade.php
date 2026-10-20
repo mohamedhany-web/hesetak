@@ -1,15 +1,18 @@
 @php
     $isRtl = $isRtl ?? (app()->getLocale() === 'ar');
-    $heroImage = public_img_url('mycourses/hero-tutor-student.png');
+    $heroWebp = public_path('img/mycourses/hero-tutor-student.webp');
+    $heroFile = is_file($heroWebp) ? 'mycourses/hero-tutor-student.webp' : 'mycourses/hero-tutor-student.png';
+    $heroImage = public_img_url($heroFile);
 @endphp
 <section class="dp-hero" aria-labelledby="dp-hero-title">
-  <figure class="dp-hero__media" aria-hidden="true">
+  <figure class="dp-hero__media">
     <img
       src="{{ $heroImage }}"
       width="1600"
       height="900"
-      alt=""
+      alt="{{ app()->getLocale() === 'ar' ? 'ولي أمر يتابع درسًا أونلاين مع ابنه' : 'A parent following an online lesson with their child' }}"
       loading="eager"
+      fetchpriority="high"
       decoding="async"
     >
   </figure>
@@ -21,7 +24,11 @@
       <p class="dp-hero__lead">{{ __('landing.mc.hero.lead') }}</p>
       <div class="dp-hero__actions">
         <a href="{{ route('public.instructors.index') }}" class="mc-btn mc-btn--lg mc-btn--secondary">{{ __('landing.mc.hero.cta_primary') }}</a>
-        <a href="{{ route('register') }}" class="mc-btn mc-btn--lg mc-btn--ghost-on-dark">{{ __('landing.nav.register') }}</a>
+        @auth
+          <a href="{{ route('dashboard') }}" class="mc-btn mc-btn--lg mc-btn--ghost-on-dark">{{ __('landing.nav.dashboard') }}</a>
+        @else
+          <a href="{{ route('register') }}" class="mc-btn mc-btn--lg mc-btn--ghost-on-dark">{{ __('landing.nav.register') }}</a>
+        @endauth
       </div>
     </div>
   </div>

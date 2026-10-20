@@ -18,6 +18,7 @@ trait BuildsFeatureSchema
             $table->id();
             $table->uuid('uuid')->nullable()->unique();
             $table->string('progress_share_token', 64)->nullable()->unique();
+            $table->string('student_public_code', 16)->nullable()->unique();
             $table->string('referral_code')->nullable()->unique();
             $table->string('name');
             $table->string('email')->unique();
@@ -156,6 +157,7 @@ trait BuildsFeatureSchema
             $table->json('answers')->nullable();
             $table->json('teaching_subject_ids')->nullable();
             $table->json('academic_year_ids')->nullable();
+            $table->json('academic_grade_ids')->nullable();
             $table->json('curriculum_types')->nullable();
             $table->timestamp('blocked_at')->nullable();
             $table->string('blocked_reason', 120)->nullable();
@@ -177,6 +179,8 @@ trait BuildsFeatureSchema
             $table->text('experience')->nullable();
             $table->json('skills')->nullable();
             $table->json('teaching_subject_ids')->nullable();
+            $table->json('academic_year_ids')->nullable();
+            $table->json('academic_grade_ids')->nullable();
             $table->json('curriculum_types')->nullable();
             $table->string('photo_path')->nullable();
             $table->string('status')->default('draft');
@@ -268,6 +272,7 @@ trait BuildsFeatureSchema
             $table->id();
             $table->string('name');
             $table->string('slug')->nullable();
+            $table->string('code')->nullable();
             $table->unsignedInteger('level_number')->nullable();
             $table->unsignedInteger('order')->default(0);
             $table->boolean('is_active')->default(true);

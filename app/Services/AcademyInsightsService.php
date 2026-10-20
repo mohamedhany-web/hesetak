@@ -101,7 +101,7 @@ class AcademyInsightsService
                 'label' => 'إيراد الشهر',
                 'value' => round($revenueMonth, 2),
                 'formatted' => number_format($revenueMonth, 2) . ' ' . currency_symbol(),
-                'delta' => number_format($revenueToday, 2).' $ اليوم',
+                'delta' => number_format($revenueToday, 2).' '.currency_symbol().' اليوم',
                 'hint' => 'طلبات معتمدة',
                 'tone' => 'gold',
             ],
@@ -188,7 +188,7 @@ class AcademyInsightsService
                 ->map(fn ($o) => [
                     'id' => $o->id,
                     'title' => $o->user?->name ?? 'طلب #'.$o->id,
-                    'meta' => number_format((float) $o->amount, 2).' $ · '.$o->status,
+                    'meta' => number_format((float) $o->amount, 2).' '.currency_symbol().' · '.$o->status,
                     'when' => optional($o->created_at)->diffForHumans(),
                     'url' => Route::has('admin.orders.show') ? route('admin.orders.show', $o) : (Route::has('admin.orders.index') ? route('admin.orders.index') : null),
                 ]),

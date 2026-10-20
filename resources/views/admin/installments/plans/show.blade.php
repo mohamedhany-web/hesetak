@@ -90,11 +90,11 @@
                     </div>
                     <div>
                         <dt class="text-xs font-medium text-muted">القيمة الممولة</dt>
-                        <dd class="mt-1 text-sm font-semibold tabular-nums text-ink">{{ number_format($totalFinanced, 2) }} <span class="text-xs font-normal text-muted">$</span></dd>
+                        <dd class="mt-1 text-sm font-semibold tabular-nums text-ink">{{ number_format($totalFinanced, 2) }} <span class="text-xs font-normal text-muted">{{ currency_symbol() }}</span></dd>
                     </div>
                     <div>
                         <dt class="text-xs font-medium text-muted">إجمالي الدفعات المقدمة</dt>
-                        <dd class="mt-1 text-sm font-semibold tabular-nums text-ink">{{ number_format($totalDeposits, 2) }} <span class="text-xs font-normal text-muted">$</span></dd>
+                        <dd class="mt-1 text-sm font-semibold tabular-nums text-ink">{{ number_format($totalDeposits, 2) }} <span class="text-xs font-normal text-muted">{{ currency_symbol() }}</span></dd>
                     </div>
                     <div>
                         <dt class="text-xs font-medium text-muted">ملاحظات إضافية</dt>
@@ -129,11 +129,11 @@
                                 <div class="grid grid-cols-2 gap-3 text-xs">
                                     <div>
                                         <p class="text-[11px] font-medium uppercase text-muted">إجمالي الاتفاقية</p>
-                                        <p class="mt-1 text-sm font-semibold tabular-nums text-ink">{{ number_format($agreement->total_amount ?? 0, 2) }} <span class="font-normal text-muted">$</span></p>
+                                        <p class="mt-1 text-sm font-semibold tabular-nums text-ink">{{ number_format($agreement->total_amount ?? 0, 2) }} <span class="font-normal text-muted">{{ currency_symbol() }}</span></p>
                                     </div>
                                     <div>
                                         <p class="text-[11px] font-medium uppercase text-muted">دفعة مقدمة</p>
-                                        <p class="mt-1 text-sm font-semibold tabular-nums text-ink">{{ number_format($agreement->deposit_amount ?? 0, 2) }} <span class="font-normal text-muted">$</span></p>
+                                        <p class="mt-1 text-sm font-semibold tabular-nums text-ink">{{ number_format($agreement->deposit_amount ?? 0, 2) }} <span class="font-normal text-muted">{{ currency_symbol() }}</span></p>
                                     </div>
                                     <div>
                                         <p class="text-[11px] font-medium uppercase text-muted">عدد الأقساط</p>
@@ -170,7 +170,7 @@
                 <ul class="space-y-3 p-4 text-sm text-ink-soft sm:p-5">
                     <li class="flex items-start gap-2">
                         <i class="fas fa-hand-holding-usd mt-0.5 text-accent"></i>
-                        الدفعة المقدمة: {{ number_format($plan->deposit_amount ?? 0, 2) }} $ تُسدد عند التعاقد.
+                        الدفعة المقدمة: {{ number_format($plan->deposit_amount ?? 0, 2) }} {{ currency_symbol() }} تُسدد عند التعاقد.
                     </li>
                     <li class="flex items-start gap-2">
                         <i class="fas fa-calendar-alt mt-0.5 text-accent"></i>

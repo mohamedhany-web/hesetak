@@ -78,7 +78,7 @@
                             <td class="px-4 py-3 font-mono text-xs">{{ $req->id }}</td>
                             <td class="px-4 py-3">{{ $req->student->name ?? '—' }}</td>
                             <td class="px-4 py-3">{{ $req->instructor->name ?? '—' }}</td>
-                            <td class="px-4 py-3 font-semibold">{{ number_format($req->price_amount, 2) }} $</td>
+                            <td class="px-4 py-3 font-semibold">{{ number_format($req->price_amount, 2) }} {{ currency_symbol() }}</td>
                             <td class="px-4 py-3"><span class="px-2 py-1 rounded-md bg-slate-100 text-xs">{{ $req->statusLabel() }}</span></td>
                             <td class="px-4 py-3 text-xs text-slate-500">{{ $req->created_at->format('Y-m-d H:i') }}</td>
                             <td class="px-4 py-3"><a href="{{ route('admin.consultations.show', $req) }}" class="text-sky-600 font-semibold hover:underline">إدارة</a></td>

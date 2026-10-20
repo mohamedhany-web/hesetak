@@ -8,7 +8,7 @@ use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Schema;
 
-class GlotticalAcademyUserSeeder extends Seeder
+class HesetakAcademyUserSeeder extends Seeder
 {
     /**
      * بيانات مستخدمي منصة حصتك — تأهيل المعلمين للعمل أونلاين
@@ -91,18 +91,20 @@ class GlotticalAcademyUserSeeder extends Seeder
 
             // إنشاء ملف تعريفي للمدرب إذا كان الجدول موجوداً
             if (Schema::hasTable('instructor_profiles') && !$user->instructorProfile) {
-                InstructorProfile::firstOrCreate(
-                    ['user_id' => $user->id],
-                    [
-                        'headline' => $data['bio'],
-                        'bio' => $data['bio'],
-                        'experience' => 'خبرة في التدريب وتأهيل المعلمين',
-                        'skills' => 'التدريس أونلاين، أدوات رقمية، تصميم الدروس',
-                        'status' => InstructorProfile::STATUS_APPROVED,
-                        'submitted_at' => now(),
-                        'reviewed_at' => now(),
-                    ]
-                );
+                InstructorProfile::withoutEvents(function () use ($user, $data) {
+                    InstructorProfile::firstOrCreate(
+                        ['user_id' => $user->id],
+                        [
+                            'headline' => $data['bio'],
+                            'bio' => $data['bio'],
+                            'experience' => 'خبرة في التدريب وتأهيل المعلمين',
+                            'skills' => 'التدريس أونلاين، أدوات رقمية، تصميم الدروس',
+                            'status' => InstructorProfile::STATUS_APPROVED,
+                            'submitted_at' => now(),
+                            'reviewed_at' => now(),
+                        ]
+                    );
+                });
             }
         }
 

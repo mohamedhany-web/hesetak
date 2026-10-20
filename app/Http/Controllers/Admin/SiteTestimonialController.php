@@ -65,8 +65,8 @@ class SiteTestimonialController extends Controller
 
         $base = [
             'content_type' => 'required|in:text,image',
-            'author_name' => 'nullable|string|max:190',
-            'role_label' => 'nullable|string|max:190',
+            'author_name' => ['nullable', 'string', 'max:190', new \App\Rules\NoDemoPlaceholder],
+            'role_label' => ['nullable', 'string', 'max:190', new \App\Rules\NoDemoPlaceholder],
             'sort_order' => 'nullable|integer|min:0|max:999999',
             'is_active' => 'boolean',
             'is_featured' => 'boolean',
@@ -74,7 +74,7 @@ class SiteTestimonialController extends Controller
 
         if ($type === SiteTestimonial::CONTENT_TEXT) {
             $validated = $request->validate(array_merge($base, [
-                'body' => 'required|string|max:8000',
+                'body' => ['required', 'string', 'max:8000', new \App\Rules\NoDemoPlaceholder],
             ]), [
                 'body.required' => 'نص الرأي مطلوب.',
             ]);
@@ -123,8 +123,8 @@ class SiteTestimonialController extends Controller
 
         $base = [
             'content_type' => 'required|in:text,image',
-            'author_name' => 'nullable|string|max:190',
-            'role_label' => 'nullable|string|max:190',
+            'author_name' => ['nullable', 'string', 'max:190', new \App\Rules\NoDemoPlaceholder],
+            'role_label' => ['nullable', 'string', 'max:190', new \App\Rules\NoDemoPlaceholder],
             'sort_order' => 'nullable|integer|min:0|max:999999',
             'is_active' => 'boolean',
             'is_featured' => 'boolean',
@@ -133,7 +133,7 @@ class SiteTestimonialController extends Controller
 
         if ($type === SiteTestimonial::CONTENT_TEXT) {
             $validated = $request->validate(array_merge($base, [
-                'body' => 'required|string|max:8000',
+                'body' => ['required', 'string', 'max:8000', new \App\Rules\NoDemoPlaceholder],
             ]), [
                 'body.required' => 'نص الرأي مطلوب.',
             ]);

@@ -80,9 +80,9 @@
                 </div>
 
                 <div>
-                    <label class="{{ $labelClass }}" for="salary">الراتب ($) <span class="text-rose-500">*</span></label>
-                    <input id="salary" type="number" name="salary" step="0.01" min="0" value="{{ old('salary', $employeeAgreement->salary) }}" required class="{{ $fieldClass }}" placeholder="0.00" />
-                    <p class="mt-1 text-xs text-muted">الراتب الشهري للموظف</p>
+                    <label class="{{ $labelClass }}" for="salary">الراتب {{ currency_unit() }} <span class="text-rose-500">*</span></label>
+                    <input id="salary" type="number" name="salary" step="0.01" min="0" value="{{ old('salary', $employeeAgreement->salary) }}" required class="{{ $fieldClass }}" placeholder="مثال: 5000" />
+                    <p class="mt-1 text-xs text-muted">عند الحالة «نشط» يجب أن يكون الراتب أكبر من صفر</p>
                     @error('salary')<p class="mt-1 text-xs text-rose-500">{{ $message }}</p>@enderror
                 </div>
 
@@ -117,14 +117,15 @@
                 </div>
 
                 <div class="sm:col-span-2">
-                    <label class="{{ $labelClass }}" for="contract_terms">شروط العقد</label>
-                    <textarea id="contract_terms" name="contract_terms" rows="5" class="{{ $areaClass }}" placeholder="شروط وأحكام العقد...">{{ old('contract_terms', $employeeAgreement->contract_terms) }}</textarea>
+                    <label class="{{ $labelClass }}" for="contract_terms">شروط العقد <span class="text-rose-500">*</span></label>
+                    <textarea id="contract_terms" name="contract_terms" rows="8" class="{{ $areaClass }}" placeholder="شروط وأحكام العقد...">{{ old('contract_terms', $employeeAgreement->contract_terms) }}</textarea>
+                    <p class="mt-1 text-xs text-muted">إلزامي عند نقل الحالة إلى نشط. أي تعديل بعد التوقيع ينشئ إصداراً جديداً.</p>
                     @error('contract_terms')<p class="mt-1 text-xs text-rose-500">{{ $message }}</p>@enderror
                 </div>
 
                 <div class="sm:col-span-2">
-                    <label class="{{ $labelClass }}" for="agreement_terms">بنود الاتفاقية</label>
-                    <textarea id="agreement_terms" name="agreement_terms" rows="5" class="{{ $areaClass }}" placeholder="بنود وأحكام الاتفاقية...">{{ old('agreement_terms', $employeeAgreement->agreement_terms) }}</textarea>
+                    <label class="{{ $labelClass }}" for="agreement_terms">بنود الاتفاقية <span class="text-rose-500">*</span></label>
+                    <textarea id="agreement_terms" name="agreement_terms" rows="8" class="{{ $areaClass }}" placeholder="بنود وأحكام الاتفاقية...">{{ old('agreement_terms', $employeeAgreement->agreement_terms) }}</textarea>
                     @error('agreement_terms')<p class="mt-1 text-xs text-rose-500">{{ $message }}</p>@enderror
                 </div>
 

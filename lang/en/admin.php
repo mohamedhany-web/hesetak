@@ -217,4 +217,10 @@ return [
     'academy_opportunities_title' => 'Published hiring opportunities',
     'academy_opportunity_hiring_academy' => 'Hiring academy',
     'academy_opportunity_presentations_count' => 'Curated presentations',
+
+    // Custom private-session package pricing (admin/pricing)
+    'custom_package_pricing_sidebar' => 'Session package pricing',
+    'custom_package_pricing_heading' => 'Inputs for «Your private sessions package»',
+    'custom_package_pricing_page_title' => 'Custom package pricing',
+    'custom_package_pricing_rule_private_name' => 'Private 1:1 sessions — your private sessions package',
 ];

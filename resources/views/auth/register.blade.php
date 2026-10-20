@@ -45,6 +45,22 @@
     @csrf
     <input type="hidden" name="referral_code" value="{{ old('referral_code', $pendingReferralCode ?? '') }}">
 
+    <fieldset class="lasles-auth-field" style="border:0;padding:0;margin:0 0 1rem">
+      <legend class="lasles-auth-label" style="font-weight:700;margin-bottom:.5rem">{{ __('auth.account_kind') }}</legend>
+      <div style="display:flex;gap:.75rem;flex-wrap:wrap">
+        <label style="display:flex;gap:.4rem;align-items:center">
+          <input type="radio" name="account_kind" value="student" @checked(old('account_kind', 'student') === 'student') required>
+          {{ __('auth.account_kind_student') }}
+        </label>
+        <label style="display:flex;gap:.4rem;align-items:center">
+          <input type="radio" name="account_kind" value="parent" @checked(old('account_kind') === 'parent') required>
+          {{ __('auth.account_kind_parent') }}
+        </label>
+      </div>
+      <p class="lasles-auth-hint">{{ __('auth.account_kind_hint') }}</p>
+      @error('account_kind')<p class="lasles-auth-error">{{ $message }}</p>@enderror
+    </fieldset>
+
     <div class="lasles-auth-field">
       <label for="name">{{ __('auth.full_name') }}</label>
       <div class="lasles-auth-input-wrap">
@@ -65,18 +81,88 @@
 
     @php
       $academicYears = $academicYears ?? collect();
+      $gradesByYear = $gradesByYear ?? [];
+      $subjectsByYear = $subjectsByYear ?? [];
       $curriculumTypes = $curriculumTypes ?? [];
+      $oldSubjects = array_map('strval', (array) old('preferred_subject_ids', []));
     @endphp
-    <div class="lasles-auth-field">
-      <label for="academic_year_id">{{ __('auth.academic_stage') }}</label>
-      <select id="academic_year_id" name="academic_year_id" required class="lasles-auth-input @error('academic_year_id') has-error @enderror">
-        <option value="">{{ __('auth.academic_stage_placeholder') }}</option>
-        @foreach($academicYears as $year)
-          <option value="{{ $year->id }}" @selected((string) old('academic_year_id') === (string) $year->id)>{{ $year->name }}</option>
-        @endforeach
-      </select>
-      <p class="lasles-auth-hint">{{ __('auth.academic_stage_hint') }}</p>
-      @error('academic_year_id')<p class="lasles-auth-error">{{ $message }}</p>@enderror
+    <div id="student-learning-fields"
+      x-data="{
+        yearId: @js((string) old('academic_year_id', '')),
+        gradeId: @js((string) old('academic_grade_id', '')),
+        selectedSubjects: @js($oldSubjects),
+        map: @js($gradesByYear),
+        subjectsMap: @js($subjectsByYear),
+        placeholder: @js(__('auth.academic_grade_placeholder')),
+        get grades() { return this.map[String(this.yearId)] || []; },
+        get hasGrades() { return this.grades.length > 0; },
+        get subjects() { return this.subjectsMap[String(this.yearId)] || []; },
+        get hasSubjects() { return this.subjects.length > 0; },
+        fillGrades() {
+          const select = this.$refs.gradeSelect;
+          if (!select) return;
+          const current = String(this.gradeId || '');
+          select.innerHTML = '';
+          const empty = document.createElement('option');
+          empty.value = '';
+          empty.textContent = this.placeholder;
+          select.appendChild(empty);
+          this.grades.forEach((grade) => {
+            const option = document.createElement('option');
+            option.value = String(grade.id);
+            option.textContent = grade.name;
+            if (current && current === String(grade.id)) option.selected = true;
+            select.appendChild(option);
+          });
+          if (!this.grades.some((grade) => String(grade.id) === current)) {
+            this.gradeId = '';
+            select.value = '';
+          }
+          select.required = this.hasGrades;
+          const allowed = this.subjects.map((s) => String(s.id));
+          this.selectedSubjects = (this.selectedSubjects || []).filter((id) => allowed.includes(String(id)));
+        }
+      }"
+      x-init="fillGrades()"
+    >
+      <div class="lasles-auth-field">
+        <label for="academic_year_id">{{ __('auth.academic_stage') }}</label>
+        <select id="academic_year_id" name="academic_year_id" required class="lasles-auth-input @error('academic_year_id') has-error @enderror"
+                x-model="yearId" @change="fillGrades()">
+          <option value="">{{ __('auth.academic_stage_placeholder') }}</option>
+          @foreach($academicYears as $year)
+            <option value="{{ $year->id }}">{{ $year->name }}</option>
+          @endforeach
+        </select>
+        <p class="lasles-auth-hint" data-hint-student>{{ __('auth.academic_stage_hint') }}</p>
+        <p class="lasles-auth-hint" data-hint-parent hidden>{{ __('auth.parent_stage_hint') }}</p>
+        @error('academic_year_id')<p class="lasles-auth-error">{{ $message }}</p>@enderror
+      </div>
+
+      <div class="lasles-auth-field" id="student-grade-field" x-show="hasGrades" x-cloak>
+        <label for="academic_grade_id">{{ __('auth.academic_grade') }}</label>
+        <select id="academic_grade_id" name="academic_grade_id" x-ref="gradeSelect" x-model="gradeId"
+                class="lasles-auth-input @error('academic_grade_id') has-error @enderror">
+          <option value="">{{ __('auth.academic_grade_placeholder') }}</option>
+        </select>
+        <p class="lasles-auth-hint">{{ __('auth.academic_grade_hint') }}</p>
+        @error('academic_grade_id')<p class="lasles-auth-error">{{ $message }}</p>@enderror
+      </div>
+
+      <div class="lasles-auth-field" id="preferred-subjects-field" x-show="hasSubjects" x-cloak>
+        <label>{{ __('auth.preferred_subjects') }}</label>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(9.5rem,1fr));gap:.45rem;margin-top:.35rem">
+          <template x-for="subject in subjects" :key="subject.id">
+            <label style="display:flex;align-items:center;gap:.4rem;font-size:.9rem;border:1px solid #d7e0ec;border-radius:.55rem;padding:.4rem .55rem;cursor:pointer">
+              <input type="checkbox" name="preferred_subject_ids[]" :value="subject.id" x-model="selectedSubjects">
+              <span x-text="subject.name"></span>
+            </label>
+          </template>
+        </div>
+        <p class="lasles-auth-hint" data-hint-student>{{ __('auth.preferred_subjects_hint') }}</p>
+        <p class="lasles-auth-hint" data-hint-parent hidden>{{ __('auth.parent_subjects_hint') }}</p>
+        @error('preferred_subject_ids')<p class="lasles-auth-error">{{ $message }}</p>@enderror
+      </div>
     </div>
 
     <div class="lasles-auth-field">
@@ -87,9 +173,41 @@
           <option value="{{ $key }}" @selected((string) old('preferred_curriculum_type') === (string) $key)>{{ $meta['label'] ?? $key }}</option>
         @endforeach
       </select>
-      <p class="lasles-auth-hint">{{ __('auth.curriculum_type_hint') }}</p>
+      <p class="lasles-auth-hint" data-hint-student>{{ __('auth.curriculum_type_hint') }}</p>
+      <p class="lasles-auth-hint" data-hint-parent hidden>{{ __('auth.parent_curriculum_hint') }}</p>
       @error('preferred_curriculum_type')<p class="lasles-auth-error">{{ $message }}</p>@enderror
     </div>
+    <p class="lasles-auth-hint" id="parent-subjects-note" hidden>{{ __('auth.parent_subjects_note') }}</p>
+    </div>
+    <script>
+      (function () {
+        var box = document.getElementById('student-learning-fields');
+        var gradeField = document.getElementById('student-grade-field');
+        var parentNote = document.getElementById('parent-subjects-note');
+        if (!box) return;
+        function sync() {
+          var kind = document.querySelector('input[name="account_kind"]:checked');
+          var isParent = kind && kind.value === 'parent';
+          box.hidden = false;
+          if (gradeField) {
+            gradeField.style.display = isParent ? 'none' : '';
+            var gradeSelect = gradeField.querySelector('select');
+            if (gradeSelect) gradeSelect.required = false;
+          }
+          box.querySelectorAll('[data-hint-student]').forEach(function (el) { el.hidden = !!isParent; });
+          box.querySelectorAll('[data-hint-parent]').forEach(function (el) { el.hidden = !isParent; });
+          if (parentNote) parentNote.hidden = !isParent;
+          var yearSelect = document.getElementById('academic_year_id');
+          var currSelect = document.getElementById('preferred_curriculum_type');
+          if (yearSelect) yearSelect.required = true;
+          if (currSelect) currSelect.required = true;
+        }
+        document.querySelectorAll('input[name="account_kind"]').forEach(function (el) {
+          el.addEventListener('change', sync);
+        });
+        sync();
+      })();
+    </script>
 
     <div class="lasles-auth-field">
       <label>{{ __('auth.phone_number') }}</label>

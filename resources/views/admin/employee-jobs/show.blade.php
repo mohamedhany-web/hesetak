@@ -83,11 +83,11 @@
                 <p class="text-sm text-gray-600 mb-1">نطاق الراتب</p>
                 <p class="font-semibold text-gray-900 text-lg">
                     @if($employeeJob->min_salary && $employeeJob->max_salary)
-                        {{ number_format($employeeJob->min_salary) }} - {{ number_format($employeeJob->max_salary) }} $
+                        {{ number_format($employeeJob->min_salary) }} - {{ number_format($employeeJob->max_salary) }} {{ currency_symbol() }}
                     @elseif($employeeJob->min_salary)
-                        من {{ number_format($employeeJob->min_salary) }} $
+                        من {{ number_format($employeeJob->min_salary) }} {{ currency_symbol() }}
                     @elseif($employeeJob->max_salary)
-                        حتى {{ number_format($employeeJob->max_salary) }} $
+                        حتى {{ number_format($employeeJob->max_salary) }} {{ currency_symbol() }}
                     @endif
                 </p>
             </div>

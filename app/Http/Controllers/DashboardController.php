@@ -36,11 +36,12 @@ class DashboardController extends Controller
         
         // التحقق من كون المستخدم موظف
         if ($user->isEmployee()) {
-            // الموظف ذو دور RBAC مخصص → لوحة تحكم الأدمن بصلاحيات محدودة
-            if ($user->roles()->exists()) {
+            // دخول الأدمن فقط بصلاحية admin.access الحقيقية — لا يكفي وجود أي دور RBAC
+            // صلاحيات المبيعات المخصصة تُبقى على /employee
+            if ($user->userHasAdminAccessCapability()) {
                 return redirect()->route('admin.dashboard');
             }
-            // الموظف العادي → لوحة الموظفين
+
             return redirect()->route('employee.dashboard');
         }
         

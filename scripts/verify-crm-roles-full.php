@@ -94,10 +94,10 @@ foreach ($jobCodes as $code) {
 }
 
 // ── 2. إنشاء حسابات تجريبية ───────────────────────────────────
-$marketing = ensureEmployee('crm-test-marketing@glottical.test', 'CRM تسويق تجريبي', 'crm_marketing', '01099001001');
-$sales = ensureEmployee('crm-test-sales@glottical.test', 'CRM سيلز تجريبي', 'sales', '01099001002');
-$teamLeader = ensureEmployee('crm-test-tl@glottical.test', 'CRM قائد فريق تجريبي', 'crm_team_leader', '01099001003');
-$finance = ensureEmployee('crm-test-finance@glottical.test', 'CRM مالية تجريبي', 'crm_finance', '01099001004');
+$marketing = ensureEmployee('crm-test-marketing@hesetak.test', 'CRM تسويق تجريبي', 'crm_marketing', '01099001001');
+$sales = ensureEmployee('crm-test-sales@hesetak.test', 'CRM سيلز تجريبي', 'sales', '01099001002');
+$teamLeader = ensureEmployee('crm-test-tl@hesetak.test', 'CRM قائد فريق تجريبي', 'crm_team_leader', '01099001003');
+$finance = ensureEmployee('crm-test-finance@hesetak.test', 'CRM مالية تجريبي', 'crm_finance', '01099001004');
 $admin = User::where('role', 'super_admin')->first() ?? User::where('role', 'admin')->first();
 $student = User::where('role', 'student')->where('is_employee', false)->first();
 $course = AdvancedCourse::where('is_active', true)->first();

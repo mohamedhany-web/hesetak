@@ -25,21 +25,21 @@
     ], $extra), fn ($v) => $v !== null && $v !== '');
 @endphp
 <!DOCTYPE html>
-<html lang="{{ $locale }}" dir="{{ request()->boolean('figma') ? 'ltr' : ($isRtl ? 'rtl' : 'ltr') }}">
+<html lang="{{ $locale }}" dir="{{ $isRtl ? 'rtl' : 'ltr' }}">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes">
-  <title>{{ $p['meta_title'] }}</title>
-  <meta name="description" content="{{ $p['meta_description'] }}">
   <meta name="theme-color" content="#1E4E8C">
-  <link rel="canonical" href="{{ route('public.courses') }}">
-  <link rel="alternate" hreflang="ar" href="{{ url('/courses') }}?lang=ar">
-  <link rel="alternate" hreflang="en" href="{{ url('/courses') }}?lang=en">
+  @include('components.seo-meta', [
+      'title' => __('seo.courses.title'),
+      'description' => __('seo.courses.description'),
+      'canonicalPath' => '/courses',
+  ])
   @include('partials.favicon-links')
   @include('partials.seo-jsonld', ['jsonldType' => 'website'])
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Lato:wght@400;700;900&family=Rubik:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;600;700&family=Lato:wght@400;700&family=Rubik:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{{ route('assets.landing.css', ['sheet' => 'mycourses']) }}?v={{ $mcVer }}">
   @include('partials.figma-capture-head')
 </head>
@@ -124,12 +124,6 @@
         </div>
       @endif
 
-      <div class="mc-dir-chips" role="list" aria-label="{{ $isRtl ? 'مسار المنتج' : 'Product track' }}" style="margin-top:.75rem">
-        <a role="listitem" class="mc-dir-chip {{ $track === '' ? 'is-on' : '' }}" href="{{ route('public.courses', $filterQuery(['track' => null])) }}">{{ $isRtl ? 'كل المسارات' : 'All tracks' }}</a>
-        <a role="listitem" class="mc-dir-chip {{ $track === 'recorded' ? 'is-on' : '' }}" href="{{ route('public.recorded-courses') }}">{{ $isRtl ? 'كورسات مسجّلة' : 'Recorded' }}</a>
-        <a role="listitem" class="mc-dir-chip {{ $track === 'book' ? 'is-on' : '' }}" href="{{ route('public.books') }}">{{ $isRtl ? 'كتب للقراءة' : 'Books' }}</a>
-      </div>
-
       @if($activeCategory)
         <p class="mc-dir-meta__filter mc-dir-head__active">
           <span class="mc-dir-meta__tag">{{ $activeCategory->name }}</span>
@@ -138,6 +132,10 @@
       @endif
     </div>
   </section>
+
+  <div class="mc-section mc-section--compact">
+    @include('partials.landing.mycourses.path-guide', ['pathGuideActive' => 'courses'])
+  </div>
 
   <section class="mc-section mc-section--tight mc-dir-results">
     <div class="mc-container">
@@ -164,7 +162,13 @@
                 @if($cover)
                   <img src="{{ $cover }}" alt="" loading="lazy" decoding="async" width="480" height="300">
                 @else
-                  <span class="mc-catalog-card__media-fallback" aria-hidden="true"></span>
+                  @php
+                    $hay = mb_strtolower($title.' '.$categoryName.' '.(string) ($course->language ?? ''));
+                    $fallbackIcon = (str_contains($hay, 'engl') || str_contains($hay, 'إنجل')) ? 'fa-language' : 'fa-graduation-cap';
+                  @endphp
+                  <span class="mc-catalog-card__media-fallback" aria-hidden="true" style="display:flex;align-items:center;justify-content:center;font-size:2.25rem;color:#1E4E8C">
+                    <i class="fas {{ $fallbackIcon }}"></i>
+                  </span>
                 @endif
                 @if(!empty($course->is_featured))
                   <span class="mc-catalog-card__badge">{{ $p['featured'] }}</span>
@@ -223,28 +227,6 @@
     </div>
   </section>
 
-  <section class="mc-section mc-section--compact" aria-labelledby="mc-cat-split">
-    <div class="mc-container">
-      <h2 id="mc-cat-split" class="mc-title mc-curr-split__title">{{ $p['split_title'] }}</h2>
-      <div class="mc-curr-split mc-catalog-split">
-        <article class="mc-curr-split__card is-active">
-          <h3>{{ $p['split_courses_title'] }}</h3>
-          <p>{{ $p['split_courses'] }}</p>
-        </article>
-        <article class="mc-curr-split__card">
-          <h3>{{ $p['split_curricula_title'] }}</h3>
-          <p>{{ $p['split_curricula'] }}</p>
-          <a href="{{ route('public.curricula') }}" class="mc-btn mc-btn--md mc-btn--outline">{{ $p['cta_curricula'] }}</a>
-        </article>
-        <article class="mc-curr-split__card">
-          <h3>{{ $p['split_teachers_title'] }}</h3>
-          <p>{{ $p['split_teachers'] }}</p>
-          <a href="{{ route('public.instructors.index') }}" class="mc-btn mc-btn--md mc-btn--outline">{{ $p['cta_teachers'] }}</a>
-        </article>
-      </div>
-    </div>
-  </section>
-
   <section class="mc-section mc-section--compact">
     <div class="mc-container">
       <div class="mc-cta">
@@ -253,8 +235,8 @@
           <p>{{ $p['parent_cta_desc'] }}</p>
         </div>
         <div class="mc-cta__actions">
-          <a href="{{ route('public.pricing') }}" class="mc-btn mc-btn--lg mc-btn--secondary">{{ $p['cta_packages'] }}</a>
-          <a href="{{ route('public.instructors.index') }}" class="mc-btn mc-btn--lg mc-btn--ghost-on-dark">{{ $p['cta_teachers'] }}</a>
+          <a href="#mc-cat-title" class="mc-btn mc-btn--lg mc-btn--secondary">{{ $p['show_all'] }}</a>
+          <a href="{{ route('public.pricing') }}" class="mc-btn mc-btn--lg mc-btn--ghost-on-dark">{{ $p['cta_packages'] }}</a>
         </div>
       </div>
     </div>

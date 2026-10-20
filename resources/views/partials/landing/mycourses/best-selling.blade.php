@@ -1,3 +1,5 @@
+@php $packages = $homePackages ?? collect(); @endphp
+@if($packages->isNotEmpty())
 <section class="mc-section" id="best-selling">
   <div class="mc-container dp-shell">
     <div class="mc-section-head">
@@ -15,15 +17,6 @@
       </div>
     </div>
 
-    @include('partials.landing.mycourses.package-catalog-filters', [
-      'packageCatalog' => $packageCatalog ?? [],
-      'anchor' => 'best-selling',
-    ])
-
-    @php $packages = $homePackages ?? ($packageCatalog['packages'] ?? collect()); @endphp
-    @if($packages->isEmpty())
-      <div class="mc-empty">{{ app()->getLocale() === 'ar' ? 'لا توجد باقات متاحة حالياً.' : 'No packages available yet.' }}</div>
-    @else
       <div class="mc-packages">
         @foreach($packages as $row)
           @php
@@ -81,6 +74,6 @@
           </article>
         @endforeach
       </div>
-    @endif
   </div>
 </section>
+@endif

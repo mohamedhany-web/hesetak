@@ -30,6 +30,16 @@
     $learnPoints = $course->what_you_learn
         ? array_values(array_filter(array_map('trim', preg_split('/\r\n|\r|\n/', (string) $course->what_you_learn) ?: [])))
         : [];
+    if ($learnPoints === []) {
+        $learnPoints = $isRtl
+            ? ['محتوى مرتّب حسب أهداف المسار', 'تمارين تطبيقية أثناء التعلّم', 'متابعة تقدّم الطالب عبر الدروس']
+            : ['Structured content by path goals', 'Practice activities during learning', 'Progress tracking across lessons'];
+    }
+    $hasAssessments = (bool) ($course->has_exams ?? false) || (int) ($course->exams_count ?? 0) > 0;
+    $courseLang = trim((string) ($course->language ?? $course->programming_language ?? $categoryDisplay));
+    $isEnglishCourse = str_contains(mb_strtolower($courseLang.' '.$course->title), 'engl')
+        || str_contains(mb_strtolower($courseLang.' '.$course->title), 'إنجل')
+        || str_contains(mb_strtolower((string) $course->language), 'en');
 
     $checkoutUrl = route('public.course.checkout', $course->id);
     $showUrl = route('public.course.show', $course->id);
@@ -202,22 +212,46 @@
     </section>
 
     {{-- Outcomes first (decision support) --}}
-    @if(count($learnPoints) > 0)
-      <section class="mc-cd-block" aria-labelledby="mc-cd-learn">
-        <header class="mc-cd-block__head">
-          <h2 id="mc-cd-learn">{{ $p['learn'] }}</h2>
-          <p>{{ $isRtl ? 'ما يخرج به الطالب من هذا المسار.' : 'What the student walks away with.' }}</p>
-        </header>
-        <ol class="mc-cd-outcomes">
-          @foreach($learnPoints as $i => $point)
-            <li>
-              <span aria-hidden="true">{{ str_pad((string) ($i + 1), 2, '0', STR_PAD_LEFT) }}</span>
-              <p>{{ $point }}</p>
-            </li>
-          @endforeach
-        </ol>
-      </section>
-    @endif
+    <section class="mc-cd-block" aria-labelledby="mc-cd-learn">
+      <header class="mc-cd-block__head">
+        <h2 id="mc-cd-learn">{{ $p['learn'] }}</h2>
+        <p>{{ $isRtl ? 'ما يغطيه الكورس وما يخرج به الطالب.' : 'What the course covers and what the student walks away with.' }}</p>
+      </header>
+      @if($isEnglishCourse || $courseLang !== '')
+        <p class="mc-cd-lang" style="margin:0 0 1rem;display:inline-flex;align-items:center;gap:.5rem">
+          <i class="fas fa-language" aria-hidden="true"></i>
+          <span>{{ $isEnglishCourse ? ($isRtl ? 'كورس لغة إنجليزية' : 'English language course') : $courseLang }}</span>
+        </p>
+      @endif
+      <ol class="mc-cd-outcomes">
+        @foreach($learnPoints as $i => $point)
+          <li>
+            <span aria-hidden="true">{{ str_pad((string) ($i + 1), 2, '0', STR_PAD_LEFT) }}</span>
+            <p>{{ $point }}</p>
+          </li>
+        @endforeach
+      </ol>
+    </section>
+
+    <section class="mc-cd-block" aria-labelledby="mc-cd-assess">
+      <header class="mc-cd-block__head">
+        <h2 id="mc-cd-assess">{{ $isRtl ? 'الاختبارات والمتابعة' : 'Assessments & follow-up' }}</h2>
+        <p>{{ $isRtl ? 'وضوح قبل الشراء حول نظام التقييم داخل الكورس.' : 'Clarity before purchase about assessment inside the course.' }}</p>
+      </header>
+      <ul class="mc-cd-trust" style="display:grid;gap:.65rem">
+        <li><i class="fas fa-{{ $hasAssessments ? 'check' : 'circle-info' }}" aria-hidden="true"></i>
+          {{ $hasAssessments
+            ? ($isRtl ? 'يوجد اختبارات/تقييمات ضمن مسار الكورس.' : 'Includes quizzes/assessments in the course path.')
+            : ($isRtl ? 'لا يظهر نظام اختبارات منفصل معلن حالياً — التعلّم عبر الدروس والمتابعة مع المعلم حسب إعداد الكورس.' : 'No separate exam system is listed yet — learning is via lessons and teacher follow-up as configured.') }}
+        </li>
+        <li><i class="fas fa-clipboard-list" aria-hidden="true"></i>
+          {{ $isRtl ? 'تسليمات وواجبات تظهر داخل الدروس إن أضافها المعلم.' : 'Assignments appear inside lessons when the teacher adds them.' }}
+        </li>
+        <li><i class="fas fa-chart-line" aria-hidden="true"></i>
+          {{ $isRtl ? 'يمكنك متابعة تقدّمك من «كورساتي» بعد الاشتراك.' : 'Track progress from My Courses after enrollment.' }}
+        </li>
+      </ul>
+    </section>
 
     {{-- Story --}}
     <section class="mc-cd-block mc-cd-story" aria-labelledby="mc-cd-about">

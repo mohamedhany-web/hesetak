@@ -13,11 +13,14 @@ use App\Models\OneToOneWeeklyAvailability;
 use App\Models\ServicePackage;
 use App\Models\User;
 use App\Services\OneToOneAvailabilityService;
+use App\Services\PublicInstructorDirectory;
 use App\Services\StudentEntitlementService;
 use App\Support\HesetakMatchCatalog;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\View\View;
 
 class InstructorController extends Controller
 {
@@ -28,7 +31,7 @@ class InstructorController extends Controller
         $stage = trim((string) $request->query('stage', ''));
         $curriculum = trim((string) $request->query('curriculum', ''));
         $sort = (string) $request->query('sort', 'newest');
-        if (! in_array($sort, ['newest', 'name', 'courses'], true)) {
+        if (! in_array($sort, ['newest', 'name', 'courses', 'price_asc', 'price_desc'], true)) {
             $sort = 'newest';
         }
 
@@ -78,15 +81,15 @@ class InstructorController extends Controller
                 ->values();
         }
 
-        $baseQuery = InstructorProfile::query()
-            ->approved()
-            ->whereHas('user', function ($query) {
-                $query->whereIn('role', ['instructor', 'teacher'])
-                    ->where('is_active', true);
-            })
-            ->with(['user:id,name,role,is_active']);
+        $baseQuery = PublicInstructorDirectory::approvedActiveQuery()
+            ->with([
+                'user:'.implode(',', PublicInstructorDirectory::userSelect()),
+                'user.teachingLearningPaths',
+            ]);
 
-        $allForFacets = (clone $baseQuery)->get(['id', 'user_id', 'skills', 'headline', 'curriculum_types']);
+        $allForFacets = (clone $baseQuery)->get()
+            ->filter(fn (InstructorProfile $profile) => PublicInstructorDirectory::isPublishableListing($profile))
+            ->values();
         $skillFacets = $this->buildSkillFacets($allForFacets);
         $totalTeachers = $allForFacets->count();
 
@@ -158,7 +161,9 @@ class InstructorController extends Controller
         $profiles = $query
             ->orderByDesc('instructor_profiles.reviewed_at')
             ->orderByDesc('instructor_profiles.id')
-            ->get();
+            ->get()
+            ->filter(fn (InstructorProfile $profile) => PublicInstructorDirectory::isPublishableListing($profile))
+            ->values();
 
         if ($curriculum !== '') {
             $profiles = $profiles->filter(function (InstructorProfile $profile) use ($curriculum) {
@@ -186,6 +191,10 @@ class InstructorController extends Controller
             $profiles = $profiles->sortBy(fn (InstructorProfile $p) => mb_strtolower((string) ($p->user->name ?? '')), SORT_NATURAL)->values();
         } elseif ($sort === 'courses') {
             $profiles = $profiles->sortByDesc(fn (InstructorProfile $p) => (int) ($p->courses_count ?? 0))->values();
+        } elseif ($sort === 'price_asc') {
+            $profiles = $profiles->sortBy(fn (InstructorProfile $p) => (float) ($p->consultation_price_egp ?? PHP_INT_MAX))->values();
+        } elseif ($sort === 'price_desc') {
+            $profiles = $profiles->sortByDesc(fn (InstructorProfile $p) => (float) ($p->consultation_price_egp ?? 0))->values();
         }
 
         $consultationSetting = ConsultationSetting::current();
@@ -252,33 +261,43 @@ class InstructorController extends Controller
         return array_values(array_slice($counts, 0, 12));
     }
 
-    public function show(User $instructor)
+    public function show(string $instructor): View|RedirectResponse
     {
-        if (! $instructor->isInstructor()) {
-            abort(404);
+        $resolved = PublicInstructorDirectory::resolvePublicShow($instructor);
+        if ($resolved instanceof RedirectResponse) {
+            return $resolved;
         }
-        $profile = InstructorProfile::where('user_id', $instructor->id)->approved()->with('user')->firstOrFail();
-        $courses = AdvancedCourse::where('instructor_id', $instructor->id)
-            ->where('is_active', true)
-            ->withCount('lessons')
-            ->orderByDesc('is_featured')
-            ->orderByDesc('created_at')
-            ->get();
+        $instructor = $resolved;
+        $profile = InstructorProfile::where('user_id', $instructor->id)
+            ->approved()
+            ->with(['user:'.implode(',', array_merge(PublicInstructorDirectory::userSelect(), ['portfolio_intro_video_url']))])
+            ->firstOrFail();
+        $courses = Schema::hasTable('advanced_courses')
+            ? AdvancedCourse::where('instructor_id', $instructor->id)
+                ->where('is_active', true)
+                ->when(Schema::hasTable('course_lessons'), fn ($q) => $q->withCount('lessons'))
+                ->orderByDesc('is_featured')
+                ->orderByDesc('created_at')
+                ->get()
+            : collect();
 
         $groupCourses = $courses->filter(fn ($c) => ! $c->isOneToOne())->values();
         $oneToOneCourses = $courses->filter(fn ($c) => $c->isOneToOne())->values();
 
-        // Collective/group tutoring surface removed — keep empty for view compatibility
         $privateGroups = collect();
 
-        $consultationSetting = ConsultationSetting::current();
+        $consultationSetting = Schema::hasTable('consultation_settings')
+            ? ConsultationSetting::current()
+            : null;
 
-        $weeklyRules = OneToOneWeeklyAvailability::query()
-            ->where('instructor_id', $instructor->id)
-            ->where('is_active', true)
-            ->orderBy('day_of_week')
-            ->orderBy('start_time')
-            ->get();
+        $weeklyRules = Schema::hasTable('one_to_one_weekly_availabilities')
+            ? OneToOneWeeklyAvailability::query()
+                ->where('instructor_id', $instructor->id)
+                ->where('is_active', true)
+                ->orderBy('day_of_week')
+                ->orderBy('start_time')
+                ->get()
+            : collect();
 
         $weeklyCalendar = $this->buildWeeklyCalendar($weeklyRules);
 

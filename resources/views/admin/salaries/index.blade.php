@@ -77,7 +77,7 @@
                                 </td>
                                 <td class="px-4 py-3">
                                     @if($stats && (float) $stats->pending_total > 0)
-                                        <p class="font-semibold tabular-nums text-metal">{{ number_format($stats->pending_total, 2) }} <span class="text-xs font-normal text-muted">$</span></p>
+                                        <p class="font-semibold tabular-nums text-metal">{{ number_format($stats->pending_total, 2) }} <span class="text-xs font-normal text-muted">{{ currency_symbol() }}</span></p>
                                         <p class="mt-0.5 text-[11px] text-muted">{{ $stats->pending_count }} مدفوعة</p>
                                     @else
                                         <span class="text-muted">—</span>
@@ -85,7 +85,7 @@
                                 </td>
                                 <td class="px-4 py-3">
                                     @if($stats && (float) $stats->paid_total > 0)
-                                        <p class="font-semibold tabular-nums text-accent">{{ number_format($stats->paid_total, 2) }} <span class="text-xs font-normal text-muted">$</span></p>
+                                        <p class="font-semibold tabular-nums text-accent">{{ number_format($stats->paid_total, 2) }} <span class="text-xs font-normal text-muted">{{ currency_symbol() }}</span></p>
                                         <p class="mt-0.5 text-[11px] text-muted">{{ $stats->paid_count }} مدفوعة</p>
                                     @else
                                         <span class="text-muted">—</span>

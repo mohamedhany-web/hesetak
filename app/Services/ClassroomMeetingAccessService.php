@@ -208,7 +208,9 @@ class ClassroomMeetingAccessService
 
     public static function roomUrlForUser(ClassroomMeeting $meeting, User $user): string
     {
-        $isInstructorSide = $user->isInstructor() || $user->isAdmin() || self::userIsHost($meeting, $user);
+        // الأدمن يدخل غرفة الطالب/المراقبة — مسار المعلم محمي بـ role:instructor فقط.
+        $isInstructorSide = ($user->isInstructor() || self::userIsHost($meeting, $user))
+            && ! $user->isAdmin();
 
         if ($isInstructorSide && Route::has('instructor.classroom.room')) {
             return route('instructor.classroom.room', $meeting);

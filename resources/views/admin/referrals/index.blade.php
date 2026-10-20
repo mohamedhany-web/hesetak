@@ -176,10 +176,10 @@
                                     </span>
                                 </td>
                                 <td class="px-4 py-3 font-semibold tabular-nums text-ink">
-                                    {{ number_format($referral->discount_amount ?? 0, 2) }} $
+                                    {{ number_format($referral->discount_amount ?? 0, 2) }} {{ currency_symbol() }}
                                 </td>
                                 <td class="px-4 py-3 font-bold tabular-nums text-emerald-700">
-                                    {{ number_format($referral->reward_amount ?? 0, 2) }} $
+                                    {{ number_format($referral->reward_amount ?? 0, 2) }} {{ currency_symbol() }}
                                 </td>
                                 <td class="px-4 py-3 text-muted">
                                     {{ $referral->created_at->format('d/m/Y') }}

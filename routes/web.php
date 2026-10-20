@@ -21,21 +21,6 @@ Route::get('/storage/{path}', [\App\Http\Controllers\StorageFileController::clas
     ->name('storage.file')
     ->middleware('web');
 
-/*
-|--------------------------------------------------------------------------
-| Instructor panel CSS — عبر Laravel عند فشل خدمة public/css على الاستضافة
-|--------------------------------------------------------------------------
-*/
-Route::get('/__glottical/instructor-panel.css', function () {
-    $path = public_path('css/instructor-panel.css');
-    abort_unless(is_file($path), 404);
-
-    return response()->file($path, [
-        'Content-Type' => 'text/css; charset=UTF-8',
-        'Cache-Control' => 'public, max-age=86400',
-    ]);
-})->name('assets.instructor-panel.css');
-
 Route::post('/webhooks/fawaterak', [\App\Http\Controllers\Webhooks\FawaterakWebhookController::class, 'handle'])
     ->name('webhooks.fawaterak')
     ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class]);
@@ -43,6 +28,16 @@ Route::post('/webhooks/fawaterak', [\App\Http\Controllers\Webhooks\FawaterakWebh
 Route::post('/webhooks/paypal', [\App\Http\Controllers\Webhooks\PayPalWebhookController::class, 'handle'])
     ->name('webhooks.paypal')
     ->middleware('throttle:120,1')
+    ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class]);
+
+Route::post('/webhooks/stripe', [\App\Http\Controllers\Webhooks\StripeWebhookController::class, 'handle'])
+    ->name('webhooks.stripe')
+    ->middleware('throttle:120,1')
+    ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class]);
+
+Route::match(['get', 'post'], '/ops/cron', [\App\Http\Controllers\Ops\CronHeartbeatController::class, 'run'])
+    ->name('ops.cron')
+    ->middleware('throttle:30,1')
     ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class]);
 
 /*
@@ -101,116 +96,31 @@ Route::get('/mx-vendor/excalidraw/{path}', function (string $path) {
 })->where('path', '.*')->name('mx.vendor.excalidraw')->middleware('web');
 
 // Sitemap Route — حصتك SEO
+Route::get('/robots.txt', \App\Http\Controllers\Public\RobotsTxtController::class)
+    ->name('robots')
+    ->withoutMiddleware([
+        \App\Http\Middleware\CheckActiveStatus::class,
+        \App\Http\Middleware\SetLocale::class,
+    ]);
+
+Route::get('/llms.txt', function () {
+    $path = public_path('llms.txt');
+    $body = is_file($path) ? (string) file_get_contents($path) : "# حصتك\nhttps://hissatak.online\n";
+
+    return response($body, 200, [
+        'Content-Type' => 'text/plain; charset=UTF-8',
+        'Cache-Control' => 'public, max-age=3600',
+    ]);
+})->name('llms')->withoutMiddleware([
+    \App\Http\Middleware\CheckActiveStatus::class,
+    \App\Http\Middleware\SetLocale::class,
+]);
+
 Route::get('/sitemap.xml', function () {
-    $xmlEscape = static fn (?string $value): string => htmlspecialchars((string) $value, ENT_XML1 | ENT_QUOTES, 'UTF-8');
-    $urls = [];
+    $xml = app(\App\Services\PublicSitemapBuilder::class)->xml();
 
-    // الصفحة الرئيسية
-    $urls[] = ['loc' => url('/'), 'lastmod' => now()->toDateString(), 'changefreq' => 'daily', 'priority' => '1.0'];
-
-    // الصفحات العامة الثابتة — خريطة حصتك الحالية
-    $staticPages = [
-        ['url' => '/instructors',    'priority' => '0.9', 'changefreq' => 'daily'],
-        ['url' => '/curricula',      'priority' => '0.9', 'changefreq' => 'weekly'],
-        ['url' => '/courses',        'priority' => '0.9', 'changefreq' => 'daily'],
-        ['url' => '/pricing',        'priority' => '0.85', 'changefreq' => 'weekly'],
-        ['url' => '/about',          'priority' => '0.8', 'changefreq' => 'monthly'],
-        ['url' => '/how-it-works',   'priority' => '0.75', 'changefreq' => 'monthly'],
-        ['url' => '/for-students',   'priority' => '0.7', 'changefreq' => 'monthly'],
-        ['url' => '/for-teachers',   'priority' => '0.7', 'changefreq' => 'monthly'],
-        ['url' => '/faq',            'priority' => '0.7', 'changefreq' => 'monthly'],
-        ['url' => '/contact',        'priority' => '0.7', 'changefreq' => 'monthly'],
-        ['url' => '/tutor/apply',    'priority' => '0.65', 'changefreq' => 'monthly'],
-        ['url' => '/certificates/verify', 'priority' => '0.5', 'changefreq' => 'monthly'],
-        ['url' => '/help',           'priority' => '0.5', 'changefreq' => 'monthly'],
-        ['url' => '/terms',          'priority' => '0.4', 'changefreq' => 'yearly'],
-        ['url' => '/privacy',        'priority' => '0.4', 'changefreq' => 'yearly'],
-        ['url' => '/refund',         'priority' => '0.4', 'changefreq' => 'yearly'],
-    ];
-
-    foreach ($staticPages as $page) {
-        $urls[] = [
-            'loc' => url($page['url']),
-            'lastmod' => now()->toDateString(),
-            'changefreq' => $page['changefreq'],
-            'priority' => $page['priority'],
-        ];
-    }
-
-    // الكورسات النشطة مع صورة (Image Sitemap)
-    try {
-        $courses = \App\Models\AdvancedCourse::where('is_active', true)
-            ->select('id', 'title', 'thumbnail', 'description', 'updated_at')
-            ->orderBy('updated_at', 'desc')
-            ->get();
-
-        foreach ($courses as $course) {
-            $entry = [
-                'loc' => url('/course/'.$course->id),
-                'lastmod' => optional($course->updated_at)->format('Y-m-d') ?: now()->toDateString(),
-                'changefreq' => 'weekly',
-                'priority' => '0.8',
-            ];
-            if ($course->thumbnail) {
-                $entry['image_loc'] = storage_asset(str_replace('\\', '/', $course->thumbnail));
-                $entry['image_title'] = $course->title ?? '';
-                $entry['image_caption'] = \Illuminate\Support\Str::limit(strip_tags($course->description ?? ''), 100);
-            }
-            $urls[] = $entry;
-        }
-    } catch (\Exception $e) {
-    }
-
-    // المدربون النشطون مع صورة
-    try {
-        $instructors = \App\Models\User::whereIn('role', ['instructor', 'teacher'])
-            ->where('is_active', true)
-            ->select('id', 'uuid', 'name', 'updated_at')
-            ->orderBy('updated_at', 'desc')
-            ->limit(1000)
-            ->get();
-
-        foreach ($instructors as $instructor) {
-            $urls[] = [
-                'loc' => route('public.instructors.show', $instructor),
-                'lastmod' => optional($instructor->updated_at)->format('Y-m-d') ?: now()->toDateString(),
-                'changefreq' => 'weekly',
-                'priority' => '0.7',
-            ];
-        }
-    } catch (\Exception $e) {
-    }
-
-    // معرض الوسائط القديم غير مُدرَج في الـ sitemap
-
-    // بناء XML مع دعم Image Sitemap
-    $sitemap = '<?xml version="1.0" encoding="UTF-8"?>'.PHP_EOL;
-    $sitemap .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"'.PHP_EOL;
-    $sitemap .= '        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">'.PHP_EOL;
-
-    foreach ($urls as $entry) {
-        $sitemap .= '  <url>'.PHP_EOL;
-        $sitemap .= '    <loc>'.$xmlEscape($entry['loc']).'</loc>'.PHP_EOL;
-        $sitemap .= '    <lastmod>'.$xmlEscape($entry['lastmod']).'</lastmod>'.PHP_EOL;
-        $sitemap .= '    <changefreq>'.$xmlEscape($entry['changefreq']).'</changefreq>'.PHP_EOL;
-        $sitemap .= '    <priority>'.$xmlEscape($entry['priority']).'</priority>'.PHP_EOL;
-        if (! empty($entry['image_loc'])) {
-            $sitemap .= '    <image:image>'.PHP_EOL;
-            $sitemap .= '      <image:loc>'.$xmlEscape($entry['image_loc']).'</image:loc>'.PHP_EOL;
-            if (! empty($entry['image_title'])) {
-                $sitemap .= '      <image:title>'.$xmlEscape($entry['image_title']).'</image:title>'.PHP_EOL;
-            }
-            if (! empty($entry['image_caption'])) {
-                $sitemap .= '      <image:caption>'.$xmlEscape($entry['image_caption']).'</image:caption>'.PHP_EOL;
-            }
-            $sitemap .= '    </image:image>'.PHP_EOL;
-        }
-        $sitemap .= '  </url>'.PHP_EOL;
-    }
-    $sitemap .= '</urlset>';
-
-    return response($sitemap, 200)
-        ->header('Content-Type', 'application/xml')
+    return response($xml, 200)
+        ->header('Content-Type', 'application/xml; charset=UTF-8')
         ->header('Cache-Control', 'public, max-age=3600');
 })->name('sitemap');
 
@@ -393,7 +303,7 @@ Route::get('/js/landing/{file}.js', function (string $file) use ($serveAtheerAss
 })->where('file', '[A-Za-z0-9\-]+')->name('assets.landing.js');
 
 Route::get('/img/{folder}/{file}', [\App\Http\Controllers\PublicImgController::class, 'show'])
-    ->where(['folder' => 'brand|mycourses|lasles|glottical|sanua|student-timeline', 'file' => '[A-Za-z0-9._\-]+'])
+    ->where(['folder' => 'brand|mycourses|lasles|sanua|student-timeline|admin-ops-guide', 'file' => '[A-Za-z0-9._\-]+'])
     ->name('assets.landing.img');
 
 /*
@@ -401,7 +311,7 @@ Route::get('/img/{folder}/{file}', [\App\Http\Controllers\PublicImgController::c
 | document root خاطئ فيرجع 404 قبل الوصول لـ index.php (عكس /css/landing/*).
 */
 Route::get('/__hesetak/img/{folder}/{file}', [\App\Http\Controllers\PublicImgController::class, 'show'])
-    ->where(['folder' => 'brand|mycourses|lasles|glottical|sanua|student-timeline', 'file' => '[A-Za-z0-9._\-]+'])
+    ->where(['folder' => 'brand|mycourses|lasles|sanua|student-timeline|admin-ops-guide', 'file' => '[A-Za-z0-9._\-]+'])
     ->name('assets.hesetak.img');
 
 // صور لوحة المدرب وغيرها تحت /images/* (نفس مشكلة الاستضافة مع الملفات الثابتة)
@@ -449,6 +359,9 @@ Route::get('/for-teachers', [\App\Http\Controllers\Public\PageController::class,
 Route::get('/how-it-works', [\App\Http\Controllers\Public\PageController::class, 'how'])->name('public.how');
 Route::redirect('/how', '/how-it-works', 301);
 Route::get('/curricula', [\App\Http\Controllers\Public\CurriculaController::class, 'index'])->name('public.curricula');
+Route::get('/curricula/{stage}', [\App\Http\Controllers\Public\CurriculaController::class, 'stage'])
+    ->where('stage', 'primary|middle|secondary|international|university|qiyas|skills')
+    ->name('public.curricula.stage');
 Route::get('/curricula/{year}', [\App\Http\Controllers\Public\CurriculaController::class, 'show'])->name('public.curricula.show');
 
 // حصتك expandable public IA (config/tadris_nav.php)
@@ -464,6 +377,7 @@ Route::get('/faq', [\App\Http\Controllers\Public\PageController::class, 'faq'])-
 Route::get('/terms', [\App\Http\Controllers\Public\PageController::class, 'terms'])->name('public.terms');
 Route::get('/privacy', [\App\Http\Controllers\Public\PageController::class, 'privacy'])->name('public.privacy');
 Route::get('/pricing', [\App\Http\Controllers\Public\PageController::class, 'pricing'])->name('public.pricing');
+Route::get('/search', \App\Http\Controllers\Public\SearchController::class)->name('public.search');
 Route::get('/api/public/package-catalog', [\App\Http\Controllers\Public\PackageCatalogApiController::class, '__invoke'])
     ->middleware('throttle:60,1')
     ->name('public.package-catalog');
@@ -584,10 +498,21 @@ Route::post('/service-packages/{servicePackage}/checkout/paypal', [\App\Http\Con
 Route::post('/service-packages/custom/orders/{order}/paypal', [\App\Http\Controllers\Public\PayPalCheckoutController::class, 'startExistingOrder'])
     ->middleware(['auth', 'throttle:20,1'])
     ->name('public.service-packages.custom.paypal');
+Route::post('/service-packages/{servicePackage}/checkout/stripe', [\App\Http\Controllers\Public\StripeCheckoutController::class, 'startPackage'])
+    ->middleware(['auth', 'throttle:20,1'])
+    ->name('public.service-packages.stripe');
+Route::post('/service-packages/custom/orders/{order}/stripe', [\App\Http\Controllers\Public\StripeCheckoutController::class, 'startExistingOrder'])
+    ->middleware(['auth', 'throttle:20,1'])
+    ->name('public.service-packages.custom.stripe');
 Route::redirect('/teachers', '/instructors', 301);
-Route::get('/teachers/{instructor}', function (\App\Models\User $instructor) {
-    return redirect()->route('public.instructors.show', $instructor, 301);
-})->name('public.teachers.show');
+Route::get('/teachers/{instructor}', function (string $instructor) {
+    $resolved = \App\Services\PublicInstructorDirectory::resolvePublicShow($instructor);
+    if ($resolved instanceof \Illuminate\Http\RedirectResponse) {
+        return $resolved;
+    }
+
+    return redirect()->route('public.instructors.show', $resolved, 301);
+})->where('instructor', '[0-9A-Za-z\-]+')->name('public.teachers.show');
 
 // صفحة الكورسات العامة (?subject=id & ?delivery=one_to_one|group)
 Route::get('/courses', [\App\Http\Controllers\Public\CoursesController::class, 'index'])->name('public.courses');
@@ -600,7 +525,9 @@ Route::get('/books', [\App\Http\Controllers\Public\ProductTrackCatalogController
 
 // صفحة المدربين (الملفات التعريفية المعتمدة)
 Route::get('/instructors', [\App\Http\Controllers\Public\InstructorController::class, 'index'])->name('public.instructors.index');
-Route::get('/instructors/{instructor}', [\App\Http\Controllers\Public\InstructorController::class, 'show'])->name('public.instructors.show');
+Route::get('/instructors/{instructor}', [\App\Http\Controllers\Public\InstructorController::class, 'show'])
+    ->where('instructor', '[0-9A-Za-z\-]+')
+    ->name('public.instructors.show');
 Route::get('/tutor/apply', [\App\Http\Controllers\Public\TutorApplyController::class, 'create'])->name('public.tutor.apply');
 Route::post('/tutor/apply/register', [\App\Http\Controllers\Public\TutorApplyController::class, 'register'])->name('public.tutor.apply.register');
 Route::get('/tutor/apply/profile', [\App\Http\Controllers\Public\TutorApplyController::class, 'profile'])
@@ -669,6 +596,10 @@ Route::post('/course/{courseId}/checkout/paypal', [\App\Http\Controllers\Public\
     ->middleware(['auth', 'throttle:20,1'])
     ->name('public.course.checkout.paypal');
 
+Route::post('/course/{courseId}/checkout/stripe', [\App\Http\Controllers\Public\StripeCheckoutController::class, 'startCourse'])
+    ->middleware(['auth', 'throttle:20,1'])
+    ->name('public.course.checkout.stripe');
+
 // تسجيل مجاني للكورسات المجانية
 Route::post('/course/{courseId}/enroll-free', [\App\Http\Controllers\Public\CheckoutController::class, 'enrollFree'])
     ->middleware('auth')
@@ -689,6 +620,13 @@ Route::get('/checkout/paypal/return', [\App\Http\Controllers\Public\PayPalChecko
 Route::get('/checkout/paypal/cancel', [\App\Http\Controllers\Public\PayPalCheckoutController::class, 'cancel'])
     ->middleware(['auth', 'throttle:30,1'])
     ->name('public.checkout.paypal.cancel');
+
+Route::get('/checkout/stripe/return', [\App\Http\Controllers\Public\StripeCheckoutController::class, 'returnFromStripe'])
+    ->middleware(['auth', 'throttle:30,1'])
+    ->name('public.checkout.stripe.return');
+Route::get('/checkout/stripe/cancel', [\App\Http\Controllers\Public\StripeCheckoutController::class, 'cancel'])
+    ->middleware(['auth', 'throttle:30,1'])
+    ->name('public.checkout.stripe.cancel');
 
 // روابط قديمة لمنتج المسارات التعليمية (أُزيل) → الكورسات
 Route::redirect('/learning-paths', '/courses', 301);
@@ -1000,6 +938,7 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
     Route::middleware(['role:student'])->group(function () {
         Route::get('/profile', [\App\Http\Controllers\Student\ProfileController::class, 'index'])->name('profile');
         Route::put('/profile', [\App\Http\Controllers\Student\ProfileController::class, 'update'])->name('profile.update');
+        Route::post('/profile/children', [\App\Http\Controllers\Student\ProfileController::class, 'storeChild'])->name('profile.children.store');
         Route::get('/settings', [\App\Http\Controllers\Student\SettingsController::class, 'index'])->name('settings');
         Route::get('/notifications', [\App\Http\Controllers\Student\NotificationController::class, 'index'])->name('notifications');
         Route::get('/notifications/{notification}/go', [\App\Http\Controllers\Student\NotificationController::class, 'go'])
@@ -1252,6 +1191,13 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
 
         Route::get('/agreements', [\App\Http\Controllers\Employee\AgreementController::class, 'index'])->middleware('employee.can:agreements')->name('agreements.index');
         Route::get('/agreements/{agreement}', [\App\Http\Controllers\Employee\AgreementController::class, 'show'])->middleware('employee.can:agreements')->name('agreements.show');
+        Route::get('/agreements/{agreement}/pdf', [\App\Http\Controllers\Employee\AgreementController::class, 'downloadPdf'])->middleware('employee.can:agreements')->name('agreements.pdf');
+        Route::post('/agreements/{agreement}/request-code', [\App\Http\Controllers\Employee\AgreementController::class, 'requestAcceptanceCode'])
+            ->middleware(['employee.can:agreements', 'throttle:5,1'])
+            ->name('agreements.request-code');
+        Route::post('/agreements/{agreement}/accept', [\App\Http\Controllers\Employee\AgreementController::class, 'accept'])
+            ->middleware(['employee.can:agreements', 'throttle:10,1'])
+            ->name('agreements.accept');
 
         Route::get('/profile', [\App\Http\Controllers\Employee\EmployeeProfileController::class, 'index'])->middleware('employee.can:profile')->name('profile');
         Route::put('/profile', [\App\Http\Controllers\Employee\EmployeeProfileController::class, 'update'])->middleware('employee.can:profile')->name('profile.update');
@@ -1296,8 +1242,9 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::get('/profile', [\App\Http\Controllers\Admin\ProfileController::class, 'index'])->name('profile');
         Route::put('/profile', [\App\Http\Controllers\Admin\ProfileController::class, 'update'])->name('profile.update');
 
-        // إدارة المستخدمين
-        Route::get('/users', [\App\Http\Controllers\Admin\AdminController::class, 'users'])->name('users.index');
+        // إدارة المستخدمين — دليل موحّد للأنواع الأربعة
+        Route::get('/users', [\App\Http\Controllers\Admin\UsersDirectoryController::class, 'index'])->name('users.index');
+        Route::get('/users/export', [\App\Http\Controllers\Admin\UsersDirectoryController::class, 'export'])->name('users.export');
         Route::get('/students-accounts', [\App\Http\Controllers\Admin\AdminController::class, 'studentsAccounts'])->name('students-accounts.index');
 
         Route::get('/users/create', [\App\Http\Controllers\Admin\AdminController::class, 'createUser'])->name('users.create');
@@ -1310,9 +1257,20 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::post('/users/{user}', [\App\Http\Controllers\Admin\AdminController::class, 'updateUser'])->whereUuid('user');
         Route::put('/users/{user}', [\App\Http\Controllers\Admin\AdminController::class, 'updateUser'])->name('users.update')->whereUuid('user');
         Route::delete('/users/{user}', [\App\Http\Controllers\Admin\AdminController::class, 'deleteUser'])->name('users.delete')->whereUuid('user');
+        Route::post('/users/{user}/toggle-status', [\App\Http\Controllers\Admin\UsersDirectoryController::class, 'toggleStatus'])
+            ->middleware('throttle:30,1')
+            ->name('users.toggle-status')
+            ->whereUuid('user');
+        Route::post('/users/{user}/resend-credentials', [\App\Http\Controllers\Admin\UsersDirectoryController::class, 'resendCredentials'])
+            ->middleware('throttle:10,1')
+            ->name('users.resend-credentials')
+            ->whereUuid('user');
 
         // مسارات التعلم (السنوات الدراسية)
-        Route::resource('academic-years', \App\Http\Controllers\Admin\AcademicYearController::class)->except(['show']);
+        Route::resource('academic-years', \App\Http\Controllers\Admin\AcademicYearController::class);
+        Route::post('/academic-years/{academicYear}/grades', [\App\Http\Controllers\Admin\AcademicGradeController::class, 'store'])->name('academic-years.grades.store');
+        Route::put('/academic-years/{academicYear}/grades/{grade}', [\App\Http\Controllers\Admin\AcademicGradeController::class, 'update'])->name('academic-years.grades.update');
+        Route::delete('/academic-years/{academicYear}/grades/{grade}', [\App\Http\Controllers\Admin\AcademicGradeController::class, 'destroy'])->name('academic-years.grades.destroy');
         Route::post('/academic-years/{academicYear}/toggle-status', [\App\Http\Controllers\Admin\AcademicYearController::class, 'toggleStatus'])->name('academic-years.toggle-status');
         Route::post('/academic-years/reorder', [\App\Http\Controllers\Admin\AcademicYearController::class, 'reorder'])->name('academic-years.reorder');
         Route::post('/academic-years/{academicYear}/add-course', [\App\Http\Controllers\Admin\AcademicYearController::class, 'addCourse'])->name('academic-years.add-course');
@@ -1517,9 +1475,7 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
             Route::post('/user-permissions/{user}/detach', [\App\Http\Controllers\Admin\UserPermissionController::class, 'detachPermission'])->name('user-permissions.detach');
         });
 
-        // إدارة المحافظ الذكية
-        Route::resource('wallets', \App\Http\Controllers\Admin\WalletController::class);
-        Route::post('/wallets/transfer', [\App\Http\Controllers\Admin\WalletController::class, 'transfer'])->name('wallets.transfer');
+        // إدارة المحافظ الذكية — المسارات الإضافية فقط (resource مُعرَّف لاحقاً مع throttle)
         Route::get('/wallets/{wallet}/transactions', [\App\Http\Controllers\Admin\WalletController::class, 'transactions'])->name('wallets.transactions');
         Route::get('/wallets/{wallet}/reports', [\App\Http\Controllers\Admin\WalletController::class, 'reports'])->name('wallets.reports');
         Route::post('/wallets/{wallet}/generate-report', [\App\Http\Controllers\Admin\WalletController::class, 'generateReport'])->name('wallets.generate-report');
@@ -1628,6 +1584,7 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
 
         // الإدارة العليا (من نحن وغيرها)
         Route::get('about', [\App\Http\Controllers\Admin\AboutPageController::class, 'index'])->name('about.index');
+        Route::put('about', [\App\Http\Controllers\Admin\AboutPageController::class, 'update'])->name('about.update');
         Route::get('about/view', [\App\Http\Controllers\Admin\AboutPageController::class, 'viewPublic'])->name('about.view-public');
 
         Route::resource('contact-messages', \App\Http\Controllers\Admin\ContactMessageController::class)
@@ -1705,9 +1662,15 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::post('/payment-gateways/paypal/test', [\App\Http\Controllers\Admin\PaymentGatewaysController::class, 'testPaypal'])
             ->middleware('throttle:8,1')
             ->name('payment-gateways.paypal.test');
+        Route::post('/payment-gateways/stripe/test', [\App\Http\Controllers\Admin\PaymentGatewaysController::class, 'testStripe'])
+            ->middleware('throttle:8,1')
+            ->name('payment-gateways.stripe.test');
         Route::post('/system-settings/paypal/test', [\App\Http\Controllers\Admin\PaymentGatewaysController::class, 'testPaypal'])
             ->middleware('throttle:8,1')
             ->name('system-settings.paypal.test');
+        Route::post('/system-settings/stripe/test', [\App\Http\Controllers\Admin\PaymentGatewaysController::class, 'testStripe'])
+            ->middleware('throttle:8,1')
+            ->name('system-settings.stripe.test');
         Route::post('/system-settings/two-factor/enable-request', [\App\Http\Controllers\Admin\SystemSettingsController::class, 'requestTwoFactorEnable'])
             ->middleware('throttle:10,1')
             ->name('system-settings.two-factor.enable-request');
@@ -1732,10 +1695,11 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::post('/packages/bulk-update', [\App\Http\Controllers\Admin\PackageController::class, 'updateBulkPrices'])->name('packages.bulk-update');
 
         // باقات خدمات الطالب ورصيد الحصص
-        Route::resource('service-packages', \App\Http\Controllers\Admin\ServicePackageController::class)->except(['show']);
+        Route::resource('service-packages', \App\Http\Controllers\Admin\ServicePackageController::class);
         Route::get('/service-packages-grant', [\App\Http\Controllers\Admin\ServicePackageController::class, 'grantForm'])->name('service-packages.grant');
         Route::post('/service-packages-grant', [\App\Http\Controllers\Admin\ServicePackageController::class, 'grantStore'])->name('service-packages.grant.store');
         Route::post('/service-packages/{servicePackage}/toggle-status', [\App\Http\Controllers\Admin\ServicePackageController::class, 'toggleStatus'])->name('service-packages.toggle-status');
+        Route::post('/service-packages/{servicePackage}/toggle-featured', [\App\Http\Controllers\Admin\ServicePackageController::class, 'toggleFeatured'])->name('service-packages.toggle-featured');
         Route::resource('service-package-pricing-rules', \App\Http\Controllers\Admin\ServicePackagePricingRuleController::class)
             ->only(['index', 'store', 'update', 'destroy']);
         Route::get('/service-session-rates', [\App\Http\Controllers\Admin\ServiceSessionRateController::class, 'index'])
@@ -1907,13 +1871,15 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
             ->middleware('throttle:60,1')
             ->except(['update', 'destroy']);
         Route::post('/wallets/transfer', [\App\Http\Controllers\Admin\WalletController::class, 'transfer'])->middleware('throttle:20,5')->name('wallets.transfer');
-        Route::post('/wallets/{wallet}', [\App\Http\Controllers\Admin\WalletController::class, 'update'])->middleware('throttle:20,5')->name('wallets.update');
+        Route::match(['post', 'put', 'patch'], '/wallets/{wallet}', [\App\Http\Controllers\Admin\WalletController::class, 'update'])->middleware('throttle:20,5')->name('wallets.update');
         Route::delete('/wallets/{wallet}', [\App\Http\Controllers\Admin\WalletController::class, 'destroy'])->middleware('throttle:10,1')->name('wallets.destroy');
 
-        Route::resource('expenses', \App\Http\Controllers\Admin\ExpenseController::class)->except(['destroy']);
+        Route::resource('expenses', \App\Http\Controllers\Admin\ExpenseController::class)
+            ->middleware('throttle:60,1')
+            ->except(['update', 'destroy']);
         Route::post('/expenses/{expense}/approve', [\App\Http\Controllers\Admin\ExpenseController::class, 'approve'])->middleware('throttle:10,1')->name('expenses.approve');
         Route::post('/expenses/{expense}/reject', [\App\Http\Controllers\Admin\ExpenseController::class, 'reject'])->middleware('throttle:10,1')->name('expenses.reject');
-        Route::post('/expenses/{expense}', [\App\Http\Controllers\Admin\ExpenseController::class, 'update'])->middleware('throttle:20,5')->name('expenses.update');
+        Route::match(['post', 'put', 'patch'], '/expenses/{expense}', [\App\Http\Controllers\Admin\ExpenseController::class, 'update'])->middleware('throttle:20,5')->name('expenses.update');
         Route::delete('/expenses/{expense}', [\App\Http\Controllers\Admin\ExpenseController::class, 'destroy'])->middleware('throttle:10,1')->name('expenses.destroy');
 
         // نظام الدعم الفني
@@ -2076,6 +2042,10 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
                 ->name('store');
             Route::post('payments/{payment}/mark-paid', [\App\Http\Controllers\Admin\EmployeeAgreementController::class, 'markPaymentPaid'])->name('payments.mark-paid');
             Route::post('{employeeAgreement}/payments', [\App\Http\Controllers\Admin\EmployeeAgreementController::class, 'storePayment'])->name('payments.store');
+            Route::get('/{employeeAgreement}/pdf', [\App\Http\Controllers\Admin\EmployeeAgreementController::class, 'downloadPdf'])->name('pdf');
+            Route::post('/{employeeAgreement}/send-acceptance', [\App\Http\Controllers\Admin\EmployeeAgreementController::class, 'sendForAcceptance'])
+                ->middleware('throttle:10,1')
+                ->name('send-acceptance');
             Route::get('/{employeeAgreement}', [\App\Http\Controllers\Admin\EmployeeAgreementController::class, 'show'])->name('show');
             Route::get('/{employeeAgreement}/edit', [\App\Http\Controllers\Admin\EmployeeAgreementController::class, 'edit'])->name('edit');
             Route::put('/{employeeAgreement}', [\App\Http\Controllers\Admin\EmployeeAgreementController::class, 'update'])
@@ -2103,6 +2073,7 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
 
         // إدارة التسويق
         Route::get('/personal-branding', [\App\Http\Controllers\Admin\InstructorPersonalBrandingController::class, 'index'])->name('personal-branding.index');
+        Route::post('/personal-branding/unpublish-all-incomplete', [\App\Http\Controllers\Admin\InstructorPersonalBrandingController::class, 'unpublishAllIncomplete'])->name('personal-branding.unpublish-all-incomplete');
         Route::resource('popup-ads', \App\Http\Controllers\Admin\PopupAdController::class)->except(['show']);
         Route::get('/personal-branding/{personal_branding}/edit', [\App\Http\Controllers\Admin\InstructorPersonalBrandingController::class, 'edit'])->name('personal-branding.edit');
         Route::put('/personal-branding/{personal_branding}', [\App\Http\Controllers\Admin\InstructorPersonalBrandingController::class, 'update'])
@@ -2115,6 +2086,7 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::post('/personal-branding/{personal_branding}/approve', [\App\Http\Controllers\Admin\InstructorPersonalBrandingController::class, 'approve'])->name('personal-branding.approve');
         Route::post('/personal-branding/{personal_branding}/reject', [\App\Http\Controllers\Admin\InstructorPersonalBrandingController::class, 'reject'])->name('personal-branding.reject');
         Route::post('/personal-branding/{personal_branding}/send-back', [\App\Http\Controllers\Admin\InstructorPersonalBrandingController::class, 'sendBackForReview'])->name('personal-branding.send-back');
+        Route::post('/personal-branding/{personal_branding}/unpublish-incomplete', [\App\Http\Controllers\Admin\InstructorPersonalBrandingController::class, 'unpublishIncomplete'])->name('personal-branding.unpublish-incomplete');
         Route::post('/personal-branding/{personal_branding}/consultation-pricing', [\App\Http\Controllers\Admin\InstructorPersonalBrandingController::class, 'updateConsultationPricing'])->name('personal-branding.consultation-pricing');
         Route::get('/curriculum-types', [\App\Http\Controllers\Admin\HesetakCurriculumTypeController::class, 'index'])->name('curriculum-types.index');
         Route::post('/curriculum-types', [\App\Http\Controllers\Admin\HesetakCurriculumTypeController::class, 'store'])->middleware('throttle:30,1')->name('curriculum-types.store');
@@ -2251,6 +2223,7 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
 
     // مسارات الطلاب - محمية للطلاب فقط
     Route::prefix('student')->name('student.')->middleware(['role:student'])->group(function () {
+        Route::get('/learning-desk', [\App\Http\Controllers\Student\LearningDeskController::class, 'index'])->name('learning-desk');
         Route::resource('invoices', \App\Http\Controllers\Student\InvoiceController::class)->only(['index', 'show']);
         Route::resource('wallet', \App\Http\Controllers\Student\WalletController::class)->only(['index', 'show']);
         Route::resource('certificates', \App\Http\Controllers\Student\CertificateController::class)->only(['index', 'show']);

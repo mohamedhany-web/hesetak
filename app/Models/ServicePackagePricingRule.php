@@ -7,9 +7,14 @@ use Illuminate\Database\Eloquent\Model;
 
 class ServicePackagePricingRule extends Model
 {
+    public const KIND_STANDARD = 'standard';
+
+    public const KIND_URGENT = 'urgent';
+
     protected $fillable = [
         'name',
         'scope',
+        'kind',
         'price_per_session',
         'min_sessions',
         'max_sessions',
@@ -46,8 +51,33 @@ class ServicePackagePricingRule extends Model
         return $query->orderBy('sort_order')->orderBy('id');
     }
 
+    public function scopeStandard(Builder $query): Builder
+    {
+        return $query->where(function ($q) {
+            $q->where('kind', self::KIND_STANDARD)->orWhereNull('kind');
+        });
+    }
+
+    public function scopeUrgent(Builder $query): Builder
+    {
+        return $query->where('kind', self::KIND_URGENT);
+    }
+
+    public function isUrgent(): bool
+    {
+        return ($this->kind ?? self::KIND_STANDARD) === self::KIND_URGENT;
+    }
+
     public function scopeLabel(): string
     {
         return ServicePackage::scopes()[$this->scope] ?? $this->scope;
+    }
+
+    public function kindLabel(): string
+    {
+        return match ($this->kind ?? self::KIND_STANDARD) {
+            self::KIND_URGENT => 'حصة مستعجلة',
+            default => 'قياسي',
+        };
     }
 }

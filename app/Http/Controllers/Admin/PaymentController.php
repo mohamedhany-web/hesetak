@@ -104,7 +104,7 @@ class PaymentController extends Controller
 
         if ($validated['amount'] > $remainingAmount) {
             return back()->withErrors([
-                'amount' => 'لا يمكن دفع مبلغ أكبر من المتبقي (' . number_format($remainingAmount, 2) . ' $).' ,
+                'amount' => 'لا يمكن دفع مبلغ أكبر من المتبقي (' . number_format($remainingAmount, 2) . ' ' . currency_symbol() . ').' ,
             ])->withInput();
         }
 
@@ -197,7 +197,7 @@ class PaymentController extends Controller
 
         if ($validated['status'] === 'completed' && $validated['amount'] > $currentRemaining) {
             return back()->withErrors([
-                'amount' => 'لا يمكن دفع مبلغ أكبر من المتبقي (' . number_format(max($currentRemaining, 0), 2) . ' $).' ,
+                'amount' => 'لا يمكن دفع مبلغ أكبر من المتبقي (' . number_format(max($currentRemaining, 0), 2) . ' ' . currency_symbol() . ').' ,
             ])->withInput();
         }
 

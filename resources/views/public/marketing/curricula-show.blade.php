@@ -19,13 +19,13 @@
       <span aria-hidden="true">/</span>
       <a href="{{ route('public.curricula') }}">{{ $p['eyebrow'] }}</a>
       <span aria-hidden="true">/</span>
-      <span>{{ $year->name }}</span>
+      <span>{{ \App\Support\LocalizedCatalogLabel::text($year->name) }}</span>
     </nav>
 
     <div class="mc-dir-head__top" style="margin-top:1rem">
       <div class="mc-dir-head__copy">
         <p class="mc-eyebrow">{{ $d['eyebrow'] ?? $p['eyebrow'] }}</p>
-        <h1 id="mc-curr-detail-title">{{ $year->name }}</h1>
+        <h1 id="mc-curr-detail-title">{{ \App\Support\LocalizedCatalogLabel::text($year->name) }}</h1>
         @if(filled($year->tagline))
           <p class="mc-curr-head__lead">{{ $year->tagline }}</p>
         @elseif(filled($year->description))
@@ -40,10 +40,10 @@
 
     <div class="mc-curr-actions">
       <a
-        href="{{ route('public.instructors.index', ['stage' => $year->slug]) }}"
+        href="{{ route('public.pricing', ['year' => $year->id]) }}#mc-pricing-storefront"
         class="mc-btn mc-btn--md mc-btn--primary"
-      >{{ $d['cta_match'] ?? $p['cta_teachers'] }}</a>
-      <a href="{{ route('public.pricing') }}" class="mc-btn mc-btn--md mc-btn--outline">{{ $p['cta_packages'] }}</a>
+      >{{ $p['cta_packages'] }}</a>
+      <a href="{{ route('public.instructors.index', ['stage' => $year->slug]) }}" class="mc-btn mc-btn--md mc-btn--outline">{{ $d['cta_match'] ?? $p['cta_teachers'] }}</a>
       <a href="{{ route('public.curricula') }}" class="mc-btn mc-btn--md mc-btn--soft">{{ $d['cta_back'] ?? ($isRtl ? 'كل المناهج' : 'All curricula') }}</a>
     </div>
   </div>
@@ -67,25 +67,30 @@
     <div class="mc-section-head">
       <div>
         <h2 id="mc-curr-subjects" class="mc-title">{{ $d['subjects_title'] ?? $p['subjects_title'] }}</h2>
-        <p class="mc-lead">{{ $d['subjects_lead'] ?? ($isRtl ? 'المواد كما يصفها الأدمن داخل المنصة. اختر مادة لفتح دليل المعلمين.' : 'Subjects as configured by admin. Pick one to open the teacher directory.') }}</p>
+        <p class="mc-lead">{{ $d['subjects_lead'] ?? ($isRtl ? 'اختر المادة ثم انتقل لخيارات عدد الحصص في الباقات.' : 'Pick a subject, then choose session count on packages.') }}</p>
       </div>
     </div>
 
     @if($subjects->isEmpty())
-      <div class="mc-empty">{{ $d['subjects_empty'] ?? ($isRtl ? 'لا مواد منشورة لهذه المرحلة بعد.' : 'No subjects published for this stage yet.') }}</div>
+      <div class="mc-empty">
+        {{ $d['subjects_empty'] ?? ($isRtl ? 'لا مواد منشورة لهذه المرحلة بعد.' : 'No subjects published for this stage yet.') }}
+        <p style="margin-top:.75rem">
+          <a href="{{ route('public.pricing', ['year' => $year->id]) }}#mc-pricing-storefront" class="mc-btn mc-btn--md mc-btn--primary">{{ $p['cta_packages'] }}</a>
+        </p>
+      </div>
     @else
       <div class="mc-curricula-grid">
         @foreach($subjects as $subject)
           <a
             class="mc-curricula-card mc-curricula-card--link"
-            href="{{ route('public.instructors.index', ['stage' => $year->slug, 'skill' => $subject->name]) }}"
+            href="{{ route('public.pricing', ['year' => $year->id, 'subject' => $subject->id]) }}#mc-pricing-storefront"
           >
-            <h3>{{ $subject->name }}</h3>
+            <h3>{{ \App\Support\LocalizedCatalogLabel::text($subject->name) }}</h3>
             <p>
               @if(filled($subject->description))
                 {{ \Illuminate\Support\Str::limit(strip_tags($subject->description), 100) }}
               @else
-                {{ $d['subject_cta'] ?? ($isRtl ? 'ابحث عن معلم لهذه المادة' : 'Find a teacher for this subject') }}
+                {{ $isRtl ? 'اختر عدد الحصص لهذه المادة' : 'Choose session count for this subject' }}
               @endif
             </p>
             <span class="mc-curricula-card__cta">{{ $p['cta_teachers'] }} →</span>

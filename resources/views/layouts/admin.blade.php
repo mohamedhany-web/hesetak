@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <meta name="robots" content="noindex, nofollow">
     <title>@yield('title', __('auth.dashboard')) - {{ config('app.name') }}</title>
     
     @include('partials.favicon-links')
@@ -272,6 +273,17 @@
         .dark .content-wrapper input:not([type="submit"]):not([type="button"]),
         .dark .content-wrapper textarea,
         .dark .content-wrapper select { background: #334155 !important; border-color: #475569 !important; color: #e2e8f0 !important; }
+        /* قوائم منسدلة أصلية: تجنّب مسافات عمودية مبالغ فيها بين الخيارات */
+        .content-wrapper select {
+            line-height: 1.25 !important;
+            padding-block: 0.5rem !important;
+        }
+        .content-wrapper select option {
+            padding: 0.35rem 0.65rem !important;
+            line-height: 1.35 !important;
+            min-height: 0 !important;
+            font-size: 0.875rem !important;
+        }
         .dark table { border-color: #475569; }
         .dark th, .dark td { border-color: #334155; color: #e2e8f0; }
         .dark thead th { background: #334155 !important; color: #f1f5f9 !important; }
@@ -505,7 +517,17 @@
                             @endif
                             <div class="hidden leading-tight md:block">
                                 <p class="max-w-[100px] truncate text-xs font-semibold text-ink">{{ auth()->user()->name }}</p>
-                                <p class="text-[10px] text-muted">صلاحيات كاملة</p>
+                                @php
+                                    $navUser = auth()->user();
+                                    $navPermLabel = ($navUser->isAdmin() && ! $navUser->roles()->exists())
+                                        ? 'صلاحيات كاملة'
+                                        : ($navUser->is_employee
+                                            ? ($navUser->usesCustomEmployeePermissions()
+                                                ? 'صلاحيات مخصصة'
+                                                : ($navUser->isSalesDepartmentEmployee() ? 'صلاحيات الوظيفة' : 'صلاحيات محدودة'))
+                                            : 'صلاحيات الدور');
+                                @endphp
+                                <p class="text-[10px] text-muted">{{ $navPermLabel }}</p>
                             </div>
                         </button>
                         <div x-show="open" x-cloak class="admin-dropdown-panel absolute left-0 z-[9999] mt-2 overflow-hidden rounded-2xl border border-line bg-surface shadow-lift" style="width:min(14rem,calc(100vw - 1.5rem))">
@@ -533,24 +555,7 @@
         {{-- المحتوى يتمرّر هنا فقط — السايدبار ثابت --}}
         <main class="admin-main-scroll min-h-0 flex-1 overflow-x-hidden overflow-y-auto">
             <div class="admin-content-pad page-enter space-y-5" data-admin-page>
-                @if(session('success'))
-                    <div class="flex items-center gap-3 rounded-2xl border border-line bg-success/10 px-4 py-3 text-success sm:px-5" role="alert">
-                        <span class="min-w-0 flex-1 text-sm font-medium">{{ session('success') }}</span>
-                        <button type="button" onclick="this.parentElement.remove()" class="shrink-0 text-muted hover:text-ink" aria-label="إغلاق">×</button>
-                    </div>
-                @endif
-                @if(session('error'))
-                    <div class="flex items-center gap-3 rounded-2xl border border-line bg-danger/10 px-4 py-3 text-danger sm:px-5" role="alert">
-                        <span class="min-w-0 flex-1 text-sm font-medium">{{ session('error') }}</span>
-                        <button type="button" onclick="this.parentElement.remove()" class="shrink-0 text-muted hover:text-ink" aria-label="إغلاق">×</button>
-                    </div>
-                @endif
-                @if(session('warning'))
-                    <div class="flex items-center gap-3 rounded-2xl border border-line bg-metal/15 px-4 py-3 text-[#7a5c2e] sm:px-5" role="alert">
-                        <span class="min-w-0 flex-1 text-sm font-medium">{{ session('warning') }}</span>
-                        <button type="button" onclick="this.parentElement.remove()" class="shrink-0 text-muted hover:text-ink" aria-label="إغلاق">×</button>
-                    </div>
-                @endif
+                @include('partials.admin-flash')
                 @yield('content')
             </div>
         </main>
@@ -568,6 +573,45 @@
       if (sidebar) window.dispatchEvent(new CustomEvent('close-sidebar'));
     }
   }, true);
+
+  (function () {
+    var KEY = 'hesetak.adminSidebar.scrollTop';
+    function navs() {
+      return document.querySelectorAll('.admin-sidebar .sidebar-nav');
+    }
+    function persistFrom(nav) {
+      if (!nav) return;
+      try { sessionStorage.setItem(KEY, String(nav.scrollTop)); } catch (e) {}
+    }
+    function restore() {
+      var y = 0;
+      try { y = parseInt(sessionStorage.getItem(KEY) || '0', 10) || 0; } catch (e) { y = 0; }
+      navs().forEach(function (nav) { nav.scrollTop = y; });
+    }
+    function holdScroll(nav) {
+      if (!nav) return;
+      var top = nav.scrollTop;
+      requestAnimationFrame(function () {
+        nav.scrollTop = top;
+        requestAnimationFrame(function () { nav.scrollTop = top; persistFrom(nav); });
+      });
+    }
+    restore();
+    document.addEventListener('DOMContentLoaded', restore);
+    window.addEventListener('pageshow', restore);
+    navs().forEach(function (nav) {
+      nav.addEventListener('scroll', function () { persistFrom(nav); }, { passive: true });
+    });
+    document.addEventListener('click', function (e) {
+      var nav = e.target.closest('.admin-sidebar .sidebar-nav');
+      if (!nav) return;
+      if (e.target.closest('.sidebar-group-btn')) {
+        holdScroll(nav);
+        return;
+      }
+      if (e.target.closest('a')) persistFrom(nav);
+    }, true);
+  })();
 </script>
 </body>
 </html>

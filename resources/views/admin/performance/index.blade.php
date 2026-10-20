@@ -175,16 +175,47 @@
             </div>
 
             <div class="rounded-2xl border border-line bg-surface p-4 shadow-soft">
-                <h4 class="mb-4 flex items-center gap-2 text-base font-semibold text-ink">
+                <h4 class="mb-3 flex items-center gap-2 text-base font-semibold text-ink">
                     <span class="inline-flex size-9 items-center justify-center rounded-xl bg-[#f2f5f4] text-accent">
                         <i class="fas fa-database text-sm"></i>
                     </span>
                     تحسين قاعدة البيانات
                 </h4>
-                <p class="mb-4 text-sm text-muted">
-                    تحسين الجداول وتحسين الأداء
+                <p class="mb-3 text-sm text-muted">
+                    يسترجع مساحة الصفوف المحذوفة ويعيد ترتيب الجداول ويحدّث إحصاءات الفهارس (<code class="text-xs">OPTIMIZE TABLE</code>).
+                    على قاعدة صغيرة/جديدة قد لا يظهر فرق سرعة — وهذا طبيعي.
                 </p>
-                <button onclick="optimizeDatabase()" class="btn-press inline-flex w-full items-center justify-center gap-2 rounded-xl bg-accent px-4 py-3 text-sm font-medium text-white hover:bg-[#0d4f4a]">
+                <div class="mb-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900 leading-relaxed">
+                    <strong>تنبيه:</strong> العملية قد تقفل الجداول لحظياً. يُفضَّل تشغيلها خارج أوقات الذروة.
+                    التسريع الحقيقي يأتي من فهارس البحث، الكاش (Redis / config / route / view)، OPcache، إصلاح N+1، CDN، وضغط الصور وتشغيل Queue Worker.
+                </div>
+
+                @if(!empty($databaseInfo))
+                    <div class="mb-3 grid grid-cols-2 gap-2 text-xs">
+                        <div class="rounded-xl border border-line bg-canvas px-3 py-2">
+                            <div class="text-muted">حجم القاعدة الآن</div>
+                            <div class="mt-0.5 font-semibold tabular-nums text-ink">{{ $databaseInfo['size_human'] }}</div>
+                        </div>
+                        <div class="rounded-xl border border-line bg-canvas px-3 py-2">
+                            <div class="text-muted">عدد الجداول</div>
+                            <div class="mt-0.5 font-semibold tabular-nums text-ink">{{ number_format($databaseInfo['tables']) }}</div>
+                        </div>
+                        <div class="rounded-xl border border-line bg-canvas px-3 py-2">
+                            <div class="text-muted">مساحة قابلة للاسترجاع (تقريبي)</div>
+                            <div class="mt-0.5 font-semibold tabular-nums text-ink">{{ $databaseInfo['free_human'] }}</div>
+                        </div>
+                        <div class="rounded-xl border border-line bg-canvas px-3 py-2">
+                            <div class="text-muted">آخر تشغيل</div>
+                            <div class="mt-0.5 font-semibold tabular-nums text-ink" id="db-last-run">
+                                {{ $lastDbOptimize['ran_at_human'] ?? 'لم يُنفَّذ بعد' }}
+                            </div>
+                        </div>
+                    </div>
+                @endif
+
+                <div id="db-optimize-result" class="mb-3 hidden rounded-xl border border-line bg-canvas px-3 py-3 text-xs text-ink space-y-2"></div>
+
+                <button type="button" onclick="optimizeDatabase(this)" class="btn-press inline-flex w-full items-center justify-center gap-2 rounded-xl bg-accent px-4 py-3 text-sm font-medium text-white hover:bg-[#0d4f4a]">
                     <i class="fas fa-tools"></i>
                     تحسين قاعدة البيانات
                 </button>
@@ -262,7 +293,11 @@ function optimizeCache() {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                alert(data.message);
+                let msg = data.message || 'تم';
+                if (data.warnings && Object.keys(data.warnings).length) {
+                    msg += '\n\nتحذيرات:\n' + Object.values(data.warnings).join('\n');
+                }
+                alert(msg);
                 location.reload();
             } else {
                 alert('حدث خطأ: ' + data.message);
@@ -317,41 +352,68 @@ function clearTempFiles() {
     }
 }
 
-function optimizeDatabase() {
+function optimizeDatabase(buttonEl) {
     if (isSubmitting) return;
 
-    if (confirm('هل تريد تحسين قاعدة البيانات؟ قد يستغرق هذا الأمر بعض الوقت.')) {
-        isSubmitting = true;
-        const button = event.target.closest('button');
-        const originalText = button.innerHTML;
-        button.disabled = true;
-        button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحسين...';
-
-        fetch(`{{ route('admin.performance.optimize-database') }}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '{{ csrf_token() }}'
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                alert(data.message);
-            } else {
-                alert('حدث خطأ: ' + data.message);
-            }
-            button.disabled = false;
-            button.innerHTML = originalText;
-            isSubmitting = false;
-        })
-        .catch(error => {
-            alert('حدث خطأ أثناء الاتصال');
-            button.disabled = false;
-            button.innerHTML = originalText;
-            isSubmitting = false;
-        });
+    if (!confirm('تحسين قاعدة البيانات قد يقفل الجداول لحظياً. يُفضَّل خارج الذروة. المتابعة؟')) {
+        return;
     }
+
+    isSubmitting = true;
+    const button = buttonEl || event.target.closest('button');
+    const originalText = button.innerHTML;
+    button.disabled = true;
+    button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحسين...';
+
+    const resultBox = document.getElementById('db-optimize-result');
+
+    fetch(`{{ route('admin.performance.optimize-database') }}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '{{ csrf_token() }}'
+        }
+    })
+    .then(async (response) => {
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok && !data.success) {
+            throw new Error(data.message || 'فشل الطلب');
+        }
+        return data;
+    })
+    .then(data => {
+        if (data.success && data.summary) {
+            const s = data.summary;
+            if (resultBox) {
+                resultBox.classList.remove('hidden');
+                resultBox.innerHTML = `
+                    <div class="font-semibold text-ink">${data.message}</div>
+                    <div class="grid grid-cols-2 gap-2 mt-2">
+                        <div><span class="text-muted">قبل:</span> <span class="tabular-nums font-semibold">${s.before.size_human}</span> · ${s.before.tables} جدول</div>
+                        <div><span class="text-muted">بعد:</span> <span class="tabular-nums font-semibold">${s.after.size_human}</span> · ${s.after.tables} جدول</div>
+                        <div><span class="text-muted">مسترجَع:</span> <span class="tabular-nums font-semibold">${s.reclaimed_human}</span></div>
+                        <div><span class="text-muted">المدة:</span> <span class="tabular-nums font-semibold">${s.duration_human}</span></div>
+                        <div class="col-span-2"><span class="text-muted">جداول محسَّنة:</span> <span class="tabular-nums font-semibold">${s.tables_optimized}</span></div>
+                    </div>
+                    <p class="text-muted leading-relaxed mt-1">${s.note || ''}</p>
+                `;
+            }
+            const lastRun = document.getElementById('db-last-run');
+            if (lastRun && s.ran_at_human) lastRun.textContent = s.ran_at_human;
+        } else {
+            alert('حدث خطأ: ' + (data.message || 'غير معروف'));
+        }
+        button.disabled = false;
+        button.innerHTML = originalText;
+        isSubmitting = false;
+    })
+    .catch(error => {
+        alert('حدث خطأ أثناء الاتصال: ' + (error.message || ''));
+        button.disabled = false;
+        button.innerHTML = originalText;
+        isSubmitting = false;
+    });
 }
 </script>
 @endpush

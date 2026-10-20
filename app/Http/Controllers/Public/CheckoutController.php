@@ -73,10 +73,13 @@ class CheckoutController extends Controller
             }
         }
 
-        // جلب المحافظ الإلكترونية النشطة
+        // جلب المحافظ الإلكترونية النشطة (يشمل other مثل STC Pay)
         $wallets = \App\Models\Wallet::where('is_active', true)
-            ->whereNotNull('type')
-            ->whereIn('type', ['vodafone_cash', 'instapay', 'bank_transfer'])
+            ->where(function ($q) {
+                $q->whereIn('type', ['vodafone_cash', 'instapay', 'bank_transfer', 'other'])
+                    ->orWhereNull('type')
+                    ->orWhere('type', '');
+            })
             ->where(function ($query) {
                 $query->whereNotNull('account_number')
                     ->orWhereNotNull('name');
@@ -98,6 +101,9 @@ class CheckoutController extends Controller
         $paypalMisconfigured = \App\Services\PayPalSettings::isMisconfigured();
         $kashierUseGateway = KashierSettings::isReady();
         $kashierMisconfigured = KashierSettings::isMisconfigured();
+        $stripeUseGateway = \App\Services\StripeSettings::isReady();
+        $stripeMisconfigured = \App\Services\StripeSettings::isMisconfigured();
+        $manualCheckoutAllowed = ! PaymentGatewaySettings::blocksManualCheckout();
         $platformLogoUrl = AdminPanelBranding::logoPublicUrl();
 
         $studentWallet = Wallet::where('user_id', Auth::id())->first();
@@ -113,6 +119,9 @@ class CheckoutController extends Controller
             'paypalMisconfigured',
             'kashierUseGateway',
             'kashierMisconfigured',
+            'stripeUseGateway',
+            'stripeMisconfigured',
+            'manualCheckoutAllowed',
             'platformLogoUrl',
             'studentWalletBalance'
         ));
@@ -944,7 +953,7 @@ class CheckoutController extends Controller
     /**
      * يُنشئ فاتورة مدفوعة، وسجل دفع، ومعاملة محاسبية، ويحدّث الطلب إلى مقبول، ويُفعّل الكورس/الباقة.
      *
-     * @param  'kashier'|'fawaterak'|'paypal'|'other'  $paymentGateway
+     * @param  'kashier'|'fawaterak'|'paypal'|'stripe'|'other'  $paymentGateway
      */
     private function approveOrderAfterOnlinePayment(
         Order $order,

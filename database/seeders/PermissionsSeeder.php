@@ -38,7 +38,6 @@ class PermissionsSeeder extends Seeder
             // إدارة التسويق
             ['name' => 'manage.coupons', 'display_name' => 'إدارة الكوبونات', 'description' => 'إدارة الكوبونات والخصومات', 'group' => 'إدارة التسويق'],
             ['name' => 'manage.referrals', 'display_name' => 'إدارة برنامج الإحالات', 'description' => 'إدارة برنامج الإحالات', 'group' => 'إدارة التسويق'],
-            ['name' => 'manage.loyalty', 'display_name' => 'إدارة برامج الولاء', 'description' => 'إدارة برامج الولاء', 'group' => 'إدارة التسويق'],
 
             // الشهادات والإنجازات
             ['name' => 'manage.certificates', 'display_name' => 'إدارة الشهادات', 'description' => 'إدارة الشهادات', 'group' => 'الشهادات والإنجازات'],

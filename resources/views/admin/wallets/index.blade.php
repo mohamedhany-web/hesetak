@@ -173,7 +173,7 @@
                             <i class="fas fa-arrow-down text-accent"></i>
                         </div>
                         <p class="mt-3 text-2xl font-semibold tabular-nums text-ink">
-                            {{ number_format($currentMonthDeposits ?? 0, 2) }} <span class="text-sm font-normal text-muted">$</span>
+                            {{ number_format($currentMonthDeposits ?? 0, 2) }} <span class="text-sm font-normal text-muted">{{ currency_symbol() }}</span>
                         </p>
                     </div>
                     <div class="rounded-xl border border-line bg-canvas-muted/50 p-4">
@@ -182,7 +182,7 @@
                             <i class="fas fa-arrow-up text-muted"></i>
                         </div>
                         <p class="mt-3 text-2xl font-semibold tabular-nums text-ink">
-                            {{ number_format($currentMonthWithdrawals ?? 0, 2) }} <span class="text-sm font-normal text-muted">$</span>
+                            {{ number_format($currentMonthWithdrawals ?? 0, 2) }} <span class="text-sm font-normal text-muted">{{ currency_symbol() }}</span>
                         </p>
                     </div>
                 </div>
@@ -206,7 +206,7 @@
                                 </div>
                             </div>
                             <p class="text-sm font-semibold tabular-nums text-accent">
-                                {{ number_format($type['total_balance'], 2) }} <span class="text-xs font-normal text-muted">$</span>
+                                {{ number_format($type['total_balance'], 2) }} <span class="text-xs font-normal text-muted">{{ currency_symbol() }}</span>
                             </p>
                         </div>
                     @empty
@@ -234,7 +234,7 @@
                         </p>
                         <div class="mt-3 flex items-center justify-between">
                             <span class="text-sm font-semibold tabular-nums text-ink">
-                                {{ number_format($recent->balance, 2) }} <span class="text-xs font-normal text-muted">$</span>
+                                {{ number_format($recent->balance, 2) }} <span class="text-xs font-normal text-muted">{{ currency_symbol() }}</span>
                             </span>
                             <a href="{{ route('admin.wallets.show', $recent) }}" class="text-xs font-medium text-accent hover:underline">
                                 تفاصيل <i class="fas fa-arrow-left text-[10px]"></i>
@@ -283,11 +283,11 @@
                         <dl class="grid grid-cols-2 gap-3 text-sm">
                             <div>
                                 <dt class="text-xs text-muted">الرصيد الحالي</dt>
-                                <dd class="mt-0.5 font-semibold tabular-nums text-ink">{{ number_format($wallet->balance, 2) }} <span class="text-xs font-normal text-muted">$</span></dd>
+                                <dd class="mt-0.5 font-semibold tabular-nums text-ink">{{ number_format($wallet->balance, 2) }} <span class="text-xs font-normal text-muted">{{ currency_symbol() }}</span></dd>
                             </div>
                             <div>
                                 <dt class="text-xs text-muted">الرصيد المعلّق</dt>
-                                <dd class="mt-0.5 font-semibold tabular-nums text-ink">{{ number_format($wallet->pending_balance ?? 0, 2) }} <span class="text-xs font-normal text-muted">$</span></dd>
+                                <dd class="mt-0.5 font-semibold tabular-nums text-ink">{{ number_format($wallet->pending_balance ?? 0, 2) }} <span class="text-xs font-normal text-muted">{{ currency_symbol() }}</span></dd>
                             </div>
                             <div>
                                 <dt class="text-xs text-muted">رقم الحساب</dt>

@@ -27,6 +27,7 @@ class PackageCatalogFilterService
      *   packages: Collection<int, array>,
      *   viewer_locked: bool
      * }
+     * @param  bool  $featuredOnly  الأكثر مبيعًا كما تُعلَّم من الإدارة.
      */
     public function catalog(
         ?int $yearId = null,
@@ -34,6 +35,7 @@ class PackageCatalogFilterService
         ?string $curriculumType = null,
         ?int $limit = null,
         bool $applyViewerDefaults = true,
+        bool $featuredOnly = false,
     ): array {
         $years = Schema::hasTable('academic_years')
             ? AcademicYear::query()->publicCatalog()->ordered()->get(['id', 'name', 'slug', 'level_number'])
@@ -72,6 +74,7 @@ class PackageCatalogFilterService
 
         $packages = ServicePackage::query()
             ->storefront()
+            ->when($featuredOnly, fn ($q) => $q->where('is_featured', true))
             ->forSchoolProgram($yearId, $subjectId)
             ->when(
                 $selectedTrack,
@@ -83,8 +86,20 @@ class PackageCatalogFilterService
                 }
             )
             ->with(['academicYear:id,name', 'academicSubject:id,name'])
-            ->when($limit, fn ($q) => $q->limit($limit))
             ->get();
+
+        $packages = $packages->reject(function (ServicePackage $pkg) {
+            return \App\Support\PublicDemoContent::recordLooksLikeDemo([
+                $pkg->name,
+                $pkg->tagline,
+                $pkg->description,
+                $pkg->badge,
+            ]);
+        })->values();
+
+        if ($limit) {
+            $packages = $packages->take($limit)->values();
+        }
 
         $priced = $packages->map(function (ServicePackage $pkg) use ($yearId, $selectedTrack) {
             $quote = $this->rates->quotePackage($pkg, $yearId, $selectedTrack);
@@ -128,6 +143,21 @@ class PackageCatalogFilterService
             'packages' => $priced,
             'viewer_locked' => $viewerLocked,
         ];
+    }
+
+    /**
+     * باقات الرئيسية / الأكثر مبيعًا: المميزة فقط كما تُدار من الإدارة.
+     */
+    public function homeShowcase(int $limit = 6): Collection
+    {
+        return $this->catalog(
+            yearId: null,
+            subjectId: null,
+            curriculumType: null,
+            limit: $limit,
+            applyViewerDefaults: false,
+            featuredOnly: true,
+        )['packages'];
     }
 
     public function subjectsForYear(?int $yearId): Collection

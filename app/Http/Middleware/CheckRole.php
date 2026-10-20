@@ -47,6 +47,12 @@ class CheckRole
                 ->with('error', 'حسابك غير نشط. يرجى الاتصال بالإدارة');
         }
 
+        // مدير المنصة يتجاوز قيد الدور — دخول الحصة كان يُرفض لأن الغرفة مسجّلة تحت role:student.
+        $rawRole = strtolower(trim((string) $user->role));
+        if ($user->isAdmin() || in_array($rawRole, ['admin', 'super_admin'], true)) {
+            return $next($request);
+        }
+
         // التحقق من الدور
         $allowedRoles = explode('|', $role);
         $userRole = strtolower(trim($user->role));
@@ -56,6 +62,8 @@ class CheckRole
             'admin' => 'super_admin',
             // «معلم» في الواجهة = طالب — لا يُعاد توجيهه كمدرب
             'teacher' => 'student',
+            // ولي الأمر يستخدم بوابة الطالب ويربط الأبناء من الملف
+            'parent' => 'student',
         ];
 
         if (isset($roleMapping[$userRole])) {

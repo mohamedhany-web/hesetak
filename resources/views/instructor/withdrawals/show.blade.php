@@ -66,7 +66,7 @@
             <span class="id-kpi__icon id-kpi__icon--gold" aria-hidden="true"><i class="fas fa-money-bill-wave"></i></span>
             <span class="id-kpi__body">
                 <span class="id-kpi__label">{{ __('instructor.amount') }}</span>
-                <span class="id-kpi__value" style="font-size:1.2rem">{{ number_format($withdrawal->amount, 2) }}</span>
+                <span class="id-kpi__value" style="font-size:1.2rem">{{ number_format($withdrawal->amount, 2) }} {{ $currency }}</span>
                 <span class="id-field__hint" style="margin-top:2px">{{ $currency }}</span>
             </span>
         </article>

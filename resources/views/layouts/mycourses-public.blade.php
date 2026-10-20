@@ -11,7 +11,7 @@
     $pageDescription = $pageDescription ?? __('landing.meta.description');
 @endphp
 <!DOCTYPE html>
-<html lang="{{ $locale }}" dir="{{ request()->boolean('figma') ? 'ltr' : ($isRtl ? 'rtl' : 'ltr') }}">
+<html lang="{{ $locale }}" dir="{{ $isRtl ? 'rtl' : 'ltr' }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes">
@@ -22,16 +22,19 @@
         'keywords' => __('landing.meta.keywords'),
         'image' => \App\Services\SeoAssets::ogImageUrl(),
         'imageAlt' => $pageTitle,
-        'url' => url()->current(),
+        'canonicalPath' => '/'.ltrim(request()->path(), '/'),
+        'indexable' => $indexable ?? ! \App\Support\PublicSeo::isPrivatePath(),
         'type' => 'website',
     ])
     @include('partials.favicon-links')
+    @include('partials.seo-jsonld', ['jsonldType' => $jsonldType ?? 'website', 'faqs' => $jsonldFaqs ?? null, 'breadcrumbs' => $jsonldBreadcrumbs ?? null])
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Lato:wght@400;700;900&family=Rubik:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;600;700&family=Lato:wght@400;700&family=Rubik:wght@400;700&display=swap" rel="stylesheet">
     <meta name="theme-color" content="#1E4E8C">
     <link rel="stylesheet" href="{{ route('assets.landing.css', ['sheet' => 'mycourses']) }}?v={{ $mcVer }}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" media="print" onload="this.media='all'">
+    <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"></noscript>
     @stack('head')
     @include('partials.figma-capture-head')
 </head>

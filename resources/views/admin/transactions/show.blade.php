@@ -64,8 +64,8 @@
             </div>
             <p class="mt-3 text-xs text-muted">المبلغ</p>
             <p class="mt-1 text-xl font-semibold tabular-nums {{ $amountTone }}">
-                {{ $isDebit ? '-' : ($isCredit ? '+' : '') }}{{ number_format($transaction->amount, 2) }}
-                <span class="text-sm font-normal text-muted">$</span>
+                {{ $isDebit ? '-' : ($isCredit ? '+' : '') }}{{ format_money($transaction->amount) }}
+                <span class="text-sm font-normal text-muted">{{ currency_symbol() }}</span>
             </p>
         </article>
         <article class="rounded-2xl border border-line bg-surface p-4 shadow-soft">
@@ -112,7 +112,7 @@
                     <div>
                         <dt class="text-xs font-medium text-muted">المبلغ</dt>
                         <dd class="mt-1 text-lg font-semibold tabular-nums {{ $amountTone }}">
-                            {{ $isDebit ? '-' : ($isCredit ? '+' : '') }}{{ number_format($transaction->amount, 2) }} $
+                            {{ $isDebit ? '-' : ($isCredit ? '+' : '') }}{{ format_money($transaction->amount) }} {{ currency_symbol() }}
                         </dd>
                     </div>
                     <div>
@@ -217,7 +217,7 @@
                     </div>
                     <div class="flex items-center justify-between gap-4">
                         <dt class="text-xs font-medium text-muted">المبلغ</dt>
-                        <dd class="text-sm font-semibold tabular-nums text-ink">{{ number_format($transaction->payment->amount, 2) }} $</dd>
+                        <dd class="text-sm font-semibold tabular-nums text-ink">{{ number_format($transaction->payment->amount, 2) }} {{ currency_symbol() }}</dd>
                     </div>
                     <div class="flex items-center justify-between gap-4">
                         <dt class="text-xs font-medium text-muted">طريقة الدفع</dt>
@@ -244,7 +244,7 @@
                     </div>
                     <div class="flex items-center justify-between gap-4">
                         <dt class="text-xs font-medium text-muted">المبلغ الإجمالي</dt>
-                        <dd class="text-sm font-semibold tabular-nums text-ink">{{ number_format($transaction->invoice->total_amount, 2) }} $</dd>
+                        <dd class="text-sm font-semibold tabular-nums text-ink">{{ number_format($transaction->invoice->total_amount, 2) }} {{ currency_symbol() }}</dd>
                     </div>
                     <div class="flex items-center justify-between gap-4">
                         <dt class="text-xs font-medium text-muted">الحالة</dt>

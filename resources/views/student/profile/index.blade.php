@@ -24,7 +24,8 @@
         : null;
 
     $memberId = (string) ($user->uuid ?: '');
-    $progressShareToken = $user->ensureProgressShareToken();
+    $studentPublicCode = ($user->role ?? '') === 'student' ? $user->ensureStudentPublicCode() : '';
+    $progressShareToken = $studentPublicCode !== '' ? $studentPublicCode : $user->ensureProgressShareToken();
     $progressShareUrl = $user->progressShareUrl();
 @endphp
 
@@ -63,7 +64,7 @@
 <section class="st-class-id" aria-label="{{ __('student_timeline.class_user_id') }}">
     <div class="st-class-id__copy">
         <p class="st-class-id__kicker">{{ __('student_timeline.class_user_id') }}</p>
-        <p class="st-class-id__value" dir="ltr" id="stClassUserId" style="font-size:0.85rem;word-break:break-all">{{ $progressShareToken }}</p>
+        <p class="st-class-id__value" dir="ltr" id="stClassUserId" style="font-size:1.35rem;letter-spacing:.06em">{{ $progressShareToken }}</p>
         <p class="st-class-id__hint">{{ __('student_timeline.class_user_id_hint') }}</p>
         <p class="st-class-id__hint" dir="ltr" style="margin-top:0.35rem;font-size:0.75rem;opacity:0.85;word-break:break-all">{{ $progressShareUrl }}</p>
     </div>
@@ -89,7 +90,7 @@
 <section class="st-profile-meta" aria-label="{{ __('student_timeline.profile_summary') }}">
     <div class="st-profile-meta__item st-profile-meta__item--accent">
         <span>{{ __('student_timeline.class_user_id') }}</span>
-        <strong dir="ltr" style="font-size:0.75rem;word-break:break-all">{{ \Illuminate\Support\Str::limit($progressShareToken, 16, '…') }}</strong>
+        <strong dir="ltr">{{ $progressShareToken }}</strong>
     </div>
     <div class="st-profile-meta__item">
         <span>{{ __('student_timeline.member_id') }}</span>
@@ -161,19 +162,62 @@
 
             @php
                 $academicYears = $academicYears ?? \App\Support\StudentLearningProfile::publicYears();
+                $gradesByYear = $gradesByYear ?? \App\Support\StudentLearningProfile::gradesByYearMap($academicYears);
                 $curriculumTypes = $curriculumTypes ?? \App\Support\HesetakMatchCatalog::curriculumTypes();
             @endphp
-            <label class="st-field">
-                <span>{{ __('auth.academic_stage') }}</span>
-                <select name="academic_year_id">
-                    <option value="">{{ __('auth.academic_stage_placeholder') }}</option>
-                    @foreach($academicYears as $year)
-                        <option value="{{ $year->id }}" @selected((string) old('academic_year_id', $user->academic_year_id) === (string) $year->id)>{{ $year->name }}</option>
-                    @endforeach
-                </select>
-                <small class="st-field__hint" style="opacity:.75;display:block;margin-top:.35rem">{{ __('auth.academic_stage_hint') }}</small>
-                @error('academic_year_id')<small class="st-field__err">{{ $message }}</small>@enderror
-            </label>
+            <div
+                x-data="{
+                    yearId: @js((string) old('academic_year_id', $user->academic_year_id)),
+                    gradeId: @js((string) old('academic_grade_id', $user->academic_grade_id)),
+                    map: @js($gradesByYear),
+                    placeholder: @js(__('auth.academic_grade_placeholder')),
+                    get grades() { return this.map[String(this.yearId)] || []; },
+                    get hasGrades() { return this.grades.length > 0; },
+                    fillGrades() {
+                        const select = this.$refs.gradeSelect;
+                        if (!select) return;
+                        const current = String(this.gradeId || '');
+                        select.innerHTML = '';
+                        const empty = document.createElement('option');
+                        empty.value = '';
+                        empty.textContent = this.placeholder;
+                        select.appendChild(empty);
+                        this.grades.forEach((grade) => {
+                            const option = document.createElement('option');
+                            option.value = String(grade.id);
+                            option.textContent = grade.name;
+                            if (current && current === String(grade.id)) option.selected = true;
+                            select.appendChild(option);
+                        });
+                        if (!this.grades.some((grade) => String(grade.id) === current)) {
+                            this.gradeId = '';
+                            select.value = '';
+                        }
+                        select.required = this.hasGrades;
+                    }
+                }"
+                x-init="fillGrades()"
+            >
+                <label class="st-field">
+                    <span>{{ __('auth.academic_stage') }}</span>
+                    <select name="academic_year_id" x-model="yearId" @change="fillGrades()">
+                        <option value="">{{ __('auth.academic_stage_placeholder') }}</option>
+                        @foreach($academicYears as $year)
+                            <option value="{{ $year->id }}">{{ $year->name }}</option>
+                        @endforeach
+                    </select>
+                    <small class="st-field__hint" style="opacity:.75;display:block;margin-top:.35rem">{{ __('auth.academic_stage_hint') }}</small>
+                    @error('academic_year_id')<small class="st-field__err">{{ $message }}</small>@enderror
+                </label>
+                <label class="st-field" x-show="hasGrades" x-cloak>
+                    <span>{{ __('auth.academic_grade') }}</span>
+                    <select name="academic_grade_id" x-ref="gradeSelect" x-model="gradeId">
+                        <option value="">{{ __('auth.academic_grade_placeholder') }}</option>
+                    </select>
+                    <small class="st-field__hint" style="opacity:.75;display:block;margin-top:.35rem">{{ __('auth.academic_grade_hint') }}</small>
+                    @error('academic_grade_id')<small class="st-field__err">{{ $message }}</small>@enderror
+                </label>
+            </div>
             <label class="st-field">
                 <span>{{ __('auth.curriculum_type') }}</span>
                 <select name="preferred_curriculum_type">
@@ -254,6 +298,50 @@
 <div class="st-events__top">
     <h2>{{ __('student_timeline.quick_links') }}</h2>
 </div>
+
+@if(($user->role ?? '') === 'parent')
+<section class="st-event-card st-event-card--blue" style="margin-bottom:1rem">
+    <h3>{{ app()->getLocale() === 'ar' ? 'الأبناء' : 'Children' }}</h3>
+    <p class="st-event-card__sub">{{ app()->getLocale() === 'ar' ? 'كل ابن بحساب وبريد خاص، مربوط بحسابك. لا يُعاد استخدام بريد ولي الأمر.' : 'Each child has their own account and email, linked to you. The parent email is not reused.' }}</p>
+    @forelse(($children ?? collect()) as $child)
+        <p style="margin:.4rem 0">
+            <strong>{{ $child->name }}</strong>
+            <span dir="ltr">{{ $child->ensureStudentPublicCode() }}</span>
+            · {{ \App\Support\LocalizedCatalogLabel::text($child->academicYear->name ?? '') }}
+            <a href="{{ route('public.parent-progress', ['code' => $child->student_public_code]) }}">{{ app()->getLocale() === 'ar' ? 'تقرير ولي الأمر' : 'Parent report' }}</a>
+            <a href="{{ route('student.learning-desk', ['child' => $child->id]) }}">{{ app()->getLocale() === 'ar' ? 'حصصه' : 'Lessons' }}</a>
+        </p>
+    @empty
+        <p class="st-event-card__sub">{{ app()->getLocale() === 'ar' ? 'لم يُضف أبناء بعد.' : 'No children yet.' }}</p>
+    @endforelse
+    <form method="POST" action="{{ route('profile.children.store') }}" class="st-form" style="margin-top:1rem">
+        @csrf
+        <label class="st-field"><span>{{ app()->getLocale() === 'ar' ? 'اسم الابن' : 'Child name' }}</span><input name="child_name" value="{{ old('child_name') }}" required></label>
+        <label class="st-field"><span>{{ app()->getLocale() === 'ar' ? 'بريد الابن' : 'Child email' }}</span><input type="email" name="child_email" value="{{ old('child_email') }}" required></label>
+        <label class="st-field"><span>{{ app()->getLocale() === 'ar' ? 'كلمة مرور الابن' : 'Child password' }}</span><input type="password" name="child_password" required minlength="8"></label>
+        <label class="st-field"><span>{{ app()->getLocale() === 'ar' ? 'تأكيد كلمة المرور' : 'Confirm password' }}</span><input type="password" name="child_password_confirmation" required minlength="8"></label>
+        <label class="st-field">
+            <span>{{ __('auth.academic_stage') }}</span>
+            <select name="child_academic_year_id" required>
+                <option value="">{{ __('auth.academic_stage_placeholder') }}</option>
+                @foreach(($academicYears ?? collect()) as $year)
+                    <option value="{{ $year->id }}" @selected((string) old('child_academic_year_id') === (string) $year->id)>{{ \App\Support\LocalizedCatalogLabel::text($year->name) }}</option>
+                @endforeach
+            </select>
+        </label>
+        <label class="st-field">
+            <span>{{ __('auth.curriculum_type') }}</span>
+            <select name="child_preferred_curriculum_type" required>
+                <option value="">{{ __('auth.curriculum_type_placeholder') }}</option>
+                @foreach(($curriculumTypes ?? []) as $key => $meta)
+                    <option value="{{ $key }}" @selected(old('child_preferred_curriculum_type') === $key)>{{ $meta['label'] ?? $key }}</option>
+                @endforeach
+            </select>
+        </label>
+        <button class="st-pill st-pill--solid" type="submit">{{ app()->getLocale() === 'ar' ? 'إضافة ابن' : 'Add child' }}</button>
+    </form>
+</section>
+@endif
 
 <a href="{{ route('settings') }}" class="st-event-card st-event-card--blue">
     <h3>{{ __('student_timeline.nav_settings') }}</h3>

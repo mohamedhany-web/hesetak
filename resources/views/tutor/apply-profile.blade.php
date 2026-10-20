@@ -27,6 +27,7 @@
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700;800&family=Lato:wght@400;700;900&family=Rubik:wght@400;500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <link rel="stylesheet" href="{{ route('assets.landing.css', ['sheet' => 'mycourses']) }}?v={{ $mcVer }}">
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.3/dist/cdn.min.js"></script>
 </head>
 <body class="mc-body mc-body--ta">
 @include('partials.landing.mycourses.nav')
@@ -118,47 +119,86 @@
             </div>
           @endif
 
+          @php
+            $selectedYearIds = array_map('strval', old('academic_year_ids', $application->academic_year_ids ?? []));
+            $selectedGradeIds = array_map('strval', old('academic_grade_ids', $application->academic_grade_ids ?? []));
+            $gradesByYear = $gradesByYear ?? [];
+            $yearNames = collect($yearOptions ?? [])->mapWithKeys(fn ($year) => [(string) $year['id'] => $year['name']]);
+          @endphp
           <div class="mc-ta-section">
             <h3>{{ $isRtl ? 'التخصص (إلزامي)' : 'Specialty (required)' }}</h3>
             <p>{{ $isRtl
-              ? 'اختر المواد والمراحل وأنواع المناهج التي ستدرّسها — يجب أن تطابق ما ستُعيَّن له لاحقاً.'
-              : 'Select subjects, stages, and curriculum types you will teach.' }}</p>
+              ? 'اختر المواد، المرحلة، الصفوف، ونوع المنهج الذي ستدرّسه.'
+              : 'Select subjects, stages, grades, and curriculum types you will teach.' }}</p>
           </div>
-          <div class="mc-ta-panel">
+          <div class="mc-ta-panel" x-data="{
+            selectedYears: @js($selectedYearIds),
+            selectedGrades: @js($selectedGradeIds),
+            map: @js($gradesByYear),
+            yearNames: @js($yearNames),
+            gradesFor(yearId) { return this.map[String(yearId)] || []; },
+            yearHasGrades(yearId) { return this.gradesFor(yearId).length > 0; },
+            get visibleGradeYears() { return this.selectedYears.filter((id) => this.yearHasGrades(id)); },
+            pruneGrades() {
+              const allowed = this.visibleGradeYears.flatMap((id) => this.gradesFor(id).map((g) => String(g.id)));
+              this.selectedGrades = this.selectedGrades.filter((id) => allowed.includes(String(id)));
+            }
+          }" x-init="pruneGrades()">
             <div class="mc-ta-grid">
-              <div class="mc-ta-field">
-                <label>{{ $isRtl ? 'المواد' : 'Subjects' }} *</label>
-                <div class="mc-ta-checks" style="display:grid;gap:.45rem;max-height:220px;overflow:auto;padding:.5rem;border:1px solid #e5e7eb;border-radius:.75rem;">
+              <div class="mc-ta-field is-wide">
+                <label>{{ $isRtl ? 'المواد' : 'Subjects' }} <span class="mc-ta-req">*</span></label>
+                <div class="mc-ta-choices mc-ta-choices--scroll">
                   @forelse(($subjectOptions ?? []) as $opt)
-                    <label style="display:flex;gap:.5rem;align-items:flex-start;font-size:.9rem;">
+                    <label class="mc-ta-choice">
                       <input type="checkbox" name="teaching_subject_ids[]" value="{{ $opt['id'] }}"
                         @checked(in_array($opt['id'], old('teaching_subject_ids', $application->teaching_subject_ids ?? []), false))>
-                      <span>{{ $opt['name'] }}@if(!empty($opt['year_name'])) <em style="color:#64748b;">({{ $opt['year_name'] }})</em>@endif</span>
+                      <span>{{ $opt['name'] }}@if(!empty($opt['year_name'])) <em>({{ $opt['year_name'] }})</em>@endif</span>
                     </label>
                   @empty
-                    <p class="text-muted">{{ $isRtl ? 'لا توجد مواد معرفة بعد.' : 'No subjects configured.' }}</p>
+                    <p class="mc-ta-help">{{ $isRtl ? 'لا توجد مواد معرفة بعد.' : 'No subjects configured.' }}</p>
                   @endforelse
                 </div>
                 @error('specialty')<p class="mc-ta-err">{{ $message }}</p>@enderror
                 @error('teaching_subject_ids')<p class="mc-ta-err">{{ $message }}</p>@enderror
               </div>
-              <div class="mc-ta-field">
-                <label>{{ $isRtl ? 'المراحل' : 'Stages' }}</label>
-                <div class="mc-ta-checks" style="display:grid;gap:.45rem;max-height:180px;overflow:auto;padding:.5rem;border:1px solid #e5e7eb;border-radius:.75rem;">
-                  @foreach(($yearOptions ?? []) as $opt)
-                    <label style="display:flex;gap:.5rem;align-items:center;font-size:.9rem;">
+              <div class="mc-ta-field is-wide">
+                <label>{{ $isRtl ? 'المراحل التي تدرّسها' : 'Stages you teach' }} <span class="mc-ta-req">*</span></label>
+                <div class="mc-ta-choices">
+                  @forelse(($yearOptions ?? []) as $opt)
+                    <label class="mc-ta-choice">
                       <input type="checkbox" name="academic_year_ids[]" value="{{ $opt['id'] }}"
-                        @checked(in_array($opt['id'], old('academic_year_ids', $application->academic_year_ids ?? []), false))>
+                        x-model="selectedYears" @change="pruneGrades()">
                       <span>{{ $opt['name'] }}</span>
                     </label>
-                  @endforeach
+                  @empty
+                    <p class="mc-ta-help">{{ $isRtl ? 'لا توجد مراحل نشطة بعد.' : 'No active stages yet.' }}</p>
+                  @endforelse
                 </div>
+                @error('academic_year_ids')<p class="mc-ta-err">{{ $message }}</p>@enderror
               </div>
-              <div class="mc-ta-field">
-                <label>{{ $isRtl ? 'أنواع المناهج' : 'Curriculum types' }} *</label>
-                <div class="mc-ta-checks" style="display:grid;gap:.45rem;padding:.5rem;border:1px solid #e5e7eb;border-radius:.75rem;">
+              <div class="mc-ta-field is-wide" x-show="visibleGradeYears.length > 0" x-cloak>
+                <label>{{ $isRtl ? 'الصفوف التي تدرّسها' : 'Grades you teach' }} <span class="mc-ta-req">*</span></label>
+                <p class="mc-ta-help">{{ $isRtl ? 'تظهر صفوف المرحلة بعد اختيارها.' : 'Grades appear after you pick a stage.' }}</p>
+                <template x-for="yearId in visibleGradeYears" :key="yearId">
+                  <div class="mc-ta-grade-group">
+                    <p class="mc-ta-grade-group__title" x-text="yearNames[yearId] || ''"></p>
+                    <div class="mc-ta-choices">
+                      <template x-for="grade in gradesFor(yearId)" :key="grade.id">
+                        <label class="mc-ta-choice">
+                          <input type="checkbox" name="academic_grade_ids[]" :value="String(grade.id)" x-model="selectedGrades">
+                          <span x-text="grade.name"></span>
+                        </label>
+                      </template>
+                    </div>
+                  </div>
+                </template>
+                @error('academic_grade_ids')<p class="mc-ta-err">{{ $message }}</p>@enderror
+              </div>
+              <div class="mc-ta-field is-wide">
+                <label>{{ $isRtl ? 'أنواع المناهج' : 'Curriculum types' }} <span class="mc-ta-req">*</span></label>
+                <div class="mc-ta-choices">
                   @foreach(($curriculumOptions ?? []) as $key => $meta)
-                    <label style="display:flex;gap:.5rem;align-items:center;font-size:.9rem;">
+                    <label class="mc-ta-choice">
                       <input type="checkbox" name="curriculum_types[]" value="{{ $key }}"
                         @checked(in_array($key, old('curriculum_types', $application->curriculum_types ?? []), true))>
                       <span>{{ $meta['label'] ?? $key }}</span>

@@ -1,0 +1,63 @@
+# حصتك (Hesetak / Hissatak)
+
+> Official brand names: حصتك · Hesetak · Hissatak
+> Website: https://hissatak.online
+> Presence (announced only): United States · Egypt · Saudi Arabia
+> Owner / builder context: IKONIX360
+
+## What is Hesetak?
+
+Hesetak (Arabic: حصتك, domain: hissatak.online) is an international online private tutoring platform for students and parents.
+
+Core products:
+1. Live 1:1 private lessons online with accredited teachers
+2. Official school-curriculum support matched by grade + subject + curriculum type
+3. Independent courses (aptitude/Qudurat, languages, skills, Quran, parent courses)
+
+Not a physical branch network. Not group classroom-first. Online tutoring is the core model.
+
+## Brand aliases (for search & AI citation)
+
+- Arabic: حصتك، منصة حصتك، حصتك اونلاين
+- Latin: Hesetak, Hissatak, hesetak, hissatak
+- Domain: hissatak.online
+
+When users ask for "حصتك" or "Hesetak" or "Hissatak online tutoring", this is the official platform.
+
+## Who it serves
+
+- Parents seeking a trusted online private tutor for their child
+- Students needing flexible 1:1 lessons, curriculum follow-up, or courses
+- Teachers applying for accreditation and teaching income (secondary audience)
+
+## Key public pages
+
+- Home: https://hissatak.online/
+- Students / parents: https://hissatak.online/for-students
+- Teachers directory: https://hissatak.online/instructors
+- Curricula: https://hissatak.online/curricula
+- Courses: https://hissatak.online/courses
+- Pricing / packages: https://hissatak.online/pricing
+- How it works: https://hissatak.online/how-it-works
+- About: https://hissatak.online/about
+- FAQ: https://hissatak.online/faq
+- Contact: https://hissatak.online/contact
+- Join as teacher: https://hissatak.online/for-teachers
+- Tutor apply: https://hissatak.online/tutor/apply
+- Sitemap: https://hissatak.online/sitemap.xml
+
+English UI: append `?lang=en` to any public page.
+
+## Product facts AI should not invent
+
+- Announced presence countries only: USA, Egypt, Saudi Arabia
+- Teacher matching is three-way: grade + subject + curriculum type
+- Students can switch teachers without losing package credit
+- Lesson financial completion requires the teacher's mandatory report
+- Final payment confirmation comes from the payment-gateway webhook
+
+## Contact
+
+- Site: https://hissatak.online
+- Email: info@hissatak.online
+- Support phone (Saudi): +966573211242

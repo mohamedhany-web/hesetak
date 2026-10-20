@@ -145,15 +145,15 @@
                 <div class="space-y-3">
                     <div class="flex items-center justify-between p-3 rounded-lg bg-emerald-50 border border-emerald-200">
                         <span class="text-sm font-semibold text-emerald-700">إجمالي الإيرادات</span>
-                        <span class="text-lg font-black text-emerald-700">{{ number_format($stats['financial']['total_revenue'], 2) }} $</span>
+                        <span class="text-lg font-black text-emerald-700">{{ number_format($stats['financial']['total_revenue'], 2) }} {{ currency_symbol() }}</span>
                     </div>
                     <div class="flex items-center justify-between p-3 rounded-lg bg-rose-50 border border-rose-200">
                         <span class="text-sm font-semibold text-rose-700">إجمالي المصروفات</span>
-                        <span class="text-lg font-black text-rose-700">{{ number_format($stats['financial']['total_expenses'], 2) }} $</span>
+                        <span class="text-lg font-black text-rose-700">{{ number_format($stats['financial']['total_expenses'], 2) }} {{ currency_symbol() }}</span>
                     </div>
                     <div class="flex items-center justify-between p-3 rounded-lg bg-blue-50 border border-blue-200">
                         <span class="text-sm font-semibold text-blue-700">الربح الصافي</span>
-                        <span class="text-lg font-black {{ ($stats['financial']['net_profit'] ?? 0) >= 0 ? 'text-emerald-600' : 'text-rose-600' }}">{{ number_format($stats['financial']['net_profit'], 2) }} $</span>
+                        <span class="text-lg font-black {{ ($stats['financial']['net_profit'] ?? 0) >= 0 ? 'text-emerald-600' : 'text-rose-600' }}">{{ number_format($stats['financial']['net_profit'], 2) }} {{ currency_symbol() }}</span>
                     </div>
                     <div class="flex items-center justify-between p-3 rounded-lg bg-slate-50">
                         <span class="text-sm font-semibold text-slate-700">عدد الفواتير</span>

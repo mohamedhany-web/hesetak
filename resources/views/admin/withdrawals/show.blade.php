@@ -65,7 +65,7 @@
                 <dl class="grid grid-cols-1 gap-4 p-4 sm:grid-cols-2 sm:p-5">
                     <div>
                         <dt class="text-xs font-medium text-muted">المبلغ</dt>
-                        <dd class="mt-1 text-2xl font-semibold tabular-nums text-ink">{{ number_format($withdrawal->amount, 2) }} <span class="text-sm font-normal text-muted">$</span></dd>
+                        <dd class="mt-1 text-2xl font-semibold tabular-nums text-ink">{{ number_format($withdrawal->amount, 2) }} <span class="text-sm font-normal text-muted">{{ currency_symbol() }}</span></dd>
                     </div>
                     <div>
                         <dt class="text-xs font-medium text-muted">طريقة الاستلام</dt>

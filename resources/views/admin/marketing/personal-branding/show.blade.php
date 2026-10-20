@@ -189,13 +189,13 @@
                 <div class="space-y-4 p-4 sm:p-5">
                     <p class="text-xs text-muted">
                         إن تركت حقل السعر فارغاً يُستخدم السعر الافتراضي للمنصة حالياً:
-                        <strong class="tabular-nums text-ink">{{ number_format($consultDefaults->default_price, 2) }} $</strong>
+                        <strong class="tabular-nums text-ink">{{ number_format($consultDefaults->default_price, 2) }} {{ currency_symbol() }}</strong>
                         — مدة افتراضية:
                         <strong class="tabular-nums text-ink">{{ (int) $consultDefaults->default_duration_minutes }} دقيقة</strong>.
                     </p>
                     <p class="text-xs text-muted">
                         السعر الظاهر للزوار الآن لهذا المدرب:
-                        <strong class="tabular-nums text-accent">{{ number_format($personal_branding->effectiveConsultationPriceEgp(), 2) }} $</strong>
+                        <strong class="tabular-nums text-accent">{{ number_format($personal_branding->effectiveConsultationPriceEgp(), 2) }} {{ currency_symbol() }}</strong>
                         — المدة:
                         <strong class="tabular-nums text-ink">{{ $personal_branding->effectiveConsultationDurationMinutes() }} دقيقة</strong>
                     </p>
@@ -204,7 +204,7 @@
                           class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                         @csrf
                         <div>
-                            <label class="{{ $labelClass }}">سعر الاستشارة ($) — اختياري</label>
+                            <label class="{{ $labelClass }}">سعر الاستشارة {{ currency_unit() }} — اختياري</label>
                             <input type="number" step="0.01" name="consultation_price_egp"
                                    value="{{ old('consultation_price_egp', $personal_branding->consultation_price_egp) }}"
                                    class="{{ $fieldClass }}" placeholder="فارغ = الافتراضي" dir="ltr">
@@ -242,16 +242,44 @@
                     </div>
                 </div>
                 <div class="space-y-4 p-4 sm:p-5">
+                    @isset($looksLikeDemo)
+                        @if($looksLikeDemo)
+                            <div class="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2.5 text-xs font-medium text-rose-800">
+                                تنبيه معاينة: يبدو أن العنوان/النبذة/المهارات تجريبية (مثل «اختبار» أو test). أزلها قبل الموافقة.
+                            </div>
+                        @endif
+                    @endisset
+                    @isset($publication)
+                        @unless($publication['ok'])
+                            <div class="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs text-amber-900">
+                                <p class="font-semibold">لا يمكن النشر حتى يكتمل:</p>
+                                <ul class="mt-1 list-disc pr-4 space-y-0.5">
+                                    @foreach($publication['missing'] as $item)
+                                        <li>{{ $item }}</li>
+                                    @endforeach
+                                </ul>
+                                <a href="{{ route('admin.personal-branding.edit', $personal_branding) }}" class="mt-2 inline-flex font-semibold text-accent hover:underline">تعديل الملف لإكمال المطابقة</a>
+                            </div>
+                        @endunless
+                    @endisset
                     @if($personal_branding->status === \App\Models\InstructorProfile::STATUS_PENDING_REVIEW)
-                        <form method="POST" action="{{ route('admin.personal-branding.approve', $personal_branding) }}"
-                              onsubmit="return confirm('تأكيد الموافقة على هذا الملف ونشره للطلاب في الموقع؟');">
-                            @csrf
-                            <button type="submit"
-                                    class="btn-press flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-emerald-700">
-                                <i class="fas fa-check text-xs"></i>
-                                موافقة ونشر على الموقع
+                        @if(($publication['ok'] ?? false))
+                            <form method="POST" action="{{ route('admin.personal-branding.approve', $personal_branding) }}"
+                                  onsubmit="return confirm('تأكيد الموافقة على هذا الملف ونشره للطلاب في الموقع؟');">
+                                @csrf
+                                <button type="submit"
+                                        class="btn-press flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-emerald-700">
+                                    <i class="fas fa-check text-xs"></i>
+                                    موافقة ونشر على الموقع
+                                </button>
+                            </form>
+                        @else
+                            <button type="button" disabled
+                                    class="flex w-full cursor-not-allowed items-center justify-center gap-2 rounded-xl bg-canvas px-4 py-2.5 text-sm font-medium text-muted opacity-70">
+                                <i class="fas fa-ban text-xs"></i>
+                                موافقة ونشر — معطّل حتى اكتمال المطابقة
                             </button>
-                        </form>
+                        @endif
 
                         {{-- نموذج رفض بدون Alpine: يعمل حتى لو تعطّل أو تأخّر تحميل Alpine.js --}}
                         <form method="POST" action="{{ route('admin.personal-branding.reject', $personal_branding) }}"
@@ -272,6 +300,17 @@
                             </button>
                         </form>
                     @elseif(in_array($personal_branding->status, [\App\Models\InstructorProfile::STATUS_APPROVED, \App\Models\InstructorProfile::STATUS_REJECTED], true))
+                        @if($personal_branding->status === \App\Models\InstructorProfile::STATUS_APPROVED && ! ($publication['ok'] ?? true))
+                            <form method="POST" action="{{ route('admin.personal-branding.unpublish-incomplete', $personal_branding) }}"
+                                  onsubmit="return confirm('إيقاف نشر هذا الملف الناقص وإعادته لقيد المراجعة؟');">
+                                @csrf
+                                <button type="submit"
+                                        class="btn-press flex w-full items-center justify-center gap-2 rounded-xl bg-amber-700 px-4 py-2.5 text-sm font-medium text-white hover:bg-amber-800">
+                                    <i class="fas fa-pause text-xs"></i>
+                                    إيقاف النشر (ناقص مطابقة)
+                                </button>
+                            </form>
+                        @endif
                         <form method="POST" action="{{ route('admin.personal-branding.send-back', $personal_branding) }}"
                               onsubmit="return confirm('إعادة هذا الملف إلى قيد المراجعة؟');">
                             @csrf

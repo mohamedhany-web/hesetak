@@ -17,7 +17,7 @@
           <tr>
             <td class="px-4 py-3">#{{ $c->sales_lead_id }} {{ $c->lead?->name }}</td>
             <td class="px-4 py-3">{{ $c->typeLabel() }}</td>
-            <td class="px-4 py-3 font-bold">{{ number_format($c->commission_amount_egp, 2) }} $</td>
+            <td class="px-4 py-3 font-bold">{{ number_format($c->commission_amount_egp, 2) }} {{ currency_symbol() }}</td>
             <td class="px-4 py-3">{{ $c->statusLabel() }}</td>
             <td class="px-4 py-3">
               @if($role === 'finance' && $c->status === \App\Models\CrmCommission::STATUS_PENDING)

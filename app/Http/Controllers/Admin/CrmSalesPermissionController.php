@@ -59,7 +59,7 @@ class CrmSalesPermissionController extends Controller
         abort_unless($employee->is_employee, 404);
         abort_unless($employee->isSalesDepartmentEmployee(), 404);
 
-        $employee->load('employeeJob');
+        $employee->load('employeeJob', 'roles');
         $groups = EmployeePermissionCatalog::salesPermissionGroups();
         $selected = old('employee_permissions', $employee->usesCustomEmployeePermissions()
             ? $employee->effectiveEmployeePermissions()
@@ -81,17 +81,26 @@ class CrmSalesPermissionController extends Controller
         ]);
 
         $useCustom = $request->boolean('employee_permissions_custom');
-        $permissions = $useCustom
-            ? EmployeePermissionCatalog::sanitize($data['employee_permissions'] ?? [])
-            : null;
+        $rawPermissions = EmployeePermissionCatalog::sanitize($data['employee_permissions'] ?? []);
+
+        // أي علامة صح تفعّل التخصيص تلقائياً — حتى لا تُحفظ خانات وهمية والمفتاح مطفأ
+        if ($rawPermissions !== []) {
+            $useCustom = true;
+        }
+
+        $permissions = $useCustom ? $rawPermissions : null;
 
         $employee->update([
             'employee_permissions_custom' => $useCustom,
             'employee_permissions' => $useCustom ? $permissions : null,
         ]);
 
+        $scope = $useCustom
+            ? 'صلاحيات مخصصة (لوحة الموظف فقط)'
+            : 'صلاحيات الوظيفة العامة';
+
         return redirect()
             ->route('admin.crm.sales-permissions.index')
-            ->with('success', 'تم تحديث صلاحيات '.$employee->name.' — التغييرات تظهر فوراً في لوحة الموظف.');
+            ->with('success', 'تم تحديث صلاحيات '.$employee->name.' — '.$scope.'.');
     }
 }

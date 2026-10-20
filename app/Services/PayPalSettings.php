@@ -24,8 +24,18 @@ class PayPalSettings
 
     public const CURRENCIES = ['SAR', 'USD', 'EUR', 'GBP', 'EGP'];
 
+    /** Soft-archived: Stripe replaces PayPal for students; credentials kept for records. */
+    public static function isSoftArchived(): bool
+    {
+        return true;
+    }
+
     public static function isEnabled(): bool
     {
+        if (self::isSoftArchived()) {
+            return false;
+        }
+
         return Setting::getValue(self::ENABLED_KEY) === '1';
     }
 
@@ -113,7 +123,10 @@ class PayPalSettings
      */
     public static function save(array $data): void
     {
-        Setting::setValue(self::ENABLED_KEY, ! empty($data['enabled']) ? '1' : null);
+        Setting::setValue(
+            self::ENABLED_KEY,
+            self::isSoftArchived() ? null : (! empty($data['enabled']) ? '1' : null)
+        );
 
         $mode = strtolower(trim((string) ($data['mode'] ?? 'sandbox')));
         Setting::setValue(self::MODE_KEY, in_array($mode, self::MODES, true) ? $mode : 'sandbox');

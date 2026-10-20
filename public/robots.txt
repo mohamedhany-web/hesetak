@@ -1,60 +1,15 @@
-# robots.txt — حصتك
-# https://glottical.com
-
 User-agent: *
-Allow: /
-
-# حماية لوحة التحكم والـ API
-Disallow: /admin/
-Disallow: /dashboard/
-Disallow: /employee/
-Disallow: /api/
-Disallow: /_debugbar/
-
-# تجنب الصفحات المكررة بسبب query strings
-Disallow: /*?sort=*
-Disallow: /*?filter=*
-Disallow: /*?utm_source=*
-Disallow: /*?fbclid=*
-Disallow: /*?gclid=*
-
-# منع صفحات المصادقة من الفهرسة
 Disallow: /login
 Disallow: /register
 Disallow: /forgot-password
-Disallow: /reset-password
-Disallow: /password/
+Disallow: /dashboard
+Disallow: /admin
+Disallow: /checkout
+Disallow: /service-packages/*/checkout
+Disallow: /account
+Disallow: /teacher/dashboard
+Disallow: /student/dashboard
 
-# السماح بالمحتوى الثابت
-Allow: /*.css$
-Allow: /*.js$
-Allow: /storage/
-Allow: /images/
-
-# ─── Googlebot ────────────────────────────────────────────
-User-agent: Googlebot
 Allow: /
-Disallow: /admin/
-Disallow: /dashboard/
-Disallow: /api/
-Allow: /*.css$
-Allow: /*.js$
 
-# ─── Bingbot ──────────────────────────────────────────────
-User-agent: Bingbot
-Allow: /
-Disallow: /admin/
-Disallow: /dashboard/
-Disallow: /api/
-
-# ─── GPTBot (OpenAI) ─ لمنع استخدام المحتوى في تدريب AI ─
-User-agent: GPTBot
-Disallow: /
-
-# ─── Anthropic AI ─────────────────────────────────────────
-User-agent: anthropic-ai
-Disallow: /
-
-# ─── Sitemap (يُغيَّر عند النشر الفعلي) ─────────────────
-# ─── Sitemap ───────────────────────────────────────────────
-Sitemap: https://glottical.com/sitemap.xml
+Sitemap: https://hissatak.online/sitemap.xml

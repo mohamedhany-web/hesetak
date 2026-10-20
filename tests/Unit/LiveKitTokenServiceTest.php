@@ -14,8 +14,8 @@ class LiveKitTokenServiceTest extends TestCase
             'livekit.livekit.api_key' => 'APItestkey',
             'livekit.livekit.api_secret' => 'test-secret-value-1234567890',
             'livekit.livekit.token_ttl' => 3600,
-            'livekit.livekit.url' => 'wss://live.glottical.com',
-            'livekit.livekit.host' => 'live.glottical.com',
+            'livekit.livekit.url' => 'wss://live.hissatak.online',
+            'livekit.livekit.host' => 'live.hissatak.online',
         ]);
 
         $user = new User([
@@ -27,7 +27,7 @@ class LiveKitTokenServiceTest extends TestCase
 
         $service = new LiveKitTokenService();
         $this->assertTrue($service->isConfigured());
-        $this->assertSame('wss://live.glottical.com', $service->wsUrl());
+        $this->assertSame('wss://live.hissatak.online', $service->wsUrl());
 
         $token = $service->createJoinToken('room-demo', $user, ['roomAdmin' => true]);
         $parts = explode('.', $token);

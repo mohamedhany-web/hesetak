@@ -31,8 +31,8 @@ class ClassroomPrivateLessonSmokeTest extends TestCase
             'livekit.provider' => 'livekit',
             'livekit.livekit.api_key' => 'APItestkey',
             'livekit.livekit.api_secret' => 'test-secret-value-1234567890',
-            'livekit.livekit.url' => 'wss://live.glottical.com',
-            'livekit.livekit.host' => 'live.glottical.com',
+            'livekit.livekit.url' => 'wss://live.hissatak.online',
+            'livekit.livekit.host' => 'live.hissatak.online',
             'livekit.livekit.token_ttl' => 3600,
         ]);
     }
@@ -94,7 +94,7 @@ class ClassroomPrivateLessonSmokeTest extends TestCase
     {
         LiveServer::query()->create([
             'name' => 'Hissatak Meeting',
-            'domain' => 'live.glottical.com',
+            'domain' => 'live.hissatak.online',
             'provider' => 'livekit',
             'status' => 'active',
         ]);

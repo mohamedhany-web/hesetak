@@ -25,28 +25,47 @@ class ParentProgressReportService
      */
     public function lookupByShareToken(string $token): array
     {
-        $token = trim($token);
-        if ($token === '' || strlen($token) < 24) {
+        return $this->lookupPublic($token);
+    }
+
+    /**
+     * يقبل رقم الطالب القصير (HS-XXXX-XXXX) أو رمز المشاركة الطويل.
+     * لا يقبل رقم الحساب التسلسلي.
+     *
+     * @return array{found: bool, error?: string, student?: array, report?: array}
+     */
+    public function lookupPublic(string $input): array
+    {
+        $raw = trim($input);
+        $publicCode = $this->normalizeStudentPublicCode($raw);
+        $isShareToken = $publicCode === null
+            && strlen($raw) >= 24
+            && strlen($raw) <= 64
+            && preg_match('/^[A-Za-z0-9_-]+$/', $raw) === 1;
+
+        if ($publicCode === null && ! $isShareToken) {
             return [
                 'found' => false,
                 'error' => app()->getLocale() === 'ar'
-                    ? 'رمز المشاركة غير صالح. انسخ الرابط أو الرمز من ملف الطالب.'
-                    : 'Invalid share code. Copy the link or code from the student profile.',
+                    ? 'رقم الطالب غير صالح. انسخه من ملف الطالب بصيغة HS-XXXX-XXXX.'
+                    : 'Invalid student ID. Copy it from the student profile in the form HS-XXXX-XXXX.',
             ];
         }
 
-        $student = User::query()
+        $studentQuery = User::query()
             ->with(['academicYear:id,name'])
-            ->where('progress_share_token', $token)
-            ->where('role', 'student')
-            ->first();
+            ->where('role', 'student');
+
+        $student = $publicCode
+            ? $studentQuery->where('student_public_code', $publicCode)->first()
+            : $studentQuery->where('progress_share_token', $raw)->first();
 
         if (! $student) {
             return [
                 'found' => false,
                 'error' => app()->getLocale() === 'ar'
-                    ? 'لم نعثر على تقرير بهذا الرمز. تأكد من الرابط أو حدّث الرمز من ملف الطالب.'
-                    : 'No report found for this code. Check the link or refresh the code on the student profile.',
+                    ? 'لم نعثر على طالب بهذا الرقم. تأكد من الرقم في ملف الطالب.'
+                    : 'No student found for this ID. Check the code on the student profile.',
             ];
         }
 
@@ -102,6 +121,16 @@ class ParentProgressReportService
         ];
     }
 
+    protected function normalizeStudentPublicCode(string $raw): ?string
+    {
+        $compact = strtoupper((string) preg_replace('/[^A-Za-z0-9]/', '', $raw));
+        if (! preg_match('/^HS[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{8}$/', $compact)) {
+            return null;
+        }
+
+        return 'HS-'.substr($compact, 2, 4).'-'.substr($compact, 6, 4);
+    }
+
     /**
      * @return array<string, mixed>
      */
@@ -109,6 +138,7 @@ class ParentProgressReportService
     {
         return [
             'uuid' => (string) $student->uuid,
+            'public_code' => $student->ensureStudentPublicCode(),
             'name' => (string) $student->name,
             'academic_year' => $student->academicYear?->name,
             'last_login_at' => $student->last_login_at?->format('Y-m-d H:i'),

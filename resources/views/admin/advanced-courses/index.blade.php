@@ -135,7 +135,7 @@
                             @endif
                             <div class="flex items-center gap-2">
                                 @if(! $course->is_free && $course->effectivePurchasePrice() > 0)
-                                    <i class="fas fa-dollar-sign w-4 text-muted"></i>
+                                    <i class="{{ currency_icon_class() }} w-4 text-muted"></i>
                                     <span class="tabular-nums font-medium text-ink">
                                         @if($course->hasPromotionalPrice())
                                             <span class="ml-1 text-muted line-through">{{ number_format($course->listPriceAmount()) }}</span>

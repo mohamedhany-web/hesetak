@@ -129,4 +129,10 @@ return [
     */
     'admin_2fa_required' => env('ADMIN_2FA_REQUIRED', false),
 
+    /*
+    | رمز تشغيل الجدولة/الطابور عبر HTTP (Hostinger hPanel Cron عندما لا يوجد crontab في SSH).
+    | مثال: https://hissatak.online/ops/cron?token=...
+    */
+    'cron_token' => env('CRON_TOKEN', ''),
+
 ];

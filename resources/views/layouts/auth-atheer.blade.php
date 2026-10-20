@@ -44,111 +44,111 @@
       background-position:center;
     }
     /* حصتك brand tokens — auth shell only */
-    body.auth-glottical{
+    body.auth-hesetak{
       --atheer-accent:#0B3D91;
       --atheer-metal:#F5B800;
       --atheer-canvas:#F4F7FC;
       background:#F4F7FC;
       overflow-x:clip;
     }
-    body.auth-glottical .bg-accent{background-color:#0B3D91!important}
-    body.auth-glottical .bg-accent-soft{background-color:#E8EEF8!important}
-    body.auth-glottical .text-accent{color:#0B3D91!important}
-    body.auth-glottical .text-metal{color:#F5B800!important}
-    body.auth-glottical .bg-metal\/15{background-color:rgba(245,184,0,.15)!important}
-    body.auth-glottical .auth-brand-panel{
+    body.auth-hesetak .bg-accent{background-color:#0B3D91!important}
+    body.auth-hesetak .bg-accent-soft{background-color:#E8EEF8!important}
+    body.auth-hesetak .text-accent{color:#0B3D91!important}
+    body.auth-hesetak .text-metal{color:#F5B800!important}
+    body.auth-hesetak .bg-metal\/15{background-color:rgba(245,184,0,.15)!important}
+    body.auth-hesetak .auth-brand-panel{
       background:
         radial-gradient(ellipse 80% 60% at 10% 0%, rgba(11,61,145,.58), transparent 55%),
         radial-gradient(ellipse 70% 50% at 100% 100%, rgba(245,184,0,.22), transparent 50%),
         #0b1220;
     }
-    body.auth-glottical .auth-input:focus,
-    body.auth-glottical .auth-phone:focus-within{
+    body.auth-hesetak .auth-input:focus,
+    body.auth-hesetak .auth-phone:focus-within{
       border-color:#0B3D91;
       box-shadow:0 0 0 3px rgba(11,61,145,.16);
     }
-    body.auth-glottical .auth-input[type="checkbox"],
-    body.auth-glottical input[type="checkbox"].text-accent{
+    body.auth-hesetak .auth-input[type="checkbox"],
+    body.auth-hesetak input[type="checkbox"].text-accent{
       accent-color:#0B3D91;
     }
     /* Responsive polish */
-    body.auth-glottical .auth-shell{
+    body.auth-hesetak .auth-shell{
       min-height:100dvh;
       display:block;
     }
-    body.auth-glottical .auth-brand-panel{
+    body.auth-hesetak .auth-brand-panel{
       display:none;
     }
-    body.auth-glottical .auth-form-col{
+    body.auth-hesetak .auth-form-col{
       min-height:100dvh;
       display:flex;
       flex-direction:column;
     }
-    body.auth-glottical .auth-mobile-strip{
+    body.auth-hesetak .auth-mobile-strip{
       display:block;
     }
-    body.auth-glottical .auth-desktop-header{
+    body.auth-hesetak .auth-desktop-header{
       display:none;
     }
-    body.auth-glottical .auth-form-main{
+    body.auth-hesetak .auth-form-main{
       padding-bottom:max(1.5rem, env(safe-area-inset-bottom));
       display:flex;
       flex:1 1 auto;
       flex-direction:column;
       justify-content:center;
     }
-    body.auth-glottical .auth-mobile-footer{
+    body.auth-hesetak .auth-mobile-footer{
       display:block;
     }
     @media (min-width:1024px){
-      body.auth-glottical .auth-shell{
+      body.auth-hesetak .auth-shell{
         display:grid;
         grid-template-columns:1fr 1fr;
       }
-      body.auth-glottical .auth-brand-panel{
+      body.auth-hesetak .auth-brand-panel{
         display:flex;
         flex-direction:column;
         justify-content:space-between;
       }
-      body.auth-glottical .auth-mobile-strip,
-      body.auth-glottical .auth-mobile-footer{
+      body.auth-hesetak .auth-mobile-strip,
+      body.auth-hesetak .auth-mobile-footer{
         display:none!important;
       }
-      body.auth-glottical .auth-desktop-header{
+      body.auth-hesetak .auth-desktop-header{
         display:flex;
         align-items:center;
         justify-content:space-between;
       }
     }
     /* منع القفزة عند التحميل — إلغاء أنيميشن الدخول */
-    body.auth-glottical .fade-up,
-    body.auth-glottical .fade-up-delay-1,
-    body.auth-glottical .fade-up-delay-2,
-    body.auth-glottical .fade-up-delay-3,
-    body.auth-glottical .page-enter{
+    body.auth-hesetak .fade-up,
+    body.auth-hesetak .fade-up-delay-1,
+    body.auth-hesetak .fade-up-delay-2,
+    body.auth-hesetak .fade-up-delay-3,
+    body.auth-hesetak .page-enter{
       animation:none!important;
       opacity:1!important;
       transform:none!important;
     }
     @media (max-width:1023px){
-      body.auth-glottical .auth-mobile-strip{
+      body.auth-hesetak .auth-mobile-strip{
         padding-top:max(0.75rem, env(safe-area-inset-top));
       }
-      body.auth-glottical .auth-form-main{
+      body.auth-hesetak .auth-form-main{
         justify-content:flex-start;
         padding-top:1.25rem;
       }
-      body.auth-glottical .auth-form-col{
+      body.auth-hesetak .auth-form-col{
         min-height:auto;
       }
     }
     @media (max-width:380px){
-      body.auth-glottical .auth-form-card h1{
+      body.auth-hesetak .auth-form-card h1{
         font-size:1.5rem;
       }
     }
     @media (prefers-reduced-motion: reduce){
-      body.auth-glottical *{
+      body.auth-hesetak *{
         animation:none!important;
         transition:none!important;
       }
@@ -156,7 +156,7 @@
   </style>
   @stack('head')
 </head>
-<body class="auth-glottical font-sans antialiased text-ink" @yield('body_attrs')>
+<body class="auth-hesetak font-sans antialiased text-ink" @yield('body_attrs')>
   <div class="auth-shell min-h-screen lg:grid lg:grid-cols-2">
     {{-- Brand / atmosphere panel --}}
     <aside class="auth-brand-panel relative hidden overflow-hidden text-white lg:flex lg:flex-col lg:justify-between lg:p-12 xl:p-14">

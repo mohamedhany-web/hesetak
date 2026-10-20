@@ -82,16 +82,14 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes">
   <meta name="csrf-token" content="{{ csrf_token() }}">
-  <title>{{ $instrPageTitle }}</title>
-  <meta name="description" content="{{ $instrPageDesc }}">
-  <meta name="theme-color" content="#1E4E8C">
-  <link rel="canonical" href="{{ $instrPageUrl }}">
-  <meta property="og:type" content="profile">
-  <meta property="og:url" content="{{ $instrPageUrl }}">
-  <meta property="og:title" content="{{ $instrPageTitle }}">
-  <meta property="og:description" content="{{ $instrPageDesc }}">
-  <meta property="og:image" content="{{ $instrPageImg }}">
-  <meta property="og:site_name" content="{{ $brand }}">
+  @include('components.seo-meta', [
+      'title' => $instrPageTitle,
+      'description' => $instrPageDesc,
+      'image' => $instrPageImg,
+      'imageAlt' => $name,
+      'canonicalPath' => '/instructors/'.$profile->user->getRouteKey(),
+      'type' => 'profile',
+  ])
   @include('partials.favicon-links')
   @include('partials.seo-jsonld', ['jsonldType' => 'instructor', 'profile' => $profile])
   <link rel="preconnect" href="https://fonts.googleapis.com">

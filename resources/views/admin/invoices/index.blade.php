@@ -139,8 +139,8 @@
                                 <p class="mt-0.5 text-[11px] text-muted">{{ $invoice->user->phone ?? $invoice->user->email ?? '—' }}</p>
                             </td>
                             <td class="px-4 py-3 font-semibold tabular-nums text-ink">
-                                {{ number_format($invoice->total_amount, 2) }}
-                                <span class="text-xs font-normal text-muted">$</span>
+                                {{ format_money($invoice->total_amount) }}
+                                <span class="text-xs font-normal text-muted">{{ currency_symbol() }}</span>
                             </td>
                             <td class="px-4 py-3 text-xs tabular-nums text-muted">
                                 {{ $invoice->due_date ? $invoice->due_date->format('d/m/Y') : '—' }}

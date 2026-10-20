@@ -26,7 +26,7 @@
           <article class="mc-teacher">
             <div class="mc-teacher__photo">
               @if($photo)
-                <img src="{{ $photo }}" width="320" height="400" alt="{{ $name }}" loading="lazy" decoding="async">
+                <img src="{{ $photo }}" width="320" height="400" alt="{{ app()->getLocale() === 'ar' ? 'صورة المعلم '.$name.' في منصة حصتك' : 'Photo of teacher '.$name.' on Hesetak' }}" loading="lazy" decoding="async">
               @else
                 <div class="mc-teacher__photo-fallback" aria-hidden="true">{{ mb_substr($name, 0, 1) }}</div>
               @endif

@@ -22,7 +22,7 @@ class OpsGuideController extends Controller
             $shot = $section['screenshot'] ?? null;
             $path = $shot ? public_path('img/admin-ops-guide/'.$shot) : null;
             $section['screenshot_url'] = ($path && is_file($path))
-                ? asset('img/admin-ops-guide/'.$shot).'?v='.filemtime($path)
+                ? public_img_url('admin-ops-guide/'.$shot)
                 : null;
 
             return $section;

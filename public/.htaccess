@@ -6,6 +6,10 @@
     RewriteEngine On
     RewriteBase /
 
+    # Hostinger: robots.txt و sitemap.xml يجب أن يمرا عبر Laravel (الملفات الثابتة غالباً 404 HTML)
+    RewriteRule ^robots\.txt$ index.php [L]
+    RewriteRule ^sitemap\.xml$ index.php [L]
+
     # Handle Authorization Header
     RewriteCond %{HTTP:Authorization} .
     RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
@@ -16,7 +20,7 @@
     # CSS/JS أثير + لاندنج + صور الهيرو: على الاستضافة ملفات public لا تُقدَّم كملفات ثابتة (404)
     RewriteRule ^(css/atheer\.css|css/admin-atheer\.css|js/atheer-tailwind-config\.js)$ index.php [L]
     RewriteRule ^(css/landing/.*\.css|js/landing/.*\.js)$ index.php [L]
-    RewriteRule ^(__hesetak/img/.+|img/(brand|mycourses|lasles|glottical|sanua)/.+)$ index.php [L]
+    RewriteRule ^(__hesetak/img/.+|img/(brand|mycourses|lasles|sanua)/.+)$ index.php [L]
 
     # Redirect Trailing Slashes If Not A Folder...
     RewriteCond %{REQUEST_FILENAME} !-d
@@ -35,18 +39,7 @@
     Header always set X-Frame-Options SAMEORIGIN
     Header always set X-XSS-Protection "1; mode=block"
     Header always set Referrer-Policy "strict-origin-when-cross-origin"
-    
-    # SEO Headers
-    Header always set X-Robots-Tag "index, follow"
-    
-    # Performance Headers
     Header always set Vary "Accept-Encoding"
-    
-    # Preload critical resources
-    Header always set Link "</css/app.css>; rel=preload; as=style"
-    Header always set Link "</js/app.js>; rel=preload; as=script"
-    
-    # Security and Performance
     Header always set X-DNS-Prefetch-Control "on"
     Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
 </IfModule>

@@ -16,7 +16,7 @@ return new class extends Migration
         DB::table('service_package_pricing_rules')
             ->where('scope', 'private_lessons')
             ->update([
-                'name' => 'حصص خاصة 1:1 — خصّص باقتك',
+                'name' => 'حصص خاصة 1:1 — حصص باقتك الخاصة',
                 'min_sessions' => 4,
                 'max_sessions' => 48,
                 'session_step' => 1,
@@ -37,7 +37,7 @@ return new class extends Migration
 
         if (! $exists) {
             DB::table('service_package_pricing_rules')->insert([
-                'name' => 'حصص خاصة 1:1 — خصّص باقتك',
+                'name' => 'حصص خاصة 1:1 — حصص باقتك الخاصة',
                 'scope' => 'private_lessons',
                 'price_per_session' => 40,
                 'min_sessions' => 4,

@@ -49,10 +49,17 @@ class ForgotPasswordTest extends TestCase
             'email' => $user->email,
         ]);
 
-        $response->assertRedirect();
+        $response->assertRedirect(route('password.request', ['sent' => 1]));
         $response->assertSessionHas('status', __('auth.reset_link_sent'));
+        $response->assertSessionHas('reset_email', $user->email);
 
+        // بعد afterResponse يُرسل الإشعار عند إنهاء الطلب في الاختبارات أيضاً.
         Notification::assertSentTo($user, ResetPasswordNotification::class);
+
+        $this->get(route('password.request', ['sent' => 1]))
+            ->assertOk()
+            ->assertSee(__('auth.check_inbox_title'), false)
+            ->assertSee(__('auth.forgot_password_sent_title'), false);
     }
 
     public function test_forgot_password_rejects_unknown_email(): void

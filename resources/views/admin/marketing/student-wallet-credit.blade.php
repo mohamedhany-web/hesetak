@@ -172,7 +172,7 @@
 
                     <div>
                         <label class="block text-sm font-bold text-slate-700 dark:text-slate-200 mb-2">
-                            المبلغ ($) <span class="text-red-500">*</span>
+                            المبلغ {{ currency_unit() }} <span class="text-red-500">*</span>
                         </label>
                         <div class="relative">
                             <input type="number"
@@ -183,7 +183,7 @@
                                    value="{{ old('amount') }}"
                                    placeholder="0.00"
                                    class="w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 dark:text-white pl-4 pr-12 py-3.5 text-lg font-bold tabular-nums focus:ring-2 focus:ring-sky-500/30 focus:border-sky-500">
-                            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-semibold">$</span>
+                            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-semibold">{{ currency_symbol() }}</span>
                         </div>
                         @error('amount')
                             <p class="text-red-600 dark:text-red-400 text-xs mt-1.5 font-medium">{{ $message }}</p>

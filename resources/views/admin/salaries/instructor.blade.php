@@ -71,7 +71,7 @@
                             <th class="px-4 py-3 text-start font-medium">رقم الاتفاقية</th>
                             <th class="px-4 py-3 text-start font-medium">العنوان</th>
                             <th class="px-4 py-3 text-start font-medium">النوع</th>
-                            <th class="px-4 py-3 text-start font-medium">المبلغ/المعدل ($)</th>
+                            <th class="px-4 py-3 text-start font-medium">المبلغ/المعدل {{ currency_unit() }}</th>
                             <th class="px-4 py-3 text-start font-medium">من</th>
                             <th class="px-4 py-3 text-start font-medium">إلى</th>
                             <th class="px-4 py-3 text-start font-medium">الحالة</th>
@@ -91,7 +91,7 @@
                                     @else {{ $agr->type ?? '—' }}
                                     @endif
                                 </td>
-                                <td class="px-4 py-3 font-semibold tabular-nums text-ink">{{ number_format((float) ($agr->rate ?? 0), 2) }} <span class="text-xs font-normal text-muted">$</span></td>
+                                <td class="px-4 py-3 font-semibold tabular-nums text-ink">{{ number_format((float) ($agr->rate ?? 0), 2) }} <span class="text-xs font-normal text-muted">{{ currency_symbol() }}</span></td>
                                 <td class="px-4 py-3 text-xs tabular-nums text-muted">{{ $agr->start_date ? $agr->start_date->format('Y-m-d') : '—' }}</td>
                                 <td class="px-4 py-3 text-xs tabular-nums text-muted">{{ $agr->end_date ? $agr->end_date->format('Y-m-d') : '—' }}</td>
                                 <td class="px-4 py-3">
@@ -151,7 +151,7 @@
                                 <td class="px-4 py-3 font-mono text-xs text-muted">{{ $p->payment_number }}</td>
                                 <td class="px-4 py-3 text-ink-soft">{{ $p->agreement->title ?? '—' }}</td>
                                 <td class="px-4 py-3 text-ink-soft">{{ $p->type_label }}</td>
-                                <td class="px-4 py-3 font-semibold tabular-nums text-ink">{{ number_format($p->amount, 2) }} <span class="text-xs font-normal text-muted">$</span></td>
+                                <td class="px-4 py-3 font-semibold tabular-nums text-ink">{{ number_format($p->amount, 2) }} <span class="text-xs font-normal text-muted">{{ currency_symbol() }}</span></td>
                                 <td class="px-4 py-3">
                                     <span class="inline-flex rounded-lg px-2.5 py-1 text-xs font-medium {{ $pBadge['classes'] }}">{{ $pBadge['label'] }}</span>
                                 </td>

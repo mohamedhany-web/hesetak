@@ -77,7 +77,7 @@ class StudentLiveAdminBroadcastIsolationTest extends TestCase
     {
         $admin = User::factory()->create([
             'role' => 'super_admin',
-            'name' => 'مدير منصة glottical',
+            'name' => 'مدير منصة حصتك',
             'is_active' => true,
             'password' => Hash::make('secret'),
         ]);
@@ -94,7 +94,7 @@ class StudentLiveAdminBroadcastIsolationTest extends TestCase
         ]);
         $server = LiveServer::create([
             'name' => 'Hissatak Meeting',
-            'domain' => 'live.glottical.com',
+            'domain' => 'live.hissatak.online',
             'provider' => 'livekit',
             'status' => 'active',
         ]);
@@ -129,7 +129,7 @@ class StudentLiveAdminBroadcastIsolationTest extends TestCase
         $index = $this->actingAs($student)->get(route('student.live-sessions.index'));
         $index->assertOk();
         $index->assertDontSee('بث إداري', false);
-        $index->assertDontSee('مدير منصة glottical', false);
+        $index->assertDontSee('مدير منصة حصتك', false);
         $index->assertSee('جلسة كورس مفتوحة', false);
         $index->assertSee('معلم الكورس', false);
 

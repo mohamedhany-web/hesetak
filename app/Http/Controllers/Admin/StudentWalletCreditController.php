@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\Wallet;
+use App\Services\PlatformNotifier;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -64,7 +65,9 @@ class StudentWalletCreditController extends Controller
         $notes = trim((string) ($validated['notes'] ?? ''));
         $desc = 'رصيد تسويق من الإدارة'.($notes !== '' ? ' — '.$notes : '');
 
-        DB::transaction(function () use ($user, $validated, $desc) {
+        $amount = (float) $validated['amount'];
+
+        DB::transaction(function () use ($user, $amount, $desc) {
             $wallet = Wallet::firstOrCreate(
                 ['user_id' => $user->id],
                 [
@@ -75,15 +78,28 @@ class StudentWalletCreditController extends Controller
                 ]
             );
             $wallet->deposit(
-                (float) $validated['amount'],
+                $amount,
                 null,
                 null,
                 $desc
             );
         });
 
+        app(PlatformNotifier::class)->notify($user, [
+            'title' => 'تمت إضافة رصيد لمحفظتك',
+            'message' => 'أُضيف '.format_money($amount).' إلى محفظتك. '.$desc,
+            'type' => 'system',
+            'priority' => 'normal',
+            'action_url' => '/student/wallet',
+            'action_text' => 'عرض المحفظة',
+            'data' => [
+                'source' => 'admin_wallet_credit',
+                'amount' => $amount,
+            ],
+        ]);
+
         return redirect()
             ->route('admin.marketing.student-wallet-credit.create')
-            ->with('success', 'تم إضافة '.number_format((float) $validated['amount'], 2).' $ لمحفظة الطالب بنجاح.');
+            ->with('success', 'تم إضافة '.format_money($amount).' لمحفظة الطالب بنجاح.');
     }
 }

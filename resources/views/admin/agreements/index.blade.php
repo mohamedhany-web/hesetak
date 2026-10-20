@@ -12,7 +12,7 @@
         ['label' => 'إجمالي الاتفاقيات', 'value' => number_format($stats['total']), 'icon' => 'fa-handshake', 'note' => 'كل العقود المسجّلة'],
         ['label' => 'اتفاقيات نشطة', 'value' => number_format($stats['active']), 'icon' => 'fa-check-circle', 'note' => 'سارية المفعول'],
         ['label' => 'مسودات', 'value' => number_format($stats['draft']), 'icon' => 'fa-file-alt', 'note' => 'قيد الإعداد'],
-        ['label' => 'إجمالي المدفوعات', 'value' => number_format($stats['total_earned'], 2), 'icon' => 'fa-money-bill-wave', 'note' => '$ — مدفوعات المدربين'],
+        ['label' => 'إجمالي المدفوعات', 'value' => format_money($stats['total_earned']), 'icon' => 'fa-money-bill-wave', 'note' => 'مدفوعات المدربين'],
     ];
 
     $typeBadges = [
@@ -183,7 +183,7 @@
                                 </span>
                             </td>
                             <td class="px-4 py-3">
-                                <p class="font-semibold tabular-nums text-ink">{{ number_format($agreement->rate ?? 0, 2) }} $</p>
+                                <p class="font-semibold tabular-nums text-ink">{{ number_format($agreement->rate ?? 0, 2) }} {{ currency_symbol() }}</p>
                                 @if($agreement->type == 'hourly_rate')
                                     <p class="text-xs text-muted">للساعة</p>
                                 @elseif($agreement->type == 'monthly_salary')

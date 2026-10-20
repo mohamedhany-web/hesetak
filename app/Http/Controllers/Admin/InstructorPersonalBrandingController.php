@@ -7,8 +7,10 @@ use App\Models\AcademicYear;
 use App\Models\InstructorProfile;
 use App\Services\PublicMediaStorage;
 use App\Support\InstructorMatchCompleteness;
+use App\Support\InstructorProfilePublication;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Validation\ValidationException;
 
 class InstructorPersonalBrandingController extends Controller
 {
@@ -36,15 +38,45 @@ class InstructorPersonalBrandingController extends Controller
             'draft' => InstructorProfile::where('status', InstructorProfile::STATUS_DRAFT)->count(),
         ];
 
-        return view('admin.marketing.personal-branding.index', compact('profiles', 'counts'));
+        $approvedIncomplete = InstructorProfile::query()
+            ->approved()
+            ->with(['user.teachingLearningPaths'])
+            ->get()
+            ->filter(fn (InstructorProfile $p) => ! InstructorProfilePublication::isPublishable($p))
+            ->values();
+
+        $approvedIncompleteCount = $approvedIncomplete->count();
+
+        if ($request->input('gap') === 'approved') {
+            $ids = $approvedIncomplete->pluck('id')->all();
+            $profiles = InstructorProfile::query()
+                ->with(['user.teachingLearningPaths', 'reviewedByUser'])
+                ->whereIn('id', $ids ?: [0])
+                ->latest('updated_at')
+                ->paginate(30)
+                ->withQueryString();
+        }
+
+        return view('admin.marketing.personal-branding.index', compact(
+            'profiles',
+            'counts',
+            'approvedIncompleteCount'
+        ));
     }
 
     public function show(InstructorProfile $personal_branding)
     {
         $personal_branding->load(['user.teachingLearningPaths', 'reviewedByUser']);
         $matchCompleteness = InstructorMatchCompleteness::evaluate($personal_branding);
+        $publication = InstructorProfilePublication::evaluate($personal_branding);
+        $looksLikeDemo = $publication['is_demo'];
 
-        return view('admin.marketing.personal-branding.show', compact('personal_branding', 'matchCompleteness'));
+        return view('admin.marketing.personal-branding.show', compact(
+            'personal_branding',
+            'matchCompleteness',
+            'publication',
+            'looksLikeDemo'
+        ));
     }
 
     public function edit(InstructorProfile $personal_branding)
@@ -57,10 +89,10 @@ class InstructorPersonalBrandingController extends Controller
     public function update(Request $request, InstructorProfile $personal_branding)
     {
         $data = $request->validate([
-            'headline' => 'nullable|string|max:255',
-            'bio' => 'nullable|string|max:5000',
-            'experience' => 'nullable|string|max:50000',
-            'skills' => 'nullable|string|max:5000',
+            'headline' => ['nullable', 'string', 'max:255', new \App\Rules\NoDemoPlaceholder],
+            'bio' => ['nullable', 'string', 'max:5000', new \App\Rules\NoDemoPlaceholder],
+            'experience' => ['nullable', 'string', 'max:50000', new \App\Rules\NoDemoPlaceholder],
+            'skills' => ['nullable', 'string', 'max:5000', new \App\Rules\NoDemoPlaceholder],
             'curriculum_types' => 'nullable|array',
             'curriculum_types.*' => 'string|in:'.implode(',', \App\Support\HesetakMatchCatalog::allowedCurriculumTypeKeys() ?: ['__none__']),
             'teaching_year_ids' => 'nullable|array',
@@ -101,8 +133,10 @@ class InstructorPersonalBrandingController extends Controller
             }
         }
 
-        $personal_branding->update($data);
+        $wasApproved = $personal_branding->status === InstructorProfile::STATUS_APPROVED;
 
+        // إن كان معتمداً وأصبح غير قابل للنشر بعد التعديل، ننزله قبل الحفظ حتى لا تفشل بوابة الموديل.
+        $personal_branding->fill($data);
         if ($personal_branding->user && Schema::hasTable('academic_year_instructors')) {
             $publicIds = AcademicYear::query()
                 ->publicCatalog()
@@ -117,11 +151,29 @@ class InstructorPersonalBrandingController extends Controller
                     'year_ids' => $publicIds,
                 ],
             ])->save();
+            $personal_branding->unsetRelation('user');
+            $personal_branding->load('user.teachingLearningPaths');
+        }
+
+        $demoted = false;
+        if ($wasApproved && ! InstructorProfilePublication::isPublishable($personal_branding)) {
+            $personal_branding->status = InstructorProfile::STATUS_PENDING_REVIEW;
+            $personal_branding->reviewed_at = null;
+            $personal_branding->reviewed_by = null;
+            $personal_branding->rejection_reason = 'أُوقف النشر بعد التعديل: ملف المطابقة ناقص أو محتوى تجريبي.';
+            $demoted = true;
+        }
+
+        $personal_branding->save();
+
+        $message = 'تم تحديث الملف التعريفي للمدرب.';
+        if ($demoted) {
+            $message .= ' تنبيه: لم يعد يستوفي شروط النشر فأُعيد إلى قيد المراجعة.';
         }
 
         return redirect()
             ->route('admin.personal-branding.show', $personal_branding)
-            ->with('success', 'تم تحديث الملف التعريفي للمدرب.');
+            ->with($demoted ? 'error' : 'success', $message);
     }
 
     public function destroy(InstructorProfile $personal_branding)
@@ -141,25 +193,11 @@ class InstructorPersonalBrandingController extends Controller
 
     public function approve(InstructorProfile $personal_branding)
     {
-        if ($personal_branding->status !== InstructorProfile::STATUS_PENDING_REVIEW) {
-            return back()->with('error', 'يمكن الموافقة فقط على الملفات قيد المراجعة.');
+        try {
+            InstructorProfilePublication::approve($personal_branding, (int) auth()->id());
+        } catch (ValidationException $e) {
+            return back()->with('error', collect($e->errors())->flatten()->first() ?: 'تعذرت الموافقة.');
         }
-
-        $personal_branding->loadMissing('user.teachingLearningPaths');
-        $completeness = InstructorMatchCompleteness::evaluate($personal_branding);
-        if (! $completeness['ok']) {
-            return back()->with(
-                'error',
-                'لا يمكن النشر — ملف المطابقة ناقص: '.implode(' · ', $completeness['missing'])
-            );
-        }
-
-        $personal_branding->update([
-            'status' => InstructorProfile::STATUS_APPROVED,
-            'reviewed_at' => now(),
-            'reviewed_by' => auth()->id(),
-            'rejection_reason' => null,
-        ]);
 
         return back()->with('success', 'تمت الموافقة على الملف التعريفي للمدرب ونشره على الموقع.');
     }
@@ -199,6 +237,48 @@ class InstructorPersonalBrandingController extends Controller
         ]);
 
         return back()->with('success', 'تم إعادة الملف التعريفي إلى قيد المراجعة.');
+    }
+
+    /**
+     * إيقاف نشر ملف معتمد ناقص المطابقة / تجريبي.
+     */
+    public function unpublishIncomplete(InstructorProfile $personal_branding)
+    {
+        if ($personal_branding->status !== InstructorProfile::STATUS_APPROVED) {
+            return back()->with('error', 'هذا الملف ليس معتمداً.');
+        }
+
+        $ok = InstructorProfilePublication::demoteIncompleteApproved($personal_branding);
+        if (! $ok) {
+            return back()->with('error', 'الملف يستوفي شروط النشر — لا حاجة لإيقافه.');
+        }
+
+        return back()->with('success', 'تم إيقاف نشر الملف وإعادته لقيد المراجعة لاستكمال المطابقة.');
+    }
+
+    /**
+     * إيقاف نشر كل المعتمدين الناقصين دفعة واحدة.
+     */
+    public function unpublishAllIncomplete()
+    {
+        $demoted = 0;
+        InstructorProfile::query()
+            ->approved()
+            ->with(['user.teachingLearningPaths'])
+            ->each(function (InstructorProfile $profile) use (&$demoted) {
+                if (InstructorProfilePublication::demoteIncompleteApproved($profile)) {
+                    $demoted++;
+                }
+            });
+
+        return redirect()
+            ->route('admin.personal-branding.index', ['gap' => 'approved'])
+            ->with(
+                $demoted > 0 ? 'success' : 'error',
+                $demoted > 0
+                    ? "تم إيقاف نشر {$demoted} ملفاً معتمداً ناقص المطابقة."
+                    : 'لا توجد ملفات معتمدة ناقصة للمطابقة.'
+            );
     }
 
     /**

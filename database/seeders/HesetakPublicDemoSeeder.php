@@ -23,7 +23,7 @@ class HesetakPublicDemoSeeder extends Seeder
     public function run(): void
     {
         $this->call([
-            GlotticalAcademyUserSeeder::class,
+            HesetakAcademyUserSeeder::class,
             AcademicYearSeeder::class,
             SubjectsSeeder::class,
         ]);
@@ -84,23 +84,49 @@ class HesetakPublicDemoSeeder extends Seeder
                 continue;
             }
 
+            $user->forceFill([
+                'is_active' => true,
+                'role' => 'instructor',
+            ])->save();
+
             $yearCodes = $data['years'] ?? [];
             $types = $data['curriculum_types'] ?? [];
             unset($data['years'], $data['curriculum_types']);
 
-            InstructorProfile::query()->updateOrCreate(
-                ['user_id' => $user->id],
-                array_merge($data, [
-                    'status' => InstructorProfile::STATUS_APPROVED,
-                    'submitted_at' => now(),
-                    'reviewed_at' => now(),
-                    'curriculum_types' => $types,
-                ])
-            );
-
-            if (Schema::hasTable('academic_year_instructors') && $yearCodes !== []) {
+            $yearIds = [];
+            if (Schema::hasTable('academic_years') && $yearCodes !== []) {
                 $yearIds = AcademicYear::query()->whereIn('code', $yearCodes)->pluck('id')->all();
-                $user->teachingLearningPaths()->syncWithoutDetaching($yearIds);
+            }
+
+            $subjectIds = [];
+            if ($yearIds !== [] && Schema::hasTable('academic_subjects')) {
+                $subjectIds = AcademicSubject::query()
+                    ->whereIn('academic_year_id', $yearIds)
+                    ->where('is_active', true)
+                    ->orderBy('order')
+                    ->limit(4)
+                    ->pluck('id')
+                    ->all();
+            }
+
+            InstructorProfile::withoutEvents(function () use ($user, $data, $types, $yearIds, $subjectIds) {
+                $profile = InstructorProfile::query()->updateOrCreate(
+                    ['user_id' => $user->id],
+                    array_merge($data, [
+                        'status' => InstructorProfile::STATUS_APPROVED,
+                        'submitted_at' => now(),
+                        'reviewed_at' => now(),
+                        'curriculum_types' => $types,
+                        'academic_year_ids' => $yearIds,
+                        'teaching_subject_ids' => $subjectIds,
+                    ])
+                );
+                $profile->bypassPublicationGuard = true;
+                $profile->save();
+            });
+
+            if (Schema::hasTable('academic_year_instructors') && $yearIds !== []) {
+                $user->teachingLearningPaths()->sync($yearIds);
             }
         }
     }
@@ -179,31 +205,54 @@ class HesetakPublicDemoSeeder extends Seeder
             $subjects = $stage['subjects'];
             unset($stage['subjects']);
 
-            $year = AcademicYear::query()->updateOrCreate(
-                ['code' => $stage['code']],
-                array_merge($stage, [
-                    'is_active' => true,
-                    'is_public' => true,
-                    'icon' => 'fas fa-book-open',
-                    'color' => '#1E4E8C',
-                ])
-            );
+            $year = AcademicYear::query()
+                ->where('code', $stage['code'])
+                ->orWhere('slug', $stage['slug'])
+                ->first();
+
+            $yearPayload = array_merge($stage, [
+                'is_active' => true,
+                'is_public' => true,
+                'icon' => 'fas fa-book-open',
+                'color' => '#1E4E8C',
+            ]);
+
+            if ($year) {
+                // حافظ على slug الموجود لتجنب تعارض unique مع كتالوج التسعير
+                unset($yearPayload['slug']);
+                $year->fill($yearPayload)->save();
+            } else {
+                $year = AcademicYear::query()->create($yearPayload);
+            }
 
             foreach ($subjects as $row) {
                 $code = $stage['code'].'-'.$row['code_suffix'];
-                AcademicSubject::query()->updateOrCreate(
-                    ['code' => $code],
-                    [
-                        'academic_year_id' => $year->id,
-                        'name' => $row['name'],
-                        'slug' => Str::slug($row['name']).'-'.Str::lower($row['code_suffix']).'-'.$year->id,
-                        'is_active' => true,
-                        'order' => $row['order'],
-                        'icon' => 'fas fa-book',
-                        'color' => '#1E4E8C',
-                        'description' => 'مادة ضمن '.$year->name.' كما تُدار من لوحة الأدمن.',
-                    ]
-                );
+                $slug = Str::slug($row['name']).'-'.Str::lower($row['code_suffix']).'-'.$year->id;
+                $subject = AcademicSubject::query()
+                    ->where('code', $code)
+                    ->orWhere(function ($q) use ($slug, $year) {
+                        $q->where('slug', $slug)->where('academic_year_id', $year->id);
+                    })
+                    ->first();
+
+                $subjectPayload = [
+                    'academic_year_id' => $year->id,
+                    'code' => $code,
+                    'name' => $row['name'],
+                    'slug' => $slug,
+                    'is_active' => true,
+                    'order' => $row['order'],
+                    'icon' => 'fas fa-book',
+                    'color' => '#1E4E8C',
+                    'description' => 'مادة ضمن '.$year->name.' كما تُدار من لوحة الأدمن.',
+                ];
+
+                if ($subject) {
+                    unset($subjectPayload['slug']);
+                    $subject->fill($subjectPayload)->save();
+                } else {
+                    AcademicSubject::query()->create($subjectPayload);
+                }
             }
         }
     }

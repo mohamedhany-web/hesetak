@@ -32,9 +32,12 @@ class EnsurePermission
             return $next($request);
         }
 
-        // admin.access: السماح لأي موظف يملك دوراً RBAC مخصصاً
-        // (كل الأدوار الأخرى تُتحقق منها بصلاحياتها الفعلية في السايدبار)
-        if ($permission === 'admin.access' && $user->is_employee && $user->roles()->exists()) {
+        // admin.access: يتطلب الصلاحية فعلياً (لا يكفي وجود أي دور RBAC للموظف)
+        if ($permission === 'admin.access') {
+            if (! $user->userHasAdminAccessCapability()) {
+                abort(403, 'ليس لديك الصلاحية للوصول إلى هذه الصفحة');
+            }
+
             return $next($request);
         }
 

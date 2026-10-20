@@ -24,11 +24,11 @@ class PopupAdController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'body' => 'required|string|max:5000',
+            'title' => ['required', 'string', 'max:255', new \App\Rules\NoDemoPlaceholder],
+            'body' => ['required', 'string', 'max:5000', new \App\Rules\NoDemoPlaceholder],
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:'.config('upload_limits.max_upload_kb'),
             'link_url' => 'nullable|url|max:500',
-            'cta_text' => 'nullable|string|max:100',
+            'cta_text' => ['nullable', 'string', 'max:100', new \App\Rules\NoDemoPlaceholder],
             'starts_at' => 'required|date',
             'duration_days' => 'required|integer|min:1|max:365',
             'max_views_per_visitor' => 'required|integer|min:1|max:100',
@@ -67,11 +67,11 @@ class PopupAdController extends Controller
     public function update(Request $request, PopupAd $popupAd)
     {
         $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'body' => 'required|string|max:5000',
+            'title' => ['required', 'string', 'max:255', new \App\Rules\NoDemoPlaceholder],
+            'body' => ['required', 'string', 'max:5000', new \App\Rules\NoDemoPlaceholder],
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:'.config('upload_limits.max_upload_kb'),
             'link_url' => 'nullable|url|max:500',
-            'cta_text' => 'nullable|string|max:100',
+            'cta_text' => ['nullable', 'string', 'max:100', new \App\Rules\NoDemoPlaceholder],
             'starts_at' => 'required|date',
             'duration_days' => 'required|integer|min:1|max:365',
             'max_views_per_visitor' => 'required|integer|min:1|max:100',

@@ -1,5 +1,8 @@
 @php
     $isRtl = $isRtl ?? (app()->getLocale() === 'ar');
+    $footerSocial = \App\Services\PublicFooterSettings::payload();
+    $socials = $footerSocial['socials'] ?? [];
+    $waFooter = trim((string) ($footerSocial['whatsapp_url'] ?? ''));
 @endphp
 <footer class="mc-footer">
   <div class="mc-container">
@@ -10,10 +13,20 @@
           {{ __('landing.nav.brand') }}
         </a>
         <p class="mc-footer__tagline">{{ __('landing.mc.footer.tagline') }}</p>
+        @if($waFooter !== '' || count($socials) > 0)
+          <div class="mc-footer__social" style="display:flex;flex-wrap:wrap;gap:.65rem;margin-top:.85rem" aria-label="{{ $isRtl ? 'حسابات التواصل' : 'Social accounts' }}">
+            @if($waFooter !== '')
+              <a href="{{ $waFooter }}" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp"><i class="fab fa-whatsapp" aria-hidden="true"></i></a>
+            @endif
+            @foreach($socials as $social)
+              <a href="{{ $social['url'] }}" target="_blank" rel="noopener noreferrer" aria-label="{{ $social['label'] }}"><i class="{{ $social['icon'] }}" aria-hidden="true"></i></a>
+            @endforeach
+          </div>
+        @endif
       </div>
 
       <div class="mc-footer__col mc-footer__col--desktop">
-        <h4>{{ __('landing.mc.footer.explore') }}</h4>
+        <p class="mc-footer__heading">{{ __('landing.mc.footer.explore') }}</p>
         <ul>
           <li><a href="{{ route('public.instructors.index') }}">{{ __('landing.mc.nav.instructors') }}</a></li>
           <li><a href="{{ route('public.curricula') }}">{{ __('landing.mc.footer.curricula') }}</a></li>
@@ -22,18 +35,19 @@
         </ul>
       </div>
       <div class="mc-footer__col mc-footer__col--desktop">
-        <h4>{{ __('landing.mc.footer.company') }}</h4>
+        <p class="mc-footer__heading">{{ __('landing.mc.footer.company') }}</p>
         <ul>
           <li><a href="{{ route('public.for-students') }}">{{ __('landing.mc.footer.for_students') }}</a></li>
           <li><a href="{{ route('public.for-teachers') }}">{{ __('landing.mc.footer.for_teachers') }}</a></li>
           <li><a href="{{ route('public.how') }}">{{ __('landing.mc.footer.how') }}</a></li>
           <li><a href="{{ route('public.faq') }}">{{ __('landing.mc.footer.faq') }}</a></li>
+          <li><a href="{{ route('public.parent-progress') }}">{{ __('landing.mc.footer.student_report') }}</a></li>
           <li><a href="{{ route('public.about') }}">{{ __('landing.mc.nav.about') }}</a></li>
           <li><a href="{{ route('public.contact') }}">{{ __('landing.mc.nav.contact') }}</a></li>
         </ul>
       </div>
       <div class="mc-footer__col mc-footer__col--desktop">
-        <h4>{{ __('landing.mc.footer.legal') }}</h4>
+        <p class="mc-footer__heading">{{ __('landing.mc.footer.legal') }}</p>
         <ul>
           <li><a href="{{ route('public.terms') }}">{{ __('landing.mc.footer.terms') }}</a></li>
           <li><a href="{{ route('public.privacy') }}">{{ __('landing.mc.footer.privacy') }}</a></li>
@@ -54,6 +68,7 @@
       <div class="mc-footer__mobile-legal">
         <a href="{{ route('public.how') }}">{{ __('landing.mc.footer.how') }}</a>
         <a href="{{ route('public.faq') }}">{{ __('landing.mc.footer.faq') }}</a>
+        <a href="{{ route('public.parent-progress') }}">{{ __('landing.mc.footer.student_report') }}</a>
         <a href="{{ route('public.about') }}">{{ __('landing.mc.nav.about') }}</a>
         <a href="{{ route('public.for-students') }}">{{ __('landing.mc.footer.for_students') }}</a>
         <a href="{{ route('public.terms') }}">{{ __('landing.mc.footer.terms') }}</a>

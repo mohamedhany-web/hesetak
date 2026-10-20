@@ -171,8 +171,8 @@
                                 </span>
                             </td>
                             <td class="px-4 py-3 font-semibold tabular-nums {{ $isDebit ? 'text-metal' : ($isCredit ? 'text-accent' : 'text-ink') }}">
-                                {{ $isDebit ? '-' : ($isCredit ? '+' : '') }}{{ number_format($transaction->amount, 2) }}
-                                <span class="text-xs font-normal text-muted">$</span>
+                                {{ $isDebit ? '-' : ($isCredit ? '+' : '') }}{{ format_money($transaction->amount) }}
+                                <span class="text-xs font-normal text-muted">{{ currency_symbol() }}</span>
                             </td>
                             <td class="px-4 py-3">
                                 <span class="inline-flex rounded-lg px-2.5 py-1 text-xs font-medium {{ $statusMeta['classes'] }}">{{ $statusMeta['label'] }}</span>

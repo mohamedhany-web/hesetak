@@ -10,6 +10,8 @@ use App\Services\KashierSettings;
 use App\Services\PayPalService;
 use App\Services\PayPalSettings;
 use App\Services\PaymentGatewaySettings;
+use App\Services\StripeService;
+use App\Services\StripeSettings;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -38,6 +40,9 @@ class PaymentGatewaysController extends Controller
             'fawaterakConfigured' => $fawaterakConfigured,
             'fawaterakIntegration' => $fawaterakIntegration,
             'paymentGatewayFeePercent' => $paymentGatewayFeePercent,
+            'allowManualWithGateways' => PaymentGatewaySettings::allowsManualWithGateways(),
+            'blocksManual' => PaymentGatewaySettings::blocksManualCheckout(),
+            'enabledCount' => PaymentGatewaySettings::hubEnabledCount(),
             'paypalEnabled' => PayPalSettings::isEnabled(),
             'paypalConfigured' => PayPalSettings::isConfigured(),
             'paypalMode' => PayPalSettings::mode(),
@@ -45,6 +50,13 @@ class PaymentGatewaysController extends Controller
             'paypalHasSecret' => PayPalSettings::hasStoredSecret() || PayPalSettings::clientSecret() !== '',
             'paypalWebhookId' => PayPalSettings::webhookId(),
             'paypalCurrency' => PayPalSettings::currency(),
+            'stripeEnabled' => StripeSettings::isEnabled(),
+            'stripeConfigured' => StripeSettings::isConfigured(),
+            'stripeMode' => StripeSettings::mode(),
+            'stripePublishableKey' => StripeSettings::publishableKey(),
+            'stripeHasSecret' => StripeSettings::hasStoredSecret() || StripeSettings::secretKey() !== '',
+            'stripeHasWebhookSecret' => StripeSettings::hasStoredWebhookSecret() || StripeSettings::webhookSecret() !== '',
+            'stripeCurrency' => StripeSettings::currency(),
             'kashierEnabled' => KashierSettings::isEnabled(),
             'kashierConfigured' => KashierSettings::isConfigured(),
             'kashierMode' => KashierSettings::mode(),
@@ -54,20 +66,27 @@ class PaymentGatewaysController extends Controller
             'kashierCurrency' => KashierSettings::currency(),
             'kashierRedirectUrl' => KashierSettings::merchantRedirectUrl(),
             'paypalWebhookUrl' => url('/webhooks/paypal'),
+            'stripeWebhookUrl' => url('/webhooks/stripe'),
             'kashierCallbackUrl' => url()->route('public.checkout.kashier.callback'),
         ]);
     }
 
     public function update(Request $request): RedirectResponse
     {
-        $paypalEnabled = $request->boolean('paypal_gateway_enabled');
+        // PayPal مؤرشف: يُحفظ الربط للسجلات فقط ولا يُفعَّل من المركز.
+        $paypalEnabled = false;
         $paypalClientId = trim((string) $request->input('paypal_client_id', ''));
         $paypalSecret = trim((string) $request->input('paypal_client_secret', ''));
-        if ($paypalEnabled && $paypalClientId === '') {
-            return back()->withErrors(['paypal_client_id' => 'Client ID مطلوب لتفعيل PayPal.'])->withInput();
+
+        $stripeEnabled = $request->boolean('stripe_gateway_enabled');
+        $stripePk = trim((string) $request->input('stripe_publishable_key', ''));
+        $stripeSecret = trim((string) $request->input('stripe_secret_key', ''));
+        $stripeWh = trim((string) $request->input('stripe_webhook_secret', ''));
+        if ($stripeEnabled && $stripePk === '') {
+            return back()->withErrors(['stripe_publishable_key' => 'Publishable Key مطلوب لتفعيل Stripe.'])->withInput();
         }
-        if ($paypalEnabled && $paypalSecret === '' && ! PayPalSettings::isConfigured()) {
-            return back()->withErrors(['paypal_client_secret' => 'Secret مطلوب لتفعيل PayPal في أول ربط.'])->withInput();
+        if ($stripeEnabled && $stripeSecret === '' && ! StripeSettings::isConfigured()) {
+            return back()->withErrors(['stripe_secret_key' => 'Secret Key مطلوب لتفعيل Stripe في أول ربط.'])->withInput();
         }
 
         $kashierEnabled = $request->boolean('kashier_gateway_enabled');
@@ -94,6 +113,10 @@ class PaymentGatewaysController extends Controller
             $request->boolean('fawaterak_gateway_enabled') ? '1' : null
         );
 
+        PaymentGatewaySettings::setAllowManualWithGateways(
+            $request->boolean('allow_manual_checkout_with_gateways')
+        );
+
         $feeRaw = trim((string) $request->input('payment_gateway_fee_percent', ''));
         if ($feeRaw === '') {
             Setting::setValue(PaymentGatewaySettings::FEE_PERCENT_SETTING_KEY, null);
@@ -112,6 +135,15 @@ class PaymentGatewaysController extends Controller
             'client_secret' => $paypalSecret !== '' ? $paypalSecret : null,
             'webhook_id' => (string) $request->input('paypal_webhook_id', ''),
             'currency' => (string) $request->input('paypal_currency', platform_currency()),
+        ]);
+
+        StripeSettings::save([
+            'enabled' => $stripeEnabled,
+            'mode' => (string) $request->input('stripe_mode', 'test'),
+            'publishable_key' => $stripePk,
+            'secret_key' => $stripeSecret !== '' ? $stripeSecret : null,
+            'webhook_secret' => $stripeWh !== '' ? $stripeWh : null,
+            'currency' => (string) $request->input('stripe_currency', platform_currency()),
         ]);
 
         KashierSettings::save([
@@ -139,12 +171,32 @@ class PaymentGatewaysController extends Controller
             $result = app(PayPalService::class)->ping();
 
             return redirect()->route('admin.payment-gateways.index')
-                ->with('success', 'اتصال PayPal ناجح (وضع '.($result['mode'] === 'live' ? 'Live' : 'Sandbox').').');
+                ->with('success', 'اتصال PayPal ناجح (وضع '.($result['mode'] === 'live' ? 'Live' : 'Sandbox').') — البوابة مؤرشفة ولن تظهر للطالب.');
         } catch (Throwable $e) {
             report($e);
 
             return redirect()->route('admin.payment-gateways.index')
                 ->withErrors(['paypal_client_secret' => $e->getMessage()]);
+        }
+    }
+
+    public function testStripe(Request $request): RedirectResponse
+    {
+        if (! StripeSettings::isConfigured()) {
+            return redirect()->route('admin.payment-gateways.index')
+                ->withErrors(['stripe_secret_key' => 'احفظ Publishable + Secret أولاً ثم اختبر الاتصال.']);
+        }
+
+        try {
+            $result = app(StripeService::class)->ping();
+
+            return redirect()->route('admin.payment-gateways.index')
+                ->with('success', 'اتصال Stripe ناجح (وضع '.($result['mode'] === 'live' ? 'Live' : 'Test').').');
+        } catch (Throwable $e) {
+            report($e);
+
+            return redirect()->route('admin.payment-gateways.index')
+                ->withErrors(['stripe_secret_key' => $e->getMessage()]);
         }
     }
 }

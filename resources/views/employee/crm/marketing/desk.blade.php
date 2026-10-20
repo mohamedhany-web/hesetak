@@ -30,13 +30,13 @@
     <div class="rounded-xl border bg-white p-4 text-sm"><span class="text-gray-500">أُرسل للمبيعات</span><p class="font-black text-lg">{{ number_format($summary['submitted_to_sales']) }}</p></div>
     <div class="rounded-xl border bg-amber-50 border-amber-200 p-4 text-sm"><span class="text-amber-800">بانتظار استلام سيلز</span><p class="font-black text-lg text-amber-900">{{ number_format($summary['awaiting_sales']) }}</p></div>
     <div class="rounded-xl border bg-white p-4 text-sm"><span class="text-gray-500">عند المبيعات الآن</span><p class="font-black text-lg">{{ number_format($summary['in_sales_pipeline']) }}</p></div>
-    <div class="rounded-xl border bg-white p-4 text-sm"><span class="text-gray-500">عمولة إجمالي</span><p class="font-black text-lg text-violet-800">{{ number_format($summary['commissions_total'], 2) }} $</p></div>
+    <div class="rounded-xl border bg-white p-4 text-sm"><span class="text-gray-500">عمولة إجمالي</span><p class="font-black text-lg text-violet-800">{{ number_format($summary['commissions_total'], 2) }} {{ currency_symbol() }}</p></div>
   </div>
 
   <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-    <div class="rounded-xl border bg-white p-4 text-sm"><span class="text-gray-500">معلّقة</span><p class="font-bold">{{ number_format($summary['commissions_pending'], 2) }} $</p></div>
-    <div class="rounded-xl border bg-white p-4 text-sm"><span class="text-gray-500">معتمدة</span><p class="font-bold text-emerald-700">{{ number_format($summary['commissions_approved'], 2) }} $</p></div>
-    <div class="rounded-xl border bg-white p-4 text-sm"><span class="text-gray-500">مدفوعة</span><p class="font-bold text-sky-700">{{ number_format($summary['commissions_paid'], 2) }} $</p></div>
+    <div class="rounded-xl border bg-white p-4 text-sm"><span class="text-gray-500">معلّقة</span><p class="font-bold">{{ number_format($summary['commissions_pending'], 2) }} {{ currency_symbol() }}</p></div>
+    <div class="rounded-xl border bg-white p-4 text-sm"><span class="text-gray-500">معتمدة</span><p class="font-bold text-emerald-700">{{ number_format($summary['commissions_approved'], 2) }} {{ currency_symbol() }}</p></div>
+    <div class="rounded-xl border bg-white p-4 text-sm"><span class="text-gray-500">مدفوعة</span><p class="font-bold text-sky-700">{{ number_format($summary['commissions_paid'], 2) }} {{ currency_symbol() }}</p></div>
   </div>
 
   <div class="rounded-2xl border bg-white overflow-hidden">
@@ -54,7 +54,7 @@
             <tr>
               <td class="px-4 py-3 font-semibold">{{ $row['course_title'] }}</td>
               <td class="px-4 py-3 tabular-nums">{{ $row['subscribers'] }}</td>
-              <td class="px-4 py-3 tabular-nums">{{ number_format($row['revenue'], 2) }}</td>
+              <td class="px-4 py-3 tabular-nums">{{ format_money($row['revenue']) }}</td>
               <td class="px-4 py-3 font-bold text-violet-800 tabular-nums">{{ number_format($row['revenue'] * $summary['commission_percent'] / 100, 2) }}</td>
             </tr>
           @empty
@@ -123,7 +123,7 @@
       @forelse($recentCommissions as $c)
         <li class="px-5 py-3 text-sm flex justify-between gap-2">
           <span>{{ $c->lead?->name ?? ('#'.$c->sales_lead_id) }} — {{ $c->statusLabel() }}</span>
-          <span class="font-bold tabular-nums">{{ number_format($c->commission_amount_egp, 2) }} $ ({{ number_format((float)$c->commission_percent, 1) }}٪)</span>
+          <span class="font-bold tabular-nums">{{ number_format($c->commission_amount_egp, 2) }} {{ currency_symbol() }} ({{ number_format((float)$c->commission_percent, 1) }}٪)</span>
         </li>
       @empty
         <li class="px-5 py-8 text-center text-gray-500 text-sm">تظهر العمولة بعد اشتراك العميل واعتماد الطلب</li>

@@ -45,8 +45,8 @@ class FAQController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'question' => 'required|string|max:500',
-            'answer' => 'required|string|max:2000',
+            'question' => ['required', 'string', 'max:500', new \App\Rules\NoDemoPlaceholder],
+            'answer' => ['required', 'string', 'max:2000', new \App\Rules\NoDemoPlaceholder],
             'category' => 'nullable|string|max:100',
             'order' => 'nullable|integer|min:0',
             'is_active' => 'boolean',
@@ -75,8 +75,8 @@ class FAQController extends Controller
     public function update(Request $request, FAQ $faq)
     {
         $validated = $request->validate([
-            'question' => 'required|string|max:500',
-            'answer' => 'required|string|max:2000',
+            'question' => ['required', 'string', 'max:500', new \App\Rules\NoDemoPlaceholder],
+            'answer' => ['required', 'string', 'max:2000', new \App\Rules\NoDemoPlaceholder],
             'category' => 'nullable|string|max:100',
             'order' => 'nullable|integer|min:0',
             'is_active' => 'boolean',

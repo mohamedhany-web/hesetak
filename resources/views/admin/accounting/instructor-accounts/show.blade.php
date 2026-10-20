@@ -105,7 +105,7 @@
                                     @if(($agr->billing_type ?? '') === 'course_percentage')
                                         {{ number_format($agr->course_percentage ?? 0, 2) }}%
                                     @else
-                                        {{ number_format((float) ($agr->rate ?? 0), 2) }} <span class="text-xs font-normal text-muted">$</span>
+                                        {{ number_format((float) ($agr->rate ?? 0), 2) }} <span class="text-xs font-normal text-muted">{{ currency_symbol() }}</span>
                                     @endif
                                 </td>
                                 <td class="px-4 py-3 text-xs tabular-nums text-muted">
@@ -138,9 +138,9 @@
                             <th class="px-4 py-3 text-start font-medium">التاريخ</th>
                             <th class="px-4 py-3 text-start font-medium">الطالب</th>
                             <th class="px-4 py-3 text-start font-medium">الكورس</th>
-                            <th class="px-4 py-3 text-start font-medium">مبلغ الشراء ($)</th>
+                            <th class="px-4 py-3 text-start font-medium">مبلغ الشراء {{ currency_unit() }}</th>
                             <th class="px-4 py-3 text-start font-medium">نسبة المدرب</th>
-                            <th class="px-4 py-3 text-start font-medium">حصة المدرب ($)</th>
+                            <th class="px-4 py-3 text-start font-medium">حصة المدرب {{ currency_unit() }}</th>
                             <th class="px-4 py-3 text-start font-medium">حالة الدفع</th>
                         </tr>
                     </thead>
@@ -157,7 +157,7 @@
                                         {{ number_format($p->agreement->course_percentage ?? 0, 2) }}%
                                     @else — @endif
                                 </td>
-                                <td class="px-4 py-3 font-semibold tabular-nums text-accent">{{ number_format($p->amount, 2) }} <span class="text-xs font-normal text-muted">$</span></td>
+                                <td class="px-4 py-3 font-semibold tabular-nums text-accent">{{ number_format($p->amount, 2) }} <span class="text-xs font-normal text-muted">{{ currency_symbol() }}</span></td>
                                 <td class="px-4 py-3">
                                     <span class="inline-flex rounded-lg px-2.5 py-1 text-xs font-medium {{ $actBadge['classes'] }}">{{ $actBadge['label'] }}</span>
                                 </td>
@@ -167,7 +167,7 @@
                 </table>
             </div>
             <div class="border-t border-line bg-canvas/40 px-4 py-4 text-start sm:px-5">
-                <span class="text-sm font-semibold tabular-nums text-ink">إجمالي أرباح التفعيلات: {{ number_format($activationPayments->sum('amount'), 2) }} $</span>
+                <span class="text-sm font-semibold tabular-nums text-ink">إجمالي أرباح التفعيلات: {{ number_format($activationPayments->sum('amount'), 2) }} {{ currency_symbol() }}</span>
             </div>
         </article>
     @endif
@@ -201,7 +201,7 @@
                                 <td class="px-4 py-3 font-mono text-xs text-muted">{{ $p->payment_number }}</td>
                                 <td class="px-4 py-3 text-ink-soft">{{ $p->agreement->title ?? $p->description ?? '—' }}</td>
                                 <td class="px-4 py-3 text-ink-soft">{{ $p->type_label ?? $p->type }}</td>
-                                <td class="px-4 py-3 font-semibold tabular-nums text-ink">{{ number_format($p->amount, 2) }} <span class="text-xs font-normal text-muted">$</span></td>
+                                <td class="px-4 py-3 font-semibold tabular-nums text-ink">{{ number_format($p->amount, 2) }} <span class="text-xs font-normal text-muted">{{ currency_symbol() }}</span></td>
                                 <td class="px-4 py-3">
                                     <span class="inline-flex rounded-lg px-2.5 py-1 text-xs font-medium {{ $pBadge['classes'] }}">{{ $pBadge['label'] }}</span>
                                 </td>

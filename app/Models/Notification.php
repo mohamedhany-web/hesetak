@@ -45,7 +45,8 @@ class Notification extends Model
     }
 
     /**
-     * إرسال نسخة بريدية إلى Gmail/البريد المرتبط بحساب المستخدم.
+     * إرسال نسخة بريدية إلى بريد المستخدم (Gmail وغيره).
+     * يُفضَّل الإرسال الفوري لضمان الوصول حتى بدون queue worker.
      */
     public function dispatchEmailCopy(): void
     {
@@ -60,24 +61,22 @@ class Notification extends Model
 
         try {
             $user = $this->relationLoaded('user') ? $this->user : $this->user()->first();
-            if (! $user || empty($user->email)) {
+            if (! $user || empty($user->email) || ! filter_var($user->email, FILTER_VALIDATE_EMAIL)) {
                 return;
             }
 
             $mailable = new InAppNotificationMail($this, (string) ($user->name ?? ''));
 
-            // لا نوقف الطلب إذا فشل البريد
-            dispatch(function () use ($user, $mailable) {
-                try {
-                    Mail::to($user->email)->send($mailable);
-                } catch (\Throwable $e) {
-                    Log::warning('In-app notification email failed', [
-                        'user_id' => $user->id,
-                        'email' => $user->email,
-                        'error' => $e->getMessage(),
-                    ]);
-                }
-            })->afterResponse();
+            try {
+                Mail::to($user->email)->send($mailable);
+            } catch (\Throwable $e) {
+                Log::warning('In-app notification email failed', [
+                    'notification_id' => $this->id,
+                    'user_id' => $user->id,
+                    'email' => $user->email,
+                    'error' => $e->getMessage(),
+                ]);
+            }
         } catch (\Throwable $e) {
             Log::warning('In-app notification email dispatch failed', [
                 'notification_id' => $this->id,
@@ -378,26 +377,26 @@ class Notification extends Model
      */
     public static function sendToEmployees($employeeIds, $data)
     {
-        $notifications = [];
+        $employeeIds = collect($employeeIds)->filter()->values()->all();
+        if ($employeeIds === []) {
+            return 0;
+        }
+
+        // create() يطلق البريد؛ insert() لا يفعل ذلك
+        $count = 0;
         foreach ($employeeIds as $employeeId) {
-            $notifications[] = array_merge($data, [
-                'user_id' => $employeeId,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
+            try {
+                if (self::create(array_merge($data, ['user_id' => $employeeId]))) {
+                    $count++;
+                }
+            } catch (\Throwable $e) {
+                Log::error('Error sending notification to employee: '.$e->getMessage(), [
+                    'employee_id' => $employeeId,
+                ]);
+            }
         }
 
-        if (empty($notifications)) {
-            return 0;
-        }
-
-        try {
-            self::insert($notifications);
-            return count($notifications);
-        } catch (\Exception $e) {
-            \Log::error('Error sending notifications to employees: ' . $e->getMessage());
-            return 0;
-        }
+        return $count;
     }
 
     /**

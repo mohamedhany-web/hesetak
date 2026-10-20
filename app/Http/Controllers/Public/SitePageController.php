@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Public;
 
 use App\Http\Controllers\Controller;
+use App\Services\PublicAboutSettings;
 use App\Support\TadrisPublicNav;
 use Illuminate\Http\Request;
 
@@ -22,13 +23,33 @@ class SitePageController extends Controller
             ];
         }
 
+        if ($page === 'about') {
+            $about = PublicAboutSettings::payload();
+            $content = array_merge($content, [
+                'kicker' => $about['kicker'],
+                'title' => $about['title'],
+                'lead' => $about['lead'],
+                'meta_title' => $about['meta_title'] ?: ($content['meta_title'] ?? null),
+                'meta_description' => $about['meta_description'] ?: ($content['meta_description'] ?? null),
+                'sections' => $about['sections'] !== [] ? $about['sections'] : ($content['sections'] ?? []),
+            ]);
+        }
+
         return view($node['view'] ?? 'public.site.show', [
             'pageKey' => $page,
             'node' => $node,
             'content' => $content,
             'laslesNavActive' => $page,
-            'pageTitle' => ($content['meta_title'] ?? null) ?: (($content['title'] ?? $node['label']).' — '.__('common.app_name')),
-            'pageDescription' => $content['meta_description'] ?? ($content['lead'] ?? __('landing.meta.description')),
+            'pageTitle' => match ($page) {
+                'about' => __('seo.about.title'),
+                'contact' => __('seo.contact.title'),
+                default => ($content['meta_title'] ?? null) ?: (($content['title'] ?? $node['label']).' — '.__('common.app_name')),
+            },
+            'pageDescription' => match ($page) {
+                'about' => __('seo.about.description'),
+                'contact' => __('seo.contact.description'),
+                default => $content['meta_description'] ?? ($content['lead'] ?? __('landing.meta.description')),
+            },
             'bodyClass' => 'lasles-site-page lasles-site-page--'.$page,
         ]);
     }
@@ -43,8 +64,8 @@ class SitePageController extends Controller
             'node' => $node,
             'content' => is_array($content) ? $content : [],
             'laslesNavActive' => 'contact',
-            'pageTitle' => ($content['meta_title'] ?? null) ?: (__('site.nav.contact').' — '.__('common.app_name')),
-            'pageDescription' => $content['meta_description'] ?? ($content['lead'] ?? ''),
+            'pageTitle' => __('seo.contact.title'),
+            'pageDescription' => __('seo.contact.description'),
             'bodyClass' => 'mc-body--contact',
             'mcActive' => 'contact',
         ]);

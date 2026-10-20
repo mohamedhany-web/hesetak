@@ -15,6 +15,15 @@
         'draft' => ['label' => 'مسودة', 'classes' => 'bg-canvas-muted text-muted'],
     ];
     $badge = $statusBadges[$invoice->status] ?? ['label' => $invoice->status, 'classes' => 'bg-canvas-muted text-muted'];
+    $settlement = $invoice->settlementSummary();
+    $paymentStatusLabels = [
+        'completed' => 'مكتملة',
+        'paid' => 'مدفوعة',
+        'success' => 'ناجحة',
+        'pending' => 'معلقة',
+        'failed' => 'فاشلة',
+        'cancelled' => 'ملغاة',
+    ];
 @endphp
 
 <div class="space-y-5 invoice-print-wrapper">
@@ -53,6 +62,21 @@
             <p>{{ session('error') }}</p>
         </div>
     @endif
+
+    <section class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <article class="rounded-2xl border border-line bg-surface p-4 shadow-soft">
+            <p class="text-xs font-medium text-muted">إجمالي المستحق</p>
+            <p class="mt-1 text-2xl font-semibold tabular-nums text-ink">{{ format_money($settlement['due']) }}</p>
+        </article>
+        <article class="rounded-2xl border border-line bg-accent-soft/40 p-4 shadow-soft">
+            <p class="text-xs font-medium text-accent">اللي اتدفع / اللي أخدناه</p>
+            <p class="mt-1 text-2xl font-semibold tabular-nums text-accent">{{ format_money($settlement['paid']) }}</p>
+        </article>
+        <article class="rounded-2xl border border-line {{ $settlement['remaining'] > 0 ? 'bg-metal/10' : 'bg-canvas-muted/50' }} p-4 shadow-soft">
+            <p class="text-xs font-medium {{ $settlement['remaining'] > 0 ? 'text-metal' : 'text-muted' }}">اللي لسه عليه</p>
+            <p class="mt-1 text-2xl font-semibold tabular-nums {{ $settlement['remaining'] > 0 ? 'text-ink' : 'text-muted' }}">{{ format_money($settlement['remaining']) }}</p>
+        </article>
+    </section>
 
     <section class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
         <div id="invoice-print-area" class="space-y-5 p-4 sm:p-5 lg:p-6">
@@ -105,23 +129,31 @@
                         <tbody class="divide-y divide-line">
                             <tr class="flex items-center justify-between py-3">
                                 <td>المبلغ الفرعي</td>
-                                <td class="font-semibold tabular-nums text-ink">{{ number_format($invoice->subtotal, 2) }} $</td>
+                                <td class="font-semibold tabular-nums text-ink">{{ number_format($invoice->subtotal, 2) }} {{ currency_symbol() }}</td>
                             </tr>
                             @if ($invoice->tax_amount > 0)
                                 <tr class="flex items-center justify-between py-3">
                                     <td>الضريبة</td>
-                                    <td class="font-semibold tabular-nums text-ink">{{ number_format($invoice->tax_amount, 2) }} $</td>
+                                    <td class="font-semibold tabular-nums text-ink">{{ number_format($invoice->tax_amount, 2) }} {{ currency_symbol() }}</td>
                                 </tr>
                             @endif
                             @if ($invoice->discount_amount > 0)
                                 <tr class="flex items-center justify-between py-3">
                                     <td>الخصم</td>
-                                    <td class="font-semibold tabular-nums text-metal">-{{ number_format($invoice->discount_amount, 2) }} $</td>
+                                    <td class="font-semibold tabular-nums text-metal">-{{ number_format($invoice->discount_amount, 2) }} {{ currency_symbol() }}</td>
                                 </tr>
                             @endif
                             <tr class="flex items-center justify-between py-3 text-base font-semibold text-ink">
                                 <td>الإجمالي المستحق</td>
-                                <td class="tabular-nums text-accent">{{ number_format($invoice->total_amount, 2) }} $</td>
+                                <td class="tabular-nums text-accent">{{ format_money($settlement['due']) }}</td>
+                            </tr>
+                            <tr class="flex items-center justify-between py-3 font-semibold text-accent">
+                                <td>المدفوع</td>
+                                <td class="tabular-nums">{{ format_money($settlement['paid']) }}</td>
+                            </tr>
+                            <tr class="flex items-center justify-between py-3 font-semibold {{ $settlement['remaining'] > 0 ? 'text-metal' : 'text-muted' }}">
+                                <td>المتبقي عليه</td>
+                                <td class="tabular-nums">{{ format_money($settlement['remaining']) }}</td>
                             </tr>
                         </tbody>
                     </table>
@@ -139,6 +171,7 @@
                                 <tr>
                                     <th class="px-4 py-3 text-start font-medium">رقم الدفعة</th>
                                     <th class="px-4 py-3 text-center font-medium">تاريخ الدفع</th>
+                                    <th class="px-4 py-3 text-center font-medium">الحالة</th>
                                     <th class="px-4 py-3 text-end font-medium">المبلغ</th>
                                 </tr>
                             </thead>
@@ -147,7 +180,8 @@
                                     <tr class="hover:bg-canvas/40">
                                         <td class="px-4 py-3 font-semibold text-ink">{{ $payment->payment_number }}</td>
                                         <td class="px-4 py-3 text-center text-muted">{{ $payment->paid_at ? $payment->paid_at->format('Y-m-d') : '—' }}</td>
-                                        <td class="px-4 py-3 text-end font-semibold tabular-nums text-ink">{{ number_format($payment->amount, 2) }} $</td>
+                                        <td class="px-4 py-3 text-center text-muted">{{ $paymentStatusLabels[$payment->status] ?? $payment->status }}</td>
+                                        <td class="px-4 py-3 text-end font-semibold tabular-nums text-ink">{{ format_money($payment->amount) }}</td>
                                     </tr>
                                 @endforeach
                             </tbody>

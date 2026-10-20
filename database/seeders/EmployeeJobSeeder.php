@@ -58,7 +58,7 @@ class EmployeeJobSeeder extends Seeder
                 'permissions' => [
                     'dashboard', 'tasks', 'leaves', 'reports', 'calendar',
                     'profile', 'notifications', 'settings',
-                    'hr_desk',
+                    'hr_desk', 'hr_leave_requests', 'hr_directory', 'hr_recruitment',
                 ],
             ],
             [

@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Services\PublicStorageUrl;
 use App\Services\PublicMediaStorage;
 use App\Services\UserProfileImageStorage;
+use App\Support\InstructorProfilePublication;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -15,6 +16,11 @@ class InstructorProfile extends Model
     const STATUS_APPROVED = 'approved';
     const STATUS_REJECTED = 'rejected';
 
+    /**
+     * يسمح للـ seeders فقط بتجاوز بوابة النشر (لا يُستخدم في طلبات HTTP).
+     */
+    public bool $bypassPublicationGuard = false;
+
     protected $fillable = [
         'user_id',
         'headline',
@@ -24,6 +30,8 @@ class InstructorProfile extends Model
         'skills',
         'curriculum_types',
         'teaching_subject_ids',
+        'academic_year_ids',
+        'academic_grade_ids',
         'social_links',
         'status',
         'rejection_reason',
@@ -38,11 +46,28 @@ class InstructorProfile extends Model
         'social_links' => 'array',
         'curriculum_types' => 'array',
         'teaching_subject_ids' => 'array',
+        'academic_year_ids' => 'array',
+        'academic_grade_ids' => 'array',
         'reviewed_at' => 'datetime',
         'submitted_at' => 'datetime',
         'consultation_price_egp' => 'decimal:2',
         'consultation_duration_minutes' => 'integer',
     ];
+
+    protected static function booted(): void
+    {
+        static::saving(function (self $profile): void {
+            if ($profile->bypassPublicationGuard) {
+                return;
+            }
+            if ($profile->status !== self::STATUS_APPROVED) {
+                return;
+            }
+
+            $profile->loadMissing('user.teachingLearningPaths');
+            InstructorProfilePublication::assertPublishable($profile);
+        });
+    }
 
     /**
      * @return list<string>

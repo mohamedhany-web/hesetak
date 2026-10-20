@@ -4,7 +4,25 @@
 @section('header', 'تفاصيل الفاتورة')
 
 @section('content')
+@php
+    $settlement = $invoice->settlementSummary();
+@endphp
 <div class="space-y-6">
+    <section class="st-stats st-stats--classes" aria-label="ملخص التسوية">
+        <article class="st-stat-card">
+            <p class="st-stat-card__label">إجمالي المستحق</p>
+            <p class="st-stat-card__value">{{ format_money($settlement['due']) }}</p>
+        </article>
+        <article class="st-stat-card">
+            <p class="st-stat-card__label">اللي اتدفع</p>
+            <p class="st-stat-card__value">{{ format_money($settlement['paid']) }}</p>
+        </article>
+        <article class="st-stat-card">
+            <p class="st-stat-card__label">اللي لسه عليه</p>
+            <p class="st-stat-card__value">{{ format_money($settlement['remaining']) }}</p>
+        </article>
+    </section>
+
     <div class="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
         <div class="mb-6">
             <a href="{{ route('student.invoices.index') }}" class="text-sky-600 hover:text-sky-900 mb-4 inline-block">
@@ -35,23 +53,31 @@
                 <div class="space-y-2">
                     <div class="flex justify-between">
                         <span class="text-gray-600">المبلغ الفرعي:</span>
-                        <span class="font-medium text-gray-900">{{ number_format($invoice->subtotal, 2) }} $</span>
+                        <span class="font-medium text-gray-900">{{ format_money($invoice->subtotal) }}</span>
                     </div>
                     @if($invoice->tax_amount > 0)
                     <div class="flex justify-between">
                         <span class="text-gray-600">الضريبة:</span>
-                        <span class="font-medium text-gray-900">{{ number_format($invoice->tax_amount, 2) }} $</span>
+                        <span class="font-medium text-gray-900">{{ format_money($invoice->tax_amount) }}</span>
                     </div>
                     @endif
                     @if($invoice->discount_amount > 0)
                     <div class="flex justify-between">
                         <span class="text-gray-600">الخصم:</span>
-                        <span class="font-medium text-red-600">-{{ number_format($invoice->discount_amount, 2) }} $</span>
+                        <span class="font-medium text-red-600">-{{ format_money($invoice->discount_amount) }}</span>
                     </div>
                     @endif
                     <div class="flex justify-between text-lg font-bold border-t border-gray-200 pt-2 mt-2">
-                        <span class="text-gray-900">المبلغ الإجمالي:</span>
-                        <span class="text-sky-600">{{ number_format($invoice->total_amount, 2) }} $</span>
+                        <span class="text-gray-900">إجمالي المستحق:</span>
+                        <span class="text-sky-600">{{ format_money($settlement['due']) }}</span>
+                    </div>
+                    <div class="flex justify-between font-semibold">
+                        <span class="text-gray-900">المدفوع:</span>
+                        <span class="text-green-700">{{ format_money($settlement['paid']) }}</span>
+                    </div>
+                    <div class="flex justify-between font-semibold">
+                        <span class="text-gray-900">اللي لسه عليه:</span>
+                        <span class="{{ $settlement['remaining'] > 0 ? 'text-amber-700' : 'text-gray-700' }}">{{ format_money($settlement['remaining']) }}</span>
                     </div>
                 </div>
             </div>
@@ -67,7 +93,7 @@
                         <div class="font-medium text-gray-900">{{ $payment->payment_number }}</div>
                         <div class="text-sm text-gray-600">{{ $payment->paid_at ? $payment->paid_at->format('Y-m-d') : '-' }}</div>
                     </div>
-                    <div class="font-medium text-green-600">{{ number_format($payment->amount, 2) }} $</div>
+                    <div class="font-medium text-green-600">{{ format_money($payment->amount) }}</div>
                 </div>
                 @endforeach
             </div>

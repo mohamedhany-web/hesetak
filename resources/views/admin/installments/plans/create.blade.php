@@ -50,7 +50,7 @@
                             <option value="">خطة عامة</option>
                             @foreach($courses as $course)
                                 <option value="{{ $course->id }}" {{ old('advanced_course_id') == $course->id ? 'selected' : '' }}>
-                                    {{ $course->title }} ({{ number_format($course->price ?? 0, 2) }} $)
+                                    {{ $course->title }} ({{ number_format($course->price ?? 0, 2) }} {{ currency_symbol() }})
                                 </option>
                             @endforeach
                         </select>
@@ -82,7 +82,7 @@
                             <div class="relative">
                                 <input type="number" step="0.01" min="0" id="total_amount" name="total_amount" value="{{ old('total_amount') }}"
                                        class="{{ $fieldClass }} ps-12" placeholder="يتم استخدام سعر الكورس إن تركته فارغًا">
-                                <span class="absolute inset-y-0 start-4 flex items-center text-xs font-medium text-muted">$</span>
+                                <span class="absolute inset-y-0 start-4 flex items-center text-xs font-medium text-muted">{{ currency_symbol() }}</span>
                             </div>
                             @error('total_amount')
                                 <p class="mt-1.5 text-xs text-rose-600">{{ $message }}</p>
@@ -93,7 +93,7 @@
                             <div class="relative">
                                 <input type="number" step="0.01" min="0" id="deposit_amount" name="deposit_amount" value="{{ old('deposit_amount', 0) }}"
                                        class="{{ $fieldClass }} ps-12">
-                                <span class="absolute inset-y-0 start-4 flex items-center text-xs font-medium text-muted">$</span>
+                                <span class="absolute inset-y-0 start-4 flex items-center text-xs font-medium text-muted">{{ currency_symbol() }}</span>
                             </div>
                             @error('deposit_amount')
                                 <p class="mt-1.5 text-xs text-rose-600">{{ $message }}</p>

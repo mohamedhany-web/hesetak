@@ -15,7 +15,7 @@ class CloudflareR2DiskResolutionTest extends TestCase
             'filesystems.disks.r2' => [
                 'key' => 'test-key',
                 'secret' => 'test-secret',
-                'bucket' => 'glottical',
+                'bucket' => 'hesetak',
                 'endpoint' => 'https://account.r2.cloudflarestorage.com',
             ],
             'filesystems.curriculum_library_disk' => 'r2',
@@ -36,7 +36,7 @@ class CloudflareR2DiskResolutionTest extends TestCase
             'filesystems.disks.r2' => [
                 'key' => '',
                 'secret' => '  ',
-                'bucket' => 'glottical',
+                'bucket' => 'hesetak',
                 'endpoint' => 'https://account.r2.cloudflarestorage.com',
             ],
             'filesystems.curriculum_library_disk' => 'r2',
@@ -69,10 +69,10 @@ class CloudflareR2DiskResolutionTest extends TestCase
         $this->assertStringNotContainsString("putFileAs(\$dir, \$file, \$name, ['visibility' => 'public'])", $lecture);
     }
 
-    public function test_browser_cors_origins_include_app_url_and_glottical(): void
+    public function test_browser_cors_origins_include_app_url_and_hissatak(): void
     {
         config([
-            'app.url' => 'https://glottical.com',
+            'app.url' => 'https://hissatak.online',
             'filesystems.disks.r2' => [
                 'key' => '',
                 'secret' => '',
@@ -81,9 +81,9 @@ class CloudflareR2DiskResolutionTest extends TestCase
             ],
         ]);
 
-        $origins = CloudflareR2::browserCorsOrigins(['https://www.glottical.com/']);
-        $this->assertContains('https://glottical.com', $origins);
-        $this->assertContains('https://www.glottical.com', $origins);
+        $origins = CloudflareR2::browserCorsOrigins(['https://www.hissatak.online/']);
+        $this->assertContains('https://hissatak.online', $origins);
+        $this->assertContains('https://www.hissatak.online', $origins);
         $this->assertFalse(CloudflareR2::ensureBrowserUploadCors());
     }
 }

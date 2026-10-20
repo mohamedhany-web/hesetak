@@ -29,8 +29,8 @@ class CurriculumR2SmokeCommand extends Command
             return self::FAILURE;
         }
 
-        $key = 'curriculum-library/_smoke/glottical-'.now()->format('YmdHis').'.txt';
-        $body = 'glottical curriculum r2 smoke '.now()->toIso8601String();
+        $key = 'curriculum-library/_smoke/hesetak-'.now()->format('YmdHis').'.txt';
+        $body = 'hesetak curriculum r2 smoke '.now()->toIso8601String();
 
         try {
             $ok = Storage::disk('r2')->put($key, $body);

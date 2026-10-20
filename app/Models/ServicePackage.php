@@ -161,9 +161,9 @@ class ServicePackage extends Model
     }
 
     /**
-     * Packages usable within a school year/subject context.
-     * Null year/subject on the package = general (works everywhere).
-     * Locked packages only match the same year, and subject when set.
+     * فلتر الكتالوج بنفس حقول الإدارة:
+     * عامة (بدون مرحلة/مادة) تظهر في كل اختيار.
+     * المربوطة بمرحلة تظهر مع هذه المرحلة، ومع مادتها إن حُددت.
      */
     public function scopeForSchoolProgram(Builder $query, ?int $yearId = null, ?int $subjectId = null): Builder
     {
@@ -176,19 +176,29 @@ class ServicePackage extends Model
                 $general->whereNull('academic_year_id')->whereNull('academic_subject_id');
             });
 
-            if ($yearId) {
-                $q->orWhere(function (Builder $yearMatch) use ($yearId, $subjectId) {
-                    $yearMatch->where('academic_year_id', $yearId)
+            if ($yearId && $subjectId) {
+                $q->orWhere(function (Builder $yearAndSubject) use ($yearId, $subjectId) {
+                    $yearAndSubject->where('academic_year_id', $yearId)
                         ->where(function (Builder $subjectMatch) use ($subjectId) {
-                            $subjectMatch->whereNull('academic_subject_id');
-                            if ($subjectId) {
-                                $subjectMatch->orWhere('academic_subject_id', $subjectId);
-                            }
+                            $subjectMatch->whereNull('academic_subject_id')
+                                ->orWhere('academic_subject_id', $subjectId);
                         });
                 });
-            } elseif ($subjectId) {
-                $q->orWhere('academic_subject_id', $subjectId);
+                $q->orWhere(function (Builder $subjectOnly) use ($subjectId) {
+                    $subjectOnly->whereNull('academic_year_id')
+                        ->where('academic_subject_id', $subjectId);
+                });
+
+                return;
             }
+
+            if ($yearId) {
+                $q->orWhere('academic_year_id', $yearId);
+
+                return;
+            }
+
+            $q->orWhere('academic_subject_id', $subjectId);
         });
     }
 

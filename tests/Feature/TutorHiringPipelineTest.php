@@ -196,4 +196,14 @@ class TutorHiringPipelineTest extends TestCase
         $this->assertFalse(TeacherSpecialtyMatcher::matches($profile, 99, null, 'saudi'));
         $this->assertTrue(TeacherSpecialtyMatcher::matches($profile, 10, null, 'saudi'));
     }
+
+    public function test_normalize_payload_includes_grade_ids(): void
+    {
+        $normalized = TeacherSpecialtyMatcher::normalizePayload([1], [12], ['saudi'], [3, 3, 0]);
+
+        $this->assertSame([1], $normalized['subject_ids']);
+        $this->assertSame([12], $normalized['year_ids']);
+        $this->assertSame([3], $normalized['grade_ids']);
+        $this->assertSame(['saudi'], $normalized['curriculum_types']);
+    }
 }

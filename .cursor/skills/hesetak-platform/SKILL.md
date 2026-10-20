@@ -98,7 +98,7 @@ Audit:
 - [ ] 2. Marked مرجعي in الدليل? → STOP / do not build
 - [ ] 3. AI? → proposal + human review path required
 - [ ] 4. Touches money/chat/minors? → follow operations.md policies
-- [ ] 5. Propose KEEP | REPURPOSE | DISABLE (disable inherited Glottical surplus; do not mass-delete)
+- [ ] 5. Propose KEEP | REPURPOSE | DISABLE (disable inherited surplus from prior products; do not mass-delete)
 ```
 
 ## Working docs (human + agent)

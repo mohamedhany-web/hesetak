@@ -34,7 +34,20 @@ class PreventBrowserHtmlCache
             return $response;
         }
 
-        $response->headers->set('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
+        $path = '/'.ltrim($request->path(), '/');
+        $isPublicMarketing = ! $request->user()
+            && ! \App\Support\PublicSeo::isPrivatePath($path)
+            && $response->getStatusCode() === 200;
+
+        if ($isPublicMarketing) {
+            $response->headers->set('Cache-Control', 'public, max-age=300, stale-while-revalidate=60');
+            $response->headers->remove('Pragma');
+            $response->headers->remove('Expires');
+
+            return $response;
+        }
+
+        $response->headers->set('Cache-Control', 'private, no-cache, no-store, must-revalidate, max-age=0');
         $response->headers->set('Pragma', 'no-cache');
         $response->headers->set('Expires', '0');
         $response->headers->remove('ETag');

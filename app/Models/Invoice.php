@@ -133,16 +133,46 @@ class Invoice extends Model
         ]);
     }
 
-    public function getPaidAmountAttribute()
+    public function getPaidAmountAttribute(): float
     {
-        return $this->payments()
-            ->where('status', 'completed')
-            ->sum('amount');
+        $collected = $this->collectedPaymentAmount();
+
+        if ($collected <= 0 && $this->isPaid()) {
+            return round((float) $this->total_amount, 2);
+        }
+
+        return $collected;
     }
 
-    public function getRemainingAmountAttribute()
+    public function getRemainingAmountAttribute(): float
     {
-        return $this->total_amount - $this->paid_amount;
+        return max(0, round((float) $this->total_amount - $this->paid_amount, 2));
+    }
+
+    /**
+     * @return array{due: float, paid: float, remaining: float}
+     */
+    public function settlementSummary(): array
+    {
+        $due = round((float) $this->total_amount, 2);
+        $paid = $this->paid_amount;
+
+        return [
+            'due' => $due,
+            'paid' => $paid,
+            'remaining' => max(0, round($due - $paid, 2)),
+        ];
+    }
+
+    private function collectedPaymentAmount(): float
+    {
+        $statuses = ['completed', 'paid', 'success'];
+
+        if ($this->relationLoaded('payments')) {
+            return round((float) $this->payments->whereIn('status', $statuses)->sum('amount'), 2);
+        }
+
+        return round((float) $this->payments()->whereIn('status', $statuses)->sum('amount'), 2);
     }
 
     public function isPaid()

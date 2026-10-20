@@ -150,7 +150,7 @@ class CourseVideoStorage
 
         $path = ltrim(str_replace('\\', '/', $path), '/');
 
-        // .../glottical/bucket/course-videos/x.mp4 أو /storage/course-videos/x.mp4
+        // مسار التخزين النسبي داخل الـ bucket (course-videos/x.mp4)
         if (preg_match('#(?:^|/)(?:storage/|media/)?('.preg_quote(self::DIRECTORY, '#').'/[^?\#]+)$#', $path, $m)) {
             return PublicMediaStorage::normalizePath($m[1]);
         }

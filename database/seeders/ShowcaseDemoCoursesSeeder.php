@@ -43,7 +43,7 @@ class ShowcaseDemoCoursesSeeder extends Seeder
             ?? User::query()->first();
 
         if (! $instructor) {
-            $this->command->error('لا يوجد مستخدم لربطه كمدرّب. شغّل GlotticalAcademyUserSeeder أولاً.');
+            $this->command->error('لا يوجد مستخدم لربطه كمدرّب. شغّل HesetakAcademyUserSeeder أولاً.');
 
             return;
         }

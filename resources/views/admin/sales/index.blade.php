@@ -10,8 +10,8 @@
     $kpis = [
         ['label' => 'طلبات الفترة', 'value' => number_format($stats['orders_total']), 'icon' => 'fa-shopping-bag', 'tone' => 'accent', 'note' => 'كل الطلبات الجديدة'],
         ['label' => 'معلّقة الآن', 'value' => number_format($stats['pending']), 'icon' => 'fa-clock', 'tone' => 'metal', 'note' => 'بانتظار الاعتماد'],
-        ['label' => 'إيراد الفترة', 'value' => number_format($stats['revenue_period'], 2), 'icon' => 'fa-coins', 'tone' => 'accent', 'note' => 'معتمد بالريال'],
-        ['label' => 'إيراد الشهر', 'value' => number_format($stats['revenue_month'], 2), 'icon' => 'fa-calendar', 'tone' => 'muted', 'note' => 'من أول الشهر'],
+        ['label' => 'إيراد الفترة', 'value' => format_money($stats['revenue_period']), 'icon' => 'fa-coins', 'tone' => 'accent', 'note' => 'معتمد بالريال'],
+        ['label' => 'إيراد الشهر', 'value' => format_money($stats['revenue_month']), 'icon' => 'fa-calendar', 'tone' => 'muted', 'note' => 'من أول الشهر'],
     ];
     $toneClass = [
         'accent' => 'bg-accent-soft text-accent',

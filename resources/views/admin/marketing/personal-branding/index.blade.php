@@ -38,9 +38,45 @@
         <div class="min-w-0">
             <p class="text-xs font-medium text-muted">التسويق · المدربين</p>
             <h2 class="mt-1 text-2xl font-semibold tracking-tight text-ink md:text-[28px]">مراجعة ملفات المدربين التعريفية</h2>
-            <p class="mt-1 max-w-2xl text-sm text-muted">الملفات المعتمدة تظهر في الصفحة الرئيسية ضمن المدربين وعند عرض كل كورس.</p>
+            <p class="mt-1 max-w-2xl text-sm text-muted">الملفات المعتمدة تظهر في الصفحة الرئيسية ضمن المدربين وعند عرض كل كورس — فقط بعد اكتمال المطابقة وخلوّها من بيانات تجريبية.</p>
         </div>
     </section>
+
+    @if(($approvedIncompleteCount ?? 0) > 0)
+        <div class="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-4 shadow-soft">
+            <div class="flex flex-wrap items-start justify-between gap-3">
+                <div class="min-w-0">
+                    <p class="text-sm font-semibold text-amber-900">
+                        تدقيق: {{ $approvedIncompleteCount }} ملف بحالة «معتمد» و«ناقص مطابقة» معاً
+                    </p>
+                    <p class="mt-1 text-xs text-amber-800/90">
+                        غالباً اعتمدت قبل تفعيل بوابة المطابقة أو عبر بيانات تجريبية. أكمل الملفات أو أوقف نشرها حتى لا تظهر للعامة ناقصة.
+                    </p>
+                </div>
+                <div class="flex flex-wrap gap-2">
+                    <a href="{{ route('admin.personal-branding.index', ['gap' => 'approved']) }}"
+                       class="btn-press inline-flex h-9 items-center gap-2 rounded-xl border border-amber-300 bg-white px-4 text-sm font-medium text-amber-900 hover:bg-amber-100">
+                        عرض الناقصين فقط
+                    </a>
+                    <form method="POST" action="{{ route('admin.personal-branding.unpublish-all-incomplete') }}"
+                          onsubmit="return confirm('إيقاف نشر كل المعتمدين الناقصين وإعادتهم لقيد المراجعة؟');">
+                        @csrf
+                        <button type="submit"
+                                class="btn-press inline-flex h-9 items-center gap-2 rounded-xl bg-amber-700 px-4 text-sm font-medium text-white hover:bg-amber-800">
+                            إيقاف نشر الكل
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    @if(request('gap') === 'approved')
+        <div class="rounded-xl border border-line bg-canvas px-4 py-3 text-sm text-ink">
+            عرض تدقيق: معتمد + ناقص مطابقة.
+            <a href="{{ route('admin.personal-branding.index') }}" class="font-semibold text-accent hover:underline">إلغاء الفلتر</a>
+        </div>
+    @endif
 
     <section class="flex flex-wrap gap-2">
         @foreach($filterTabs as $tab)
@@ -104,7 +140,7 @@
                         <th class="px-4 py-3 text-start font-medium">المدرب</th>
                         <th class="px-4 py-3 text-start font-medium">العنوان التعريفي</th>
                         <th class="px-4 py-3 text-start font-medium">الحالة</th>
-                        <th class="px-4 py-3 text-start font-medium">استشارة ($)</th>
+                        <th class="px-4 py-3 text-start font-medium">استشارة {{ currency_unit() }}</th>
                         <th class="px-4 py-3 text-start font-medium">تاريخ التقديم</th>
                         <th class="px-4 py-3 text-end font-medium">إجراءات</th>
                     </tr>
@@ -113,9 +149,11 @@
                     @forelse($profiles as $p)
                         @php
                             $badge = $statusBadges[$p->status] ?? $statusBadges['default'];
-                            $matchOk = \App\Support\InstructorMatchCompleteness::isComplete($p);
+                            $publication = \App\Support\InstructorProfilePublication::evaluate($p);
+                            $matchOk = $publication['ok'];
+                            $looksDemo = $publication['is_demo'];
                         @endphp
-                        <tr class="hover:bg-canvas/60">
+                        <tr class="hover:bg-canvas/60 {{ (! $matchOk && $p->status === 'approved') ? 'bg-amber-50/40' : '' }}">
                             <td class="px-4 py-3">
                                 <div class="flex items-center gap-3 min-w-0">
                                     <div class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-[#f2f5f4] text-sm font-bold text-accent">
@@ -127,7 +165,12 @@
                                     </div>
                                 </div>
                             </td>
-                            <td class="px-4 py-3 text-ink">{{ Str::limit($p->headline ?? '—', 40) }}</td>
+                            <td class="px-4 py-3 text-ink">
+                                <span>{{ Str::limit($p->headline ?? '—', 40) }}</span>
+                                @if($looksDemo)
+                                    <span class="mt-1 inline-flex items-center rounded-lg border border-rose-200 bg-rose-50 px-2 py-0.5 text-[10px] font-semibold text-rose-700">عنوان تجريبي</span>
+                                @endif
+                            </td>
                             <td class="px-4 py-3">
                                 <div class="flex flex-wrap items-center gap-1.5">
                                     <span class="inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-[11px] font-semibold {{ $badge }}">
@@ -135,7 +178,8 @@
                                         {{ \App\Models\InstructorProfile::statusLabel($p->status) }}
                                     </span>
                                     @unless($matchOk)
-                                        <span class="inline-flex items-center rounded-lg border border-amber-200 bg-amber-50 px-2 py-1 text-[11px] font-semibold text-amber-800">
+                                        <span class="inline-flex items-center rounded-lg border border-amber-200 bg-amber-50 px-2 py-1 text-[11px] font-semibold text-amber-800"
+                                              title="{{ implode(' · ', $publication['missing']) }}">
                                             ناقص مطابقة
                                         </span>
                                     @endunless
@@ -154,17 +198,35 @@
                                 <div class="flex flex-wrap items-center justify-end gap-1.5">
                                     <a href="{{ route('admin.personal-branding.show', $p) }}"
                                        class="inline-flex size-9 items-center justify-center rounded-xl border border-line text-muted hover:bg-canvas hover:text-accent"
-                                       title="عرض">
+                                       title="معاينة قبل النشر">
                                         <i class="fas fa-eye text-xs"></i>
                                     </a>
                                     @if($p->status === \App\Models\InstructorProfile::STATUS_PENDING_REVIEW)
-                                        <form method="POST" action="{{ route('admin.personal-branding.approve', $p) }}" class="inline"
-                                              onsubmit="return confirm('تأكيد الموافقة ونشر الملف للطلاب؟');">
+                                        @if($matchOk)
+                                            <form method="POST" action="{{ route('admin.personal-branding.approve', $p) }}" class="inline"
+                                                  onsubmit="return confirm('تأكيد الموافقة ونشر الملف للطلاب؟');">
+                                                @csrf
+                                                <button type="submit"
+                                                        class="inline-flex size-9 items-center justify-center rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+                                                        title="موافقة ونشر">
+                                                    <i class="fas fa-check text-xs"></i>
+                                                </button>
+                                            </form>
+                                        @else
+                                            <span class="inline-flex size-9 items-center justify-center rounded-xl border border-line bg-canvas text-muted opacity-50"
+                                                  title="لا يمكن النشر — {{ implode(' · ', $publication['missing']) }}">
+                                                <i class="fas fa-ban text-xs"></i>
+                                            </span>
+                                        @endif
+                                    @endif
+                                    @if($p->status === \App\Models\InstructorProfile::STATUS_APPROVED && ! $matchOk)
+                                        <form method="POST" action="{{ route('admin.personal-branding.unpublish-incomplete', $p) }}" class="inline"
+                                              onsubmit="return confirm('إيقاف نشر هذا الملف وإعادته لقيد المراجعة؟');">
                                             @csrf
                                             <button type="submit"
-                                                    class="inline-flex size-9 items-center justify-center rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
-                                                    title="موافقة">
-                                                <i class="fas fa-check text-xs"></i>
+                                                    class="inline-flex size-9 items-center justify-center rounded-xl border border-amber-200 bg-amber-50 text-amber-800 hover:bg-amber-100"
+                                                    title="إيقاف النشر (ناقص مطابقة)">
+                                                <i class="fas fa-pause text-xs"></i>
                                             </button>
                                         </form>
                                     @endif

@@ -79,7 +79,7 @@ class N8nSettingsController extends Controller
                     'Content-Type' => 'application/json',
                 ])->post($webhookUrl, [
                     'probe' => true,
-                    'source' => 'glottical_admin_settings_test',
+                    'source' => 'hesetak_admin_settings_test',
                     'sent_at' => now()->toIso8601String(),
                 ]);
 

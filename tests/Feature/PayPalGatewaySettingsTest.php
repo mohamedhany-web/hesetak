@@ -19,7 +19,7 @@ class PayPalGatewaySettingsTest extends TestCase
         $this->buildFeatureSchema();
     }
 
-    public function test_paypal_settings_save_enable_and_credentials(): void
+    public function test_paypal_settings_save_credentials_but_stay_soft_archived(): void
     {
         PayPalSettings::save([
             'enabled' => true,
@@ -30,15 +30,17 @@ class PayPalGatewaySettingsTest extends TestCase
             'currency' => 'USD',
         ]);
 
-        $this->assertTrue(PayPalSettings::isEnabled());
+        $this->assertTrue(PayPalSettings::isSoftArchived());
+        $this->assertFalse(PayPalSettings::isEnabled());
+        $this->assertFalse(PayPalSettings::isReady());
         $this->assertTrue(PayPalSettings::isConfigured());
-        $this->assertTrue(PayPalSettings::isReady());
         $this->assertSame('sandbox', PayPalSettings::mode());
         $this->assertSame('test-client-id', PayPalSettings::clientId());
         $this->assertSame('test-secret-value', PayPalSettings::clientSecret());
         $this->assertSame('WH-123', PayPalSettings::webhookId());
         $this->assertSame('USD', PayPalSettings::currency());
         $this->assertNotSame('test-secret-value', Setting::getValue(PayPalSettings::SECRET_KEY));
+        $this->assertNull(Setting::getValue(PayPalSettings::ENABLED_KEY));
     }
 
     public function test_paypal_rejects_amount_or_currency_mismatch(): void
@@ -77,12 +79,11 @@ class PayPalGatewaySettingsTest extends TestCase
 
     public function test_paypal_webhook_accepts_verified_signature_without_local_order(): void
     {
-        \Illuminate\Support\Facades\Schema::create('orders', function (\Illuminate\Database\Schema\Blueprint $table) {
-            $table->id();
-            $table->string('paypal_order_id')->nullable();
-            $table->string('status')->nullable();
-            $table->timestamps();
-        });
+        if (! \Illuminate\Support\Facades\Schema::hasColumn('orders', 'paypal_order_id')) {
+            \Illuminate\Support\Facades\Schema::table('orders', function (\Illuminate\Database\Schema\Blueprint $table) {
+                $table->string('paypal_order_id')->nullable();
+            });
+        }
 
         PayPalSettings::save([
             'enabled' => true,
@@ -151,8 +152,8 @@ class PayPalGatewaySettingsTest extends TestCase
         $created = app(PayPalService::class)->createOrder(
             25.5,
             'USD',
-            'https://glottical.test/checkout/paypal/return',
-            'https://glottical.test/checkout/paypal/cancel',
+            'https://hesetak.test/checkout/paypal/return',
+            'https://hesetak.test/checkout/paypal/cancel',
             '99',
             'Test course'
         );

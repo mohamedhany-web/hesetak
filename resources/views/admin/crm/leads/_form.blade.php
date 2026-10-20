@@ -1,7 +1,7 @@
 {{-- نموذج إنشاء/تعديل عميل محتمل (أدمن CRM) --}}
 @php
     $lead = $salesLead ?? null;
-    $fieldClass = 'h-11 w-full rounded-xl border border-line bg-surface px-4 text-sm text-ink transition placeholder:text-muted focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20';
+    $fieldClass = 'admin-select h-11 w-full rounded-xl border border-line bg-surface px-4 text-sm leading-normal text-ink transition placeholder:text-muted focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20';
     $labelClass = 'mb-1.5 block text-xs font-medium text-muted';
     $areaClass = 'w-full rounded-xl border border-line bg-surface px-4 py-3 text-sm text-ink transition placeholder:text-muted focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20';
 @endphp

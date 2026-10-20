@@ -91,7 +91,7 @@
                 </div>
                 <div class="text-right">
                     <p class="text-xs font-semibold text-slate-600">إجمالي الإيرادات</p>
-                    <p class="text-2xl font-black text-slate-900">{{ number_format($stats['total_revenue'] ?? 0, 2) }} $</p>
+                    <p class="text-2xl font-black text-slate-900">{{ number_format($stats['total_revenue'] ?? 0, 2) }} {{ currency_symbol() }}</p>
                 </div>
             </div>
         </div>
@@ -102,7 +102,7 @@
                 </div>
                 <div class="text-right">
                     <p class="text-xs font-semibold text-slate-600">إجمالي المصروفات</p>
-                    <p class="text-2xl font-black text-slate-900">{{ number_format($stats['total_expenses'] ?? 0, 2) }} $</p>
+                    <p class="text-2xl font-black text-slate-900">{{ number_format($stats['total_expenses'] ?? 0, 2) }} {{ currency_symbol() }}</p>
                 </div>
             </div>
         </div>
@@ -113,7 +113,7 @@
                 </div>
                 <div class="text-right">
                     <p class="text-xs font-semibold text-slate-600">الربح الصافي</p>
-                    <p class="text-2xl font-black {{ ($stats['net_profit'] ?? 0) >= 0 ? 'text-emerald-600' : 'text-rose-600' }}">{{ number_format($stats['net_profit'] ?? 0, 2) }} $</p>
+                    <p class="text-2xl font-black {{ ($stats['net_profit'] ?? 0) >= 0 ? 'text-emerald-600' : 'text-rose-600' }}">{{ number_format($stats['net_profit'] ?? 0, 2) }} {{ currency_symbol() }}</p>
                 </div>
             </div>
         </div>
@@ -158,7 +158,7 @@
                             <tr class="hover:bg-slate-50 transition-colors">
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-slate-900">{{ htmlspecialchars($invoice->invoice_number ?? 'N/A', ENT_QUOTES, 'UTF-8') }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700">{{ htmlspecialchars($invoice->user->name ?? 'غير محدد', ENT_QUOTES, 'UTF-8') }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-slate-900">{{ number_format($invoice->total_amount ?? 0, 2) }} $</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-slate-900">{{ number_format($invoice->total_amount ?? 0, 2) }} {{ currency_symbol() }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <span class="inline-flex items-center gap-1.5 rounded-lg px-3 py-1 text-xs font-semibold border 
                                         {{ $invoice->status == 'paid' ? 'bg-emerald-100 text-emerald-700 border-emerald-200' : 
@@ -221,7 +221,7 @@
                             <tr class="hover:bg-slate-50 transition-colors">
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-slate-900">{{ $payment->id }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700">{{ htmlspecialchars($payment->user->name ?? 'غير محدد', ENT_QUOTES, 'UTF-8') }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-emerald-600">{{ number_format($payment->amount, 2) }} $</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-emerald-600">{{ number_format($payment->amount, 2) }} {{ currency_symbol() }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700">{{ htmlspecialchars($payment->payment_method ?? '-', ENT_QUOTES, 'UTF-8') }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <span class="inline-flex items-center gap-1.5 rounded-lg px-3 py-1 text-xs font-semibold border {{ $payment->status == 'completed' ? 'bg-emerald-100 text-emerald-700 border-emerald-200' : 'bg-amber-100 text-amber-700 border-amber-200' }}">
@@ -283,7 +283,7 @@
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-slate-900">{{ $transaction->id }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700">{{ htmlspecialchars($transaction->user->name ?? 'غير محدد', ENT_QUOTES, 'UTF-8') }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700">{{ htmlspecialchars($transaction->type ?? '-', ENT_QUOTES, 'UTF-8') }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-slate-900">{{ number_format((float)($transaction->amount ?? 0), 2) }} $</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-slate-900">{{ number_format((float)($transaction->amount ?? 0), 2) }} {{ currency_symbol() }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700">{{ htmlspecialchars($transaction->status ?? '-', ENT_QUOTES, 'UTF-8') }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700">{{ $transaction->created_at ? $transaction->created_at->format('d/m/Y H:i') : '-' }}</td>
                             </tr>
@@ -339,7 +339,7 @@
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-slate-900">{{ htmlspecialchars($expense->expense_number ?? 'N/A', ENT_QUOTES, 'UTF-8') }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700">{{ htmlspecialchars($expense->title ?? '-', ENT_QUOTES, 'UTF-8') }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700">{{ htmlspecialchars($expense->category ?? '-', ENT_QUOTES, 'UTF-8') }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-rose-600">{{ number_format((float)($expense->amount ?? 0), 2) }} $</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-rose-600">{{ number_format((float)($expense->amount ?? 0), 2) }} {{ currency_symbol() }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700">{{ htmlspecialchars($expense->status ?? '-', ENT_QUOTES, 'UTF-8') }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700">{{ $expense->expense_date ? $expense->expense_date->format('d/m/Y') : '-' }}</td>
                             </tr>

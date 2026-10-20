@@ -53,7 +53,7 @@
                     <select name="invoice_id" required class="{{ $fieldClass }}">
                         @forelse($invoices as $invoice)
                             <option value="{{ $invoice->id }}" {{ $payment->invoice_id == $invoice->id ? 'selected' : '' }}>
-                                {{ $invoice->invoice_number }} · {{ $invoice->user->name }} · متبقي {{ number_format($invoice->remaining_amount + ($payment->invoice_id === $invoice->id ? $payment->amount : 0), 2) }} $
+                                {{ $invoice->invoice_number }} · {{ $invoice->user->name }} · متبقي {{ number_format($invoice->remaining_amount + ($payment->invoice_id === $invoice->id ? $payment->amount : 0), 2) }} {{ currency_symbol() }}
                             </option>
                         @empty
                             <option value="" disabled selected>لا توجد فواتير متاحة</option>

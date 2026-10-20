@@ -60,6 +60,12 @@ return Application::configure(basePath: dirname(__DIR__))
                  ->withoutOverlapping()
                  ->runInBackground();
 
+        // تصريف طوابير الإشعارات/التسجيل على الاستضافة المشتركة
+        $schedule->command('queue:work --stop-when-empty --max-time=50 --tries=3 --queue=default,registrations,emails,high')
+                 ->everyMinute()
+                 ->withoutOverlapping(1)
+                 ->runInBackground();
+
         // إنهاء جلسات البث التي تجاوزت المدة القصوى تلقائياً
         $schedule->command('live:auto-end-sessions')
                  ->everyFiveMinutes()

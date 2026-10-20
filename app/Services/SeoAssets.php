@@ -2,8 +2,11 @@
 
 namespace App\Services;
 
+use App\Support\PublicSeo;
+
 /**
  * أصول وصور SEO المشتركة (OG / JSON-LD).
+ * دائماً URL مطلق — الكراولرز وOpen Graph لا يعتمدون على المسارات النسبية.
  */
 class SeoAssets
 {
@@ -11,25 +14,27 @@ class SeoAssets
     {
         $configured = config('app.og_image_url');
         if (is_string($configured) && $configured !== '') {
-            return $configured;
+            return PublicSeo::forceAbsoluteUrl($configured);
         }
 
         $local = public_path('img/brand/hesetak-logo.png');
         if (is_file($local) && function_exists('public_img_url')) {
-            return public_img_url('brand/hesetak-logo.png');
+            return PublicSeo::forceAbsoluteUrl(public_img_url('brand/hesetak-logo.png'));
         }
         if (is_file($local)) {
-            return asset('img/brand/hesetak-logo.png');
+            return PublicSeo::forceAbsoluteUrl(asset('img/brand/hesetak-logo.png'));
         }
 
         $logo = AdminPanelBranding::logoPublicUrl();
         if (is_string($logo) && $logo !== '') {
-            return $logo;
+            return PublicSeo::forceAbsoluteUrl($logo);
         }
 
-        return function_exists('public_img_url')
+        $fallback = function_exists('public_img_url')
             ? public_img_url('brand/hesetak-mark.png')
             : asset('img/brand/hesetak-mark.png');
+
+        return PublicSeo::forceAbsoluteUrl($fallback);
     }
 
     /**

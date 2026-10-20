@@ -264,10 +264,10 @@ CRM حصتك يساعدك على متابعة العميل المحتمل من �
 
 | الدور | البريد | كلمة المرور |
 |--------|--------|-------------|
-| تسويق | `crm-test-marketing@glottical.test` | `CrmTest@2026` |
-| سيلز | `crm-test-sales@glottical.test` | `CrmTest@2026` |
-| قائد فريق | `crm-test-tl@glottical.test` | `CrmTest@2026` |
-| مالية | `crm-test-finance@glottical.test` | `CrmTest@2026` |
+| تسويق | `crm-test-marketing@hesetak.test` | `CrmTest@2026` |
+| سيلز | `crm-test-sales@hesetak.test` | `CrmTest@2026` |
+| قائد فريق | `crm-test-tl@hesetak.test` | `CrmTest@2026` |
+| مالية | `crm-test-finance@hesetak.test` | `CrmTest@2026` |
 
 ---
 

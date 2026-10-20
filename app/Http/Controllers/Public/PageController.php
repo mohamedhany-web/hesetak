@@ -19,39 +19,54 @@ class PageController extends Controller
 
     public function faq()
     {
-        $faqs = FAQ::active()
-            ->orderBy('order')
-            ->orderBy('created_at', 'desc')
-            ->get()
-            ->groupBy('category');
+        $faqs = collect();
+        $categories = collect();
+        $defaultFaqs = \App\Support\PlatformFaqDefaults::items();
+        if (\Illuminate\Support\Facades\Schema::hasTable('faqs')) {
+            $faqs = FAQ::active()
+                ->orderBy('order')
+                ->orderBy('created_at', 'desc')
+                ->get()
+                ->reject(fn (FAQ $faq) => \App\Support\PublicDemoContent::recordLooksLikeDemo([$faq->question, $faq->answer]))
+                ->groupBy('category');
 
-        $categories = FAQ::active()
-            ->distinct()
-            ->pluck('category')
-            ->filter()
-            ->values();
+            $categories = FAQ::active()
+                ->distinct()
+                ->pluck('category')
+                ->filter()
+                ->values();
 
-        // عند وجود أسئلة في لوحة التحكم نعرضها فقط؛ الأسئلة الافتراضية تظهر عند عدم وجود أي سجل نشط
-        $defaultFaqs = FAQ::active()->doesntExist()
-            ? PlatformFaqDefaults::items()
-            : [];
+            $defaultFaqs = FAQ::active()->doesntExist()
+                ? \App\Support\PlatformFaqDefaults::items()
+                : [];
+        }
+
+        $faqCopy = __('hesetak_pages.faq');
+        $visibleFaqItems = collect($faqCopy['student'] ?? [])->merge($faqCopy['teacher'] ?? [])->values();
 
         return view('public.marketing.faq', [
             'faqs' => $faqs,
             'categories' => $categories,
             'defaultFaqs' => $defaultFaqs,
             'mcActive' => 'faq',
-            'pageTitle' => __('hesetak_pages.faq.meta_title'),
-            'pageDescription' => __('hesetak_pages.faq.meta_description'),
+            'pageTitle' => __('seo.faq.title'),
+            'pageDescription' => __('seo.faq.description'),
+            'jsonldType' => 'faq',
+            'jsonldFaqs' => $visibleFaqItems,
         ]);
     }
 
     public function forStudents()
     {
+        $homePackages = \Illuminate\Support\Facades\Schema::hasTable('service_packages')
+            ? app(\App\Services\PackageCatalogFilterService::class)->homeShowcase(6)
+            : collect();
+
         return view('public.marketing.for-students', [
             'mcActive' => 'for-students',
-            'pageTitle' => __('hesetak_pages.for_students.meta_title'),
-            'pageDescription' => __('hesetak_pages.for_students.meta_description'),
+            'pageTitle' => __('seo.students.title'),
+            'pageDescription' => __('seo.students.description'),
+            'homePackages' => $homePackages,
         ]);
     }
 
@@ -59,8 +74,8 @@ class PageController extends Controller
     {
         return view('public.marketing.for-teachers', [
             'mcActive' => 'for-teachers',
-            'pageTitle' => __('hesetak_pages.for_teachers.meta_title'),
-            'pageDescription' => __('hesetak_pages.for_teachers.meta_description'),
+            'pageTitle' => __('seo.teachers.title'),
+            'pageDescription' => __('seo.teachers.description'),
         ]);
     }
 
@@ -68,8 +83,8 @@ class PageController extends Controller
     {
         return view('public.marketing.how', [
             'mcActive' => 'how',
-            'pageTitle' => __('hesetak_pages.how.meta_title'),
-            'pageDescription' => __('hesetak_pages.how.meta_description'),
+            'pageTitle' => __('seo.how.title'),
+            'pageDescription' => __('seo.how.description'),
         ]);
     }
 
@@ -98,30 +113,46 @@ class PageController extends Controller
 
     public function pricing(\Illuminate\Http\Request $request)
     {
-        $packageCatalog = \Illuminate\Support\Facades\Schema::hasTable('service_packages')
-            ? app(\App\Services\PackageCatalogFilterService::class)->catalog(
+        $storefront = \Illuminate\Support\Facades\Schema::hasTable('service_packages')
+            ? app(\App\Services\PricingStorefrontCatalog::class)->build(
                 yearId: $request->filled('year') ? $request->integer('year') : null,
                 subjectId: $request->filled('subject') ? $request->integer('subject') : null,
                 curriculumType: $request->query('curriculum_type'),
             )
             : [
-                'years' => collect(),
+                'catalog' => [
+                    'years' => collect(),
+                    'subjects' => collect(),
+                    'tracks' => [],
+                    'selected_year_id' => null,
+                    'selected_subject_id' => null,
+                    'selected_curriculum_type' => null,
+                    'packages' => collect(),
+                    'viewer_locked' => false,
+                ],
+                'stages' => collect(),
                 'subjects' => collect(),
-                'tracks' => [],
-                'selected_year_id' => null,
-                'selected_subject_id' => null,
-                'selected_curriculum_type' => null,
-                'packages' => collect(),
-                'viewer_locked' => false,
+                'cards' => [],
+                'price_options_template' => [],
+                'custom_builder_url' => route('public.service-packages.index', ['catalog' => 1]).'#private-builder',
+                'private_rule' => null,
+                'urgent_rule' => null,
             ];
+
+        $packageCatalog = $storefront['catalog'];
 
         return view('public.marketing.pricing', [
             'mcActive' => 'pricing',
             'bodyClass' => 'mc-body--dir',
-            'pageTitle' => __('public.pricing_page_title'),
-            'pageDescription' => __('public.pricing_meta_description'),
+            'pageTitle' => __('seo.pricing.title'),
+            'pageDescription' => __('seo.pricing.description'),
             'packageCatalog' => $packageCatalog,
-            'packages' => $packageCatalog['packages'],
+            'packages' => $packageCatalog['packages'] ?? collect(),
+            'storefront' => $storefront,
+            'pricingCards' => $storefront['cards'],
+            'pricingStages' => $storefront['stages'],
+            'pricingSubjects' => $storefront['subjects'],
+            'customBuilderUrl' => $storefront['custom_builder_url'],
         ]);
     }
 

@@ -289,6 +289,12 @@ class HiringFormService
         if (! empty($application->teaching_subject_ids)) {
             $profilePayload['teaching_subject_ids'] = $application->teaching_subject_ids;
         }
+        if (! empty($application->academic_year_ids) && \Illuminate\Support\Facades\Schema::hasColumn('instructor_profiles', 'academic_year_ids')) {
+            $profilePayload['academic_year_ids'] = $application->academic_year_ids;
+        }
+        if (! empty($application->academic_grade_ids) && \Illuminate\Support\Facades\Schema::hasColumn('instructor_profiles', 'academic_grade_ids')) {
+            $profilePayload['academic_grade_ids'] = $application->academic_grade_ids;
+        }
         if (! empty($application->curriculum_types)) {
             $profilePayload['curriculum_types'] = $application->curriculum_types;
         }

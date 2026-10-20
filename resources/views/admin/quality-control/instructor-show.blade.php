@@ -182,7 +182,7 @@
                         <td class="px-4 py-3">{{ $a->agreement_number ?? '—' }}</td>
                         <td class="px-4 py-3">{{ $a->title ?? '—' }}</td>
                         <td class="px-4 py-3">{{ $a->billing_type ?? '—' }}</td>
-                        <td class="px-4 py-3">{{ $a->total_amount ? number_format($a->total_amount, 2) . ' ' . currency_symbol() : ($a->monthly_amount ? number_format($a->monthly_amount, 2) . ' $/شهر' : '—') }}</td>
+                        <td class="px-4 py-3">{{ $a->total_amount ? number_format($a->total_amount, 2) . ' ' . currency_symbol() : ($a->monthly_amount ? number_format($a->monthly_amount, 2) . ' ' . currency_symbol() . '/شهر' : '—') }}</td>
                         <td class="px-4 py-3"><span class="rounded-full px-2 py-0.5 text-xs font-semibold {{ $a->status === 'active' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-600' }}">{{ $a->status ?? '—' }}</span></td>
                         <td class="px-4 py-3">{{ $a->start_date ? $a->start_date->format('Y-m-d') : '—' }} — {{ $a->end_date ? $a->end_date->format('Y-m-d') : '—' }}</td>
                     </tr>
@@ -252,7 +252,7 @@
                     @foreach($withdrawals as $w)
                     <tr class="hover:bg-slate-50">
                         <td class="px-4 py-3">{{ $w->id }}</td>
-                        <td class="px-4 py-3">{{ number_format($w->amount ?? 0, 2) }} $</td>
+                        <td class="px-4 py-3">{{ number_format($w->amount ?? 0, 2) }} {{ currency_symbol() }}</td>
                         <td class="px-4 py-3">{{ $w->status ?? '—' }}</td>
                         <td class="px-4 py-3">{{ $w->created_at->format('Y-m-d H:i') }}</td>
                     </tr>

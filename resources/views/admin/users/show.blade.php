@@ -19,7 +19,7 @@
     $isTeacherAccount = in_array($user->role, ['instructor', 'teacher'], true);
     $listRoute = ($user->role === 'student' && Route::has('admin.students-accounts.index'))
         ? route('admin.students-accounts.index')
-        : route('admin.users.index', $isTeacherAccount ? ['role' => 'teachers'] : []);
+        : route('admin.users.index', $isTeacherAccount ? ['type' => 'instructor'] : []);
     $listLabel = ($user->role === 'student' && Route::has('admin.students-accounts.index'))
         ? 'إدارة الطلاب والحسابات'
         : ($isTeacherAccount ? 'قائمة المعلمين' : 'إدارة المستخدمين');
@@ -217,7 +217,7 @@ function deleteUser(btn) {
             alert(data.message || 'تعذر الحذف');
             return;
         }
-        window.location.href = '{{ route('admin.users.index', ['role' => 'teachers']) }}';
+        window.location.href = '{{ route('admin.users.index', ['type' => 'instructor']) }}';
       }).catch(function () {
         alert('تعذر حذف الحساب');
       });

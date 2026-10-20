@@ -9,6 +9,7 @@
     $areaClass = 'w-full rounded-xl border border-line bg-surface px-4 py-3 text-sm text-ink transition focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20';
     $labelClass = 'mb-1.5 block text-xs font-medium text-muted';
     $action = $mode === 'create' ? route('admin.service-packages.store') : route('admin.service-packages.update', $package);
+    $tracks = $tracks ?? [];
 @endphp
 <div class="space-y-5">
     <section class="flex flex-wrap items-end justify-between gap-4">
@@ -78,22 +79,36 @@
                     </select>
                     <p class="mt-1 text-[11px] text-muted">للخطط التجارية يُضبط تلقائياً حسب نوع الخطة.</p>
                 </div>
+                <div class="sm:col-span-2 rounded-xl border border-accent/20 bg-accent/5 px-4 py-3 text-xs text-ink-soft leading-relaxed">
+                    <strong class="text-ink">توصيف صفحة الباقات:</strong>
+                    الموقع يعرض بطاقة لكل مادة تحت المرحلة المختارة. اربط الباقة بـ <strong>مرحلة + مادة</strong> ليستخدم الموقع اسم الباقة والوصف والشارة والمزايا على بطاقة تلك المادة. بدون ربط تظهر بطاقة افتراضية باسم المادة. أسعار 2 / 8 / مستعجلة تأتي من <a href="{{ route('admin.service-package-pricing-rules.index') }}" class="text-accent underline">قواعد التسعير</a>.
+                </div>
                 <div>
-                    <label class="{{ $labelClass }}" for="academic_year_id">السنة الدراسية (اختياري)</label>
+                    <label class="{{ $labelClass }}" for="academic_year_id">المرحلة (بطاقة المادة في الموقع)</label>
                     <select id="academic_year_id" name="academic_year_id" class="{{ $fieldClass }}">
-                        <option value="">— كل السنوات / عامة —</option>
+                        <option value="">— بدون ربط / عامة —</option>
                         @foreach($years as $year)
                             <option value="{{ $year->id }}" @selected((string) old('academic_year_id', $package->academic_year_id) === (string) $year->id)>
                                 {{ $year->name }}@if($year->level_number) ({{ $year->level_number }})@endif
                             </option>
                         @endforeach
                     </select>
-                    <p class="mt-1 text-[11px] text-muted">اربط الباقة بسنة من نظام المدرسة ليظهر للطالب داخل تلك السنة فقط.</p>
+                    <p class="mt-1 text-[11px] text-muted">نفس تبويبات المرحلة في صفحة الباقات. مع المادة: يخصّص بطاقة المادة.</p>
                 </div>
                 <div>
-                    <label class="{{ $labelClass }}" for="academic_subject_id">المادة الدراسية (اختياري)</label>
+                    <label class="{{ $labelClass }}" for="curriculum_type">نوع المنهج (اختياري)</label>
+                    <select id="curriculum_type" name="curriculum_type" class="{{ $fieldClass }}">
+                        <option value="">— كل المناهج / عامة —</option>
+                        @foreach($tracks as $key => $meta)
+                            <option value="{{ $key }}" @selected((string) old('curriculum_type', $package->curriculum_type) === (string) $key)>{{ $meta['label'] }}</option>
+                        @endforeach
+                    </select>
+                    <p class="mt-1 text-[11px] text-muted">يُستخدم عند وجود فلتر منهج في الكتالوج.</p>
+                </div>
+                <div>
+                    <label class="{{ $labelClass }}" for="academic_subject_id">المادة الدراسية (بطاقة الموقع)</label>
                     <select id="academic_subject_id" name="academic_subject_id" class="{{ $fieldClass }}">
-                        <option value="">— كل المواد / عامة —</option>
+                        <option value="">— بدون ربط / عامة —</option>
                         @foreach($subjects as $subject)
                             <option
                                 value="{{ $subject->id }}"
@@ -104,6 +119,7 @@
                             </option>
                         @endforeach
                     </select>
+                    <p class="mt-1 text-[11px] text-muted">بعد اختيار المرحلة تظهر موادها فقط — نفس شرائح المواد في الموقع.</p>
                 </div>
                 <div>
                     <label class="{{ $labelClass }}" for="tutoring_group_id">مجموعة مخصصة (اختياري)</label>
@@ -180,8 +196,8 @@
                 </div>
                 <label class="inline-flex items-center gap-2 text-sm"><input type="checkbox" name="includes_community" value="1" @checked(old('includes_community', $package->includes_community))> يشمل المجتمع الطلابي</label>
                 <label class="inline-flex items-center gap-2 text-sm"><input type="checkbox" name="includes_libraries" value="1" @checked(old('includes_libraries', $package->includes_libraries ?? true))> يشمل المكتبات التعليمية</label>
-                <label class="inline-flex items-center gap-2 text-sm"><input type="checkbox" name="is_active" value="1" @checked(old('is_active', $package->is_active ?? true))> نشطة</label>
-                <label class="inline-flex items-center gap-2 text-sm"><input type="checkbox" name="is_featured" value="1" @checked(old('is_featured', $package->is_featured))> مميزة</label>
+                <label class="inline-flex items-center gap-2 text-sm sm:col-span-2"><input type="checkbox" name="is_active" value="1" @checked(old('is_active', $package->is_active ?? true))> نشطة في صفحة الباقات والكتالوج</label>
+                <label class="inline-flex items-center gap-2 text-sm sm:col-span-2"><input type="checkbox" name="is_featured" value="1" @checked(old('is_featured', $package->is_featured))> الأكثر مبيعًا — تظهر في الرئيسية</label>
             </div>
         </article>
 
@@ -201,7 +217,7 @@
   const filterSubjects = () => {
     const yearId = yearSelect.value;
     const current = subjectSelect.value;
-    subjectSelect.innerHTML = '<option value="">— كل المواد / عامة —</option>';
+    subjectSelect.innerHTML = '<option value="">— بدون ربط / عامة —</option>';
     allSubjects.forEach((opt) => {
       const optYear = opt.getAttribute('data-year') || '';
       if (!yearId || !optYear || optYear === yearId) {

@@ -67,6 +67,11 @@ class AcademicYear extends Model
         return $this->hasMany(AcademicSubject::class);
     }
 
+    public function grades(): HasMany
+    {
+        return $this->hasMany(AcademicGrade::class)->ordered();
+    }
+
     public function tutoringGroups(): HasMany
     {
         return $this->hasMany(TutoringGroup::class, 'academic_year_id');
@@ -150,11 +155,26 @@ class AcademicYear extends Model
 
     public function scopePublicCatalog($query)
     {
-        return $query->where('is_public', true)
+        // مراحل العرض العام: منشورة + نشطة، مع استبعاد مسارات تطوير المعلمين (TCH-*).
+        // فحص مستقل (مش clone لـ $query) حتى لا ينكسر الـ scope داخل whereHas.
+        $hasPublic = static::query()
             ->where('is_active', true)
+            ->where('is_public', true)
+            ->where(function ($q) {
+                $q->whereNull('code')->orWhere('code', 'not like', 'TCH-%');
+            })
+            ->exists();
+
+        $query->where('is_active', true)
             ->where(function ($q) {
                 $q->whereNull('code')->orWhere('code', 'not like', 'TCH-%');
             });
+
+        if ($hasPublic) {
+            $query->where('is_public', true);
+        }
+
+        return $query;
     }
 
     public function scopeOrdered($query)

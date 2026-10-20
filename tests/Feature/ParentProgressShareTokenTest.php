@@ -48,11 +48,29 @@ class ParentProgressShareTokenTest extends TestCase
             ->assertDontSee('ID '.$student->id, false);
     }
 
+    public function test_parent_progress_opens_with_student_public_code(): void
+    {
+        $student = User::factory()->create([
+            'role' => 'student',
+            'is_active' => true,
+            'name' => 'نورة العتيبي',
+            'password' => Hash::make('password'),
+            'student_public_code' => 'HS-7K3M-9Q2P',
+        ]);
+
+        $this->get('/parent-progress?code=hs7k3m9q2p')
+            ->assertOk()
+            ->assertSee('نورة العتيبي', false)
+            ->assertSee('HS-7K3M-9Q2P', false)
+            ->assertDontSee((string) $student->email, false)
+            ->assertDontSee('ID '.$student->id, false);
+    }
+
     public function test_parent_progress_rejects_unknown_token(): void
     {
         $this->get('/parent-progress?token='.str_repeat('x', 48))
             ->assertOk()
-            ->assertSee('رمز', false);
+            ->assertSee('رقم', false);
     }
 
     public function test_admin_user_routes_use_uuid_not_numeric_id(): void

@@ -22,9 +22,9 @@
   </form>
 
   <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
-    <div class="rounded-xl border bg-white p-4"><p class="text-xs text-gray-500">إيراد معتمد</p><p class="text-2xl font-black text-emerald-700">{{ number_format($report['orders']['revenue_approved'], 2) }} $</p></div>
+    <div class="rounded-xl border bg-white p-4"><p class="text-xs text-gray-500">إيراد معتمد</p><p class="text-2xl font-black text-emerald-700">{{ number_format($report['orders']['revenue_approved'], 2) }} {{ currency_symbol() }}</p></div>
     <div class="rounded-xl border bg-white p-4"><p class="text-xs text-gray-500">طلبات معلقة</p><p class="text-2xl font-black text-amber-700">{{ $report['orders']['pending'] }}</p></div>
-    <div class="rounded-xl border bg-white p-4"><p class="text-xs text-gray-500">عمولات معلقة</p><p class="text-2xl font-black text-violet-700">{{ number_format($report['commissions']['pending'], 2) }} $</p></div>
+    <div class="rounded-xl border bg-white p-4"><p class="text-xs text-gray-500">عمولات معلقة</p><p class="text-2xl font-black text-violet-700">{{ number_format($report['commissions']['pending'], 2) }} {{ currency_symbol() }}</p></div>
     <div class="rounded-xl border bg-white p-4"><p class="text-xs text-gray-500">عملاء بانتظار الدفع</p><p class="text-2xl font-black text-rose-700">{{ $report['leads']['payment_pending'] }}</p></div>
   </div>
 
@@ -36,17 +36,17 @@
         <div><dt class="text-gray-500">معتمدة</dt><dd class="font-bold text-emerald-700">{{ $report['orders']['approved'] }}</dd></div>
         <div><dt class="text-gray-500">مرفوضة</dt><dd class="font-bold">{{ $report['orders']['rejected'] }}</dd></div>
         <div><dt class="text-gray-500">مرتبطة بـ CRM</dt><dd class="font-bold">{{ $report['orders']['crm_linked'] }}</dd></div>
-        <div class="col-span-2"><dt class="text-gray-500">إيراد CRM المعتمد</dt><dd class="font-bold">{{ number_format($report['orders']['crm_revenue'], 2) }} $</dd></div>
+        <div class="col-span-2"><dt class="text-gray-500">إيراد CRM المعتمد</dt><dd class="font-bold">{{ number_format($report['orders']['crm_revenue'], 2) }} {{ currency_symbol() }}</dd></div>
       </dl>
     </div>
     <div class="rounded-2xl border bg-white p-5 space-y-3">
       <h3 class="font-bold">ملخص العمولات</h3>
       <dl class="grid grid-cols-2 gap-2 text-sm">
-        <div><dt class="text-gray-500">معلقة</dt><dd class="font-bold text-amber-700">{{ number_format($report['commissions']['pending'], 2) }} $</dd></div>
-        <div><dt class="text-gray-500">معتمدة</dt><dd class="font-bold text-emerald-700">{{ number_format($report['commissions']['approved'], 2) }} $</dd></div>
-        <div><dt class="text-gray-500">مصروفة</dt><dd class="font-bold">{{ number_format($report['commissions']['paid'], 2) }} $</dd></div>
+        <div><dt class="text-gray-500">معلقة</dt><dd class="font-bold text-amber-700">{{ number_format($report['commissions']['pending'], 2) }} {{ currency_symbol() }}</dd></div>
+        <div><dt class="text-gray-500">معتمدة</dt><dd class="font-bold text-emerald-700">{{ number_format($report['commissions']['approved'], 2) }} {{ currency_symbol() }}</dd></div>
+        <div><dt class="text-gray-500">مصروفة</dt><dd class="font-bold">{{ number_format($report['commissions']['paid'], 2) }} {{ currency_symbol() }}</dd></div>
         @foreach($report['commissions']['by_type'] as $type => $total)
-          <div><dt class="text-gray-500">عمولة {{ $type }}</dt><dd class="font-bold">{{ number_format((float)$total, 2) }} $</dd></div>
+          <div><dt class="text-gray-500">عمولة {{ $type }}</dt><dd class="font-bold">{{ number_format((float)$total, 2) }} {{ currency_symbol() }}</dd></div>
         @endforeach
       </dl>
     </div>
@@ -66,7 +66,7 @@
           <tr>
             <td class="px-4 py-3 font-semibold">{{ $row->sales_name }}</td>
             <td class="px-4 py-3">{{ $row->orders_count }}</td>
-            <td class="px-4 py-3 font-bold">{{ number_format((float)$row->revenue, 2) }} $</td>
+            <td class="px-4 py-3 font-bold">{{ number_format((float)$row->revenue, 2) }} {{ currency_symbol() }}</td>
           </tr>
         @endforeach
       </tbody>
@@ -96,8 +96,8 @@
               <td class="px-4 py-3">{{ $row['role_label'] }}</td>
               <td class="px-4 py-3">{{ $row['total_leads'] }}</td>
               <td class="px-4 py-3 text-emerald-700 font-bold">{{ $row['closed_won'] }}</td>
-              <td class="px-4 py-3">{{ number_format($row['revenue'], 2) }} $</td>
-              <td class="px-4 py-3">{{ number_format($row['commissions'], 2) }} $</td>
+              <td class="px-4 py-3">{{ number_format($row['revenue'], 2) }} {{ currency_symbol() }}</td>
+              <td class="px-4 py-3">{{ number_format($row['commissions'], 2) }} {{ currency_symbol() }}</td>
             </tr>
           @endforeach
         </tbody>

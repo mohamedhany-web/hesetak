@@ -162,7 +162,7 @@
                 <p class="mt-1 text-xl font-semibold tabular-nums tracking-tight text-ink">{{ number_format($kpi['value']) }}</p>
                 <p class="mt-1 text-[11px] text-muted">{{ $kpi['note'] }}</p>
                 @if($kpi['label'] === 'الطلبات (الفترة)')
-                    <p class="mt-2 text-[11px] text-muted">مبالغ معتمدة: <strong class="text-ink">{{ number_format($stats['order_stats']['approved_amount'], 2) }} $</strong></p>
+                    <p class="mt-2 text-[11px] text-muted">مبالغ معتمدة: <strong class="text-ink">{{ number_format($stats['order_stats']['approved_amount'], 2) }} {{ currency_symbol() }}</strong></p>
                 @endif
             </article>
         @endforeach
@@ -254,7 +254,7 @@
                                 <p class="text-sm font-medium text-ink">{{ $item->payment_method }}</p>
                                 <p class="text-xs text-muted">{{ $item->count }} دفعة</p>
                             </div>
-                            <p class="text-sm font-semibold tabular-nums text-accent">{{ number_format($item->total, 2) }} $</p>
+                            <p class="text-sm font-semibold tabular-nums text-accent">{{ number_format($item->total, 2) }} {{ currency_symbol() }}</p>
                         </div>
                     @empty
                         <p class="py-4 text-center text-sm text-muted">لا توجد بيانات</p>
@@ -270,7 +270,7 @@
                                 <p class="text-sm font-medium text-ink">{{ $item->category ?? 'غير محدد' }}</p>
                                 <p class="text-xs text-muted">{{ $item->count }} معاملة</p>
                             </div>
-                            <p class="text-sm font-semibold tabular-nums text-accent">{{ number_format($item->total, 2) }} $</p>
+                            <p class="text-sm font-semibold tabular-nums text-accent">{{ number_format($item->total, 2) }} {{ currency_symbol() }}</p>
                         </div>
                     @empty
                         <p class="py-4 text-center text-sm text-muted">لا توجد بيانات</p>
@@ -294,7 +294,7 @@
                                 <p class="text-sm font-medium text-ink">{{ \App\Models\Expense::categoryLabel($item->category) }}</p>
                                 <p class="text-xs text-muted">{{ $item->count }} مصروف</p>
                             </div>
-                            <p class="text-sm font-semibold tabular-nums text-ink">{{ number_format($item->total, 2) }} $</p>
+                            <p class="text-sm font-semibold tabular-nums text-ink">{{ number_format($item->total, 2) }} {{ currency_symbol() }}</p>
                         </div>
                     @empty
                         <p class="py-4 text-center text-sm text-muted">لا توجد بيانات</p>
@@ -310,7 +310,7 @@
                                 <p class="text-sm font-medium text-ink">{{ $item->category ?? 'غير محدد' }}</p>
                                 <p class="text-xs text-muted">{{ $item->count }} معاملة</p>
                             </div>
-                            <p class="text-sm font-semibold tabular-nums text-ink">{{ number_format($item->total, 2) }} $</p>
+                            <p class="text-sm font-semibold tabular-nums text-ink">{{ number_format($item->total, 2) }} {{ currency_symbol() }}</p>
                         </div>
                     @empty
                         <p class="py-4 text-center text-sm text-muted">لا توجد بيانات</p>
@@ -331,9 +331,9 @@
                         <div class="mb-2 flex flex-wrap items-center justify-between gap-2">
                             <span class="text-sm font-medium text-ink">{{ \Carbon\Carbon::parse($month . '-01')->format('Y-m') }}</span>
                             <div class="flex flex-wrap items-center gap-4 text-xs">
-                                <span class="text-accent">إيرادات: {{ number_format($monthlyData['revenues'][$index], 2) }} $</span>
-                                <span class="text-muted">مصروفات: {{ number_format($monthlyData['expenses'][$index], 2) }} $</span>
-                                <span class="font-semibold text-ink">صافي: {{ number_format($monthlyData['revenues'][$index] - $monthlyData['expenses'][$index], 2) }} $</span>
+                                <span class="text-accent">إيرادات: {{ number_format($monthlyData['revenues'][$index], 2) }} {{ currency_symbol() }}</span>
+                                <span class="text-muted">مصروفات: {{ number_format($monthlyData['expenses'][$index], 2) }} {{ currency_symbol() }}</span>
+                                <span class="font-semibold text-ink">صافي: {{ number_format($monthlyData['revenues'][$index] - $monthlyData['expenses'][$index], 2) }} {{ currency_symbol() }}</span>
                             </div>
                         </div>
                         <div class="relative h-8 overflow-hidden rounded-full bg-canvas-muted">

@@ -218,4 +218,10 @@ return [
     'academy_opportunities_title' => 'فرص التوظيف المنشورة',
     'academy_opportunity_hiring_academy' => 'أكاديمية التوظيف',
     'academy_opportunity_presentations_count' => 'عروض معتمدة',
+
+    // تسعير حصص الباقات المخصصة (admin/pricing)
+    'custom_package_pricing_sidebar' => 'تسعير حصص باقاتك',
+    'custom_package_pricing_heading' => 'مدخلات «حصص باقتك الخاصة»',
+    'custom_package_pricing_page_title' => 'تسعير الباقات المخصصة',
+    'custom_package_pricing_rule_private_name' => 'حصص خاصة 1:1 — حصص باقتك الخاصة',
 ];

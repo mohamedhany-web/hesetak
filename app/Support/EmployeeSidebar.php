@@ -102,13 +102,16 @@ final class EmployeeSidebar
      */
     public static function sectionsFor(User $user): array
     {
-        // موظف له أدوار RBAC: اعرض كل أقسام القائمة «المخصصة» ومرِّها بـ employeeCan (أسماء صلاحيات الدور)
-        if ($user->roles()->exists()) {
+        $code = $user->employeeJob?->code;
+        $jobMenus = is_string($code) ? config('employee_sidebar.menus_by_job.'.$code) : null;
+
+        // أولوية قائمة الوظيفة إن وُجدت (سيلز/محاسب/HR…) حتى مع دور RBAC
+        if (is_array($jobMenus) && $jobMenus !== []) {
+            $sections = $jobMenus;
+        } elseif ($user->roles()->exists()) {
             $sections = config('employee_sidebar.menus_by_job.custom', []);
         } else {
-            $code = $user->employeeJob?->code;
-            $sections = config('employee_sidebar.menus_by_job.'.$code)
-                ?? config('employee_sidebar.fallback_sections', []);
+            $sections = config('employee_sidebar.fallback_sections', []);
         }
         $items = config('employee_sidebar.items', []);
 
@@ -119,10 +122,8 @@ final class EmployeeSidebar
             $links = [];
             foreach ($section['keys'] ?? [] as $key) {
                 $meta = $items[$key] ?? null;
-                $perm = (is_array($meta) && array_key_exists('permission', $meta) && $meta['permission'] !== null)
-                    ? $meta['permission']
-                    : $key;
-                if (! $user->employeeCan($perm)) {
+                // مصدر الحقيقة = مفتاح عنصر القائمة (نفس employee.can:* وصلاحيات الوظيفة)
+                if (! $user->employeeCan($key)) {
                     continue;
                 }
                 if ($meta === null || empty($meta['route'])) {
@@ -143,7 +144,8 @@ final class EmployeeSidebar
             }
         }
 
-        if ($user->is_employee && $user->roles()->exists()) {
+        // روابط إضافية من صلاحيات الدور فقط لغير أقسام المبيعات (لتجنب تضخيم القائمة)
+        if ($user->is_employee && $user->roles()->exists() && ! $user->isSalesDepartmentEmployee()) {
             $rbacExtra = self::rbacPermissionSidebarSections($user, $seenLinkKeys);
             if ($rbacExtra !== []) {
                 $out = array_merge($out, $rbacExtra);

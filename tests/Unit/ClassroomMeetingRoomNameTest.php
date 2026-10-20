@@ -7,7 +7,7 @@ use PHPUnit\Framework\TestCase;
 
 class ClassroomMeetingRoomNameTest extends TestCase
 {
-    public function test_canonical_room_name_uses_glottical_prefix(): void
+    public function test_canonical_room_name_uses_hesetak_prefix(): void
     {
         $this->assertSame('حصتك-ABC12345', ClassroomMeeting::canonicalRoomName('abc12345'));
     }

@@ -115,7 +115,7 @@
                                 <td class="px-4 py-3 font-semibold text-ink">{{ $g->payment_gateway }}</td>
                                 <td class="px-4 py-3 tabular-nums text-muted">{{ number_format($g->cnt) }}</td>
                                 <td class="px-4 py-3 font-semibold tabular-nums text-ink">{{ number_format($g->gross, 2) }}</td>
-                                <td class="px-4 py-3 tabular-nums text-metal">{{ number_format($g->fees, 2) }}</td>
+                                <td class="px-4 py-3 tabular-nums text-metal">{{ format_money($g->fees) }}</td>
                                 <td class="px-4 py-3 font-semibold tabular-nums text-accent">{{ number_format($g->net, 2) }}</td>
                             </tr>
                         @endforeach
@@ -162,8 +162,8 @@
                             </td>
                             <td class="px-4 py-3 text-ink-soft">{{ $payment->user->name ?? '—' }}</td>
                             <td class="px-4 py-3 font-mono text-xs text-muted">{{ $payment->payment_gateway }}</td>
-                            <td class="px-4 py-3 font-semibold tabular-nums text-ink">{{ number_format($payment->amount, 2) }}</td>
-                            <td class="px-4 py-3 tabular-nums text-metal">{{ number_format($fee, 2) }}</td>
+                            <td class="px-4 py-3 font-semibold tabular-nums text-ink">{{ format_money($payment->amount) }}</td>
+                            <td class="px-4 py-3 tabular-nums text-metal">{{ format_money($fee) }}</td>
                             <td class="px-4 py-3 font-semibold tabular-nums text-accent">{{ number_format($net, 2) }}</td>
                             <td class="px-4 py-3">
                                 @if($payment->invoice)

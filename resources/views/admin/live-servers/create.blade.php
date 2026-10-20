@@ -18,7 +18,7 @@
             </div>
             <div>
                 <label class="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-1">النطاق (Domain) <span class="text-red-500">*</span></label>
-                <input type="text" name="domain" value="{{ old('domain') }}" required class="w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white" placeholder="live.glottical.com">
+                <input type="text" name="domain" value="{{ old('domain') }}" required class="w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white" placeholder="live.hissatak.online">
                 @error('domain')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
             </div>
             <div>

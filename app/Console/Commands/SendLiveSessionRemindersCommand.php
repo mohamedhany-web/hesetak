@@ -3,8 +3,9 @@
 namespace App\Console\Commands;
 
 use App\Models\LiveSession;
+use App\Models\Notification;
 use App\Models\User;
-use App\Notifications\LiveSessionReminderNotification;
+use App\Services\PlatformNotifier;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -15,7 +16,7 @@ class SendLiveSessionRemindersCommand extends Command
 
     protected $description = 'Send reminder notifications to enrolled students before upcoming live sessions';
 
-    public function handle(): int
+    public function handle(PlatformNotifier $notifier): int
     {
         $minutes = (int) $this->option('minutes');
 
@@ -24,45 +25,70 @@ class SendLiveSessionRemindersCommand extends Command
                 now()->addMinutes($minutes - 1),
                 now()->addMinutes($minutes + 1),
             ])
-            ->whereDoesntHave('attendance', function ($q) {
-                // skip sessions that already have sent reminders (tagged via settings)
-            })
             ->with(['course', 'instructor'])
             ->get();
 
         if ($sessions->isEmpty()) {
-            $this->info('No sessions starting in ~' . $minutes . ' minutes.');
+            $this->info('No sessions starting in ~'.$minutes.' minutes.');
+
             return self::SUCCESS;
         }
 
         $totalNotified = 0;
 
         foreach ($sessions as $session) {
+            $sessionNotified = 0;
             $students = $this->getEligibleStudents($session);
+            $dedupe = 'live_reminder:'.$session->id.':'.$minutes;
 
             foreach ($students as $student) {
                 try {
-                    $alreadySent = DB::table('notifications')
-                        ->where('notifiable_id', $student->id)
-                        ->where('type', LiveSessionReminderNotification::class)
-                        ->where('data->session_id', $session->id)
+                    $alreadySent = Notification::query()
+                        ->where('user_id', $student->id)
+                        ->where('type', 'reminder')
+                        ->where(function ($q) use ($dedupe, $session) {
+                            $q->where('data->dedupe', $dedupe)
+                                ->orWhere('data->session_id', $session->id);
+                        })
+                        ->where('created_at', '>=', now()->subHours(6))
                         ->exists();
 
                     if ($alreadySent) {
                         continue;
                     }
 
-                    $student->notify(new LiveSessionReminderNotification($session, $minutes));
-                    $totalNotified++;
-                } catch (\Exception $e) {
-                    Log::warning("Failed to send live session reminder to user {$student->id}: " . $e->getMessage());
+                    $courseName = $session->course?->title ?? 'جلسة عامة';
+                    $title = 'تذكير: بث مباشر بعد '.$minutes.' دقائق';
+                    $message = 'جلسة «'.$session->title.'» ('.$courseName.') تبدأ بعد '.$minutes.' دقيقة.';
+
+                    $created = $notifier->notify($student, [
+                        'title' => $title,
+                        'message' => $message,
+                        'type' => 'reminder',
+                        'priority' => 'high',
+                        'action_url' => '/student/live-sessions/'.$session->id,
+                        'action_text' => 'دخول البث',
+                        'sender_id' => null,
+                        'data' => [
+                            'dedupe' => $dedupe,
+                            'session_id' => $session->id,
+                            'source' => 'live:send-reminders',
+                        ],
+                    ]);
+
+                    if ($created) {
+                        $sessionNotified++;
+                        $totalNotified++;
+                    }
+                } catch (\Throwable $e) {
+                    Log::warning("Failed to send live session reminder to user {$student->id}: ".$e->getMessage());
                 }
             }
 
-            $this->info("Session \"{$session->title}\": notified {$totalNotified} students.");
+            $this->info('Session "'.$session->title.'": notified '.$sessionNotified.' students.');
         }
 
-        $this->info("Done. Total notifications sent: {$totalNotified}");
+        $this->info('Done. Total notifications sent: '.$totalNotified);
 
         return self::SUCCESS;
     }
@@ -78,12 +104,12 @@ class SendLiveSessionRemindersCommand extends Command
             return User::whereIn('id', $enrolledUserIds)->get();
         }
 
-        if ($session->course_id && !$session->require_enrollment) {
-            return User::where('role', 'student')->get();
+        if ($session->course_id && ! $session->require_enrollment) {
+            return User::where('role', 'student')->where('is_active', true)->get();
         }
 
-        if (!$session->course_id) {
-            return User::where('role', 'student')->get();
+        if (! $session->course_id) {
+            return User::where('role', 'student')->where('is_active', true)->get();
         }
 
         return collect();

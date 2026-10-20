@@ -8,7 +8,7 @@
     $kpis = [
         ['label' => 'إجمالي الباقات', 'value' => $stats['total'], 'icon' => 'fa-box'],
         ['label' => 'نشطة', 'value' => $stats['active'], 'icon' => 'fa-check'],
-        ['label' => 'عامة', 'value' => $stats['global'], 'icon' => 'fa-globe'],
+        ['label' => 'الأكثر مبيعًا', 'value' => $stats['featured'], 'icon' => 'fa-star'],
         ['label' => 'أرصدة صادرة', 'value' => $stats['sold'], 'icon' => 'fa-layer-group'],
     ];
 @endphp
@@ -17,7 +17,7 @@
         <div>
             <p class="text-xs font-medium text-muted">التجارة · رصيد الحصص</p>
             <h2 class="mt-1 text-2xl font-semibold text-ink">باقات خدمات الطالب</h2>
-            <p class="mt-1 text-sm text-muted">يدفع الطالب → يحصل رصيد حصص → يستهلك عند الإتمام → يشحن عند النفاد.</p>
+            <p class="mt-1 text-sm text-muted">صفحة الباقات العامة تعرض بطاقات المواد حسب المرحلة. اربط الباقة بمرحلة + مادة ليظهر اسمها ووصفها وشارتها على بطاقة المادة. الأسعار من قواعد التسعير (2 / 8 / مستعجلة). علّم «الأكثر مبيعًا» للرئيسية.</p>
         </div>
         <div class="flex flex-wrap gap-2">
             <a href="{{ route('admin.service-packages.grant') }}" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl border border-accent/30 bg-accent/10 px-4 text-sm font-medium text-accent">
@@ -51,6 +51,7 @@
                 <tr>
                     <th class="px-4 py-3 text-start">الباقة</th>
                     <th class="px-4 py-3 text-start">النطاق</th>
+                    <th class="px-4 py-3 text-start">الفلتر</th>
                     <th class="px-4 py-3 text-start">الحصص</th>
                     <th class="px-4 py-3 text-start">مدة الحصة</th>
                     <th class="px-4 py-3 text-start">الصلاحية</th>
@@ -66,6 +67,7 @@
                         <td class="px-4 py-3">
                             <div class="font-semibold text-ink">{{ $package->name }}</div>
                             @if($package->badge)<span class="text-xs text-accent">{{ $package->badge }}</span>@endif
+                            @if($package->is_featured)<span class="ms-1 inline-flex rounded-full bg-accent-soft px-2 py-0.5 text-[10px] font-bold text-accent">الأكثر مبيعًا</span>@endif
                             @if($package->schoolProgramLabel())
                                 <div class="text-xs text-muted"><i class="fas fa-school"></i> {{ $package->schoolProgramLabel() }}</div>
                             @endif
@@ -77,6 +79,15 @@
                                 <div class="text-xs text-muted">{{ $package->termLabel() }} · {{ $package->weeklySessionsTotal() }}/أسبوع</div>
                             @else
                                 {{ $package->label() }}
+                            @endif
+                        </td>
+                        <td class="px-4 py-3 text-xs text-muted">
+                            @if($package->academic_subject_id)
+                                <span class="inline-flex rounded-full bg-success/10 px-2 py-0.5 text-[10px] font-bold text-success">بطاقة مادة</span>
+                                <div class="mt-1">{{ $package->academicYear->name ?? '—' }} · {{ $package->academicSubject->name ?? '—' }}</div>
+                            @else
+                                <span class="inline-flex rounded-full bg-canvas-muted px-2 py-0.5 text-[10px] font-bold text-muted">عامة / شراء</span>
+                                <div class="mt-1">{{ $package->academicYear->name ?? 'كل المراحل' }} · {{ $package->curriculum_type ? \App\Support\HesetakMatchCatalog::curriculumTypeLabel($package->curriculum_type) : 'كل المناهج' }}</div>
                             @endif
                         </td>
                         <td class="px-4 py-3">
@@ -95,15 +106,17 @@
                         <td class="px-4 py-3">{{ $package->is_active ? 'نشطة' : 'موقوفة' }}</td>
                         <td class="px-4 py-3">
                             <div class="flex flex-wrap gap-2">
+                                <a href="{{ route('admin.service-packages.show', $package) }}" class="text-ink-soft hover:underline">تفاصيل</a>
                                 <a href="{{ route('admin.service-packages.grant', ['service_package_id' => $package->id]) }}" class="text-success hover:underline">منح</a>
                                 <a href="{{ route('admin.service-packages.edit', $package) }}" class="text-accent hover:underline">تعديل</a>
-                                <form method="POST" action="{{ route('admin.service-packages.toggle-status', $package) }}">@csrf<button class="text-ink-soft hover:underline">تبديل</button></form>
+                                <form method="POST" action="{{ route('admin.service-packages.toggle-featured', $package) }}">@csrf<button class="text-ink-soft hover:underline">{{ $package->is_featured ? 'إزالة من الرئيسية' : 'الأكثر مبيعًا' }}</button></form>
+                                <form method="POST" action="{{ route('admin.service-packages.toggle-status', $package) }}">@csrf<button class="text-ink-soft hover:underline">{{ $package->is_active ? 'إيقاف' : 'تفعيل' }}</button></form>
                                 <form method="POST" action="{{ route('admin.service-packages.destroy', $package) }}" onsubmit="return confirm('حذف؟')">@csrf @method('DELETE')<button class="text-danger hover:underline">حذف</button></form>
                             </div>
                         </td>
                     </tr>
                 @empty
-                    <tr><td colspan="9" class="px-4 py-8 text-center text-muted">لا توجد باقات بعد.</td></tr>
+                    <tr><td colspan="10" class="px-4 py-8 text-center text-muted">لا توجد باقات بعد.</td></tr>
                 @endforelse
             </tbody>
         </table>

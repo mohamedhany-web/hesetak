@@ -30,6 +30,7 @@ class ServicePackagePricingRuleController extends Controller
             ? ServicePackagePricingRule::query()->findOrFail($request->integer('edit'))
             : new ServicePackagePricingRule([
                 'scope' => ServicePackage::SCOPE_TUTORING_INDIVIDUAL,
+                'kind' => ServicePackagePricingRule::KIND_STANDARD,
                 'price_per_session' => 25,
                 'min_sessions' => 2,
                 'max_sessions' => 24,
@@ -81,6 +82,7 @@ class ServicePackagePricingRuleController extends Controller
         return $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'scope' => ['required', 'in:global,tutoring_individual,tutoring_collective,private_lessons'],
+            'kind' => ['required', 'in:standard,urgent'],
             'price_per_session' => ['required', 'numeric', 'min:0.01', 'max:100000'],
             'min_sessions' => ['required', 'integer', 'min:1', 'max:500'],
             'max_sessions' => ['required', 'integer', 'gte:min_sessions', 'max:500'],

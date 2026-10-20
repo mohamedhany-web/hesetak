@@ -96,12 +96,15 @@ body.admin-body .focus\:border-accent:focus {
   background: transparent !important;
 }
 .admin-sidebar-desktop {
+  position: sticky !important;
+  top: 0 !important;
+  align-self: stretch !important;
   width: 280px !important;
   min-width: 280px !important;
   max-width: 280px !important;
   flex-shrink: 0 !important;
-  height: 100% !important;
-  max-height: 100% !important;
+  height: 100dvh !important;
+  max-height: 100dvh !important;
 }
 .admin-sidebar > .flex.flex-col,
 .admin-sidebar > div.flex.flex-col {
@@ -116,6 +119,7 @@ body.admin-body .focus\:border-accent:focus {
   overflow-y: auto !important;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
+  overflow-anchor: none;
   scrollbar-width: thin;
   scrollbar-color: rgba(255, 255, 255, 0.25) transparent;
 }

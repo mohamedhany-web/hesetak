@@ -634,7 +634,13 @@ class OneToOneSessionService
         }
 
         $meeting = $session->classroomMeeting;
-        if ($meeting?->started_at && ! $meeting->ended_at) {
+        // started_at قد يُضبط عند مجرد فتح رابط الدخول — لا نعتبرها «بدأت» إلا لو الغرفة لا تزال live فعلياً.
+        $isActuallyLive = $meeting
+            && $meeting->started_at
+            && ! $meeting->ended_at
+            && method_exists($meeting, 'isLive')
+            && $meeting->isLive();
+        if ($isActuallyLive) {
             throw new \InvalidArgumentException('لا يمكن تعديل موعد حصة بدأت بالفعل.');
         }
 

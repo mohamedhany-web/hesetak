@@ -115,9 +115,38 @@ final class StudentLearningProfile
             return collect();
         }
 
-        return AcademicYear::query()
-            ->publicCatalog()
-            ->ordered()
-            ->get(['id', 'name', 'slug', 'level_number']);
+        $query = AcademicYear::query()
+            ->where('is_active', true)
+            ->where(function ($q) {
+                $q->whereNull('code')->orWhere('code', 'not like', 'TCH-%');
+            })
+            ->ordered();
+
+        if (Schema::hasTable('academic_grades')) {
+            $query->with(['grades' => fn ($grades) => $grades->active()->ordered()]);
+        }
+
+        return $query->get(['id', 'name', 'slug', 'level_number']);
+    }
+
+    /**
+     * @param  Collection<int, AcademicYear>  $years
+     * @return array<string, list<array{id: int, name: string}>>
+     */
+    public static function gradesByYearMap(Collection $years): array
+    {
+        $map = [];
+        foreach ($years as $year) {
+            $grades = $year->relationLoaded('grades') ? $year->grades : collect();
+            $map[(string) $year->id] = $grades
+                ->map(fn ($grade) => [
+                    'id' => (int) $grade->id,
+                    'name' => (string) $grade->name,
+                ])
+                ->values()
+                ->all();
+        }
+
+        return $map;
     }
 }

@@ -4,21 +4,21 @@
         [
             'featured' => true,
             'title' => $isRtl ? 'حصص فردية 1:1' : 'Private 1:1 lessons',
-            'body' => $isRtl ? 'معلم معتمد، مواعيد مرنة، وتقرير تقدّم بعد كل حصة.' : 'Approved teacher, flexible timing, and a progress report after every session.',
+            'body' => $isRtl ? 'معلم معتمد + مواعيد مرنة. ادفع بباقة حصص (رصيد ساعات) ثم احجز.' : 'Accredited teacher + flexible timing. Pay with a lesson package (hour credits), then book.',
             'cta' => $isRtl ? 'ابحث عن معلم' : 'Find a teacher',
             'href' => route('public.instructors.index'),
         ],
         [
             'featured' => false,
-            'title' => $isRtl ? 'المناهج الرسمية' : 'Official curricula',
-            'body' => $isRtl ? 'مسارات خليجية واضحة حسب المرحلة والمادة.' : 'Clear Gulf curriculum paths by grade and subject.',
+            'title' => $isRtl ? 'متابعة المناهج الرسمية' : 'Follow the official curriculum',
+            'body' => $isRtl ? 'مرحلة + مادة + نوع منهج، ثم معلم مطابق لمقرر المدرسة.' : 'Grade + subject + curriculum type, then a teacher matched to the school syllabus.',
             'cta' => $isRtl ? 'استكشف المناهج' : 'Explore curricula',
             'href' => route('public.curricula'),
         ],
         [
             'featured' => false,
             'title' => $isRtl ? 'كورسات مستقلة' : 'Independent courses',
-            'body' => $isRtl ? 'مهارات وقدرات ولغات خارج المنهج الوطني.' : 'Skills, aptitude, and languages beyond the national curriculum.',
+            'body' => $isRtl ? 'محتوى جاهز خارج المنهج المدرسي (قدرات، لغات، مهارات). هذا غير باقات الحصص.' : 'Ready-made content outside school (aptitude, languages, skills). This is not a lesson package.',
             'cta' => $isRtl ? 'تصفّح الكورسات' : 'Browse courses',
             'href' => route('public.courses'),
         ],
@@ -29,8 +29,8 @@
     <div class="mc-section-head mc-section-head--tight" style="margin-bottom:1rem">
       <div>
         <p class="mc-eyebrow">{{ $isRtl ? 'ابدأ من هنا' : 'Start here' }}</p>
-        <h2 class="mc-title" id="dp-mosaic-title">{{ $isRtl ? 'اختر مسارك التعليمي' : 'Choose your learning path' }}</h2>
-        <p class="mc-lead">{{ $isRtl ? 'ثلاثة مسارات واضحة لولي الأمر والطالب.' : 'Three clear paths for parents and students.' }}</p>
+        <h2 class="mc-title" id="dp-mosaic-title">{{ $isRtl ? 'اختر مساراً واحداً بوضوح' : 'Pick one clear learning path' }}</h2>
+        <p class="mc-lead">{{ $isRtl ? 'باقات الحصص = رصيد لحصص 1:1. الكورسات المستقلة = محتوى منفصل باشتراك.' : 'Lesson packages = credits for 1:1. Independent courses = separate subscribed content.' }}</p>
       </div>
     </div>
     <div class="dp-mosaic__grid">
@@ -42,5 +42,8 @@
         </a>
       @endforeach
     </div>
+    <p class="mc-lead" style="margin-top:1.1rem">
+      <a href="{{ route('public.pricing') }}" class="lasles-auth-link" style="font-weight:600">{{ $isRtl ? 'جاهز تشتري رصيد حصص؟ افتح باقات الحصص' : 'Ready to buy hour credits? Open lesson packages' }}</a>
+    </p>
   </div>
 </section>

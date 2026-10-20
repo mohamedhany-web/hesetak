@@ -3,8 +3,6 @@
  * الإصدارات القديمة كانت تخزّن HTML بنمط cache-first فتظهر صفحات قديمة
  * حتى بعد تحديث السيرفر — لذلك نزيل الكاش ونلغي التسجيل تلقائياً.
  */
-const CACHE_PREFIX = 'glottical-shell';
-
 self.addEventListener('install', (event) => {
   self.skipWaiting();
 });
@@ -12,17 +10,9 @@ self.addEventListener('install', (event) => {
 self.addEventListener('activate', (event) => {
   event.waitUntil((async () => {
     const keys = await caches.keys();
-    await Promise.all(
-      keys
-        .filter((key) => key.startsWith(CACHE_PREFIX) || key.includes('glottical') || key.includes('muallimx'))
-        .map((key) => caches.delete(key))
-    );
+    await Promise.all(keys.map((key) => caches.delete(key)));
     await self.registration.unregister();
     const clients = await self.clients.matchAll({ type: 'window' });
     clients.forEach((client) => client.navigate(client.url));
   })());
-});
-
-self.addEventListener('fetch', (event) => {
-  event.respondWith(fetch(event.request));
 });

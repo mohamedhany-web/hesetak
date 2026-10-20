@@ -41,7 +41,6 @@ class ReferralProgramController extends Controller
 
         $data = array_merge($validated, [
             'is_active' => $request->boolean('is_active', true),
-            'allow_self_referral' => $request->boolean('allow_self_referral'),
             'is_default' => false,
         ]);
 
@@ -88,7 +87,6 @@ class ReferralProgramController extends Controller
 
         $data = array_merge($validated, [
             'is_active' => $request->boolean('is_active', true),
-            'allow_self_referral' => $request->boolean('allow_self_referral'),
         ]);
 
         $referralProgram->update($data);
@@ -136,6 +134,10 @@ class ReferralProgramController extends Controller
     private function validateProgram(Request $request): array
     {
         $mode = $request->input('reward_mode', ReferralProgram::REWARD_MODE_CREDITS);
+        $isActive = $request->boolean('is_active', true);
+        $maxRaw = trim((string) $request->input('max_referrals_per_user', ''));
+        $allowUnlimited = $request->boolean('allow_unlimited_referrals');
+        $confirmNoExpiry = $request->boolean('confirm_no_expiry');
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
@@ -177,14 +179,42 @@ class ReferralProgramController extends Controller
             ],
             'referrer_reward_value' => 'nullable|numeric|min:0',
             'discount_valid_days' => 'nullable|integer|min:1',
-            'referral_code_valid_days' => 'nullable|integer|min:1',
-            'max_referrals_per_user' => 'nullable|integer|min:1',
+            'referral_code_valid_days' => 'nullable|integer|min:1|max:3650',
+            'max_referrals_per_user' => 'nullable|integer|min:1|max:10000',
             'max_discount_uses_per_referred' => 'nullable|integer|min:1',
             'starts_at' => 'nullable|date',
             'expires_at' => 'nullable|date|after_or_equal:starts_at',
+            'allow_unlimited_referrals' => 'nullable|boolean',
+            'confirm_no_expiry' => 'nullable|boolean',
         ]);
 
-        return array_merge($validated, [
+        if ($maxRaw === '') {
+            if ($allowUnlimited) {
+                $validated['max_referrals_per_user'] = null;
+            } else {
+                $validated['max_referrals_per_user'] = ReferralProgram::DEFAULT_MAX_REFERRALS_PER_USER;
+            }
+        }
+
+        if ($isActive && empty($validated['expires_at']) && ! $confirmNoExpiry) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'expires_at' => 'حدّدوا تاريخ انتهاء، أو أكّدوا صراحةً أن البرنامج بلا انتهاء (خطر إساءة استخدام).',
+            ]);
+        }
+
+        $shareAr = trim((string) ($validated['share_message_ar'] ?? ''));
+        $shareEn = trim((string) ($validated['share_message_en'] ?? ''));
+        if ($shareEn === '' && $shareAr !== '') {
+            $shareEn = $shareAr;
+        }
+        if ($shareEn === '') {
+            $shareEn = 'Join حصتك with my link and get free lesson credits: {link}';
+        }
+        if ($shareAr === '') {
+            $shareAr = 'سجّل في حصتك من رابطي واحصل على رصيد حصص مجاني: {link}';
+        }
+
+        $payload = array_merge($validated, [
             'credit_scope' => $validated['credit_scope'] ?? ServicePackage::SCOPE_PRIVATE_LESSONS,
             'referred_credit_units' => (int) ($validated['referred_credit_units'] ?? 1),
             'referrer_credit_units' => (int) ($validated['referrer_credit_units'] ?? 1),
@@ -196,6 +226,13 @@ class ReferralProgramController extends Controller
             'discount_valid_days' => (int) ($validated['discount_valid_days'] ?? 30),
             'max_discount_uses_per_referred' => (int) ($validated['max_discount_uses_per_referred'] ?? 1),
             'credit_duration_days' => $validated['credit_duration_days'] ?? null,
+            'share_message_ar' => $shareAr,
+            'share_message_en' => $shareEn,
+            'allow_self_referral' => false,
         ]);
+
+        unset($payload['allow_unlimited_referrals'], $payload['confirm_no_expiry']);
+
+        return $payload;
     }
 }

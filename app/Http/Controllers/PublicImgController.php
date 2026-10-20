@@ -11,7 +11,7 @@ use Symfony\Component\HttpFoundation\Response;
 class PublicImgController extends Controller
 {
     /** @var list<string> */
-    private const ALLOWED_FOLDERS = ['brand', 'mycourses', 'lasles', 'glottical', 'sanua', 'student-timeline'];
+    private const ALLOWED_FOLDERS = ['brand', 'mycourses', 'lasles', 'sanua', 'student-timeline', 'admin-ops-guide'];
 
     public function show(string $folder, string $file): Response
     {

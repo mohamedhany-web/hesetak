@@ -47,7 +47,7 @@ class ApplicationUrl
     }
 
     /**
-     * مسار التطبيق النسبي من SCRIPT_NAME (مثلاً /glottical/public أو فارغ على الدومين الجذر).
+     * مسار التطبيق النسبي من SCRIPT_NAME (مثلاً /hesetak/public أو فارغ على الدومين الجذر).
      */
     public static function scriptBasePath(?Request $request = null): string
     {

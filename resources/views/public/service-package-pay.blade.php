@@ -9,6 +9,8 @@
   $fawaterakIntegration = $fawaterakIntegration ?? 'iframe';
   $paypalActive = !empty($paypalUseGateway);
   $paypalMis = !empty($paypalMisconfigured);
+  $stripeActive = !empty($stripeUseGateway);
+  $stripeMis = !empty($stripeMisconfigured);
 @endphp
 
 @section('content')
@@ -27,8 +29,10 @@
     <article class="mc-card" style="padding:1.5rem">
       <div class="mc-card__foot" style="padding:1rem;background:var(--mc-surface-2);border-radius:12px;margin-bottom:1rem"><span>{{ $isRtl ? 'المبلغ' : 'Amount' }}</span><strong class="mc-card__price">{{ format_money((float) $order->amount) }}</strong></div>
 
-      @if($fawaterakMis && !$paypalActive)
+      @if($fawaterakMis && !$paypalActive && !$stripeActive)
         <div class="mc-empty" style="color:#991b1b">{{ $isRtl ? 'تم تفعيل فواتيرك لكن الربط غير مكتمل على الخادم.' : 'Fawaterak is enabled but server credentials are incomplete.' }}</div>
+      @elseif($stripeMis && !$fawaterakActive && !$paypalActive)
+        <div class="mc-empty" style="color:#991b1b">{{ $isRtl ? 'تم تفعيل Stripe لكن بيانات الاتصال ناقصة.' : 'Stripe credentials are incomplete.' }}</div>
       @elseif($fawaterakActive && $fawaterakIntegration === 'api')
         <h2>{{ $isRtl ? 'اختر وسيلة الدفع' : 'Choose a payment method' }}</h2>
         <div id="fawaterk-api-error" hidden class="mc-empty" style="color:#991b1b"></div>
@@ -43,14 +47,21 @@
         <div id="fawaterkDivId"></div>
       @endif
 
+      @if($stripeActive)
+        <form method="POST" action="{{ $stripeRoute ?? route('public.service-packages.custom.stripe', $order) }}" style="margin-top:1rem">
+          @csrf
+          <button type="submit" class="mc-btn mc-btn--lg mc-btn--outline" style="width:100%"><i class="fab fa-stripe-s"></i> {{ $isRtl ? 'الدفع عبر Stripe' : 'Pay with Stripe' }}</button>
+        </form>
+      @endif
+
       @if($paypalActive)
         <form method="POST" action="{{ $paypalRoute ?? route('public.service-packages.custom.paypal', $order) }}" style="margin-top:1rem">
           @csrf
           <button type="submit" class="mc-btn mc-btn--lg mc-btn--outline" style="width:100%"><i class="fab fa-paypal"></i> {{ $isRtl ? 'الدفع عبر PayPal' : 'Pay with PayPal' }}</button>
         </form>
-      @elseif(!$fawaterakActive && $paypalMis)
+      @elseif(!$fawaterakActive && !$stripeActive && $paypalMis)
         <div class="mc-empty" style="color:#991b1b">{{ $isRtl ? 'تم تفعيل PayPal لكن بيانات الاتصال ناقصة.' : 'PayPal credentials are incomplete.' }}</div>
-      @elseif(!$fawaterakActive && !$fawaterakMis)
+      @elseif(!$fawaterakActive && !$stripeActive && !$fawaterakMis && !$stripeMis)
         <div class="mc-empty">{{ $isRtl ? 'بوابة الدفع غير مفعلة حالياً.' : 'Payment gateway is unavailable.' }}</div>
       @endif
 

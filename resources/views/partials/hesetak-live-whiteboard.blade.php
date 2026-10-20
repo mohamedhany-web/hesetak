@@ -1257,7 +1257,7 @@
     document.getElementById('mx-download').addEventListener('click', function() {
         var link = document.createElement('a');
         link.href = wbCanvas.toDataURL({ format: 'png', multiplier: 2 });
-        link.download = 'glottical-board-' + Date.now() + '.png';
+        link.download = 'hesetak-board-' + Date.now() + '.png';
         link.click();
     });
 

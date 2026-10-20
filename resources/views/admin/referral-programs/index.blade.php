@@ -73,7 +73,8 @@
                         <tr>
                             <th class="px-4 py-3 text-start font-medium">اسم البرنامج</th>
                             <th class="px-4 py-3 text-start font-medium">الافتراضي</th>
-                            <th class="px-4 py-3 text-start font-medium">الإحالات</th>
+                            <th class="px-4 py-3 text-start font-medium">عدد الإحالات</th>
+                            <th class="px-4 py-3 text-start font-medium">الحد الأقصى</th>
                             <th class="px-4 py-3 text-start font-medium">الوضع</th>
                             <th class="px-4 py-3 text-start font-medium">مكافأة الحصص</th>
                             <th class="px-4 py-3 text-start font-medium">النطاق</th>
@@ -106,6 +107,18 @@
                                 <td class="px-4 py-3 font-mono tabular-nums text-ink">
                                     {{ number_format($program->referrals_count ?? 0) }}
                                 </td>
+                                <td class="px-4 py-3 text-xs text-muted">
+                                    @if($program->max_referrals_per_user)
+                                        <span class="font-mono tabular-nums text-ink">{{ (int) $program->max_referrals_per_user }}/مستخدم</span>
+                                    @else
+                                        <span class="font-semibold text-amber-700">غير محدود</span>
+                                    @endif
+                                    @if($program->expires_at)
+                                        <p class="mt-0.5">ينتهي {{ $program->expires_at->format('Y-m-d') }}</p>
+                                    @else
+                                        <p class="mt-0.5 text-amber-700">بلا انتهاء</p>
+                                    @endif
+                                </td>
                                 <td class="px-4 py-3">
                                     <span class="inline-flex items-center rounded-lg border border-line bg-canvas px-2.5 py-1 text-[11px] font-semibold text-ink">
                                         {{ $program->usesCredits() ? 'رصيد حصص' : 'خصم' }}
@@ -121,7 +134,7 @@
                                             @elseif($program->referrer_reward_type == 'points')
                                                 {{ number_format($program->referrer_reward_value, 0) }} نقطة
                                             @else
-                                                {{ number_format($program->referrer_reward_value, 2) }} $
+                                                {{ number_format($program->referrer_reward_value, 2) }} {{ currency_symbol() }}
                                             @endif
                                         </p>
                                     @else

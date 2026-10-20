@@ -229,6 +229,8 @@
                     <p class="text-sm text-danger">ناقص: {{ implode(' + ', $specialty['missing'] ?: ['—']) }}</p>
                 @endif
                 <p class="text-xs text-muted">مواد: {{ count($specialty['subject_ids'] ?? []) }} · مناهج: {{ implode(', ', $specialty['curriculum_types'] ?? []) ?: '—' }}</p>
+                <p class="text-sm text-ink">المراحل: {{ implode('، ', $specialty['year_names'] ?? []) ?: '—' }}</p>
+                <p class="text-sm text-ink">الصفوف: {{ implode('، ', $specialty['grade_names'] ?? []) ?: '—' }}</p>
             </article>
 
             @if(in_array($application->status, ['pending', 'rejected'], true))

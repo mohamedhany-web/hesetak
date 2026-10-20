@@ -1,7 +1,7 @@
 @extends('layouts.admin')
 
-@section('title', 'تسعير الباقات المخصصة - حصتك')
-@section('page_title', 'تسعير الباقات المخصصة')
+@section('title', __('admin.custom_package_pricing_page_title') . ' - ' . config('app.name'))
+@section('page_title', __('admin.custom_package_pricing_page_title'))
 
 @section('content')
 @php
@@ -26,7 +26,7 @@
     <section class="flex flex-wrap items-end justify-between gap-4">
         <div>
             <p class="text-xs font-medium text-muted">الباقات والأسعار · بالريال السعودي</p>
-            <h2 class="mt-1 text-2xl font-semibold text-ink">مدخلات «خصص باقتك الخاصة»</h2>
+            <h2 class="mt-1 text-2xl font-semibold text-ink">{{ __('admin.custom_package_pricing_heading') }}</h2>
             <p class="mt-1 text-sm text-muted">قاعدة الحصص الخاصة تُستخدم في مخصص الطالب: مدة شهر أو 3 أشهر × عدد حصص أسبوعي ثابت. الإجمالي = الحصص الأسبوعية × 4 × عدد الشهور.</p>
         </div>
         <a href="{{ route('public.service-packages.index') }}" target="_blank" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl border border-line bg-surface px-4 text-sm">
@@ -65,7 +65,7 @@
                             <tr class="border-t border-line">
                                 <td class="px-4 py-3">
                                     <div class="font-semibold text-ink">{{ $rule->name }}</div>
-                                    <div class="text-xs text-muted">{{ $rule->scopeLabel() }} · {{ $rule->is_active ? 'نشطة' : 'موقوفة' }}</div>
+                                    <div class="text-xs text-muted">{{ $rule->scopeLabel() }} · {{ $rule->kindLabel() }} · {{ $rule->is_active ? 'نشطة' : 'موقوفة' }}</div>
                                 </td>
                                 <td class="px-4 py-3 font-semibold">{{ number_format((float) $rule->price_per_session, 2) }} {{ currency_symbol() }}</td>
                                 <td class="px-4 py-3">{{ $rule->min_sessions }}–{{ $rule->max_sessions }} <span class="text-xs text-muted">/ خطوة {{ $rule->session_step }}</span></td>
@@ -124,9 +124,16 @@
                         </select>
                     </div>
                     <div>
+                        <label class="{{ $label }}" for="kind">نوع القاعدة *</label>
+                        <select id="kind" name="kind" class="{{ $field }}">
+                            <option value="standard" @selected(old('kind', $editRule->kind ?? 'standard') === 'standard')">قياسي (خيارات 2 و 8 حصص)</option>
+                            <option value="urgent" @selected(old('kind', $editRule->kind ?? 'standard') === 'urgent')">حصة مستعجلة اليوم</option>
+                        </select>
+                    </div>
+                    <div>
                         <label class="{{ $label }}" for="price_per_session">سعر الحصة بالريال *</label>
                         <div class="relative">
-                            <span class="absolute inset-y-0 left-3 flex items-center font-semibold text-muted">$</span>
+                            <span class="absolute inset-y-0 left-3 flex items-center font-semibold text-muted">{{ currency_symbol() }}</span>
                             <input id="price_per_session" type="number" step="0.01" min="0.01" name="price_per_session" required value="{{ old('price_per_session', $editRule->price_per_session) }}" class="{{ $field }} pl-8" dir="ltr">
                         </div>
                     </div>

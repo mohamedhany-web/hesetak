@@ -23,8 +23,22 @@ class SecurityHeadersMiddleware
             $response->headers->set('X-Frame-Options', 'SAMEORIGIN');
             $response->headers->set('X-XSS-Protection', '1; mode=block');
             $response->headers->set('Referrer-Policy', 'strict-origin-when-cross-origin');
-            // لا تضبط microphone=/camera=/display-capture=() — ذلك يمنع أذونات غرف LiveKit (ميك/كاميرا/شير).
-            $response->headers->set('Permissions-Policy', 'geolocation=(), microphone=(self), camera=(self), display-capture=(self)');
+            // Public pages: deny mic/camera so the homepage never prompts for access.
+            // Classroom / live rooms: allow same-origin capture for LiveKit.
+            $needsAv = $request->routeIs(
+                'classroom.*',
+                'student.classroom.*',
+                'instructor.classroom.*',
+                'student.live-sessions.*',
+                'instructor.live-sessions.*',
+                'admin.live-sessions.*',
+            );
+            $response->headers->set(
+                'Permissions-Policy',
+                $needsAv
+                    ? 'geolocation=(), microphone=(self), camera=(self), display-capture=(self)'
+                    : 'geolocation=(), microphone=(), camera=(), display-capture=()'
+            );
 
             $this->applyContentSecurityPolicy($response, $request);
         } catch (\Throwable $e) {

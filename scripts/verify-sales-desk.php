@@ -20,7 +20,7 @@ function assertTrue(bool $cond, string $label): void
     }
 }
 
-$user = App\Models\User::where('email', 'crm-test-sales@glottical.test')->first();
+$user = App\Models\User::where('email', 'crm-test-sales@hesetak.test')->first();
 assertTrue((bool) $user, 'sales test user exists');
 if (! $user) {
     echo "Aborted.\n";

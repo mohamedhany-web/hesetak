@@ -3,11 +3,11 @@
 return array (
   'meta' => 
   array (
-    'title' => 'Hesetak | 1:1 online tutoring, curricula & courses',
-    'description' => 'Hesetak: online private tutoring with accredited teachers, official curricula paths, and independent courses — present in Saudi Arabia, Egypt, and the United States.',
-    'keywords' => 'Hesetak, private tutoring, online tutor, Saudi curriculum, Qudurat, courses',
-    'og_title' => 'Hesetak — Tutoring · Curricula · Courses',
-    'og_description' => 'Flexible high-quality online private lessons at fair prices, with accredited teachers and easy teacher switching.',
+    'title' => 'Hesetak (حصتك) | 1:1 online tutoring, curricula & courses',
+    'description' => 'Hesetak (Arabic: حصتك, also Hissatak): online private tutoring with accredited teachers, official curricula paths, and independent courses. Announced presence: Saudi Arabia, Egypt, and the United States.',
+    'keywords' => 'Hesetak, Hissatak, حصتك, hissatak.online, private tutoring, online tutor, Saudi curriculum, Qudurat, online courses',
+    'og_title' => 'Hesetak (حصتك) — Tutoring · Curricula · Courses',
+    'og_description' => 'Flexible high-quality online private lessons on Hesetak (حصتك) at fair prices, with accredited teachers and easy teacher switching.',
   ),
   'nav' => 
   array (
@@ -674,9 +674,9 @@ return array (
       'home' => 'Home',
       'instructors' => 'Teachers',
       'curricula' => 'Curricula',
-      'courses' => 'Courses',
-      'pricing' => 'Pricing',
-      'for_teachers' => 'Teach with us',
+      'courses' => 'Independent courses',
+      'pricing' => 'Lesson packages',
+      'for_teachers' => 'Join as a teacher',
       'for_students' => 'For students',
       'contact' => 'Contact',
       'about' => 'About',
@@ -695,7 +695,7 @@ return array (
     'hero' => 
     array (
       'eyebrow' => 'Accredited teachers, 1:1 online lessons',
-      'title_html' => 'Your trusted teacher,<br>for every subject<br>on <strong class="mc-brand-word">Hesetak</strong>',
+      'title_html' => 'The right teacher for your child’s curriculum,<br>and progress you can follow',
       'lead' => 'High-quality online private lessons at fair prices, with flexible scheduling and the freedom to change teachers anytime.',
       'cta_primary' => 'Find My Teacher',
       'cta_secondary' => 'Browse Curricula',
@@ -829,10 +829,10 @@ return array (
     ),
     'packages' => 
     array (
-      'eyebrow' => 'Packages',
-      'title' => 'Hour packages that grow with you',
-      'lead' => 'Buy hour credit deducted when the lesson completes — valid with any matching teacher on the platform.',
-      'more' => 'See all packages',
+      'eyebrow' => 'Lesson packages (1:1 credits)',
+      'title' => 'Buy hours, then book your teacher',
+      'lead' => 'Hour credits for private 1:1 lessons only — deducted on booking, valid with any teacher. Not an independent course.',
+      'more' => 'Browse lesson packages',
       'items' => 
       array (
         0 => array (
@@ -996,9 +996,10 @@ return array (
       'privacy' => 'Privacy',
       'rights' => 'All rights reserved.',
       'for_students' => 'For students & parents',
-      'for_teachers' => 'For teachers',
+      'for_teachers' => 'Join as a teacher',
       'how' => 'How it works',
       'curricula' => 'Curricula',
+      'student_report' => 'Parent report',
     ),
   ),
 );

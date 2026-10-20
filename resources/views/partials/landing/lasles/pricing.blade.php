@@ -21,7 +21,7 @@
           [
             'art' => 'plan-standard.svg',
             'name' => $isRtl ? 'باقة قياسية' : 'Standard Plan',
-            'price_html' => $isRtl ? '<b>$9</b> <span>/ شهر</span>' : '<b>$9</b> <span>/ mo</span>',
+            'price_html' => $isRtl ? '<b>'.e(currency_symbol()).' 9</b> <span>/ شهر</span>' : '<b>'.e(currency_symbol()).' 9</b> <span>/ mo</span>',
             'featured' => false,
             'features' => $isRtl
               ? ['تشخيص متقدم', 'ممارسات وأدوات', 'تحديات تطبيقية', 'يعمل على كل الأجهزة', 'متابعة تقدّم']
@@ -30,7 +30,7 @@
           [
             'art' => 'plan-premium.svg',
             'name' => $isRtl ? 'باقة مميزة' : 'Premium Plan',
-            'price_html' => $isRtl ? '<b>$12</b> <span>/ شهر</span>' : '<b>$12</b> <span>/ mo</span>',
+            'price_html' => $isRtl ? '<b>'.e(currency_symbol()).' 12</b> <span>/ شهر</span>' : '<b>'.e(currency_symbol()).' 12</b> <span>/ mo</span>',
             'featured' => true,
             'features' => $isRtl
               ? ['كل ميزات القياسية', 'مكتبة كاملة', 'تحديات متقدمة', 'قياس تقدّم تفصيلي', 'دعم أولوية', 'مسارات مخصّصة']

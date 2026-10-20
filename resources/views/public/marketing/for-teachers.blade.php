@@ -64,7 +64,14 @@
       @foreach($p['faqs'] as $faq)
         <details class="mc-faq-item">
           <summary>{{ $faq['q'] }}</summary>
-          <p>{{ $faq['a'] }}</p>
+          <p>
+            {{ $faq['a'] }}
+            @if(str_contains($faq['q'], 'سعر') || str_contains($faq['q'], 'hourly') || str_contains($faq['q'], 'rate'))
+              <a href="{{ route('public.pricing') }}" class="mc-inline-link" style="display:inline;margin-inline-start:.35rem;font-weight:700;color:var(--mc-primary,#1E4E8C);text-decoration:underline">
+                {{ app()->getLocale() === 'ar' ? 'سياسة الأسعار والباقات' : 'Pricing & packages' }}
+              </a>
+            @endif
+          </p>
         </details>
       @endforeach
     </div>

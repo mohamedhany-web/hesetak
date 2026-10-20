@@ -16,6 +16,7 @@ class Referral extends Model
         'referred_id',
         'code',
         'referral_code',
+        'device_fingerprint',
         'status',
         'commission_amount',
         'commission_type',

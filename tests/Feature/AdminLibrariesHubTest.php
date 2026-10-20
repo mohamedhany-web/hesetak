@@ -258,7 +258,7 @@ class AdminLibrariesHubTest extends TestCase
             'filesystems.disks.r2' => [
                 'key' => 'test-key',
                 'secret' => 'test-secret',
-                'bucket' => 'glottical',
+                'bucket' => 'hesetak',
                 'endpoint' => 'https://account.r2.cloudflarestorage.com',
             ],
             'filesystems.lecture_materials_disk' => 'r2',

@@ -128,11 +128,11 @@
                         <div class="grid grid-cols-2 gap-3 text-sm">
                             <div>
                                 <p class="text-[11px] font-medium uppercase text-muted">إجمالي الاتفاقية</p>
-                                <p class="mt-1 font-semibold tabular-nums text-ink">{{ number_format($agreement->total_amount ?? 0, 2) }} <span class="text-xs font-normal text-muted">$</span></p>
+                                <p class="mt-1 font-semibold tabular-nums text-ink">{{ number_format($agreement->total_amount ?? 0, 2) }} <span class="text-xs font-normal text-muted">{{ currency_symbol() }}</span></p>
                             </div>
                             <div>
                                 <p class="text-[11px] font-medium uppercase text-muted">دفعة مقدمة</p>
-                                <p class="mt-1 font-semibold tabular-nums text-ink">{{ number_format($agreement->deposit_amount ?? 0, 2) }} <span class="text-xs font-normal text-muted">$</span></p>
+                                <p class="mt-1 font-semibold tabular-nums text-ink">{{ number_format($agreement->deposit_amount ?? 0, 2) }} <span class="text-xs font-normal text-muted">{{ currency_symbol() }}</span></p>
                             </div>
                             <div>
                                 <p class="text-[11px] font-medium uppercase text-muted">عدد الأقساط</p>

@@ -11,6 +11,7 @@ class EmployeeAgreement extends Model
     protected $fillable = [
         'employee_id',
         'agreement_number',
+        'version',
         'title',
         'description',
         'salary',
@@ -20,6 +21,15 @@ class EmployeeAgreement extends Model
         'contract_terms',
         'agreement_terms',
         'notes',
+        'pdf_path',
+        'signed_at',
+        'signer_name',
+        'signature_path',
+        'signed_ip',
+        'signed_user_agent',
+        'acceptance_otp_hash',
+        'acceptance_otp_expires_at',
+        'acceptance_sent_at',
         'created_by',
     ];
 
@@ -27,45 +37,44 @@ class EmployeeAgreement extends Model
         'salary' => 'decimal:2',
         'start_date' => 'date',
         'end_date' => 'date',
+        'signed_at' => 'datetime',
+        'acceptance_otp_expires_at' => 'datetime',
+        'acceptance_sent_at' => 'datetime',
+        'version' => 'integer',
     ];
 
-    /**
-     * علاقة مع الموظف
-     */
     public function employee(): BelongsTo
     {
         return $this->belongsTo(User::class, 'employee_id');
     }
 
-    /**
-     * علاقة مع منشئ الاتفاقية
-     */
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
     }
 
-    /**
-     * علاقة مع الخصومات
-     */
     public function deductions(): HasMany
     {
         return $this->hasMany(EmployeeSalaryDeduction::class, 'agreement_id');
     }
 
-    /**
-     * علاقة مع المدفوعات
-     */
     public function payments(): HasMany
     {
         return $this->hasMany(EmployeeSalaryPayment::class, 'agreement_id');
     }
 
-    /**
-     * إنشاء رقم اتفاقية تلقائي
-     */
+    public function versions(): HasMany
+    {
+        return $this->hasMany(EmployeeAgreementVersion::class, 'employee_agreement_id')->orderByDesc('version');
+    }
+
+    public function isSigned(): bool
+    {
+        return $this->signed_at !== null;
+    }
+
     public static function generateAgreementNumber(): string
     {
-        return 'EMP-AGR-' . date('Y') . '-' . str_pad(self::count() + 1, 6, '0', STR_PAD_LEFT);
+        return 'EMP-AGR-'.date('Y').'-'.str_pad((string) (self::count() + 1), 6, '0', STR_PAD_LEFT);
     }
 }

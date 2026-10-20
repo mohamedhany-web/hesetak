@@ -5,11 +5,9 @@
         img { opacity: 1 !important; visibility: visible !important; }
         .mc-trial-sheet, .popup-ad, [id*="popup"], .mc-promo-sheet { display: none !important; }
         /*
-         * Figma html-to-design يعكس إحداثيات dir=rtl مرة ثانية فيظهر التصميم LTR.
-         * أثناء الكابتشر: html يبقى dir=ltr (يُضبط في القالب) والـ CSS يحافظ على الشكل RTL.
+         * أثناء الكابتشر نُبقي dir=rtl الحقيقي من القالب (مثل الموقع).
+         * بعد الرفع لفيجما: طبّق خط عربي (Cairo / Noto Sans Arabic) وليس Inter،
+         * وtextAlign = RIGHT — وإلا الحروف تظهر مكسورة أو بوزن واحد.
          */
-        @if(app()->getLocale() === 'ar')
-        html, body { direction: rtl !important; }
-        @endif
     </style>
 @endif

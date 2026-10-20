@@ -3,27 +3,25 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Support\SearchInput;
 use App\Models\EmployeeAgreement;
-use App\Models\EmployeeSalaryDeduction;
 use App\Models\EmployeeSalaryPayment;
 use App\Models\User;
+use App\Services\EmployeeAgreementService;
 use App\Services\PublicMediaStorage;
+use App\Support\EmployeeAgreementTemplate;
+use App\Support\SearchInput;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\ValidationException;
+use Symfony\Component\HttpFoundation\Response;
 
 class EmployeeAgreementController extends Controller
 {
-    /**
-     * عرض قائمة اتفاقيات الموظفين
-     */
     public function index(Request $request)
     {
         try {
-            // Sanitization
             $employeeId = filter_var($request->input('employee_id'), FILTER_VALIDATE_INT);
             $status = strip_tags(trim($request->input('status', '')));
             $search = SearchInput::sanitizeForLike((string) $request->input('search', ''));
@@ -35,25 +33,24 @@ class EmployeeAgreementController extends Controller
                 $query->where('employee_id', $employeeId);
             }
 
-            if ($status && in_array($status, ['draft', 'active', 'suspended', 'terminated', 'completed'])) {
+            if ($status && in_array($status, ['draft', 'active', 'suspended', 'terminated', 'completed'], true)) {
                 $query->where('status', $status);
             }
 
             if ($search !== '') {
-                $query->where(function($q) use ($search) {
-                    $q->where('agreement_number', 'like', '%' . $search . '%')
-                      ->orWhere('title', 'like', '%' . $search . '%')
-                      ->orWhereHas('employee', function($q) use ($search) {
-                          $q->where('name', 'like', '%' . $search . '%')
-                            ->orWhere('email', 'like', '%' . $search . '%')
-                            ->orWhere('phone', 'like', '%' . $search . '%');
-                      });
+                $query->where(function ($q) use ($search) {
+                    $q->where('agreement_number', 'like', '%'.$search.'%')
+                        ->orWhere('title', 'like', '%'.$search.'%')
+                        ->orWhereHas('employee', function ($q) use ($search) {
+                            $q->where('name', 'like', '%'.$search.'%')
+                                ->orWhere('email', 'like', '%'.$search.'%')
+                                ->orWhere('phone', 'like', '%'.$search.'%');
+                        });
                 });
             }
 
             $agreements = $query->orderBy('created_at', 'desc')->paginate(20);
-            
-            // جلب جميع الموظفين
+
             $employees = User::where('is_employee', true)
                 ->where('is_active', true)
                 ->orderBy('name')
@@ -68,14 +65,11 @@ class EmployeeAgreementController extends Controller
 
             return view('admin.employee-agreements.index', compact('agreements', 'employees', 'stats'));
         } catch (\Exception $e) {
-            Log::error('Error loading employee agreements: ' . $e->getMessage());
+            Log::error('Error loading employee agreements: '.$e->getMessage());
             abort(500, 'حدث خطأ أثناء تحميل اتفاقيات الموظفين');
         }
     }
 
-    /**
-     * عرض صفحة إنشاء اتفاقية جديدة
-     */
     public function create()
     {
         $employees = User::where('is_employee', true)
@@ -83,31 +77,31 @@ class EmployeeAgreementController extends Controller
             ->orderBy('name')
             ->get();
 
-        return view('admin.employee-agreements.create', compact('employees'));
+        $defaultContractTerms = old('contract_terms', EmployeeAgreementTemplate::contractTerms());
+        $defaultAgreementTerms = old('agreement_terms', EmployeeAgreementTemplate::agreementTerms());
+        $defaultDescription = old('description', EmployeeAgreementTemplate::defaultDescription());
+
+        return view('admin.employee-agreements.create', compact(
+            'employees',
+            'defaultContractTerms',
+            'defaultAgreementTerms',
+            'defaultDescription',
+        ));
     }
 
-    /**
-     * حفظ اتفاقية جديدة
-     */
-    public function store(Request $request)
+    public function store(Request $request, EmployeeAgreementService $agreements)
     {
         try {
             $endDateRaw = $request->input('end_date');
             $endDateNormalized = (is_string($endDateRaw) && trim($endDateRaw) !== '') ? trim($endDateRaw) : null;
             $request->merge(['end_date' => $endDateNormalized]);
 
-            $validator = Validator::make($request->all(), [
-                'employee_id' => 'required|exists:users,id',
-                'title' => 'required|string|max:255',
-                'description' => 'nullable|string',
-                'salary' => 'required|numeric|min:0',
-                'start_date' => 'required|date',
-                'end_date' => 'nullable|date',
-                'status' => 'required|in:draft,active,suspended,terminated,completed',
-                'contract_terms' => 'nullable|string',
-                'agreement_terms' => 'nullable|string',
-                'notes' => 'nullable|string',
-            ]);
+            $status = (string) $request->input('status', 'draft');
+            $validator = Validator::make(
+                $request->all(),
+                $agreements->validationRules($status),
+                $agreements->validationMessages()
+            );
 
             if ($validator->fails()) {
                 return redirect()->route('admin.employee-agreements.create')
@@ -116,8 +110,9 @@ class EmployeeAgreementController extends Controller
             }
 
             $validated = $validator->validated();
+            $agreements->assertEmployeeIsStaff((int) $validated['employee_id']);
 
-            if (!empty($validated['end_date']) && $validated['end_date'] < $validated['start_date']) {
+            if (! empty($validated['end_date']) && $validated['end_date'] < $validated['start_date']) {
                 return redirect()->route('admin.employee-agreements.create')
                     ->withInput()
                     ->withErrors(['end_date' => ['تاريخ الانتهاء يجب أن يكون في نفس تاريخ البدء أو بعده.']]);
@@ -128,6 +123,7 @@ class EmployeeAgreementController extends Controller
             $agreement = EmployeeAgreement::create([
                 'employee_id' => $validated['employee_id'],
                 'agreement_number' => EmployeeAgreement::generateAgreementNumber(),
+                'version' => 1,
                 'title' => $validated['title'],
                 'description' => $validated['description'] ?? null,
                 'salary' => $validated['salary'],
@@ -142,50 +138,44 @@ class EmployeeAgreementController extends Controller
 
             DB::commit();
 
-            return redirect()->route('admin.employee-agreements.index')
-                ->with('success', 'تم إنشاء الاتفاقية بنجاح');
+            return redirect()->route('admin.employee-agreements.show', $agreement)
+                ->with('success', 'تم إنشاء الاتفاقية بنجاح. يمكنك معاينة PDF أو إرسالها لموافقة الموظف.');
+        } catch (ValidationException $e) {
+            if (DB::transactionLevel() > 0) {
+                DB::rollBack();
+            }
+
+            return redirect()->route('admin.employee-agreements.create')
+                ->withInput()
+                ->withErrors($e->errors());
         } catch (\Throwable $e) {
             if (DB::transactionLevel() > 0) {
                 DB::rollBack();
             }
-            $msg = $e->getMessage();
-            $file = $e->getFile();
-            $line = $e->getLine();
             Log::error('Employee agreement store FAILED', [
                 'class' => get_class($e),
-                'message' => $msg,
-                'file' => $file,
-                'line' => $line,
-                'trace' => $e->getTraceAsString(),
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
             ]);
-            $safeMsg = mb_substr($msg, 0, 500);
-            try {
-                return redirect()->to(url('/admin/employee-agreements/create'))
-                    ->with('error', 'خطأ عند الحفظ: ' . $safeMsg);
-            } catch (\Throwable $redirectEx) {
-                Log::error('Redirect failed after store error', [
-                    'message' => $redirectEx->getMessage(),
-                    'original' => $msg,
-                ]);
-                abort(500, 'خطأ عند الحفظ: ' . $safeMsg);
-            }
+
+            return redirect()->to(url('/admin/employee-agreements/create'))
+                ->with('error', 'خطأ عند الحفظ: '.mb_substr($e->getMessage(), 0, 500));
         }
     }
 
-    /**
-     * عرض تفاصيل اتفاقية
-     */
     public function show(EmployeeAgreement $employeeAgreement)
     {
         $employeeAgreement->load([
-            'employee',
+            'employee.employeeJob',
             'creator',
-            'deductions' => function($q) {
+            'versions',
+            'deductions' => function ($q) {
                 $q->orderBy('deduction_date', 'desc');
             },
-            'payments' => function($q) {
+            'payments' => function ($q) {
                 $q->orderBy('payment_date', 'desc');
-            }
+            },
         ]);
 
         $stats = [
@@ -198,9 +188,6 @@ class EmployeeAgreementController extends Controller
         return view('admin.employee-agreements.show', compact('employeeAgreement', 'stats'));
     }
 
-    /**
-     * عرض صفحة تعديل اتفاقية
-     */
     public function edit(EmployeeAgreement $employeeAgreement)
     {
         $employees = User::where('is_employee', true)
@@ -211,25 +198,16 @@ class EmployeeAgreementController extends Controller
         return view('admin.employee-agreements.edit', compact('employeeAgreement', 'employees'));
     }
 
-    /**
-     * تحديث اتفاقية
-     */
-    public function update(Request $request, EmployeeAgreement $employeeAgreement)
+    public function update(Request $request, EmployeeAgreement $employeeAgreement, EmployeeAgreementService $agreements)
     {
         $request->merge(['end_date' => trim((string) $request->input('end_date', '')) !== '' ? $request->input('end_date') : null]);
 
-        $validator = Validator::make($request->all(), [
-            'employee_id' => 'required|exists:users,id',
-            'title' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'salary' => 'required|numeric|min:0',
-            'start_date' => 'required|date',
-            'end_date' => 'nullable|date',
-            'status' => 'required|in:draft,active,suspended,terminated,completed',
-            'contract_terms' => 'nullable|string',
-            'agreement_terms' => 'nullable|string',
-            'notes' => 'nullable|string',
-        ]);
+        $status = (string) $request->input('status', $employeeAgreement->status);
+        $validator = Validator::make(
+            $request->all(),
+            $agreements->validationRules($status),
+            $agreements->validationMessages()
+        );
 
         if ($validator->fails()) {
             return redirect()->route('admin.employee-agreements.edit', $employeeAgreement)
@@ -239,35 +217,46 @@ class EmployeeAgreementController extends Controller
 
         $validated = $validator->validated();
 
-        if (!empty($validated['end_date']) && $validated['end_date'] < $validated['start_date']) {
-            return redirect()->route('admin.employee-agreements.edit', $employeeAgreement)
-                ->withInput()
-                ->withErrors(['end_date' => ['تاريخ الانتهاء يجب أن يكون في نفس تاريخ البدء أو بعده.']]);
-        }
-
         try {
+            $agreements->assertEmployeeIsStaff((int) $validated['employee_id']);
+
+            if (! empty($validated['end_date']) && $validated['end_date'] < $validated['start_date']) {
+                return redirect()->route('admin.employee-agreements.edit', $employeeAgreement)
+                    ->withInput()
+                    ->withErrors(['end_date' => ['تاريخ الانتهاء يجب أن يكون في نفس تاريخ البدء أو بعده.']]);
+            }
+
             DB::beginTransaction();
-            $employeeAgreement->update($validated);
+            $wasSigned = $employeeAgreement->isSigned();
+            $previousVersion = (int) $employeeAgreement->version;
+            $updated = $agreements->applyUpdate($employeeAgreement, $validated, auth()->user());
             DB::commit();
 
-            return redirect()->route('admin.employee-agreements.show', $employeeAgreement)
-                ->with('success', 'تم تحديث الاتفاقية بنجاح');
-        } catch (\Throwable $e) {
+            $msg = 'تم تحديث الاتفاقية بنجاح';
+            if ($wasSigned && (int) $updated->version > $previousVersion) {
+                $msg = 'تم إنشاء إصدار جديد بعد تعديل عقد موقّع. الحالة عادت إلى مسودة بانتظار موافقة الموظف مجدداً.';
+            }
+
+            return redirect()->route('admin.employee-agreements.show', $updated)
+                ->with('success', $msg);
+        } catch (ValidationException $e) {
             DB::rollBack();
-            Log::error('Employee agreement update failed: ' . $e->getMessage(), [
-                'trace' => $e->getTraceAsString(),
-                'file' => $e->getFile(),
-                'line' => $e->getLine(),
-            ]);
+
             return redirect()->route('admin.employee-agreements.edit', $employeeAgreement)
                 ->withInput()
-                ->with('error', 'خطأ عند الحفظ: ' . $e->getMessage());
+                ->withErrors($e->errors());
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            Log::error('Employee agreement update failed: '.$e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return redirect()->route('admin.employee-agreements.edit', $employeeAgreement)
+                ->withInput()
+                ->with('error', 'خطأ عند الحفظ: '.$e->getMessage());
         }
     }
 
-    /**
-     * حذف اتفاقية
-     */
     public function destroy(EmployeeAgreement $employeeAgreement)
     {
         try {
@@ -281,18 +270,49 @@ class EmployeeAgreementController extends Controller
             return redirect()->route('admin.employee-agreements.index')
                 ->with('success', 'تم حذف الاتفاقية بنجاح');
         } catch (\Throwable $e) {
-            Log::error('Error deleting employee agreement: ' . $e->getMessage(), [
-                'file' => $e->getFile(),
-                'line' => $e->getLine(),
-            ]);
+            Log::error('Error deleting employee agreement: '.$e->getMessage());
+
             return redirect()->route('admin.employee-agreements.index')
                 ->with('error', 'حدث خطأ أثناء حذف الاتفاقية');
         }
     }
 
-    /**
-     * إنشاء دفعة راتب جديدة للاتفاقية
-     */
+    public function downloadPdf(EmployeeAgreement $employeeAgreement, EmployeeAgreementService $agreements): Response
+    {
+        try {
+            $binary = $agreements->pdfBinary($employeeAgreement, true);
+            $filename = $employeeAgreement->agreement_number.'-v'.$employeeAgreement->version.'.pdf';
+
+            return response($binary, 200, [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => 'inline; filename="'.$filename.'"',
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('Employee agreement PDF failed: '.$e->getMessage());
+
+            return redirect()->route('admin.employee-agreements.show', $employeeAgreement)
+                ->with('error', 'تعذر توليد PDF: '.$e->getMessage());
+        }
+    }
+
+    public function sendForAcceptance(EmployeeAgreement $employeeAgreement, EmployeeAgreementService $agreements)
+    {
+        try {
+            $agreements->sendAcceptanceOtp($employeeAgreement);
+
+            return redirect()->route('admin.employee-agreements.show', $employeeAgreement)
+                ->with('success', 'تم إرسال رمز التأكيد إلى بريد الموظف. يمكنه الموافقة من لوحة الموظف.');
+        } catch (ValidationException $e) {
+            return redirect()->route('admin.employee-agreements.show', $employeeAgreement)
+                ->withErrors($e->errors());
+        } catch (\Throwable $e) {
+            Log::error('Send employee agreement OTP failed: '.$e->getMessage());
+
+            return redirect()->route('admin.employee-agreements.show', $employeeAgreement)
+                ->with('error', 'تعذر إرسال رمز التأكيد: '.$e->getMessage());
+        }
+    }
+
     public function storePayment(Request $request, EmployeeAgreement $employeeAgreement)
     {
         $request->validate([
@@ -304,7 +324,7 @@ class EmployeeAgreementController extends Controller
         $totalDeductions = (float) ($request->total_deductions ?? 0);
         $netSalary = $baseSalary - $totalDeductions;
 
-        $payment = EmployeeSalaryPayment::create([
+        EmployeeSalaryPayment::create([
             'employee_id' => $employeeAgreement->employee_id,
             'agreement_id' => $employeeAgreement->id,
             'payment_number' => EmployeeSalaryPayment::generatePaymentNumber(),
@@ -321,9 +341,6 @@ class EmployeeAgreementController extends Controller
             ->with('success', 'تم إنشاء دفعة الراتب. قم بالتحويل للموظف ثم ارفع إيصال التحويل من جدول المدفوعات.');
     }
 
-    /**
-     * تسجيل دفع الراتب ورفع إيصال التحويل
-     */
     public function markPaymentPaid(Request $request, EmployeeSalaryPayment $payment)
     {
         if ($payment->status !== 'pending' && $payment->status !== 'overdue') {
@@ -343,11 +360,12 @@ class EmployeeAgreementController extends Controller
             'paid_at' => now(),
             'transfer_receipt_path' => $path,
             'notes' => $request->filled('notes')
-                ? trim(($payment->notes ?? '') . "\n" . '[تحويل] ' . $request->notes)
+                ? trim(($payment->notes ?? '')."\n".'[تحويل] '.$request->notes)
                 : $payment->notes,
         ]);
 
         $agreement = $payment->agreement;
+
         return redirect()->route('admin.employee-agreements.show', $agreement)
             ->with('success', 'تم تسجيل الدفع ورفع إيصال التحويل. ستظهر المدفوعة في قسم المحاسبة للموظف.');
     }

@@ -35,9 +35,29 @@
             </div>
             <p class="mt-1 text-sm text-muted">
                 رقم الاتفاقية: <span class="font-semibold text-ink">{{ $employeeAgreement->agreement_number }}</span>
+                · الإصدار: <span class="font-semibold text-ink">{{ $employeeAgreement->version }}</span>
+                @if($employeeAgreement->isSigned())
+                    · <span class="text-emerald-700">موقّعة {{ $employeeAgreement->signed_at->format('Y-m-d H:i') }}</span>
+                @else
+                    · <span class="text-amber-700">غير موقّعة</span>
+                @endif
             </p>
         </div>
         <div class="admin-hero-actions flex flex-wrap gap-2">
+            <a href="{{ route('admin.employee-agreements.pdf', $employeeAgreement) }}" target="_blank" rel="noopener"
+               class="btn-press inline-flex h-9 items-center gap-2 rounded-xl border border-line bg-surface px-4 text-sm font-medium text-ink hover:bg-accent-soft hover:text-accent">
+                <i class="fas fa-file-pdf text-xs"></i>
+                معاينة PDF
+            </a>
+            @unless($employeeAgreement->isSigned())
+                <form method="POST" action="{{ route('admin.employee-agreements.send-acceptance', $employeeAgreement) }}" class="inline">
+                    @csrf
+                    <button type="submit" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl border border-amber-200 bg-amber-50 px-4 text-sm font-medium text-amber-800 hover:bg-amber-100">
+                        <i class="fas fa-paper-plane text-xs"></i>
+                        إرسال للموافقة (OTP)
+                    </button>
+                </form>
+            @endunless
             <a href="{{ route('admin.employee-agreements.edit', $employeeAgreement) }}"
                class="btn-press inline-flex h-9 items-center gap-2 rounded-xl bg-accent px-4 text-sm font-medium text-white hover:bg-[#0d4f4a]">
                 <i class="fas fa-edit text-xs"></i>
@@ -50,6 +70,26 @@
             </a>
         </div>
     </section>
+
+    @if(session('success'))
+        <div class="flex items-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800 shadow-soft">
+            {{ session('success') }}
+        </div>
+    @endif
+    @if(session('error'))
+        <div class="flex items-center gap-3 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-800 shadow-soft">
+            {{ session('error') }}
+        </div>
+    @endif
+    @if($errors->any())
+        <div class="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800 shadow-soft">
+            <ul class="list-inside list-disc space-y-1">
+                @foreach($errors->all() as $err)
+                    <li>{{ $err }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
 
     <section class="admin-kpi-grid grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         @foreach ($statCards as $card)
@@ -84,7 +124,7 @@
                         </div>
                         <div>
                             <p class="text-xs font-medium text-muted">الراتب</p>
-                            <p class="mt-1 text-sm font-semibold tabular-nums text-ink">{{ number_format($employeeAgreement->salary, 2) }} $</p>
+                            <p class="mt-1 text-sm font-semibold tabular-nums text-ink">{{ number_format($employeeAgreement->salary, 2) }} {{ currency_symbol() }}</p>
                         </div>
                         <div>
                             <p class="text-xs font-medium text-muted">الحالة</p>
@@ -127,8 +167,45 @@
                         <div class="mt-1 text-sm text-ink whitespace-pre-line">{{ $employeeAgreement->notes }}</div>
                     </div>
                     @endif
+                    @if($employeeAgreement->isSigned())
+                    <div class="rounded-xl border border-emerald-200 bg-emerald-50/60 p-3">
+                        <p class="text-xs font-medium text-emerald-800">الموافقة الإلكترونية</p>
+                        <p class="mt-1 text-sm text-ink">{{ $employeeAgreement->signer_name }} · {{ $employeeAgreement->signed_at->format('Y-m-d H:i') }}</p>
+                    </div>
+                    @endif
                 </div>
             </article>
+
+            @if($employeeAgreement->versions->count() > 0)
+            <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
+                <div class="border-b border-line px-4 py-4 sm:px-5">
+                    <h3 class="text-base font-semibold text-ink">سجل الإصدارات</h3>
+                    <p class="mt-0.5 text-xs text-muted">الإصدارات المؤرشفة بعد التعديل على عقد موقّع</p>
+                </div>
+                <div class="admin-table-wrap overflow-x-auto">
+                    <table class="min-w-full text-sm">
+                        <thead class="border-b border-line bg-canvas text-xs text-muted">
+                            <tr>
+                                <th class="px-4 py-3 text-start font-medium">الإصدار</th>
+                                <th class="px-4 py-3 text-start font-medium">الراتب</th>
+                                <th class="px-4 py-3 text-start font-medium">التوقيع</th>
+                                <th class="px-4 py-3 text-start font-medium">الأرشفة</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-line">
+                            @foreach($employeeAgreement->versions as $ver)
+                            <tr>
+                                <td class="px-4 py-3 font-semibold text-ink">v{{ $ver->version }}</td>
+                                <td class="px-4 py-3 tabular-nums">{{ number_format((float) $ver->salary, 2) }} {{ currency_symbol() }}</td>
+                                <td class="px-4 py-3">{{ $ver->signed_at ? $ver->signer_name.' · '.$ver->signed_at->format('Y-m-d') : '—' }}</td>
+                                <td class="px-4 py-3 text-muted">{{ $ver->created_at?->format('Y-m-d H:i') }}</td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </article>
+            @endif
 
             @if($employeeAgreement->deductions->count() > 0)
             <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
@@ -162,7 +239,7 @@
                                         @endif
                                     </span>
                                 </td>
-                                <td class="whitespace-nowrap px-4 py-3 text-sm font-semibold tabular-nums text-rose-600">{{ number_format($deduction->amount, 2) }} $</td>
+                                <td class="whitespace-nowrap px-4 py-3 text-sm font-semibold tabular-nums text-rose-600">{{ number_format($deduction->amount, 2) }} {{ currency_symbol() }}</td>
                                 <td class="whitespace-nowrap px-4 py-3 text-muted">{{ $deduction->deduction_date->format('Y-m-d') }}</td>
                             </tr>
                             @endforeach
@@ -196,7 +273,7 @@
                             <input type="date" name="payment_date" value="{{ now()->endOfMonth()->format('Y-m-d') }}" required class="{{ $fieldClass }} w-auto min-w-[160px]">
                         </div>
                         <div>
-                            <label class="{{ $labelClass }}">الخصومات ($)</label>
+                            <label class="{{ $labelClass }}">الخصومات {{ currency_unit() }}</label>
                             <input type="number" name="total_deductions" value="0" min="0" step="0.01" class="{{ $fieldClass }} w-28">
                         </div>
                         <div class="min-w-[200px] flex-1">
@@ -227,9 +304,9 @@
                             <tr class="hover:bg-canvas/40">
                                 <td class="whitespace-nowrap px-4 py-3 text-sm font-medium text-ink">{{ $payment->payment_number }}</td>
                                 <td class="whitespace-nowrap px-4 py-3 text-muted">{{ $payment->payment_date->format('Y-m-d') }}</td>
-                                <td class="whitespace-nowrap px-4 py-3 tabular-nums text-ink">{{ number_format($payment->base_salary, 2) }} $</td>
-                                <td class="whitespace-nowrap px-4 py-3 tabular-nums text-rose-600">{{ number_format($payment->total_deductions, 2) }} $</td>
-                                <td class="whitespace-nowrap px-4 py-3 text-sm font-semibold tabular-nums text-emerald-600">{{ number_format($payment->net_salary, 2) }} $</td>
+                                <td class="whitespace-nowrap px-4 py-3 tabular-nums text-ink">{{ number_format($payment->base_salary, 2) }} {{ currency_symbol() }}</td>
+                                <td class="whitespace-nowrap px-4 py-3 tabular-nums text-rose-600">{{ number_format($payment->total_deductions, 2) }} {{ currency_symbol() }}</td>
+                                <td class="whitespace-nowrap px-4 py-3 text-sm font-semibold tabular-nums text-emerald-600">{{ number_format($payment->net_salary, 2) }} {{ currency_symbol() }}</td>
                                 <td class="whitespace-nowrap px-4 py-3">
                                     <span class="inline-flex rounded-lg px-2.5 py-1 text-xs font-semibold
                                         @if($payment->status === 'paid') bg-emerald-50 text-emerald-700

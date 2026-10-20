@@ -57,8 +57,8 @@ class ProcessInstallmentPayments extends Command
                     'installment_overdue',
                     'قسط متأخر',
                     sprintf(
-                        'يوجد عليك قسط مستحق بقيمة %s $ منذ %s. يرجى السداد في أقرب وقت لتجنب إيقاف الخدمة.',
-                        number_format($payment->amount, 2),
+                        'يوجد عليك قسط مستحق بقيمة %s منذ %s. يرجى السداد في أقرب وقت لتجنب إيقاف الخدمة.',
+                        format_money($payment->amount),
                         $payment->due_date->format('d/m/Y')
                     ),
                     'urgent',
@@ -87,8 +87,8 @@ class ProcessInstallmentPayments extends Command
 
             $days = $today->diffInDays($payment->due_date);
             $message = $days === 0
-                ? sprintf('اليوم هو موعد سداد قسط بقيمة %s $. يرجى السداد لتجنب التأخير.', number_format($payment->amount, 2))
-                : sprintf('تبقى %d يوم/أيام على موعد سداد قسط بقيمة %s $ (%s).', $days, number_format($payment->amount, 2), $payment->due_date->format('d/m/Y'));
+                ? sprintf('اليوم هو موعد سداد قسط بقيمة %s. يرجى السداد لتجنب التأخير.', format_money($payment->amount))
+                : sprintf('تبقى %d يوم/أيام على موعد سداد قسط بقيمة %s (%s).', $days, format_money($payment->amount), $payment->due_date->format('d/m/Y'));
 
             $this->sendNotification(
                 $agreement,

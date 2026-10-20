@@ -90,8 +90,8 @@ class AdminLiveSessionFlowTest extends TestCase
             'livekit.provider' => 'livekit',
             'livekit.livekit.api_key' => 'APItestkey',
             'livekit.livekit.api_secret' => 'test-secret-value-1234567890',
-            'livekit.livekit.url' => 'wss://live.glottical.com',
-            'livekit.livekit.host' => 'live.glottical.com',
+            'livekit.livekit.url' => 'wss://live.hissatak.online',
+            'livekit.livekit.host' => 'live.hissatak.online',
             'currency.code' => 'SAR',
         ]);
     }
@@ -123,7 +123,7 @@ class AdminLiveSessionFlowTest extends TestCase
 
         LiveServer::create([
             'name' => 'Hissatak Meeting',
-            'domain' => 'live.glottical.com',
+            'domain' => 'live.hissatak.online',
             'provider' => 'livekit',
             'status' => 'active',
         ]);
@@ -161,7 +161,7 @@ class AdminLiveSessionFlowTest extends TestCase
         $admin = $this->admin();
         $server = LiveServer::create([
             'name' => 'Hissatak Meeting',
-            'domain' => 'live.glottical.com',
+            'domain' => 'live.hissatak.online',
             'provider' => 'livekit',
             'status' => 'active',
         ]);

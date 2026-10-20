@@ -135,14 +135,14 @@
                         @if($referralProgram->discount_type == 'percentage')
                             {{ number_format($referralProgram->discount_value, 0) }}%
                         @else
-                            {{ number_format($referralProgram->discount_value, 2) }} $
+                            {{ number_format($referralProgram->discount_value, 2) }} {{ currency_symbol() }}
                         @endif
                     </dd>
                 </div>
                 @if($referralProgram->maximum_discount)
                     <div class="flex items-center justify-between gap-4 px-4 py-3 sm:px-5">
                         <dt class="text-sm text-muted">الحد الأقصى للخصم</dt>
-                        <dd class="text-sm font-semibold tabular-nums text-ink">{{ number_format($referralProgram->maximum_discount, 2) }} $</dd>
+                        <dd class="text-sm font-semibold tabular-nums text-ink">{{ number_format($referralProgram->maximum_discount, 2) }} {{ currency_symbol() }}</dd>
                     </div>
                 @endif
                 <div class="flex items-center justify-between gap-4 px-4 py-3 sm:px-5">
@@ -162,7 +162,7 @@
                             @elseif($referralProgram->referrer_reward_type == 'points')
                                 {{ number_format($referralProgram->referrer_reward_value, 0) }} نقطة
                             @else
-                                {{ number_format($referralProgram->referrer_reward_value, 2) }} $
+                                {{ number_format($referralProgram->referrer_reward_value, 2) }} {{ currency_symbol() }}
                             @endif
                         </dd>
                     </div>
@@ -205,7 +205,7 @@
                                     @if($referralProgram->usesCredits())
                                         حصص: <span class="font-semibold tabular-nums text-ink">{{ (int) $referral->referred_units_granted + (int) $referral->referrer_units_granted }}</span>
                                     @else
-                                        الخصم: <span class="font-semibold tabular-nums text-ink">{{ number_format($referral->discount_amount ?? 0, 2) }} $</span>
+                                        الخصم: <span class="font-semibold tabular-nums text-ink">{{ number_format($referral->discount_amount ?? 0, 2) }} {{ currency_symbol() }}</span>
                                     @endif
                                 </span>
                                 <span>{{ $referral->created_at->format('d/m/Y') }}</span>

@@ -83,7 +83,7 @@
                 </div>
 
                 <div>
-                    <label class="{{ $labelClass }}" for="balance">الرصيد الابتدائي ($)</label>
+                    <label class="{{ $labelClass }}" for="balance">الرصيد الابتدائي {{ currency_unit() }}</label>
                     <input id="balance" type="number" name="balance" value="{{ old('balance', 0) }}" step="0.01" min="0" class="{{ $fieldClass }}" placeholder="0">
                     @error('balance')
                         <p class="mt-1 text-xs text-rose-600">{{ $message }}</p>

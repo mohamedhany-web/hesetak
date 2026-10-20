@@ -15,7 +15,7 @@
         ['label' => 'إجمالي القيم الممولة', 'value' => number_format($stats['total_amount'] ?? 0, 2) . ' ' . currency_symbol(), 'icon' => 'fa-coins', 'tone' => 'accent', 'note' => 'إجمالي المبالغ التي تغطيها الخطط الحالية'],
         ['label' => 'إجمالي الدفعات المقدمة', 'value' => number_format($stats['total_deposit'] ?? 0, 2) . ' ' . currency_symbol(), 'icon' => 'fa-piggy-bank', 'tone' => 'metal', 'note' => 'قيمة الدفعات المقدمة المطلوبة عند الاشتراك'],
         ['label' => 'متوسط عدد الأقساط', 'value' => number_format($stats['average_installments'] ?? 0, 1), 'icon' => 'fa-chart-area', 'tone' => 'accent', 'note' => 'متوسط الأقساط لكل خطة تمويلية'],
-        ['label' => 'خطط جديدة هذا الشهر', 'value' => number_format($monthlyNew ?? 0), 'icon' => 'fa-calendar-plus', 'tone' => 'muted', 'note' => 'بقيمة ' . number_format($monthlyAmount ?? 0, 2) . ' $ منذ بداية الشهر'],
+        ['label' => 'خطط جديدة هذا الشهر', 'value' => number_format($monthlyNew ?? 0), 'icon' => 'fa-calendar-plus', 'tone' => 'muted', 'note' => 'بقيمة ' . number_format($monthlyAmount ?? 0, 2) . ' ' . currency_symbol() . ' منذ بداية الشهر'],
     ];
     $toneClass = [
         'accent' => 'bg-accent-soft text-accent',
@@ -102,7 +102,7 @@
                                     <p class="text-xs text-muted">{{ number_format($item->plans_count) }} خطة</p>
                                 </div>
                             </div>
-                            <p class="text-sm font-semibold tabular-nums text-ink">{{ number_format($item->total_amount, 2) }} <span class="text-xs font-normal text-muted">$</span></p>
+                            <p class="text-sm font-semibold tabular-nums text-ink">{{ number_format($item->total_amount, 2) }} <span class="text-xs font-normal text-muted">{{ currency_symbol() }}</span></p>
                         </div>
                     @empty
                         <p class="text-sm text-muted">لا توجد بيانات للتوزيع حالياً.</p>
@@ -124,7 +124,7 @@
                             </div>
                             <p class="mt-1 text-xs text-accent">{{ $plan->course->title ?? 'خطة عامة' }}</p>
                             <div class="mt-3 flex items-center justify-between">
-                                <span class="text-sm font-semibold tabular-nums text-ink">{{ number_format($plan->total_amount ?? 0, 2) }} <span class="text-xs font-normal text-muted">$</span></span>
+                                <span class="text-sm font-semibold tabular-nums text-ink">{{ number_format($plan->total_amount ?? 0, 2) }} <span class="text-xs font-normal text-muted">{{ currency_symbol() }}</span></span>
                                 <a href="{{ route('admin.installments.plans.show', $plan) }}" class="text-xs font-medium text-accent hover:underline">
                                     تفاصيل <i class="fas fa-arrow-left text-[10px]"></i>
                                 </a>
@@ -152,7 +152,7 @@
                         <p class="mt-1 text-xs text-accent">{{ $recent->course->title ?? 'خطة عامة' }}</p>
                         <p class="mt-1 text-xs text-muted">{{ number_format($recent->installments_count) }} دفعة · كل {{ $recent->frequency_interval }} {{ $unitLabels[$recent->frequency_unit] ?? $recent->frequency_unit }}</p>
                         <div class="mt-3 flex items-center justify-between">
-                            <span class="text-sm font-semibold tabular-nums text-ink">{{ number_format($recent->total_amount ?? 0, 2) }} <span class="text-xs font-normal text-muted">$</span></span>
+                            <span class="text-sm font-semibold tabular-nums text-ink">{{ number_format($recent->total_amount ?? 0, 2) }} <span class="text-xs font-normal text-muted">{{ currency_symbol() }}</span></span>
                             <a href="{{ route('admin.installments.plans.show', $recent) }}" class="text-xs font-medium text-accent hover:underline">
                                 عرض سريع <i class="fas fa-arrow-left text-[10px]"></i>
                             </a>
@@ -203,11 +203,11 @@
                         <div class="grid grid-cols-2 gap-3 text-sm">
                             <div>
                                 <p class="text-[11px] font-medium uppercase text-muted">إجمالي المبلغ</p>
-                                <p class="mt-1 font-semibold tabular-nums text-ink">{{ number_format($plan->total_amount ?? 0, 2) }} <span class="text-xs font-normal text-muted">$</span></p>
+                                <p class="mt-1 font-semibold tabular-nums text-ink">{{ number_format($plan->total_amount ?? 0, 2) }} <span class="text-xs font-normal text-muted">{{ currency_symbol() }}</span></p>
                             </div>
                             <div>
                                 <p class="text-[11px] font-medium uppercase text-muted">دفعة مقدمة</p>
-                                <p class="mt-1 font-semibold tabular-nums text-ink">{{ number_format($plan->deposit_amount ?? 0, 2) }} <span class="text-xs font-normal text-muted">$</span></p>
+                                <p class="mt-1 font-semibold tabular-nums text-ink">{{ number_format($plan->deposit_amount ?? 0, 2) }} <span class="text-xs font-normal text-muted">{{ currency_symbol() }}</span></p>
                             </div>
                             <div>
                                 <p class="text-[11px] font-medium uppercase text-muted">عدد الأقساط</p>

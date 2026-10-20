@@ -13,6 +13,46 @@ use Illuminate\Support\Str;
 
 class ReferralService
 {
+    public const DEVICE_COOKIE = 'hesetak_device';
+
+    /**
+     * إنشاء أو قراءة معرّف جهاز ثابت في كوكي المتصفح (لمكافحة تكرار الإحالة).
+     */
+    public function resolveDeviceFingerprint(?string $incoming = null): string
+    {
+        $incoming = trim((string) $incoming);
+        if ($incoming !== '' && preg_match('/^[A-Za-z0-9_-]{8,64}$/', $incoming)) {
+            return $incoming;
+        }
+
+        $fromCookie = trim((string) request()->cookie(self::DEVICE_COOKIE, ''));
+        if ($fromCookie !== '' && preg_match('/^[A-Za-z0-9_-]{8,64}$/', $fromCookie)) {
+            return $fromCookie;
+        }
+
+        return Str::lower(Str::random(32));
+    }
+
+    public function queueDeviceFingerprintCookie(string $fingerprint): \Symfony\Component\HttpFoundation\Cookie
+    {
+        return cookie(
+            self::DEVICE_COOKIE,
+            $fingerprint,
+            60 * 24 * 400,
+            '/',
+            null,
+            (bool) config('session.secure', false),
+            true,
+            false,
+            'lax'
+        );
+    }
+
+    public static function normalizePhone(?string $phone): string
+    {
+        return preg_replace('/\D+/', '', (string) $phone) ?: '';
+    }
+
     /**
      * إنشاء كود إحالة للمستخدم
      */
@@ -36,8 +76,12 @@ class ReferralService
     /**
      * معالجة إحالة مستخدم جديد
      */
-    public function processReferral(User $referrer, User $referred, ?string $referralCode = null): ?Referral
-    {
+    public function processReferral(
+        User $referrer,
+        User $referred,
+        ?string $referralCode = null,
+        ?string $deviceFingerprint = null
+    ): ?Referral {
         $program = ReferralProgram::currentForNewReferrals();
 
         if (! $program) {
@@ -49,11 +93,48 @@ class ReferralService
         }
 
         if (! $program->canUserRefer($referrer->id)) {
+            Log::info('Referral blocked: max referrals reached', [
+                'referrer_id' => $referrer->id,
+                'program_id' => $program->id,
+            ]);
+
             return null;
         }
 
-        if (! $program->allow_self_referral && $referrer->id === $referred->id) {
+        // إحالة ذاتية ممنوعة دائماً (حتى لو بقي العلم قديماً في قاعدة البيانات).
+        if ((int) $referrer->id === (int) $referred->id) {
+            Log::info('Referral blocked: self referral', ['user_id' => $referrer->id]);
+
             return null;
+        }
+
+        $referrerPhone = self::normalizePhone($referrer->phone);
+        $referredPhone = self::normalizePhone($referred->phone);
+        if ($referrerPhone !== '' && $referrerPhone === $referredPhone) {
+            Log::info('Referral blocked: same phone', [
+                'referrer_id' => $referrer->id,
+                'referred_id' => $referred->id,
+            ]);
+
+            return null;
+        }
+
+        $deviceFingerprint = $deviceFingerprint
+            ? $this->resolveDeviceFingerprint($deviceFingerprint)
+            : null;
+
+        if ($deviceFingerprint) {
+            $deviceUsed = Referral::query()
+                ->where('device_fingerprint', $deviceFingerprint)
+                ->exists();
+            if ($deviceUsed) {
+                Log::info('Referral blocked: duplicate device', [
+                    'referrer_id' => $referrer->id,
+                    'referred_id' => $referred->id,
+                ]);
+
+                return null;
+            }
         }
 
         $existingForReferred = Referral::where('referred_id', $referred->id)->first();
@@ -61,14 +142,24 @@ class ReferralService
             return $existingForReferred;
         }
 
-        $referral = Referral::create([
+        $payload = [
             'referral_program_id' => $program->id,
             'referrer_id' => $referrer->id,
             'referred_id' => $referred->id,
-            'code' => $referrer->referral_code,
             'referral_code' => $referrer->referral_code,
             'status' => Referral::STATUS_PENDING,
-        ]);
+            'device_fingerprint' => $deviceFingerprint,
+            'metadata' => array_filter([
+                'device_fingerprint' => $deviceFingerprint,
+                'referrer_phone_norm' => $referrerPhone !== '' ? $referrerPhone : null,
+                'referred_phone_norm' => $referredPhone !== '' ? $referredPhone : null,
+            ]),
+        ];
+        if (\Illuminate\Support\Facades\Schema::hasColumn('referrals', 'code')) {
+            $payload['code'] = $referrer->referral_code;
+        }
+
+        $referral = Referral::create($payload);
 
         $referred->update([
             'referred_by' => $referrer->id,

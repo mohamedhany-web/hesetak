@@ -10,6 +10,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
 
@@ -62,23 +63,31 @@ class TutorApplicationActivationService
                 'profile_image' => $application->photo_path ?: $user->profile_image,
             ])->save();
 
+            $profilePayload = [
+                'headline' => $application->headline,
+                'bio' => $application->bio,
+                'experience' => $application->experience,
+                'skills' => self::skillsFromExperience($application),
+                'photo_path' => $application->photo_path,
+                'teaching_subject_ids' => $application->teaching_subject_ids ?? [],
+                'curriculum_types' => $application->curriculum_types ?? [],
+                'status' => InstructorProfile::STATUS_APPROVED,
+                'submitted_at' => $application->created_at ?? now(),
+                'reviewed_at' => now(),
+                'reviewed_by' => $admin->id,
+                'rejection_reason' => null,
+                'social_links' => [],
+            ];
+            if (Schema::hasColumn('instructor_profiles', 'academic_year_ids')) {
+                $profilePayload['academic_year_ids'] = $application->academic_year_ids ?? [];
+            }
+            if (Schema::hasColumn('instructor_profiles', 'academic_grade_ids')) {
+                $profilePayload['academic_grade_ids'] = $application->academic_grade_ids ?? [];
+            }
+
             $profile = InstructorProfile::updateOrCreate(
                 ['user_id' => $user->id],
-                [
-                    'headline' => $application->headline,
-                    'bio' => $application->bio,
-                    'experience' => $application->experience,
-                    'skills' => self::skillsFromExperience($application),
-                    'photo_path' => $application->photo_path,
-                    'teaching_subject_ids' => $application->teaching_subject_ids ?? [],
-                    'curriculum_types' => $application->curriculum_types ?? [],
-                    'status' => InstructorProfile::STATUS_APPROVED,
-                    'submitted_at' => $application->created_at ?? now(),
-                    'reviewed_at' => now(),
-                    'reviewed_by' => $admin->id,
-                    'rejection_reason' => null,
-                    'social_links' => [],
-                ]
+                $profilePayload
             );
 
             $application->update([

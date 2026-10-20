@@ -134,8 +134,8 @@
                                 <span class="inline-flex rounded-lg px-2.5 py-1 text-xs font-medium {{ $typeBadge['classes'] }}">{{ $typeBadge['label'] }}</span>
                             </td>
                             <td class="px-4 py-3 font-semibold tabular-nums text-ink">
-                                {{ number_format($transaction->amount, 2) }}
-                                <span class="text-xs font-normal text-muted">$</span>
+                                {{ format_money($transaction->amount) }}
+                                <span class="text-xs font-normal text-muted">{{ currency_symbol() }}</span>
                             </td>
                             <td class="px-4 py-3">
                                 <span class="inline-flex rounded-lg px-2.5 py-1 text-xs font-medium {{ $statusBadge['classes'] }}">{{ $statusBadge['label'] }}</span>

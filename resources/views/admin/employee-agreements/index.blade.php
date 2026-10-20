@@ -28,9 +28,9 @@
         ],
         [
             'label' => 'إجمالي الرواتب',
-            'value' => number_format($stats['total_salary'], 2),
+            'value' => format_money($stats['total_salary']),
             'icon' => 'fas fa-money-bill-wave',
-            'description' => '$ — مجموع الرواتب الشهرية',
+            'description' => currency_symbol() . ' — مجموع الرواتب الشهرية',
         ],
     ];
 @endphp
@@ -171,7 +171,7 @@
                                 </div>
                             </td>
                             <td class="px-4 py-3">
-                                <div class="font-semibold tabular-nums text-ink">{{ number_format($agreement->salary ?? 0, 2) }} $</div>
+                                <div class="font-semibold tabular-nums text-ink">{{ number_format($agreement->salary ?? 0, 2) }} {{ currency_symbol() }}</div>
                                 <div class="text-xs text-muted">شهرياً</div>
                             </td>
                             <td class="px-4 py-3">

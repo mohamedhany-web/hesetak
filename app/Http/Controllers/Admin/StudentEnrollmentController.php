@@ -72,9 +72,8 @@ class StudentEnrollmentController extends Controller
         $enrollments = $query->latest('enrolled_at')->paginate(20);
 
         // البيانات المساعدة للفلاتر - استخدام الكاش
-        $courses = Cache::remember('active_courses_list', now()->addHours(1), function () {
-            return AdvancedCourse::active()->with(['academicYear', 'academicSubject'])->get();
-        });
+        $courses = AdvancedCourse::active()->with(['academicYear', 'academicSubject'])->orderBy('title')->get();
+        Cache::put('active_courses_list', $courses, now()->addHours(1));
         
         // استخدام خدمة الكاش للإحصائيات
         $statsService = app(\App\Services\StatisticsCacheService::class);
@@ -106,12 +105,11 @@ class StudentEnrollmentController extends Controller
             }
         }
 
-        $courses = Cache::remember('active_courses_list', now()->addHours(1), function () {
-            return AdvancedCourse::active()
-                ->with(['academicYear', 'academicSubject'])
-                ->orderBy('title')
-                ->get();
-        });
+        $courses = AdvancedCourse::active()
+            ->with(['academicYear', 'academicSubject'])
+            ->orderBy('title')
+            ->get();
+        Cache::put('active_courses_list', $courses, now()->addHours(1));
 
         return view('admin.online-enrollments.create', compact('students', 'courses'));
     }

@@ -9,7 +9,7 @@
 <div class="mc-tp-free" id="mc-tp-free" data-instructor-id="{{ $instructorUser->id }}" data-instructor-uuid="{{ $instructorUser->uuid }}">
   <div class="mc-tp-free__head">
     <span class="mc-package__badge">{{ $isRtl ? 'بعد الاشتراك' : 'After subscribe' }}</span>
-    <h4>{{ $isRtl ? 'احجز حصة تجريبية مجانية مع هذا المعلم' : 'Book a free trial with this teacher' }}</h4>
+    <h3 class="mc-tp-free__title">{{ $isRtl ? 'احجز حصة تعريفية مجانية مع هذا المعلم' : 'Book a free intro session with this teacher' }}</h3>
     <p>{{ $isRtl
       ? 'حصة تعريفية بدون خصم من رصيد باقتك — تتعرّف على أسلوب المعلم قبل تثبيت جدولك.'
       : 'An intro session that does not use your package credits — try the teacher before locking a schedule.' }}</p>

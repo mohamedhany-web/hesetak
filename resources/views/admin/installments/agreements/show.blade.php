@@ -96,7 +96,7 @@
                     <div>
                         <dt class="text-xs font-medium text-muted">الكورس</dt>
                         <dd class="mt-1 text-sm font-semibold text-ink">{{ $course->title ?? 'خطة عامة' }}</dd>
-                        <dd class="mt-0.5 text-xs text-muted">سعر الكورس: {{ number_format($course->price ?? 0, 2) }} $</dd>
+                        <dd class="mt-0.5 text-xs text-muted">سعر الكورس: {{ number_format($course->price ?? 0, 2) }} {{ currency_symbol() }}</dd>
                     </div>
                     <div>
                         <dt class="text-xs font-medium text-muted">الخطة</dt>
@@ -145,7 +145,7 @@
                                 <tr class="hover:bg-canvas/40">
                                     <td class="px-4 py-3 font-semibold tabular-nums text-ink">{{ $payment->sequence_number }}</td>
                                     <td class="px-4 py-3 tabular-nums text-ink-soft">{{ optional($payment->due_date)->format('Y-m-d') }}</td>
-                                    <td class="px-4 py-3 font-semibold tabular-nums text-ink">{{ number_format($payment->amount ?? 0, 2) }} <span class="text-xs font-normal text-muted">$</span></td>
+                                    <td class="px-4 py-3 font-semibold tabular-nums text-ink">{{ number_format($payment->amount ?? 0, 2) }} <span class="text-xs font-normal text-muted">{{ currency_symbol() }}</span></td>
                                     <td class="px-4 py-3">
                                         <span class="inline-flex rounded-lg px-2.5 py-1 text-xs font-medium {{ $payBadge }}">
                                             {{ $paymentStatuses[$payment->status] ?? $payment->status }}
@@ -184,11 +184,11 @@
                 <ul class="space-y-3 p-4 text-sm text-ink-soft sm:p-5">
                     <li class="flex items-start gap-2">
                         <i class="fas fa-wallet mt-0.5 text-accent"></i>
-                        مجموع ما تم دفعه حتى الآن: {{ number_format($paidTotal, 2) }} $
+                        مجموع ما تم دفعه حتى الآن: {{ number_format($paidTotal, 2) }} {{ currency_symbol() }}
                     </li>
                     <li class="flex items-start gap-2">
                         <i class="fas fa-balance-scale mt-0.5 text-accent"></i>
-                        المبلغ المتبقي: {{ number_format($remainingTotal, 2) }} $
+                        المبلغ المتبقي: {{ number_format($remainingTotal, 2) }} {{ currency_symbol() }}
                     </li>
                     <li class="flex items-start gap-2">
                         <i class="fas fa-exclamation-triangle mt-0.5 text-metal"></i>

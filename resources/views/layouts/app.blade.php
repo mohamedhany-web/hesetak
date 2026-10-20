@@ -9,6 +9,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
+    <meta name="robots" content="noindex, nofollow">
     <title>{{ config('app.name') }} - @yield('title', __('auth.dashboard'))</title>
 
     @include('partials.favicon-links')
