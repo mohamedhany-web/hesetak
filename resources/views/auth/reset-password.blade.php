@@ -56,6 +56,7 @@
           <span x-text="showPassword ? '{{ __('auth.hide') }}' : '{{ __('auth.show') }}'"></span>
         </button>
       </div>
+      <p class="lasles-auth-hint">{{ __('auth.password_rules_hint') }}</p>
       @error('password')<p class="lasles-auth-error">{{ $message }}</p>@enderror
     </div>
 

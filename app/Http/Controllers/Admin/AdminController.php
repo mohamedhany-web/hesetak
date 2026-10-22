@@ -928,8 +928,7 @@ class AdminController extends Controller
             'password' => [
                 'required',
                 'string',
-                'min:8',
-                'max:255',
+                \Illuminate\Validation\Rules\Password::defaults(),
             ],
             'role' => [
                 'required',
@@ -1147,7 +1146,7 @@ class AdminController extends Controller
                 'role' => 'required|in:super_admin,admin,instructor,teacher,student,parent,employee',
                 'is_active' => 'required|boolean',
                 'bio' => 'nullable|string|max:1000',
-                'password' => 'nullable|string|min:8|max:255',
+                'password' => ['nullable', 'string', \Illuminate\Validation\Rules\Password::defaults()],
             ]);
 
             if ($validator->fails()) {

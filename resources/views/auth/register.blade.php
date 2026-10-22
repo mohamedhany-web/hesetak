@@ -134,9 +134,9 @@
 
       <div class="lasles-auth-field" id="preferred-subjects-field" x-show="hasSubjects" x-cloak>
         <label>{{ __('auth.preferred_subjects') }}</label>
-        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(9.5rem,1fr));gap:.45rem;margin-top:.35rem">
+        <div class="lasles-auth-choices">
           <template x-for="subject in subjects" :key="subject.id">
-            <label style="display:flex;align-items:center;gap:.4rem;font-size:.9rem;border:1px solid #d7e0ec;border-radius:.55rem;padding:.4rem .55rem;cursor:pointer">
+            <label class="lasles-auth-choice">
               <input type="checkbox" name="preferred_subject_ids[]" :value="subject.id" x-model="selectedSubjects">
               <span x-text="subject.name"></span>
             </label>
@@ -213,6 +213,7 @@
           <span x-text="showPassword ? '{{ __('auth.hide') }}' : '{{ __('auth.show') }}'"></span>
         </button>
       </div>
+      <p class="lasles-auth-hint">{{ __('auth.password_rules_hint') }}</p>
       @error('password')<p class="lasles-auth-error">{{ $message }}</p>@enderror
     </div>
 

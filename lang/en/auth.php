@@ -7,6 +7,7 @@ return [
     'email' => 'Email',
     'password' => 'Password',
     'password_confirmation' => 'Confirm Password',
+    'password_rules_hint' => 'At least 8 characters, with both letters and numbers.',
     'remember' => 'Remember me',
     'forgot_password' => 'Forgot your password?',
     'forgot_password_eyebrow' => 'Account recovery',

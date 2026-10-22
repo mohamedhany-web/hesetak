@@ -333,7 +333,7 @@ class TeacherControlController extends Controller
             'bio' => ['nullable', 'string', 'max:1000'],
             'role' => ['required', Rule::in(['instructor', 'teacher'])],
             'is_active' => ['nullable', 'boolean'],
-            'password' => ['nullable', 'string', 'min:8', 'max:255'],
+            'password' => ['nullable', 'string', \Illuminate\Validation\Rules\Password::defaults()],
         ]);
 
         $payload = [

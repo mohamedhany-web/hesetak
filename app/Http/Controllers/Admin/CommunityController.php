@@ -376,7 +376,7 @@ class CommunityController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
-            'password' => 'required|string|min:8|confirmed',
+            'password' => ['required', 'string', 'confirmed', \Illuminate\Validation\Rules\Password::defaults()],
             'phone' => 'nullable|string|max:50',
             'contributor_type' => 'required|in:data,ai',
         ], [

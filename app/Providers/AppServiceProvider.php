@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Validation\Rules\Password;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -70,6 +71,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        Password::defaults(fn () => Password::min(8)->max(72)->letters()->numbers());
+
         /*
          | مهم: وسيط throttle الافتراضي (مثل throttle:90,1) يستخدم نفس مفتاح العداد لكل المسارات
          | للمستخدم المسجّل (معرّف المستخدم فقط). طلبات poll الإشعارات كل 5 ثوانٍ تملأ ذلك العداد

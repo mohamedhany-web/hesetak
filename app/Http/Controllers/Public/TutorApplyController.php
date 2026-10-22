@@ -41,7 +41,7 @@ class TutorApplyController extends Controller
             'full_name' => ['required', 'string', 'max:160'],
             'email' => ['required', 'email', 'max:190', 'unique:users,email'],
             'phone' => ['required', 'string', 'max:40', 'unique:users,phone'],
-            'password' => ['required', 'string', 'min:8', 'max:72', 'confirmed'],
+            'password' => ['required', 'string', 'confirmed', \Illuminate\Validation\Rules\Password::defaults()],
         ], [
             'full_name.required' => 'الاسم الكامل مطلوب.',
             'email.required' => 'البريد الإلكتروني مطلوب.',

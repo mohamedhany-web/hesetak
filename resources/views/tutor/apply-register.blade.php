@@ -87,7 +87,7 @@
             <div class="mc-ta-field">
               <label for="password">{{ $isRtl ? 'كلمة المرور' : 'Password' }} <span class="mc-ta-req">*</span></label>
               <input class="mc-input" id="password" type="password" name="password" required minlength="8" autocomplete="new-password">
-              <p class="mc-ta-help">{{ $isRtl ? '8 أحرف على الأقل' : 'At least 8 characters' }}</p>
+              <p class="mc-ta-help">{{ __('auth.password_rules_hint') }}</p>
               @error('password')<p class="mc-ta-err">{{ $message }}</p>@enderror
             </div>
 

@@ -46,7 +46,7 @@ class ProfileController extends Controller
             ])),
             'preferred_curriculum_type' => 'nullable|string|max:40',
             'current_password' => 'nullable|string',
-            'password' => 'nullable|string|min:8|confirmed',
+            'password' => ['nullable', 'string', 'confirmed', \Illuminate\Validation\Rules\Password::defaults()],
             'profile_image' => 'nullable|image|max:'.config('upload_limits.max_upload_kb'),
         ], [
             'name.required' => 'الاسم مطلوب',
@@ -154,7 +154,7 @@ class ProfileController extends Controller
         $validated = $request->validate([
             'child_name' => ['required', 'string', 'max:255'],
             'child_email' => ['required', 'email', 'max:255', 'unique:users,email'],
-            'child_password' => ['required', 'string', 'min:8', 'confirmed'],
+            'child_password' => ['required', 'string', 'confirmed', \Illuminate\Validation\Rules\Password::defaults()],
             'child_academic_year_id' => ['required', 'integer', 'exists:academic_years,id'],
             'child_academic_grade_id' => ['nullable', 'integer'],
             'child_preferred_curriculum_type' => ['required', 'string', 'max:40'],

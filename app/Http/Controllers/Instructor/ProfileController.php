@@ -35,7 +35,7 @@ class ProfileController extends Controller
             'email' => 'nullable|email|max:255|unique:users,email,' . $user->id,
             'bio' => 'nullable|string|max:2000',
             'current_password' => 'nullable|string',
-            'password' => 'nullable|string|min:8|confirmed',
+            'password' => ['nullable', 'string', 'confirmed', \Illuminate\Validation\Rules\Password::defaults()],
             'profile_image' => 'nullable|image|max:'.config('upload_limits.max_upload_kb'),
             'timezone' => AppTimezone::inputRules(true),
         ], [

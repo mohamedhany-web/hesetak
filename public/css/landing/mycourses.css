@@ -2017,6 +2017,38 @@ body.mc-drawer-open {
   font: inherit;
   transition: border-color .2s ease, box-shadow .2s ease;
 }
+.lasles-auth-field input[type="checkbox"],
+.lasles-auth-field input[type="radio"] {
+  width: 1.05rem;
+  height: 1.05rem;
+  padding: 0;
+  border-radius: 4px;
+  flex-shrink: 0;
+  accent-color: var(--mc-navy);
+}
+.lasles-auth-choices {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr));
+  gap: .45rem;
+  margin-top: .35rem;
+}
+.lasles-auth-field .lasles-auth-choice {
+  display: flex;
+  align-items: center;
+  gap: .45rem;
+  margin: 0;
+  padding: .45rem .6rem;
+  border: 1px solid var(--mc-line);
+  border-radius: .55rem;
+  font-size: .9rem;
+  font-weight: 600;
+  color: var(--mc-ink);
+  cursor: pointer;
+}
+.lasles-auth-field .lasles-auth-choice:has(input:checked) {
+  border-color: var(--mc-navy);
+  background: rgba(30, 78, 140, 0.07);
+}
 .lasles-auth-input-wrap input.has-icon,
 .lasles-auth-input.has-icon {
   padding-inline-start: 2.65rem;
@@ -6022,8 +6054,40 @@ html.mc-trial-open { overflow: hidden; }
 }
 .mc-ta-choices--scroll {
   max-height: 240px;
-  overflow: auto;
-  padding: 0.15rem;
+  overflow-y: auto;
+  padding: 0.35rem;
+  padding-inline-end: 0.5rem;
+  border: 1px solid rgba(21, 42, 74, 0.14);
+  border-radius: 14px;
+  background: #F7F9FC;
+}
+/* شريط تمرير ظاهر دائماً — على macOS/الجوال يختفي افتراضياً فلا يعرف المعلم أن هناك مواد أخرى.
+   Chrome/Safari يتجاهلون ::-webkit-scrollbar إذا وُجد scrollbar-color، لذا الخصائص القياسية لـ Firefox فقط. */
+@supports not selector(::-webkit-scrollbar) {
+  .mc-ta-choices--scroll {
+    scrollbar-width: thin;
+    scrollbar-color: #C9952A rgba(21, 42, 74, 0.08);
+  }
+}
+.mc-ta-choices--scroll::-webkit-scrollbar {
+  width: 8px;
+}
+.mc-ta-choices--scroll::-webkit-scrollbar-track {
+  background: rgba(21, 42, 74, 0.08);
+  border-radius: 8px;
+}
+.mc-ta-choices--scroll::-webkit-scrollbar-thumb {
+  background: #C9952A;
+  border-radius: 8px;
+}
+.mc-ta-scroll-hint {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0 0 0.45rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #8A6418;
 }
 .mc-ta-grade-group {
   margin-top: 0.75rem;

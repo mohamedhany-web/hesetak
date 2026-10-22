@@ -7,6 +7,7 @@ return [
     'email' => 'البريد الإلكتروني',
     'password' => 'كلمة المرور',
     'password_confirmation' => 'تأكيد كلمة المرور',
+    'password_rules_hint' => '8 أحرف على الأقل، وتحتوي على حروف وأرقام.',
     'remember' => 'تذكرني',
     'forgot_password' => 'نسيت كلمة المرور؟',
     'forgot_password_eyebrow' => 'استعادة الحساب',

@@ -147,6 +147,15 @@
             <div class="mc-ta-grid">
               <div class="mc-ta-field is-wide">
                 <label>{{ $isRtl ? 'المواد' : 'Subjects' }} <span class="mc-ta-req">*</span></label>
+                @php $subjectCount = count($subjectOptions ?? []); @endphp
+                @if($subjectCount > 6)
+                  <p class="mc-ta-scroll-hint">
+                    <i class="fas fa-arrows-up-down" aria-hidden="true"></i>
+                    {{ $isRtl
+                        ? 'القائمة فيها '.$subjectCount.' مادة — مرّر داخلها لعرض باقي المواد واختر كل ما تدرّسه.'
+                        : $subjectCount.' subjects — scroll inside the list to see them all and tick every one you teach.' }}
+                  </p>
+                @endif
                 <div class="mc-ta-choices mc-ta-choices--scroll">
                   @forelse(($subjectOptions ?? []) as $opt)
                     <label class="mc-ta-choice">
