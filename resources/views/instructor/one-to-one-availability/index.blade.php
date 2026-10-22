@@ -126,7 +126,7 @@
                             </div>
                             <div class="id-field id-field--span2" style="max-width:220px">
                                 <label>{{ __('instructor.o1o_minutes') }}</label>
-                                <input type="number" :name="'slots['+index+'][slot_duration_minutes]'" x-model="slot.slot_duration_minutes" min="30" max="180" step="15" class="id-input">
+                                <input type="number" :name="'slots['+index+'][slot_duration_minutes]'" x-model="slot.slot_duration_minutes" min="30" max="180" step="1" class="id-input">
                             </div>
                         </div>
                         <p class="id-field__hint" style="margin-top:10px" :style="slotYield(slot) > 0 ? 'color:#152A4A' : 'color:#B91C1C'">

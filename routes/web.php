@@ -359,6 +359,7 @@ Route::get('/for-teachers', [\App\Http\Controllers\Public\PageController::class,
 Route::get('/how-it-works', [\App\Http\Controllers\Public\PageController::class, 'how'])->name('public.how');
 Route::redirect('/how', '/how-it-works', 301);
 Route::get('/curricula', [\App\Http\Controllers\Public\CurriculaController::class, 'index'])->name('public.curricula');
+Route::get('/request', [\App\Http\Controllers\Public\CurriculaController::class, 'requestForm'])->name('public.request');
 Route::get('/curricula/{stage}', [\App\Http\Controllers\Public\CurriculaController::class, 'stage'])
     ->where('stage', 'primary|middle|secondary|international|university|qiyas|skills')
     ->name('public.curricula.stage');

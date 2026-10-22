@@ -17,7 +17,7 @@
     <p class="mc-lead">{{ __('public.legal_terms_hero_sub') }}</p>
     <div class="mc-hero__actions">
       <a href="{{ route('public.contact') }}" class="mc-btn mc-btn--lg mc-btn--primary">{{ __('public.contact_page_title') }}</a>
-      <a href="{{ route('public.privacy') }}" class="mc-btn mc-btn--lg mc-btn--outline">{{ __('public.privacy_page_title') }}</a>
+      <a href="{{ route('public.refund') }}" class="mc-btn mc-btn--lg mc-btn--outline">{{ __('public.refund_page_title') }}</a>
     </div>
   </div>
 </section>

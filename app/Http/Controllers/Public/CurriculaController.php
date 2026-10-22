@@ -54,6 +54,27 @@ class CurriculaController extends Controller
         ]);
     }
 
+    public function requestForm()
+    {
+        $years = collect();
+        if (Schema::hasTable('academic_years')) {
+            $years = AcademicYear::query()
+                ->publicCatalog()
+                ->ordered()
+                ->with(['subjects' => fn ($q) => $q->active()->ordered()])
+                ->get()
+                ->values();
+        }
+
+        return view('public.marketing.request', [
+            'bodyClass' => 'mc-body--dir',
+            'pageTitle' => __('hesetak_pages.curricula.match_title').' | '.__('landing.nav.brand'),
+            'pageDescription' => __('hesetak_pages.curricula.match_lead'),
+            'years' => $years,
+            'curriculumTypes' => HesetakMatchCatalog::curriculumTypes(),
+        ]);
+    }
+
     public function stage(string $stage)
     {
         $descriptions = [

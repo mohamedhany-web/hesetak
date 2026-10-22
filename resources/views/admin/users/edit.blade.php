@@ -75,6 +75,13 @@
                             <input type="text" name="phone" id="phone" value="{{ old('phone', $user->phone) }}" required class="{{ $fieldClass }}" dir="ltr" />
                             @error('phone')<p class="mt-1.5 text-xs font-medium text-danger">{{ $message }}</p>@enderror
                         </div>
+                        @if($user->role === 'student' || filled($user->parent_phone))
+                            <div>
+                                <label for="parent_phone" class="{{ $labelClass }}">رقم ولي الأمر</label>
+                                <input type="text" name="parent_phone" id="parent_phone" value="{{ old('parent_phone', $user->parent_phone) }}" class="{{ $fieldClass }}" dir="ltr" placeholder="+9665xxxxxxxx" />
+                                @error('parent_phone')<p class="mt-1.5 text-xs font-medium text-danger">{{ $message }}</p>@enderror
+                            </div>
+                        @endif
                         <div class="md:col-span-2">
                             <label for="email" class="{{ $labelClass }}">البريد الإلكتروني</label>
                             <input type="email" name="email" id="email" value="{{ old('email', $user->email) }}" maxlength="255" class="{{ $fieldClass }}" />

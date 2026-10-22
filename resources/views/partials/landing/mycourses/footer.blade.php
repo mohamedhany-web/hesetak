@@ -50,6 +50,7 @@
         <p class="mc-footer__heading">{{ __('landing.mc.footer.legal') }}</p>
         <ul>
           <li><a href="{{ route('public.terms') }}">{{ __('landing.mc.footer.terms') }}</a></li>
+          <li><a href="{{ route('public.refund') }}">{{ __('landing.mc.footer.refund') }}</a></li>
           <li><a href="{{ route('public.privacy') }}">{{ __('landing.mc.footer.privacy') }}</a></li>
           <li><a href="{{ route('public.certificates.verify') }}">{{ app()->getLocale() === 'ar' ? 'تحقق من شهادة' : 'Verify certificate' }}</a></li>
         </ul>
@@ -72,12 +73,13 @@
         <a href="{{ route('public.about') }}">{{ __('landing.mc.nav.about') }}</a>
         <a href="{{ route('public.for-students') }}">{{ __('landing.mc.footer.for_students') }}</a>
         <a href="{{ route('public.terms') }}">{{ __('landing.mc.footer.terms') }}</a>
+        <a href="{{ route('public.refund') }}">{{ __('landing.mc.footer.refund') }}</a>
         <a href="{{ route('public.privacy') }}">{{ __('landing.mc.footer.privacy') }}</a>
         <a href="{{ route('public.certificates.verify') }}">{{ app()->getLocale() === 'ar' ? 'شهادة' : 'Certificate' }}</a>
       </div>
     </nav>
 
-    <p class="mc-footer__copy">© {{ date('Y') }} {{ __('landing.nav.brand') }}. {{ __('landing.mc.footer.rights') }}</p>
+    <p class="mc-footer__copy">© {{ date('Y') }} {{ __('landing.nav.brand') }}. {{ __('landing.mc.footer.rights') }} {{ __('landing.mc.footer.cr') }}</p>
   </div>
 </footer>
 <script>

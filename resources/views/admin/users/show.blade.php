@@ -127,6 +127,12 @@
                             <p class="text-xs font-medium text-muted">رقم الهاتف</p>
                             <p class="mt-1 text-sm font-semibold text-ink" dir="ltr">{{ $user->phone ?: '—' }}</p>
                         </div>
+                        @if($user->role === 'student' || filled($user->parent_phone))
+                            <div class="rounded-xl border border-line bg-canvas/60 p-4">
+                                <p class="text-xs font-medium text-muted">رقم ولي الأمر</p>
+                                <p class="mt-1 text-sm font-semibold text-ink" dir="ltr">{{ $user->parent_phone ?: '—' }}</p>
+                            </div>
+                        @endif
                     </div>
                 </div>
                 @if($user->bio)

@@ -45,22 +45,6 @@
     @csrf
     <input type="hidden" name="referral_code" value="{{ old('referral_code', $pendingReferralCode ?? '') }}">
 
-    <fieldset class="lasles-auth-field" style="border:0;padding:0;margin:0 0 1rem">
-      <legend class="lasles-auth-label" style="font-weight:700;margin-bottom:.5rem">{{ __('auth.account_kind') }}</legend>
-      <div style="display:flex;gap:.75rem;flex-wrap:wrap">
-        <label style="display:flex;gap:.4rem;align-items:center">
-          <input type="radio" name="account_kind" value="student" @checked(old('account_kind', 'student') === 'student') required>
-          {{ __('auth.account_kind_student') }}
-        </label>
-        <label style="display:flex;gap:.4rem;align-items:center">
-          <input type="radio" name="account_kind" value="parent" @checked(old('account_kind') === 'parent') required>
-          {{ __('auth.account_kind_parent') }}
-        </label>
-      </div>
-      <p class="lasles-auth-hint">{{ __('auth.account_kind_hint') }}</p>
-      @error('account_kind')<p class="lasles-auth-error">{{ $message }}</p>@enderror
-    </fieldset>
-
     <div class="lasles-auth-field">
       <label for="name">{{ __('auth.full_name') }}</label>
       <div class="lasles-auth-input-wrap">
@@ -134,8 +118,7 @@
             <option value="{{ $year->id }}">{{ $year->name }}</option>
           @endforeach
         </select>
-        <p class="lasles-auth-hint" data-hint-student>{{ __('auth.academic_stage_hint') }}</p>
-        <p class="lasles-auth-hint" data-hint-parent hidden>{{ __('auth.parent_stage_hint') }}</p>
+        <p class="lasles-auth-hint">{{ __('auth.academic_stage_hint') }}</p>
         @error('academic_year_id')<p class="lasles-auth-error">{{ $message }}</p>@enderror
       </div>
 
@@ -159,8 +142,7 @@
             </label>
           </template>
         </div>
-        <p class="lasles-auth-hint" data-hint-student>{{ __('auth.preferred_subjects_hint') }}</p>
-        <p class="lasles-auth-hint" data-hint-parent hidden>{{ __('auth.parent_subjects_hint') }}</p>
+        <p class="lasles-auth-hint">{{ __('auth.preferred_subjects_hint') }}</p>
         @error('preferred_subject_ids')<p class="lasles-auth-error">{{ $message }}</p>@enderror
       </div>
     </div>
@@ -173,146 +155,26 @@
           <option value="{{ $key }}" @selected((string) old('preferred_curriculum_type') === (string) $key)>{{ $meta['label'] ?? $key }}</option>
         @endforeach
       </select>
-      <p class="lasles-auth-hint" data-hint-student>{{ __('auth.curriculum_type_hint') }}</p>
-      <p class="lasles-auth-hint" data-hint-parent hidden>{{ __('auth.parent_curriculum_hint') }}</p>
+      <p class="lasles-auth-hint">{{ __('auth.curriculum_type_hint') }}</p>
       @error('preferred_curriculum_type')<p class="lasles-auth-error">{{ $message }}</p>@enderror
     </div>
-    <p class="lasles-auth-hint" id="parent-subjects-note" hidden>{{ __('auth.parent_subjects_note') }}</p>
-    </div>
-    <script>
-      (function () {
-        var box = document.getElementById('student-learning-fields');
-        var gradeField = document.getElementById('student-grade-field');
-        var parentNote = document.getElementById('parent-subjects-note');
-        if (!box) return;
-        function sync() {
-          var kind = document.querySelector('input[name="account_kind"]:checked');
-          var isParent = kind && kind.value === 'parent';
-          box.hidden = false;
-          if (gradeField) {
-            gradeField.style.display = isParent ? 'none' : '';
-            var gradeSelect = gradeField.querySelector('select');
-            if (gradeSelect) gradeSelect.required = false;
-          }
-          box.querySelectorAll('[data-hint-student]').forEach(function (el) { el.hidden = !!isParent; });
-          box.querySelectorAll('[data-hint-parent]').forEach(function (el) { el.hidden = !isParent; });
-          if (parentNote) parentNote.hidden = !isParent;
-          var yearSelect = document.getElementById('academic_year_id');
-          var currSelect = document.getElementById('preferred_curriculum_type');
-          if (yearSelect) yearSelect.required = true;
-          if (currSelect) currSelect.required = true;
-        }
-        document.querySelectorAll('input[name="account_kind"]').forEach(function (el) {
-          el.addEventListener('change', sync);
-        });
-        sync();
-      })();
-    </script>
 
-    <div class="lasles-auth-field">
-      <label>{{ __('auth.phone_number') }}</label>
-      <div
-        class="lasles-auth-phone @error('phone') has-error @enderror"
-        x-data="{
-          open: false,
-          q: '',
-          dial: @js($selectedCountry['dial_code'] ?? '+966'),
-          iso: @js($selectedCountry['code'] ?? 'SA'),
-          name: @js($isRtl ? ($selectedCountry['name_ar'] ?? '') : ($selectedCountry['name_en'] ?? $selectedCountry['name_ar'] ?? '')),
-          placeholder: @js($selectedCountry['placeholder'] ?? '5xxxxxxxx'),
-          countries: @js($phoneCountriesUi),
-          localeRtl: @js($isRtl),
-          get filtered() {
-            const term = (this.q || '').trim().toLowerCase();
-            if (!term) return this.countries;
-            return this.countries.filter((c) => {
-              const hay = [c.dial_code, c.code, c.name_ar, c.name_en].join(' ').toLowerCase();
-              return hay.includes(term);
-            });
-          },
-          labelOf(c) {
-            return this.localeRtl ? (c.name_ar || c.name_en) : (c.name_en || c.name_ar);
-          },
-          select(c) {
-            this.dial = c.dial_code;
-            this.iso = c.code;
-            this.name = this.labelOf(c);
-            this.placeholder = c.placeholder || '';
-            this.open = false;
-            this.q = '';
-          },
-          toggle() {
-            this.open = !this.open;
-            if (this.open) {
-              this.$nextTick(() => this.$refs.ccSearch && this.$refs.ccSearch.focus());
-            }
-          }
-        }"
-        @keydown.escape.window="open = false"
-      >
-        <input type="hidden" name="country_code" :value="dial" required>
-        <input type="hidden" name="country_iso" :value="iso">
-        <div class="lasles-auth-cc" @click.outside="open = false">
-          <button
-            type="button"
-            class="lasles-auth-cc-btn"
-            dir="ltr"
-            @click="toggle()"
-            :aria-expanded="open.toString()"
-            aria-haspopup="listbox"
-            aria-label="{{ __('auth.country_code_aria') }}"
-          >
-            <span class="lasles-auth-cc-dial" x-text="dial"></span>
-            <span class="lasles-auth-cc-name" x-text="name"></span>
-            <i class="fas fa-chevron-down" aria-hidden="true"></i>
-          </button>
-          <div class="lasles-auth-cc-panel" x-show="open" x-cloak x-transition.opacity.duration.150ms role="listbox">
-            <div class="lasles-auth-cc-search">
-              <i class="fas fa-search" aria-hidden="true"></i>
-              <input
-                type="search"
-                x-model="q"
-                x-ref="ccSearch"
-                @keydown.escape.stop="open = false"
-                placeholder="{{ __('auth.search_country') }}"
-                autocomplete="off"
-                dir="{{ $isRtl ? 'rtl' : 'ltr' }}"
-              >
-            </div>
-            <ul class="lasles-auth-cc-list">
-              <template x-for="c in filtered" :key="c.code">
-                <li>
-                  <button
-                    type="button"
-                    class="lasles-auth-cc-option"
-                    :class="{ 'is-active': c.code === iso }"
-                    @click="select(c)"
-                    dir="ltr"
-                  >
-                    <span class="lasles-auth-cc-option-dial" x-text="c.dial_code"></span>
-                    <span class="lasles-auth-cc-option-name" x-text="labelOf(c)" :dir="localeRtl ? 'rtl' : 'ltr'"></span>
-                  </button>
-                </li>
-              </template>
-              <li x-show="filtered.length === 0" class="lasles-auth-cc-empty" x-cloak>
-                {{ __('auth.no_country_found') }}
-              </li>
-            </ul>
-          </div>
-        </div>
-        <input
-          type="tel"
-          name="phone"
-          value="{{ old('phone') }}"
-          required
-          :placeholder="placeholder || '5xxxxxxxx'"
-          dir="ltr"
-          autocomplete="tel-national"
-          aria-label="{{ __('auth.phone_aria') }}"
-        >
-      </div>
-      @error('phone')<p class="lasles-auth-error">{{ $message }}</p>@enderror
-    </div>
+    @include('auth.partials.phone-field', [
+        'field' => 'phone',
+        'dialField' => 'country_code',
+        'isoField' => 'country_iso',
+        'label' => __('auth.phone_number'),
+        'autocomplete' => 'tel-national',
+    ])
+
+    @include('auth.partials.phone-field', [
+        'field' => 'parent_phone',
+        'dialField' => 'parent_country_code',
+        'isoField' => 'parent_country_iso',
+        'label' => __('auth.parent_phone'),
+        'hint' => __('auth.parent_phone_hint'),
+        'autocomplete' => 'tel',
+    ])
 
     <div class="lasles-auth-field">
       <label for="email">{{ __('auth.email') }}</label>

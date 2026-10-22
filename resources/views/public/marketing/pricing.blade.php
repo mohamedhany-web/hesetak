@@ -100,7 +100,7 @@
         <h2 id="mc-pric-track-label" class="mc-pric-filter__label">1. {{ __('public.pricing_filter_track') }}</h2>
         <p class="mc-pric-filter__hint">{{ __('public.pricing_filter_track_hint') }}</p>
         <div class="mc-pric-subjects" role="list">
-          @foreach(collect($curriculumTypes)->only(['saudi', 'egyptian', 'us_intl']) as $key => $meta)
+          @foreach($curriculumTypes as $key => $meta)
             @php $on = (string) $selCurriculum === (string) $key; @endphp
             <a href="{{ $stageUrl($selYear ? (int) $selYear : null, null, $on ? null : $key) }}" class="mc-pric-chip {{ $on ? 'is-on' : '' }}" role="listitem">{{ $meta['label'] ?? $key }}</a>
           @endforeach

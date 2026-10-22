@@ -1121,6 +1121,7 @@ class AdminController extends Controller
                 'name' => $user->name,
                 'email' => $user->email,
                 'phone' => $user->phone,
+                'parent_phone' => $user->parent_phone,
                 'role' => $user->role,
                 'is_active' => $user->is_active,
                 'is_employee' => $user->is_employee,
@@ -1131,6 +1132,7 @@ class AdminController extends Controller
                 'name' => trim((string) $request->input('name', '')),
                 'email' => $request->filled('email') ? trim((string) $request->input('email')) : null,
                 'phone' => $request->filled('phone') ? trim((string) $request->input('phone')) : null,
+                'parent_phone' => $request->exists('parent_phone') ? trim((string) $request->input('parent_phone')) : null,
                 'role' => (string) $request->input('role', 'student'),
                 'is_active' => in_array($request->input('is_active'), [true, '1', 1, 'true', 'on'], true),
                 'bio' => $request->input('bio'),
@@ -1141,6 +1143,7 @@ class AdminController extends Controller
                 'name' => 'required|string|max:255',
                 'email' => 'nullable|email|unique:users,email,' . $id,
                 'phone' => 'nullable|string|max:50|unique:users,phone,' . $id,
+                'parent_phone' => 'nullable|string|max:30',
                 'role' => 'required|in:super_admin,admin,instructor,teacher,student,parent,employee',
                 'is_active' => 'required|boolean',
                 'bio' => 'nullable|string|max:1000',
@@ -1166,6 +1169,11 @@ class AdminController extends Controller
                 'is_active' => (bool) $input['is_active'],
                 'bio' => $input['bio'] ?: null,
             ];
+
+            if ($request->exists('parent_phone') && \Illuminate\Support\Facades\Schema::hasColumn('users', 'parent_phone')) {
+                $parentPhone = trim((string) $input['parent_phone']);
+                $updateData['parent_phone'] = $parentPhone !== '' ? $parentPhone : null;
+            }
 
             if (!empty($input['password'])) {
                 $updateData['password'] = Hash::make((string) $input['password']);

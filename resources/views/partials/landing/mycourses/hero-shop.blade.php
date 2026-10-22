@@ -23,7 +23,7 @@
       <h1 class="dp-hero__title" id="dp-hero-title">{!! __('landing.mc.hero.title_html') !!}</h1>
       <p class="dp-hero__lead">{{ __('landing.mc.hero.lead') }}</p>
       <div class="dp-hero__actions">
-        <a href="{{ route('public.instructors.index') }}" class="mc-btn mc-btn--lg mc-btn--secondary">{{ __('landing.mc.hero.cta_primary') }}</a>
+        <a href="{{ route('public.request') }}" class="mc-btn mc-btn--lg mc-btn--secondary">{{ __('landing.mc.hero.cta_request') }}</a>
         @auth
           <a href="{{ route('dashboard') }}" class="mc-btn mc-btn--lg mc-btn--ghost-on-dark">{{ __('landing.nav.dashboard') }}</a>
         @else

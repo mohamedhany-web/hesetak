@@ -322,8 +322,10 @@ class AuthController extends Controller
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
             'timezone' => ['nullable', 'string', 'max:64'],
             'timezone_auto' => ['nullable', 'string', 'max:64'],
-            'account_kind' => ['required', 'in:student,parent'],
             'academic_year_id' => ['required', 'integer', 'exists:academic_years,id'],
+            'parent_country_code' => 'required|string|max:12',
+            'parent_country_iso' => 'nullable|string|size:2',
+            'parent_phone' => 'required|string|max:20',
             'academic_grade_id' => ['nullable', 'integer'],
             'preferred_curriculum_type' => ['required', 'string', 'max:40'],
             'preferred_subject_ids' => ['nullable', 'array'],
@@ -334,9 +336,9 @@ class AuthController extends Controller
             'phone.required' => 'رقم الهاتف مطلوب',
             'email.required' => 'البريد الإلكتروني مطلوب',
             'email.email' => 'البريد الإلكتروني غير صحيح',
-            'email.unique' => 'هذا البريد مرتبط بحساب موجود. استخدمه لتسجيل الدخول، أو أضف الأبناء من حساب ولي الأمر بدل إنشاء حساب آخر بنفس البريد.',
-            'account_kind.required' => 'اختر نوع الحساب: طالب أو ولي أمر.',
-            'account_kind.in' => 'نوع الحساب غير صالح.',
+            'email.unique' => 'هذا البريد مرتبط بحساب موجود. استخدمه لتسجيل الدخول.',
+            'parent_phone.required' => 'رقم ولي الأمر مطلوب',
+            'parent_country_code.required' => 'كود دولة ولي الأمر مطلوب',
             'password.required' => 'كلمة المرور مطلوبة',
             'password.confirmed' => 'تأكيد كلمة المرور غير متطابق',
             'academic_year_id.required' => 'المرحلة الدراسية مطلوبة',
@@ -363,9 +365,6 @@ class AuthController extends Controller
             ));
         }
 
-        $accountKind = (string) $request->input('account_kind');
-        $isParent = $accountKind === 'parent';
-
         $curriculumKey = \App\Support\HesetakMatchCatalog::allowedCurriculumTypeKeys();
         $preferredCurriculum = strtolower(trim((string) $request->input('preferred_curriculum_type')));
         if (! in_array($preferredCurriculum, $curriculumKey, true)) {
@@ -383,7 +382,7 @@ class AuthController extends Controller
 
         $gradeOptions = $gradesByYear[(string) $yearId] ?? [];
         $gradeId = $request->filled('academic_grade_id') ? (int) $request->input('academic_grade_id') : null;
-        if (! $isParent && $gradeOptions !== []) {
+        if ($gradeOptions !== []) {
             $gradeIds = array_map(static fn ($row) => (int) ($row['id'] ?? 0), $gradeOptions);
             if (! $gradeId || ! in_array($gradeId, $gradeIds, true)) {
                 return back()->withErrors([
@@ -394,56 +393,27 @@ class AuthController extends Controller
             $gradeId = null;
         }
 
-        // التحقق من صحة رقم الهاتف حسب الدولة (ISO أولاً ثم كود الاتصال)
-        $country = null;
-        if ($request->filled('country_iso')) {
-            $country = collect($countries)->firstWhere('code', strtoupper((string) $request->country_iso));
-            if ($country && ($country['dial_code'] ?? '') !== $request->country_code) {
-                $country = null;
-            }
-        }
-        if (! $country) {
-            $country = collect($countries)->firstWhere('dial_code', $request->country_code);
-        }
-        $phoneRegex = $country['validation']['regex'] ?? '/^\d{6,15}$/';
-        if (! $country) {
-            return back()->withErrors(['phone' => 'كود الدولة غير مدعوم.'])->withInput()->with(compact(
-                'phoneCountries',
-                'defaultCountry',
-                'academicYears',
-                'gradesByYear',
-                'subjectsByYear',
-                'curriculumTypes'
-            ));
-        }
-        $nationalNumber = preg_replace('/\D/', '', $request->phone);
-        $nationalNumber = ltrim($nationalNumber, '0');
-        if (! preg_match($phoneRegex, $nationalNumber)) {
-            $example = $country['example'] ?? $country['placeholder'] ?? '';
-            $message = $example !== ''
-                ? ('رقم الهاتف غير صحيح لهذه الدولة. مثال: ' . $example)
-                : 'رقم الهاتف غير صحيح لهذه الدولة.';
+        $formContext = compact(
+            'phoneCountries',
+            'defaultCountry',
+            'academicYears',
+            'gradesByYear',
+            'subjectsByYear',
+            'curriculumTypes'
+        );
 
-            return back()->withErrors(['phone' => $message])->withInput()->with(compact(
-                'phoneCountries',
-                'defaultCountry',
-                'academicYears',
-                'gradesByYear',
-                'subjectsByYear',
-                'curriculumTypes'
-            ));
+        $studentPhone = $this->resolveRegistrationPhone($request, $countries, 'phone', 'country_code', 'country_iso', 'رقم الهاتف');
+        if (isset($studentPhone['error'])) {
+            return back()->withErrors(['phone' => $studentPhone['error']])->withInput()->with($formContext);
         }
-        $dial = $country['dial_code'] ?? '';
-        $fullPhone = ($dial === '' || $dial === 'OTHER') ? ('OTHER_' . $nationalNumber) : ($dial . $nationalNumber);
+        $fullPhone = $studentPhone['full'];
         if (User::where('phone', $fullPhone)->exists()) {
-            return back()->withErrors(['phone' => 'رقم الهاتف مسجل مسبقاً'])->withInput()->with(compact(
-                'phoneCountries',
-                'defaultCountry',
-                'academicYears',
-                'gradesByYear',
-                'subjectsByYear',
-                'curriculumTypes'
-            ));
+            return back()->withErrors(['phone' => 'رقم الهاتف مسجل مسبقاً'])->withInput()->with($formContext);
+        }
+
+        $parentPhone = $this->resolveRegistrationPhone($request, $countries, 'parent_phone', 'parent_country_code', 'parent_country_iso', 'رقم ولي الأمر');
+        if (isset($parentPhone['error'])) {
+            return back()->withErrors(['parent_phone' => $parentPhone['error']])->withInput()->with($formContext);
         }
 
         // التسجيل متاح فقط للطلاب
@@ -456,11 +426,14 @@ class AuthController extends Controller
             'phone' => $fullPhone,
             'email' => $request->email,
             'password' => Hash::make($request->password),
-            'role' => $isParent ? 'parent' : 'student',
+            'role' => 'student',
             'is_active' => true,
             'timezone' => $timezone,
             'academic_year_id' => $yearId,
         ];
+        if (\Illuminate\Support\Facades\Schema::hasColumn('users', 'parent_phone')) {
+            $userPayload['parent_phone'] = $parentPhone['full'];
+        }
         if (\Illuminate\Support\Facades\Schema::hasColumn('users', 'academic_grade_id')) {
             $userPayload['academic_grade_id'] = $gradeId;
         }
@@ -568,6 +541,49 @@ class AuthController extends Controller
         }
 
         return $map;
+    }
+
+    /**
+     * @param  array<int, array<string, mixed>>  $countries
+     * @return array{full: string}|array{error: string}
+     */
+    protected function resolveRegistrationPhone(
+        Request $request,
+        array $countries,
+        string $numberField,
+        string $dialField,
+        string $isoField,
+        string $label
+    ): array {
+        $country = null;
+        $dialCode = (string) $request->input($dialField, '');
+        if ($request->filled($isoField)) {
+            $country = collect($countries)->firstWhere('code', strtoupper((string) $request->input($isoField)));
+            if ($country && ($country['dial_code'] ?? '') !== $dialCode) {
+                $country = null;
+            }
+        }
+        if (! $country) {
+            $country = collect($countries)->firstWhere('dial_code', $dialCode);
+        }
+        if (! $country) {
+            return ['error' => 'كود الدولة غير مدعوم.'];
+        }
+
+        $nationalNumber = ltrim(preg_replace('/\D/', '', (string) $request->input($numberField, '')) ?? '', '0');
+        $phoneRegex = $country['validation']['regex'] ?? '/^\d{6,15}$/';
+        if (! preg_match($phoneRegex, $nationalNumber)) {
+            $example = $country['example'] ?? $country['placeholder'] ?? '';
+
+            return ['error' => $example !== ''
+                ? ($label.' غير صحيح لهذه الدولة. مثال: '.$example)
+                : ($label.' غير صحيح لهذه الدولة.')];
+        }
+
+        $dial = $country['dial_code'] ?? '';
+        $full = ($dial === '' || $dial === 'OTHER') ? ('OTHER_'.$nationalNumber) : ($dial.$nationalNumber);
+
+        return ['full' => $full];
     }
 
     public function logout(Request $request)
