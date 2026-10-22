@@ -107,6 +107,50 @@ class OneToOneSessionSequentialUnlockTest extends TestCase
         $this->assertFalse(OneToOneSessionUnlockService::canStudentJoin($session1->fresh(), $student));
     }
 
+    public function test_past_session_never_closed_does_not_lock_next_session(): void
+    {
+        [$student, $instructor] = $this->users();
+        $seriesId = 'series-test-stale';
+
+        $session1 = $this->scheduledSession($student, $instructor, 1, $seriesId);
+        $session2 = $this->scheduledSession($student, $instructor, 2, $seriesId);
+
+        $session1->update(['scheduled_at' => now()->subDays(3)]);
+
+        $this->assertTrue(OneToOneSessionUnlockService::canStudentJoin($session2->fresh(), $student));
+
+        $this->actingAs($student)
+            ->get(route('classroom.secure-enter', $session2->classroomMeeting))
+            ->assertRedirect();
+    }
+
+    public function test_ended_room_does_not_lock_next_session(): void
+    {
+        [$student, $instructor] = $this->users();
+        $seriesId = 'series-test-ended';
+
+        $session1 = $this->scheduledSession($student, $instructor, 1, $seriesId);
+        $session2 = $this->scheduledSession($student, $instructor, 2, $seriesId);
+
+        $session1->classroomMeeting->update(['started_at' => now()->subMinutes(30), 'ended_at' => now()]);
+
+        $this->assertTrue(OneToOneSessionUnlockService::canStudentJoin($session2->fresh(), $student));
+    }
+
+    public function test_session_in_progress_still_locks_next_session(): void
+    {
+        [$student, $instructor] = $this->users();
+        $seriesId = 'series-test-running';
+
+        $session1 = $this->scheduledSession($student, $instructor, 1, $seriesId);
+        $session2 = $this->scheduledSession($student, $instructor, 2, $seriesId);
+
+        $session1->update(['scheduled_at' => now()->subMinutes(40)]);
+
+        $this->assertTrue(OneToOneSessionUnlockService::canStudentJoin($session1->fresh(), $student));
+        $this->assertFalse(OneToOneSessionUnlockService::canStudentJoin($session2->fresh(), $student));
+    }
+
     public function test_admin_manual_unlock_allows_early_join(): void
     {
         [$student, $instructor, $admin] = $this->users();

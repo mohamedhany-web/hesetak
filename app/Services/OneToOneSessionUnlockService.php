@@ -40,6 +40,9 @@ class OneToOneSessionUnlockService
         return $query;
     }
 
+    /** دقائق سماح بعد نهاية الحصة قبل أن تتوقف عن حجب الحصة التالية. */
+    public const STALE_GRACE_MINUTES = 60;
+
     public static function currentSessionInSeries(OneToOneSession $session): ?OneToOneSession
     {
         return self::seriesScope($session)
@@ -47,9 +50,32 @@ class OneToOneSessionUnlockService
                 OneToOneSession::STATUS_COMPLETED,
                 OneToOneSession::STATUS_CANCELLED,
             ])
+            ->with('classroomMeeting')
             ->orderBy('session_number')
             ->orderBy('id')
-            ->first();
+            ->get()
+            ->first(fn (OneToOneSession $candidate) => ! self::isStale($candidate));
+    }
+
+    /**
+     * حصة فات وقتها أو أُنهيت غرفتها دون أن تُعلَّم مكتملة (المعلم أغلق التبويب، أو لم يحضر أحد)
+     * لا يجب أن تقفل باقي حصص السلسلة على الطالب.
+     */
+    public static function isStale(OneToOneSession $session): bool
+    {
+        if ($session->classroomMeeting?->ended_at) {
+            return true;
+        }
+
+        if (! $session->scheduled_at) {
+            return false;
+        }
+
+        $duration = (int) ($session->duration_minutes ?: 50);
+
+        return $session->scheduled_at->copy()
+            ->addMinutes($duration + self::STALE_GRACE_MINUTES)
+            ->isPast();
     }
 
     public static function isManuallyUnlocked(OneToOneSession $session): bool
