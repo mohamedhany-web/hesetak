@@ -73,7 +73,15 @@ class StudentEntitlementController extends Controller
 
     public function create(Request $request): View
     {
+        // Placement passes student_id; grant form historically used user_id — accept both.
         $selectedUserId = (int) $request->integer('user_id');
+        if ($selectedUserId < 1) {
+            $selectedUserId = (int) $request->integer('student_id');
+        }
+
+        $returnToPlacement = $request->boolean('return_to_placement')
+            || $request->filled('student_id')
+            || $request->query('from') === 'placement';
 
         return view('admin.student-entitlements.form', [
             'students' => User::query()
@@ -84,6 +92,7 @@ class StudentEntitlementController extends Controller
             'scopes' => ServicePackage::scopes(),
             'groups' => TutoringGroup::query()->active()->orderBy('title')->get(['id', 'title', 'type']),
             'selectedUserId' => $selectedUserId,
+            'returnToPlacement' => $returnToPlacement,
             'placementUrl' => \Illuminate\Support\Facades\Route::has('admin.placement.create')
                 ? route('admin.placement.create')
                 : null,
@@ -99,6 +108,7 @@ class StudentEntitlementController extends Controller
             'duration_days' => ['nullable', 'integer', 'min:1', 'max:730'],
             'tutoring_group_id' => ['nullable', 'exists:tutoring_groups,id'],
             'notes' => ['nullable', 'string', 'max:1000'],
+            'return_to_placement' => ['nullable', 'boolean'],
         ]);
 
         if (! empty($data['tutoring_group_id'])) {
@@ -109,7 +119,7 @@ class StudentEntitlementController extends Controller
             }
         }
 
-        StudentEntitlementService::grantManual(
+        $entitlement = StudentEntitlementService::grantManual(
             userId: (int) $data['user_id'],
             scope: $data['scope'],
             units: (int) $data['units'],
@@ -117,6 +127,24 @@ class StudentEntitlementController extends Controller
             durationDays: isset($data['duration_days']) ? (int) $data['duration_days'] : null,
             notes: $data['notes'] ?? null,
         );
+
+        $studentId = (int) $data['user_id'];
+        $returnToPlacement = $request->boolean('return_to_placement')
+            && \Illuminate\Support\Facades\Route::has('admin.placement.create');
+
+        if ($returnToPlacement) {
+            $mode = in_array($data['scope'], [ServicePackage::SCOPE_PRIVATE_LESSONS, ServicePackage::SCOPE_GLOBAL], true)
+                ? 'private'
+                : 'group';
+
+            return redirect()
+                ->route('admin.placement.create', array_filter([
+                    'student_id' => $studentId,
+                    'entitlement_id' => $entitlement?->id,
+                    'mode' => $mode,
+                ]))
+                ->with('success', 'تم منح الرصيد. يمكنك الآن اختيار الباقة وإتمام التسكين.');
+        }
 
         return redirect()->route('admin.student-entitlements.index')->with('success', 'تم منح الرصيد للطالب.');
     }

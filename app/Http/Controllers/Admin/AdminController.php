@@ -902,20 +902,21 @@ class AdminController extends Controller
             'email' => is_scalar($request->input('email')) ? trim((string) $request->input('email')) : '',
             'country_code' => $request->input('country_code'),
             'phone' => preg_replace('/[^0-9]/', '', $request->input('phone', '')),
+            'parent_phone' => trim((string) $request->input('parent_phone', '')),
             'password' => $request->input('password'),
             'role' => $request->input('role'),
             'is_active' => $isActive,
             'bio' => strip_tags(trim($request->input('bio', ''))),
             'rbac_role' => $request->input('rbac_role'),
+            'from' => $request->input('from'),
         ];
 
-        // Validation محسن
+        // Validation محسن (الاسم كالتعديل: بدون قيد عربي-فقط)
         $validator = Validator::make($sanitizedData, [
             'name' => [
                 'required',
                 'string',
                 'max:255',
-                'regex:/^[\p{Arabic}\s\p{N}]+$/u',
             ],
             'email' => [
                 'required',
@@ -925,6 +926,7 @@ class AdminController extends Controller
             ],
             'country_code' => ['required', 'string', 'max:10'],
             'phone' => ['required', 'string', 'max:20'],
+            'parent_phone' => ['nullable', 'string', 'max:30'],
             'password' => [
                 'required',
                 'string',
@@ -937,9 +939,9 @@ class AdminController extends Controller
             'is_active' => ['nullable'],
             'bio' => ['nullable', 'string', 'max:1000'],
             'rbac_role' => ['nullable', 'integer', 'exists:roles,id'],
+            'from' => ['nullable', 'string', 'max:32'],
         ], [
             'name.required' => 'الاسم مطلوب',
-            'name.regex' => 'الاسم يجب أن يحتوي على أحرف عربية فقط',
             'country_code.required' => 'كود الدولة مطلوب',
             'phone.required' => 'رقم الهاتف مطلوب',
             'email.required' => 'البريد الإلكتروني مطلوب',
@@ -993,7 +995,7 @@ class AdminController extends Controller
             // إذا تم اختيار دور RBAC مخصص، نعامِل المستخدم كموظف (لوحة employee)
             $isEmployee = !empty($sanitizedData['rbac_role']);
 
-            $user = User::create([
+            $createPayload = [
                 'name' => $sanitizedData['name'],
                 'email' => $sanitizedData['email'],
                 'phone' => $fullPhone,
@@ -1002,7 +1004,17 @@ class AdminController extends Controller
                 'is_active' => $sanitizedData['is_active'],
                 'is_employee' => $isEmployee,
                 'bio' => !empty($sanitizedData['bio']) ? $sanitizedData['bio'] : null,
-            ]);
+            ];
+
+            if (
+                $sanitizedData['role'] === 'student'
+                && \Illuminate\Support\Facades\Schema::hasColumn('users', 'parent_phone')
+            ) {
+                $parentPhone = trim((string) ($sanitizedData['parent_phone'] ?? ''));
+                $createPayload['parent_phone'] = $parentPhone !== '' ? $parentPhone : null;
+            }
+
+            $user = User::create($createPayload);
 
             // ربط دور لوحة التحكم (RBAC) بالمستخدم إن تم اختياره
             if (!empty($sanitizedData['rbac_role'])) {
@@ -1028,7 +1040,7 @@ class AdminController extends Controller
             // تعطيل ActivityLog هنا لتفادي تعليق/تعطل الاستجابة بعد الحفظ.
 
             // استخدام query param بدل session لتجنب 500 إن فشل حفظ الجلسة
-            return redirect()->route('admin.users.index', ['created' => 1], 303);
+            return redirect()->to($this->usersCreateRedirectUrl($sanitizedData), 303);
         } catch (\Throwable $e) {
             if (DB::transactionLevel() > 0) {
                 try {
@@ -1051,7 +1063,7 @@ class AdminController extends Controller
 
             // إذا تم الحفظ فعلياً ثم حدث خطأ لاحق (post-commit) لا نعرض 500
             if ($committed) {
-                return redirect()->route('admin.users.index', ['created' => 1], 303)
+                return redirect()->to($this->usersCreateRedirectUrl($sanitizedData), 303)
                     ->with('warning', 'تم إنشاء المستخدم، لكن حدث خطأ بعد الحفظ أثناء تجهيز الاستجابة.');
             }
 
@@ -1064,6 +1076,21 @@ class AdminController extends Controller
                 ->withInput()
                 ->with(compact('phoneCountries', 'defaultCountry'));
         }
+    }
+
+    /**
+     * بعد إنشاء مستخدم: ارجع لقائمة الطلاب إن جاء الطلب من هناك.
+     *
+     * @param  array<string, mixed>  $payload
+     */
+    private function usersCreateRedirectUrl(array $payload): string
+    {
+        if (($payload['from'] ?? null) === 'students'
+            && \Illuminate\Support\Facades\Route::has('admin.students-accounts.index')) {
+            return route('admin.students-accounts.index', ['created' => 1]);
+        }
+
+        return route('admin.users.index', ['created' => 1]);
     }
 
     /**

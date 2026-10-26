@@ -97,12 +97,12 @@
                         سيظهر هنا إن كان الطالب مشتركاً في باقة أم لا.
                     </div>
                     @if(Route::has('admin.student-entitlements.create'))
-                        <p class="mt-2 text-[11px] text-muted">
+                        <p class="mt-2 text-[11px] text-muted" id="grantExtraPackageHint">
                             تحتاج باقة إضافية للطالب؟
-                            <a href="{{ route('admin.student-entitlements.create') }}" class="font-medium text-accent hover:underline" target="_blank" rel="noopener">
+                            <a id="grantExtraPackageLink" href="{{ $grantUrl ?? route('admin.student-entitlements.create', ['return_to_placement' => 1, 'from' => 'placement']) }}" class="font-medium text-accent hover:underline">
                                 منح رصيد / باقة جديدة
                             </a>
-                            ثم ارجع واخترها من القائمة (كل تسكين يستخدم باقة واحدة حالياً).
+                            — سيُعاد توجيهك للتسكين مع بقاء الطالب محدداً.
                         </p>
                     @endif
                 </div>
@@ -384,6 +384,31 @@
   var timezoneSelect = document.getElementById('timezoneSelect');
   var manualScheduledAt = document.getElementById('manualScheduledAt');
   var preselectedEntitlement = @json((string) old('student_service_entitlement_id', $selectedEntitlementId ?: ''));
+  var grantExtraLink = document.getElementById('grantExtraPackageLink');
+
+  function buildGrantUrl(studentId) {
+    if (!grantUrl) return '#';
+    try {
+      var u = new URL(grantUrl, window.location.origin);
+      if (studentId) {
+        u.searchParams.set('student_id', String(studentId));
+        u.searchParams.delete('user_id');
+      }
+      u.searchParams.set('return_to_placement', '1');
+      u.searchParams.set('from', 'placement');
+      return u.pathname + u.search;
+    } catch (e) {
+      var base = grantUrl.split('?')[0];
+      var qs = 'return_to_placement=1&from=placement';
+      if (studentId) qs += '&student_id=' + encodeURIComponent(studentId);
+      return base + '?' + qs;
+    }
+  }
+
+  function syncGrantLink(studentId) {
+    var href = buildGrantUrl(studentId || (studentSelect && studentSelect.value) || '');
+    if (grantExtraLink) grantExtraLink.href = href;
+  }
 
   function bookingStyle() {
     var el = document.querySelector('input[name="booking_style"]:checked');
@@ -547,31 +572,39 @@
           return;
         }
 
+        syncGrantLink(studentSelect.value);
+
+        var all = data.entitlements || [];
         var bookable = (data.bookable_entitlements || []).filter(function (e) {
           if (mode === 'private') return e.kind === 'private';
           return e.kind === 'group' || e.scope === 'global';
         });
 
         if (!data.has_package || bookable.length === 0) {
+          var otherCount = all.length;
           packageStatus.innerHTML = 'الطالب <strong>غير مشترك</strong> في باقة مناسبة لهذا النوع من التسكين.'
-            + (grantUrl ? ' <a class="font-semibold text-accent underline" href="' + grantUrl + (studentSelect.value ? '?user_id=' + studentSelect.value : '') + '">منح رصيد الآن</a>' : '');
+            + (otherCount ? ' (لديه ' + otherCount + ' رصيد/أرصدة أخرى غير قابلة لهذا التسكين.)' : '')
+            + (grantUrl ? ' <a class="font-semibold text-accent underline" href="' + buildGrantUrl(studentSelect.value) + '">منح رصيد الآن</a>' : '');
           packageStatus.className = 'mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs text-amber-800';
           setOptions(entitlementSelect, [], 'لا يوجد رصيد قابل للحجز');
           refreshSubmit();
           return;
         }
 
-        packageStatus.textContent = 'مشترك · خاص: ' + (data.private_units || 0) + ' · مجموعات: ' + (data.group_units || 0);
+        packageStatus.textContent = 'متاح للاختيار: ' + bookable.length + ' / إجمالي الأرصدة: ' + (data.all_entitlement_count || all.length)
+          + ' · خاص: ' + (data.private_units || 0) + ' · مجموعات: ' + (data.group_units || 0);
         packageStatus.className = 'mt-3 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2.5 text-xs text-emerald-800';
 
         setOptions(entitlementSelect, bookable.map(function (e) {
           return {
             value: String(e.id),
-            label: (e.package || e.scope_label) + ' — ' + e.units_left + ' حصة'
+            label: '#' + e.id + ' · ' + (e.package || e.scope_label)
+              + ' — متبقي ' + e.units_left + '/' + (e.units_total || e.units_left)
               + (e.group_title ? ' — ' + e.group_title : '')
               + (e.expires_at ? ' — حتى ' + e.expires_at : '')
+              + (e.notes ? ' — ' + e.notes : '')
           };
-        }), 'اختر الرصيد…');
+        }), bookable.length > 1 ? 'اختر أحد الأرصدة (' + bookable.length + ')…' : 'اختر الرصيد…');
         if (preselectedEntitlement) entitlementSelect.value = preselectedEntitlement;
         refreshSubmit();
       })
@@ -711,7 +744,10 @@
       });
   }
 
-  studentSelect.addEventListener('change', loadStudentContext);
+  studentSelect.addEventListener('change', function () {
+    syncGrantLink(studentSelect.value);
+    loadStudentContext();
+  });
   entitlementSelect.addEventListener('change', refreshSubmit);
   if (instructorSelect) instructorSelect.addEventListener('change', function () {
     applyInstructorTimezone();
@@ -798,6 +834,7 @@
     });
   }
 
+  syncGrantLink(studentSelect.value || '');
   if (studentSelect.value) loadStudentContext();
   applyInstructorTimezone();
   if (mode === 'private' && instructorSelect && instructorSelect.value) loadSlots();

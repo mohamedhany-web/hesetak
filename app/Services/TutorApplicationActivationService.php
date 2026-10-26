@@ -204,20 +204,27 @@ class TutorApplicationActivationService
             }
 
             $application = $user->latestTutorApplication();
+            // بذرة بيانات كافية لاجتياز بوابة النشر (مهارات / نبذة / منهج) عند التوظيف اليدوي.
+            $manualDefaults = [
+                'headline' => 'معلّم معتمد عبر التوظيف اليدوي',
+                'bio' => 'ملف معلّم تم إنشاؤه يدوياً من إدارة المنصة وجاهز لمتابعة التعيين.',
+                'experience' => "تدريس خصوصي فردي\nتحضير ومتابعة الواجبات\nإدارة الحصص الأونلاين",
+                'curriculum_types' => ['saudi'],
+            ];
+
             if (! $application) {
-                $application = TutorApplication::create([
+                $application = TutorApplication::create(array_merge($manualDefaults, [
                     'user_id' => $user->id,
                     'full_name' => $name,
                     'email' => $email,
                     'phone' => $phone,
-                    'headline' => 'معلم معيَّن يدوياً',
                     'status' => TutorApplication::STATUS_APPROVED,
                     'admin_notes' => 'توظيف يدوي بالإيميل',
                     'reviewed_at' => now(),
                     'reviewed_by' => $admin->id,
-                ]);
+                ]));
             } else {
-                $application->update([
+                $application->update(array_merge($manualDefaults, [
                     'full_name' => $name,
                     'email' => $email,
                     'phone' => $phone ?: $application->phone,
@@ -225,7 +232,43 @@ class TutorApplicationActivationService
                     'admin_notes' => trim((string) $application->admin_notes."\nتوظيف يدوي بالإيميل"),
                     'reviewed_at' => $application->reviewed_at ?? now(),
                     'reviewed_by' => $application->reviewed_by ?? $admin->id,
-                ]);
+                ]));
+            }
+
+            // مرحلة أو مادة واحدة على الأقل لاجتياز شرط المطابقة
+            $application = $application->fresh();
+            if (empty($application->academic_year_ids) && Schema::hasTable('academic_years')) {
+                $yearId = (int) DB::table('academic_years')->orderBy('id')->value('id');
+                if ($yearId <= 0) {
+                    $yearId = (int) DB::table('academic_years')->insertGetId([
+                        'name' => 'مرحلة عامة',
+                        'order' => 0,
+                        'is_active' => 1,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+                }
+                if ($yearId > 0) {
+                    $application->update(['academic_year_ids' => [$yearId]]);
+                }
+            }
+            if (empty($application->teaching_subject_ids) && Schema::hasTable('academic_subjects')) {
+                $subjectId = (int) DB::table('academic_subjects')->orderBy('id')->value('id');
+                if ($subjectId <= 0) {
+                    $payload = [
+                        'name' => 'مادة عامة',
+                        'is_active' => 1,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ];
+                    if (Schema::hasColumn('academic_subjects', 'order')) {
+                        $payload['order'] = 0;
+                    }
+                    $subjectId = (int) DB::table('academic_subjects')->insertGetId($payload);
+                }
+                if ($subjectId > 0) {
+                    $application->update(['teaching_subject_ids' => [$subjectId]]);
+                }
             }
 
             $activated = self::activate($application->fresh(), $admin);

@@ -10,6 +10,7 @@
     $label = 'mb-1.5 block text-xs font-medium text-muted';
     $selectedUserId = (int) ($selectedUserId ?? 0);
     $placementUrl = $placementUrl ?? null;
+    $returnToPlacement = (bool) ($returnToPlacement ?? false);
 @endphp
 
 <div class="space-y-5">
@@ -34,6 +35,9 @@
 
     <form method="POST" action="{{ route('admin.student-entitlements.store') }}" class="space-y-5" id="entitlementGrantForm">
         @csrf
+        @if($returnToPlacement)
+            <input type="hidden" name="return_to_placement" value="1">
+        @endif
 
         <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
             <div class="border-b border-line px-4 py-4 sm:px-5">

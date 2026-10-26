@@ -46,6 +46,9 @@
 
     <form method="POST" action="{{ route('admin.users.store') }}" id="createUserForm" class="space-y-5">
         @csrf
+        @if($fromStudents)
+            <input type="hidden" name="from" value="students">
+        @endif
 
         <div class="grid gap-5 lg:grid-cols-3">
             <div class="space-y-5 lg:col-span-2">
@@ -57,7 +60,7 @@
                     <div class="grid grid-cols-1 gap-5 p-4 sm:p-5 md:grid-cols-2">
                         <div>
                             <label for="name" class="{{ $labelClass }}">الاسم الكامل <span class="text-danger">*</span></label>
-                            <input type="text" name="name" id="name" value="{{ old('name', '') }}" required maxlength="255" pattern="^[\p{Arabic}\s\p{N}]+$" title="الرجاء إدخال اسم صحيح (عربي فقط)" placeholder="أدخل الاسم الكامل" class="{{ $fieldClass }}" />
+                            <input type="text" name="name" id="name" value="{{ old('name', '') }}" required maxlength="255" placeholder="أدخل الاسم الكامل" class="{{ $fieldClass }}" />
                             @error('name')<p class="mt-1.5 text-xs font-medium text-danger">{{ $message }}</p>@enderror
                         </div>
                         <div>
@@ -79,6 +82,11 @@
                                 <input type="tel" name="phone" id="phone" value="{{ old('phone', '') }}" required placeholder="xxxxxxxx" maxlength="15" dir="ltr" aria-label="رقم الهاتف" class="h-11 min-w-0 flex-1 border-0 bg-transparent px-4 text-sm text-ink placeholder:text-muted focus:outline-none focus:ring-0" />
                             </div>
                             @error('phone')<p class="mt-1.5 text-xs font-medium text-danger">{{ $message }}</p>@enderror
+                        </div>
+                        <div id="parentPhoneWrap" class="{{ old('role', $fromStudents ? 'student' : '') === 'student' ? '' : 'hidden' }}">
+                            <label for="parent_phone" class="{{ $labelClass }}">رقم ولي الأمر <span class="font-normal text-muted">(اختياري)</span></label>
+                            <input type="text" name="parent_phone" id="parent_phone" value="{{ old('parent_phone', '') }}" class="{{ $fieldClass }}" dir="ltr" placeholder="+9665xxxxxxxx" maxlength="30" />
+                            @error('parent_phone')<p class="mt-1.5 text-xs font-medium text-danger">{{ $message }}</p>@enderror
                         </div>
                         <div class="md:col-span-2">
                             <label for="email" class="{{ $labelClass }}">البريد الإلكتروني <span class="text-danger">*</span></label>
@@ -255,15 +263,19 @@
         this.setCustomValidity(sanitized.length && sanitized.length < 6 ? 'رقم الهاتف قصير جداً' : '');
     });
 
-    // التحقق من صحة الاسم (عربي فقط)
-    document.getElementById('name').addEventListener('input', function () {
-        const arabicPattern = /^[\u0600-\u06FF\s]+$/;
-        if (this.value && !arabicPattern.test(this.value.trim())) {
-            this.setCustomValidity('الاسم يجب أن يحتوي على أحرف عربية فقط');
-        } else {
-            this.setCustomValidity('');
+    // إظهار رقم ولي الأمر عند اختيار دور طالب
+    (function () {
+        const roleSelect = document.getElementById('role');
+        const parentWrap = document.getElementById('parentPhoneWrap');
+        function syncParentPhone() {
+            if (!roleSelect || !parentWrap) return;
+            parentWrap.classList.toggle('hidden', roleSelect.value !== 'student');
         }
-    });
+        if (roleSelect) {
+            roleSelect.addEventListener('change', syncParentPhone);
+            syncParentPhone();
+        }
+    })();
 
     // التحقق من صحة البريد الإلكتروني
     document.getElementById('email').addEventListener('input', function () {

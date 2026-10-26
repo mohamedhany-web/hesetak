@@ -58,7 +58,7 @@ class EmployeeController extends Controller
 
         $employees = $query->latest('hire_date')->paginate(20);
 
-        $jobs = EmployeeJob::active()->fixedJobs()->orderBy('name')->get();
+        $jobs = EmployeeJob::active()->orderBy('name')->get();
 
         $stats = [
             'total' => User::employees()->count(),
@@ -75,7 +75,7 @@ class EmployeeController extends Controller
      */
     public function create()
     {
-        $jobs = EmployeeJob::active()->fixedJobs()->orderBy('name')->get();
+        $jobs = EmployeeJob::active()->orderBy('name')->get();
         $roles = \App\Models\Role::orderBy('display_name')->get();
         return view('admin.employees.create', compact('jobs', 'roles'));
     }
@@ -176,7 +176,7 @@ class EmployeeController extends Controller
     public function edit(User $employee)
     {
         $this->ensureEmployee($employee);
-        $jobs = EmployeeJob::active()->fixedJobs()->orderBy('name')->get();
+        $jobs = EmployeeJob::active()->orderBy('name')->get();
         $roles = \App\Models\Role::orderBy('display_name')->get();
         $employee->loadMissing('roles');
         return view('admin.employees.edit', compact('employee', 'jobs', 'roles'));

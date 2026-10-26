@@ -89,7 +89,11 @@ class PlacementController extends Controller
             'selectedEntitlementId' => $selectedEntitlementId,
             'mode' => 'private',
             'grantUrl' => Route::has('admin.student-entitlements.create')
-                ? route('admin.student-entitlements.create')
+                ? route('admin.student-entitlements.create', array_filter([
+                    'student_id' => $selectedStudentId > 0 ? $selectedStudentId : null,
+                    'return_to_placement' => 1,
+                    'from' => 'placement',
+                ]))
                 : null,
             'durationMinutes' => OneToOneSession::defaultDurationMinutes(),
             'dayLabels' => OneToOneAvailabilityService::dayLabels(),
@@ -129,11 +133,14 @@ class PlacementController extends Controller
                     'scope_label' => ServicePackage::scopes()[$entitlement->scope] ?? $entitlement->scope,
                     'kind' => $kind,
                     'units_left' => $left,
+                    'units_total' => (int) $entitlement->units_total,
+                    'units_used' => (int) $entitlement->units_used,
                     'bookable' => $left > 0,
                     'package' => $entitlement->servicePackage?->name,
                     'group_id' => $entitlement->tutoring_group_id,
                     'group_title' => $entitlement->tutoringGroup?->title,
                     'expires_at' => optional($entitlement->expires_at)->format('Y-m-d'),
+                    'notes' => $entitlement->notes ? \Illuminate\Support\Str::limit((string) $entitlement->notes, 40) : null,
                 ];
             })
             ->values();
@@ -151,6 +158,7 @@ class PlacementController extends Controller
             'has_package' => $bookable->isNotEmpty(),
             'entitlements' => $entitlements,
             'bookable_entitlements' => $bookable,
+            'all_entitlement_count' => $entitlements->count(),
             'private_units' => (int) $bookable->where('kind', 'private')->sum('units_left'),
             'group_units' => (int) $bookable->where('kind', 'group')->sum('units_left'),
         ]);

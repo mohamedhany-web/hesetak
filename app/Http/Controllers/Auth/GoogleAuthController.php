@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Support\StudentExclusiveSession;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Schema;
@@ -90,6 +91,7 @@ class GoogleAuthController extends Controller
 
         Auth::login($user, true);
         request()->session()->regenerate();
+        StudentExclusiveSession::claim($user, request()->session()->getId());
         if (Schema::hasColumn('users', 'last_login_at')) {
             $user->update(['last_login_at' => now()]);
         }

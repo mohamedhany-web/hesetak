@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Mail\TwoFactorCodeMail;
 use App\Support\RbacAdminRouteAccess;
+use App\Support\StudentExclusiveSession;
 use App\Models\TwoFactorLog;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -244,11 +245,9 @@ class AuthController extends Controller
             // تسجيل الدخول
             Auth::login($user, $request->boolean('remember'));
             $request->session()->regenerate();
-            
-            // حفظ معرف الجلسة الجديد في الكاش
-            $sessionId = $request->session()->getId();
-            $cacheKey = "user_session_{$user->id}";
-            \Cache::put($cacheKey, $sessionId, now()->addDays(7));
+
+            // طلاب فقط: جلسة واحدة — إبطال جلسات الأجهزة الأخرى
+            StudentExclusiveSession::claim($user, $request->session()->getId());
             
             // تحديث آخر دخول (حماية من SQL Injection باستخدام Eloquent)
             $user->update(['last_login_at' => now()]);
@@ -477,6 +476,8 @@ class AuthController extends Controller
         )->onQueue('registrations');
 
         Auth::login($user);
+        $request->session()->regenerate();
+        StudentExclusiveSession::claim($user, $request->session()->getId());
 
         $cookie = $referralService->queueDeviceFingerprintCookie($deviceFingerprint);
 
@@ -589,12 +590,10 @@ class AuthController extends Controller
     public function logout(Request $request)
     {
         $user = Auth::user();
-        
-        // مسح معرف الجلسة من الكاش لتجنب مشاكل تسجيل الدخول اللاحق
-        if ($user) {
-            $cacheKey = "user_session_{$user->id}";
-            \Cache::forget($cacheKey);
-            \Log::info('تسجيل خروج للمستخدم: ' . $user->id . ' - تم مسح الجلسة من الكاش');
+
+        if ($user && StudentExclusiveSession::appliesTo($user)) {
+            StudentExclusiveSession::forget($user);
+            \Log::info('تسجيل خروج للطالب: '.$user->id.' - تم مسح قفل الجلسة الحصرية');
         }
         
         Auth::logout();
