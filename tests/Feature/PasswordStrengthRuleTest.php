@@ -56,7 +56,7 @@ class PasswordStrengthRuleTest extends TestCase
         $this->post(route('public.tutor.apply.register'), [
             'full_name' => 'معلم تجريبي',
             'email' => 'weak.tutor@example.com',
-            'phone' => '+966500000098',
+            'phone' => '01012345678',
             'password' => '12345678',
             'password_confirmation' => '12345678',
         ])->assertSessionHasErrors('password');

@@ -59,6 +59,7 @@
                 @php
                     $instructorTz = \App\Support\AppTimezone::forUser($session->instructor);
                     $scheduledLocal = \App\Support\AppTimezone::datetimeLocalValue($session->scheduled_at, $instructorTz);
+                    $isFlashedRow = (string) old('_placement_session_id') === (string) $session->id;
                 @endphp
                 <div class="py-3 text-sm space-y-2">
                     <div class="flex items-center justify-between gap-3">
@@ -80,16 +81,19 @@
                               class="flex flex-wrap items-end gap-2 rounded-xl border border-line/80 bg-canvas/40 p-2.5">
                             @csrf
                             @method('PATCH')
+                            <input type="hidden" name="_placement_session_id" value="{{ $session->id }}">
                             <div class="min-w-[11rem] flex-1">
                                 <label class="mb-1 block text-[10px] font-medium text-muted">موعد الحصة (توقيت المعلم)</label>
-                                <input type="datetime-local" name="scheduled_at" value="{{ old('scheduled_at', $scheduledLocal) }}"
-                                       required dir="ltr"
+                                <input type="datetime-local" name="scheduled_at"
+                                       value="{{ $isFlashedRow ? old('scheduled_at', $scheduledLocal) : $scheduledLocal }}"
+                                       required dir="ltr" autocomplete="off"
                                        class="h-9 w-full rounded-lg border border-line bg-surface px-2.5 text-xs text-ink focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20">
                             </div>
                             <div class="w-20">
                                 <label class="mb-1 block text-[10px] font-medium text-muted">المدة (د)</label>
                                 <input type="number" name="duration_minutes" min="15" max="180" step="5"
-                                       value="{{ old('duration_minutes', (int) ($session->duration_minutes ?: 50)) }}"
+                                       value="{{ $isFlashedRow ? old('duration_minutes', (int) ($session->duration_minutes ?: 50)) : (int) ($session->duration_minutes ?: 50) }}"
+                                       autocomplete="off"
                                        class="h-9 w-full rounded-lg border border-line bg-surface px-2.5 text-xs text-ink focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20">
                             </div>
                             <input type="hidden" name="timezone" value="{{ $instructorTz }}">

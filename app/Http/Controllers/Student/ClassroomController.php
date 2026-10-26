@@ -211,6 +211,7 @@ class ClassroomController extends Controller
     public function secureEnter(ClassroomMeeting $meeting)
     {
         $user = Auth::user();
+        $this->reopenMeetingIfSessionStillScheduled($meeting);
         $this->ensureMeetingCanEnter($meeting, $user);
 
         return redirect()->to(ClassroomMeetingAccessService::roomUrlForUser($meeting, $user));
@@ -266,6 +267,7 @@ class ClassroomController extends Controller
     public function room(ClassroomMeeting $meeting)
     {
         $user = Auth::user();
+        $this->reopenMeetingIfSessionStillScheduled($meeting);
         $this->ensureMeetingCanEnter($meeting, $user);
         $isHost = ClassroomMeetingAccessService::userIsHost($meeting, $user);
         $canManageMeeting = $isHost && ($user->isInstructor() || $user->isAdmin());
@@ -1727,6 +1729,42 @@ class ClassroomController extends Controller
         }
 
         return $disk->exists($path);
+    }
+
+    /**
+     * غرفة أُغلقت من محاولة/موعد قديم ثم أُعيدت جدولة الحصة لموعد لاحق → أعد فتحها عند الدخول.
+     * لا نفتح إذا أُنهيت الحصة قرب موعدها الحالي (إنهاء شرعي من المعلم).
+     */
+    private function reopenMeetingIfSessionStillScheduled(ClassroomMeeting $meeting): void
+    {
+        if (! $meeting->ended_at || ! Schema::hasTable('one_to_one_sessions')) {
+            return;
+        }
+
+        $session = null;
+        if ($meeting->one_to_one_session_id) {
+            $session = OneToOneSession::query()->find($meeting->one_to_one_session_id);
+        }
+        if (! $session) {
+            $session = OneToOneSession::query()
+                ->where('classroom_meeting_id', $meeting->id)
+                ->first();
+        }
+
+        if (! $session || $session->status !== OneToOneSession::STATUS_SCHEDULED || ! $session->scheduled_at) {
+            return;
+        }
+
+        // فجوة واضحة بين الإغلاق والموعد الجديد = إعادة جدولة بعد إغلاق قديم
+        if ($meeting->ended_at->gte($session->scheduled_at->copy()->subHours(2))) {
+            return;
+        }
+
+        $meeting->update([
+            'started_at' => null,
+            'ended_at' => null,
+        ]);
+        $meeting->refresh();
     }
 
     private function ensureMeetingCanEnter(ClassroomMeeting $meeting, $user): void

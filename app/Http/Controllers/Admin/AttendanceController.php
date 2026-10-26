@@ -15,7 +15,7 @@ class AttendanceController extends Controller
 {
     public function index(Request $request)
     {
-        $query = AttendanceRecord::with(['lecture', 'student']);
+        $query = AttendanceRecord::with(['lecture.course', 'student']);
 
         if ($request->filled('lecture_id')) {
             $query->where('lecture_id', $request->lecture_id);
@@ -25,8 +25,29 @@ class AttendanceController extends Controller
             $query->where('status', $request->status);
         }
 
+        // فلتر حالة المحاضرة (مكتملة / فاتت) — منفصل عن حالة حضور الطالب
+        if ($request->filled('lecture_status')) {
+            $lectureStatus = (string) $request->lecture_status;
+            if ($lectureStatus === 'past') {
+                $query->whereHas('lecture', function ($q) {
+                    $q->where(function ($inner) {
+                        $inner->where('status', 'completed')
+                            ->orWhere(function ($q2) {
+                                $q2->whereNotNull('scheduled_at')
+                                    ->where('scheduled_at', '<', now());
+                            });
+                    });
+                });
+            } else {
+                $query->whereHas('lecture', fn ($q) => $q->where('status', $lectureStatus));
+            }
+        }
+
         $records = $query->orderBy('created_at', 'desc')->paginate(20);
-        $lectures = Lecture::with('course')->orderBy('scheduled_at', 'desc')->get();
+        $lectures = Lecture::with('course')
+            ->orderByDesc('scheduled_at')
+            ->limit(400)
+            ->get();
 
         return view('admin.attendance.index', compact('records', 'lectures'));
     }

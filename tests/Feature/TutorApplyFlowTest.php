@@ -2,12 +2,16 @@
 
 namespace Tests\Feature;
 
+use App\Models\AcademicSubject;
+use App\Models\AcademicYear;
 use App\Models\HiringFormField;
 use App\Models\InstructorProfile;
 use App\Models\TutorApplication;
+use App\Models\TutorHiringSetting;
 use App\Models\User;
 use App\Services\HiringFormService;
 use App\Services\TutorApplicationActivationService;
+use App\Support\HesetakMatchCatalog;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
@@ -29,7 +33,7 @@ class TutorApplyFlowTest extends TestCase
         $response = $this->post(route('public.tutor.apply.register'), [
             'full_name' => 'معلم تجريبي',
             'email' => 'tutor.test@example.com',
-            'phone' => '+966500000099',
+            'phone' => '01012345678',
             'password' => 'Password123',
             'password_confirmation' => 'Password123',
         ]);
@@ -40,7 +44,7 @@ class TutorApplyFlowTest extends TestCase
         $user = User::query()->where('email', 'tutor.test@example.com')->first();
         $this->assertNotNull($user);
         $this->assertSame('instructor', $user->role);
-        $this->assertSame('+966500000099', $user->phone);
+        $this->assertSame('01012345678', $user->phone);
         $this->assertTrue(Hash::check('Password123', $user->password));
 
         $app = TutorApplication::query()->where('user_id', $user->id)->first();
@@ -63,7 +67,7 @@ class TutorApplyFlowTest extends TestCase
         $user = User::factory()->create([
             'role' => 'instructor',
             'email' => 'teacher2@example.com',
-            'phone' => '+966500000001',
+            'phone' => '01012345679',
             'is_active' => true,
             'password' => Hash::make('password'),
         ]);
@@ -99,7 +103,7 @@ class TutorApplyFlowTest extends TestCase
             }
             $answers[$field->id] = match ($field->system_key) {
                 'full_name' => 'معلم مكتمل',
-                'phone' => '+966500000001',
+                'phone' => '01012345679',
                 'headline' => 'معلم قرآن',
                 'bio' => 'نبذة تعريفية كافية للاختبار',
                 'experience' => "خبرة 5 سنوات\nتحفيظ",
@@ -111,9 +115,31 @@ class TutorApplyFlowTest extends TestCase
             };
         }
 
+        TutorHiringSetting::putMany([
+            'require_specialty' => true,
+            'require_interview' => false,
+            'require_contract' => false,
+        ]);
+
+        $year = AcademicYear::query()->create([
+            'name' => 'ثانوي',
+            'is_active' => true,
+            'order' => 1,
+        ]);
+        $subject = AcademicSubject::query()->create([
+            'name' => 'رياضيات',
+            'academic_year_id' => $year->id,
+            'is_active' => true,
+            'order' => 1,
+        ]);
+        $curriculumKey = HesetakMatchCatalog::allowedCurriculumTypeKeys()[0] ?? 'egyptian';
+
         $response = $this->post(route('public.tutor.apply.profile.store'), [
             'answers' => $answers,
             'hiring_upload' => $uploads,
+            'teaching_subject_ids' => [$subject->id],
+            'academic_year_ids' => [$year->id],
+            'curriculum_types' => [$curriculumKey],
         ]);
 
         $response->assertRedirect(route('public.tutor.apply.profile'));

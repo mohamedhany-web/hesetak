@@ -20,7 +20,28 @@
         .hstk-excalidraw-host .excalidraw{width:100%!important;height:100%!important}
         .hstk-excalidraw-loading{position:absolute;inset:0;z-index:5;display:none;align-items:center;justify-content:center;background:rgba(15,23,42,.75);color:#94a3b8;font-size:14px}
         .hstk-wb-student-draw-lite .excalidraw button[data-testid^="toolbar-"]:not([data-testid="toolbar-freedraw"]):not([data-testid="toolbar-eraser"]):not([data-testid="toolbar-hand"]){display:none!important}
+        html, body, .hstk-live-body {
+            -webkit-user-select: none;
+            user-select: none;
+            -webkit-touch-callout: none;
+        }
+        input, textarea, [contenteditable="true"] {
+            -webkit-user-select: text;
+            user-select: text;
+        }
     </style>
+    <script>
+        document.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+        document.addEventListener('keydown', function (e) {
+            var k = e.key || '';
+            if (k === 'PrintScreen' || (e.metaKey && e.shiftKey && (k === '3' || k === '4' || k === '5'))) {
+                e.preventDefault();
+            }
+            if (e.ctrlKey && e.shiftKey && (k === 'I' || k === 'i' || k === 'S' || k === 's')) {
+                e.preventDefault();
+            }
+        });
+    </script>
 </head>
 <body class="hstk-live-body">
 @php

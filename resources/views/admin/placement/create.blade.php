@@ -96,6 +96,15 @@
                     <div id="packageStatus" class="mt-3 rounded-xl border border-line bg-canvas/60 px-3 py-2.5 text-xs text-muted">
                         سيظهر هنا إن كان الطالب مشتركاً في باقة أم لا.
                     </div>
+                    @if(Route::has('admin.student-entitlements.create'))
+                        <p class="mt-2 text-[11px] text-muted">
+                            تحتاج باقة إضافية للطالب؟
+                            <a href="{{ route('admin.student-entitlements.create') }}" class="font-medium text-accent hover:underline" target="_blank" rel="noopener">
+                                منح رصيد / باقة جديدة
+                            </a>
+                            ثم ارجع واخترها من القائمة (كل تسكين يستخدم باقة واحدة حالياً).
+                        </p>
+                    @endif
                 </div>
             </div>
         </article>

@@ -7,6 +7,7 @@ use App\Models\HiringFormField;
 use App\Models\InstructorProfile;
 use App\Models\TutorApplication;
 use App\Models\User;
+use App\Support\EgyptMobilePhone;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Validator;
@@ -119,7 +120,18 @@ class HiringFormService
             $base = [($required ? 'required' : 'nullable')];
             $rules[$key] = match ($field->type) {
                 HiringFormField::TYPE_EMAIL => array_merge($base, ['email', 'max:190']),
-                HiringFormField::TYPE_PHONE => array_merge($base, ['string', 'max:40']),
+                HiringFormField::TYPE_PHONE => array_merge($base, [
+                    'string',
+                    'max:40',
+                    function (string $attribute, mixed $value, \Closure $fail): void {
+                        if ($value === null || $value === '') {
+                            return;
+                        }
+                        if (EgyptMobilePhone::normalize(is_string($value) ? $value : (string) $value) === null) {
+                            $fail(EgyptMobilePhone::MESSAGE);
+                        }
+                    },
+                ]),
                 HiringFormField::TYPE_NUMBER => array_merge($base, ['numeric']),
                 HiringFormField::TYPE_DATE => array_merge($base, ['date']),
                 HiringFormField::TYPE_URL => array_merge($base, ['url', 'max:500']),
@@ -204,7 +216,12 @@ class HiringFormService
         }
 
         if (! empty($mapped['phone'])) {
-            $phone = preg_replace('/\s+/', '', (string) $mapped['phone']) ?: (string) $mapped['phone'];
+            $phone = EgyptMobilePhone::normalize((string) $mapped['phone']);
+            if ($phone === null) {
+                throw ValidationException::withMessages([
+                    'phone' => EgyptMobilePhone::MESSAGE,
+                ]);
+            }
             $mapped['phone'] = $phone;
             $exists = User::query()
                 ->where('phone', $phone)

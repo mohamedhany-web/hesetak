@@ -28,7 +28,8 @@
       <input class="mc-input" id="field_{{ $fid }}" type="email" name="answers[{{ $fid }}]" value="{{ $value }}" @if($field->is_required) required @endif dir="ltr" autocomplete="email" placeholder="{{ $field->placeholder }}">
       @break
     @case('phone')
-      <input class="mc-input" id="field_{{ $fid }}" type="tel" name="answers[{{ $fid }}]" value="{{ $value ?? $application->phone }}" @if($field->is_required) required @endif dir="ltr" autocomplete="tel" placeholder="{{ $field->placeholder ?: '+9665xxxxxxxx' }}">
+      <input class="mc-input" id="field_{{ $fid }}" type="tel" name="answers[{{ $fid }}]" value="{{ $value ?? $application->phone }}" @if($field->is_required) required @endif dir="ltr" autocomplete="tel" inputmode="numeric" pattern="01[0125][0-9]{8}" maxlength="11" minlength="11" placeholder="{{ $field->placeholder ?: '01012345678' }}" title="{{ $isRtl ? '11 رقماً مصرياً مثل 01012345678' : '11-digit Egypt mobile e.g. 01012345678' }}">
+      <p class="mc-ta-help">{{ $isRtl ? '11 رقماً يبدأ بـ 010 أو 011 أو 012 أو 015' : '11 digits starting with 010, 011, 012, or 015' }}</p>
       @break
     @case('number')
       <input class="mc-input" id="field_{{ $fid }}" type="number" name="answers[{{ $fid }}]" value="{{ $value }}" @if($field->is_required) required @endif placeholder="{{ $field->placeholder }}">

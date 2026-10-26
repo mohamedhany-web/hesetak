@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Mail\ManualInstructorHiredMail;
+use App\Models\AcademicSubject;
 use App\Models\InstructorProfile;
 use App\Models\Notification;
 use App\Models\TutorApplication;
@@ -12,6 +13,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use InvalidArgumentException;
 
 class TutorApplicationActivationService
@@ -85,10 +87,30 @@ class TutorApplicationActivationService
                 $profilePayload['academic_grade_ids'] = $application->academic_grade_ids ?? [];
             }
 
-            $profile = InstructorProfile::updateOrCreate(
-                ['user_id' => $user->id],
-                $profilePayload
-            );
+            $profile = InstructorProfile::firstOrNew(['user_id' => $user->id]);
+            $profile->bypassPublicationGuard = true;
+            $profile->fill($profilePayload);
+            $profile->save();
+            $profile->bypassPublicationGuard = false;
+
+            $yearIds = array_values(array_unique(array_filter(array_map(
+                'intval',
+                (array) ($application->academic_year_ids ?? [])
+            ))));
+            if ($yearIds === [] && Schema::hasTable('academic_subjects')) {
+                $yearIds = TeacherSpecialtyMatcher::yearIds($application);
+            }
+            if ($yearIds !== [] && Schema::hasTable('academic_year_instructors') && method_exists($user, 'teachingLearningPaths')) {
+                $user->teachingLearningPaths()->sync($yearIds);
+                $profile->setRelation('user', $user->load('teachingLearningPaths'));
+            }
+
+            $freshUser = $user->fresh();
+            if (! \App\Support\InstructorProfilePublication::isPublishable($profile, $freshUser)) {
+                throw ValidationException::withMessages([
+                    'skills' => 'لا يمكن تفعيل الملف العام — '.implode(' · ', \App\Support\InstructorProfilePublication::evaluate($profile, $freshUser)['missing']),
+                ]);
+            }
 
             $application->update([
                 'status' => TutorApplication::STATUS_ACTIVATED,
@@ -256,13 +278,43 @@ class TutorApplicationActivationService
 
     private static function skillsFromExperience(TutorApplication $application): ?string
     {
-        $parts = array_filter([
+        $parts = [];
+
+        $experience = trim((string) ($application->experience ?? ''));
+        if ($experience !== '') {
+            foreach (preg_split('/[\r\n,،|]+/u', $experience, -1, PREG_SPLIT_NO_EMPTY) ?: [] as $line) {
+                $line = trim($line);
+                if ($line !== '') {
+                    $parts[] = $line;
+                }
+            }
+        }
+
+        foreach ([
             $application->education,
             $application->headline,
             $application->years_experience !== null ? ($application->years_experience.' سنوات خبرة') : null,
             $application->nationality,
             $application->city,
-        ]);
+        ] as $piece) {
+            $piece = is_string($piece) ? trim($piece) : '';
+            if ($piece !== '') {
+                $parts[] = $piece;
+            }
+        }
+
+        $subjectIds = array_values(array_filter(array_map('intval', (array) ($application->teaching_subject_ids ?? []))));
+        if ($subjectIds !== [] && Schema::hasTable('academic_subjects')) {
+            $names = AcademicSubject::query()->whereIn('id', $subjectIds)->orderBy('name')->pluck('name');
+            foreach ($names as $name) {
+                $name = trim((string) $name);
+                if ($name !== '') {
+                    $parts[] = $name;
+                }
+            }
+        }
+
+        $parts = array_values(array_unique($parts));
 
         return $parts === [] ? null : implode("\n", $parts);
     }

@@ -16,6 +16,16 @@
     <script src="{{ asset('js/classroom-whiteboard-sync.js') }}?v=wb-sync-2"></script>
     <style>
         * { font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif; }
+        /* تضييق لقطات الشاشة داخل الحصة (ردع فقط — لا يمنع أدوات النظام بالكامل) */
+        html, body, #meeting-video-root, .room-body {
+            -webkit-user-select: none;
+            user-select: none;
+            -webkit-touch-callout: none;
+        }
+        input, textarea, [contenteditable="true"] {
+            -webkit-user-select: text;
+            user-select: text;
+        }
         html { height: 100%; height: 100dvh; }
         body {
             margin: 0;
@@ -379,6 +389,12 @@
                 setDrawerOpen(false);
             }, true);
         })();
+        document.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+        document.addEventListener('keydown', function (e) {
+            var k = e.key || '';
+            if (k === 'PrintScreen') e.preventDefault();
+            if (e.ctrlKey && e.shiftKey && (k === 'I' || k === 'i' || k === 'S' || k === 's')) e.preventDefault();
+        });
     </script>
 
     <div class="room-body">

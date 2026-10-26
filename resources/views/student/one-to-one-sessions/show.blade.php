@@ -14,6 +14,7 @@
     $canJoinSession = $canJoinSession ?? false;
     $sessionLockReason = $sessionLockReason ?? null;
     $awaiting = method_exists($session, 'isAwaitingTeacherStart') && $session->isAwaitingTeacherStart();
+    // حتى لو ended_at معلّق من محاولة سابقة، secureEnter يعيد فتح الغرفة طالما الحصة مجدولة.
     $joinHref = ($isScheduled && $session->classroomMeeting && $canJoinSession)
         ? route('classroom.secure-enter', $session->classroomMeeting)
         : null;
@@ -67,10 +68,12 @@
 @if(session('success'))
     <div class="st-flash st-flash--ok">{{ session('success') }}</div>
 @endif
+@if(session('error'))
+    <div class="st-flash st-flash--err">{{ session('error') }}</div>
+@endif
 @if($errors->any())
     <div class="st-flash st-flash--err">{{ $errors->first() }}</div>
 @endif
-
 @if($isScheduled)
     <section class="st-join-hero" aria-label="{{ __('student.one_to_one_join_session') }}">
         <div class="st-join-hero__copy">

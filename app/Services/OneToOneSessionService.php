@@ -684,17 +684,23 @@ class OneToOneSessionService
             return;
         }
 
-        DB::transaction(function () use ($session, $meeting, $scheduledAt, $durationMinutes, $rescheduledBy, $notify) {
+        DB::transaction(function () use ($session, $meeting, $scheduledAt, $durationMinutes, $rescheduledBy, $notify, $isActuallyLive) {
             $session->update([
                 'status' => OneToOneSession::STATUS_SCHEDULED,
                 'scheduled_at' => $scheduledAt,
                 'duration_minutes' => $durationMinutes,
             ]);
 
-            $meeting->update([
+            // إعادة فتح غرفة انتهت سابقاً عند إعادة الجدولة — وإلا زر «ادخل الآن» يرجّع الطالب بصمت.
+            $meetingPatch = [
                 'scheduled_for' => $scheduledAt,
                 'planned_duration_minutes' => $durationMinutes,
-            ]);
+            ];
+            if ($meeting->ended_at || ($meeting->started_at && ! $isActuallyLive)) {
+                $meetingPatch['started_at'] = null;
+                $meetingPatch['ended_at'] = null;
+            }
+            $meeting->update($meetingPatch);
 
             if (! $notify) {
                 return;

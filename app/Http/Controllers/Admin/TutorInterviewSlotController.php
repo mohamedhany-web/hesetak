@@ -17,7 +17,8 @@ class TutorInterviewSlotController extends Controller
             ->withCount(['interviews as booked_count' => function ($q) {
                 $q->whereIn('status', ['scheduled', 'completed']);
             }])
-            ->orderByDesc('starts_at')
+            ->orderByRaw('CASE WHEN starts_at < ? THEN 1 ELSE 0 END', [now()])
+            ->orderBy('starts_at')
             ->paginate(30);
 
         $duration = TutorHiringSetting::int('interview_duration_minutes', 30);

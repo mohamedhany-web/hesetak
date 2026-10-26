@@ -156,7 +156,8 @@ class TutorApplicationController extends Controller
         $tutorApplication->load([
             'reviewedByUser:id,name',
             'activatedByUser:id,name',
-            'user:id,name,email,phone,is_active,role,created_at',
+            'user:id,uuid,name,email,phone,is_active,role,created_at',
+            'user.instructorProfile:id,user_id,status,skills,headline',
             'latestInterview',
             'latestAgreement',
         ]);

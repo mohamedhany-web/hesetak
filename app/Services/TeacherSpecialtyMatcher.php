@@ -9,6 +9,7 @@ use App\Models\InstructorProfile;
 use App\Models\TutorApplication;
 use App\Models\TutorHiringSetting;
 use App\Support\HesetakMatchCatalog;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\ValidationException;
 
@@ -268,22 +269,24 @@ class TeacherSpecialtyMatcher
      */
     public static function subjectOptions(): array
     {
-        return AcademicSubject::query()
-            ->with('academicYear:id,name')
-            ->when(
-                AcademicSubject::query()->getModel()->getConnection()->getSchemaBuilder()->hasColumn('academic_subjects', 'is_active'),
-                fn ($q) => $q->where('is_active', true)
-            )
-            ->orderBy('order')
-            ->orderBy('name')
-            ->get(['id', 'name', 'academic_year_id', 'order'])
-            ->map(fn (AcademicSubject $s) => [
-                'id' => (int) $s->id,
-                'name' => (string) $s->name,
-                'year_id' => $s->academic_year_id ? (int) $s->academic_year_id : null,
-                'year_name' => $s->academicYear?->name,
-            ])
-            ->all();
+        return Cache::remember('teacher_specialty.subject_options.v1', 300, function () {
+            return AcademicSubject::query()
+                ->with('academicYear:id,name')
+                ->when(
+                    Schema::hasColumn('academic_subjects', 'is_active'),
+                    fn ($q) => $q->where('is_active', true)
+                )
+                ->orderBy('order')
+                ->orderBy('name')
+                ->get(['id', 'name', 'academic_year_id', 'order'])
+                ->map(fn (AcademicSubject $s) => [
+                    'id' => (int) $s->id,
+                    'name' => (string) $s->name,
+                    'year_id' => $s->academic_year_id ? (int) $s->academic_year_id : null,
+                    'year_name' => $s->academicYear?->name,
+                ])
+                ->all();
+        });
     }
 
     /**
@@ -291,31 +294,33 @@ class TeacherSpecialtyMatcher
      */
     public static function yearOptions(): array
     {
-        $query = AcademicYear::query()
-            ->where('is_active', true)
-            ->where(function ($q) {
-                $q->whereNull('code')->orWhere('code', 'not like', 'TCH-%');
-            })
-            ->ordered();
+        return Cache::remember('teacher_specialty.year_options.v1', 300, function () {
+            $query = AcademicYear::query()
+                ->where('is_active', true)
+                ->where(function ($q) {
+                    $q->whereNull('code')->orWhere('code', 'not like', 'TCH-%');
+                })
+                ->ordered();
 
-        if (Schema::hasTable('academic_grades')) {
-            $query->with(['grades' => fn ($grades) => $grades->active()->ordered()]);
-        }
+            if (Schema::hasTable('academic_grades')) {
+                $query->with(['grades' => fn ($grades) => $grades->active()->ordered()]);
+            }
 
-        return $query
-            ->get(['id', 'name'])
-            ->map(fn (AcademicYear $year) => [
-                'id' => (int) $year->id,
-                'name' => (string) $year->name,
-                'grades' => ($year->grades ?? collect())
-                    ->map(fn ($grade) => [
-                        'id' => (int) $grade->id,
-                        'name' => (string) $grade->name,
-                    ])
-                    ->values()
-                    ->all(),
-            ])
-            ->all();
+            return $query
+                ->get(['id', 'name'])
+                ->map(fn (AcademicYear $year) => [
+                    'id' => (int) $year->id,
+                    'name' => (string) $year->name,
+                    'grades' => ($year->grades ?? collect())
+                        ->map(fn ($grade) => [
+                            'id' => (int) $grade->id,
+                            'name' => (string) $grade->name,
+                        ])
+                        ->values()
+                        ->all(),
+                ])
+                ->all();
+        });
     }
 
     /**

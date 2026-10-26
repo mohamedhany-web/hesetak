@@ -49,8 +49,12 @@ class StudentEntitlementController extends Controller
         if ($request->filled('search')) {
             $s = trim((string) $request->search);
             $query->whereHas('user', function ($q) use ($s) {
-                $q->where('name', 'like', "%{$s}%")
-                    ->orWhere('email', 'like', "%{$s}%");
+                $q->where('role', 'student')
+                    ->where(function ($inner) use ($s) {
+                        $inner->where('name', 'like', "%{$s}%")
+                            ->orWhere('email', 'like', "%{$s}%")
+                            ->orWhere('phone', 'like', "%{$s}%");
+                    });
             });
         }
 

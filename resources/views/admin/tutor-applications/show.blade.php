@@ -173,17 +173,29 @@
             </article>
 
             @if($application->user)
+                @php
+                    $publicListed = $application->isActivated()
+                        && \App\Services\PublicInstructorDirectory::isPubliclyListed($application->user);
+                @endphp
                 <article class="rounded-2xl border border-line bg-surface p-5 shadow-soft">
                     <div class="flex items-start gap-3">
                         <span class="inline-flex size-9 shrink-0 items-center justify-center rounded-xl bg-accent-soft text-accent"><i class="fas fa-user-check text-sm"></i></span>
                         <div class="min-w-0 flex-1">
-                            <h3 class="text-base font-semibold text-ink">الحساب المفعّل</h3>
+                            <h3 class="text-base font-semibold text-ink">{{ $application->isActivated() ? 'الحساب المفعّل' : 'حساب المتقدّم' }}</h3>
                             <p class="mt-1 text-sm text-muted">المستخدم: <span class="font-semibold text-ink">{{ $application->user->name }}</span></p>
                             <p class="mt-0.5 text-sm text-muted" dir="ltr">{{ $application->user->email }} · {{ $application->user->phone }}</p>
-                            <p class="mt-1 text-xs text-muted">تفعيل: {{ $application->activated_at?->format('Y-m-d H:i') }} بواسطة {{ $application->activatedByUser->name ?? '—' }}</p>
+                            @if($application->isActivated())
+                                <p class="mt-1 text-xs text-muted">تفعيل: {{ $application->activated_at?->format('Y-m-d H:i') }} بواسطة {{ $application->activatedByUser->name ?? '—' }}</p>
+                            @else
+                                <p class="mt-1 text-xs text-muted">الحساب مُنشأ عند التسجيل — الملف العام يظهر بعد التفعيل واكتمال المطابقة.</p>
+                            @endif
                             <div class="mt-3 flex flex-wrap gap-2">
                                 <a href="{{ route('admin.users.edit', $application->user) }}" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl border border-line px-3 text-xs font-semibold text-ink hover:text-accent">إدارة المستخدم</a>
-                                <a href="{{ route('public.instructors.show', $application->user) }}" target="_blank" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl bg-accent px-3 text-xs font-semibold text-white">الملف العام</a>
+                                @if($publicListed)
+                                    <a href="{{ route('public.instructors.show', $application->user) }}" target="_blank" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl bg-accent px-3 text-xs font-semibold text-white">الملف العام</a>
+                                @elseif($application->user->instructorProfile)
+                                    <a href="{{ route('admin.personal-branding.show', $application->user->instructorProfile) }}" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl border border-line px-3 text-xs font-semibold text-ink hover:text-accent">ملف المطابقة</a>
+                                @endif
                             </div>
                         </div>
                     </div>
@@ -222,7 +234,21 @@
 
             <article class="rounded-2xl border border-line bg-surface p-5 shadow-soft space-y-3">
                 <h3 class="text-base font-semibold text-ink">المطابقة / التخصص</h3>
-                @php $specialty = $specialty ?? ['complete' => false, 'missing' => [], 'subject_ids' => [], 'curriculum_types' => []]; @endphp
+                @php
+                    $specialty = $specialty ?? ['complete' => false, 'missing' => [], 'subject_ids' => [], 'curriculum_types' => []];
+                    $previewSkills = array_values(array_filter(array_unique(array_merge(
+                        preg_split('/[\r\n,،|]+/u', (string) ($application->experience ?? ''), -1, PREG_SPLIT_NO_EMPTY) ?: [],
+                        array_filter([
+                            $application->education,
+                            $application->headline,
+                            $application->years_experience !== null ? ($application->years_experience.' سنوات خبرة') : null,
+                            $application->nationality,
+                            $application->city,
+                        ])
+                    ))));
+                    $previewSkills = array_map('trim', $previewSkills);
+                    $previewSkills = array_values(array_filter($previewSkills));
+                @endphp
                 @if($specialty['complete'])
                     <p class="text-sm text-accent font-semibold">مكتمل ✓</p>
                 @else
@@ -231,6 +257,21 @@
                 <p class="text-xs text-muted">مواد: {{ count($specialty['subject_ids'] ?? []) }} · مناهج: {{ implode(', ', $specialty['curriculum_types'] ?? []) ?: '—' }}</p>
                 <p class="text-sm text-ink">المراحل: {{ implode('، ', $specialty['year_names'] ?? []) ?: '—' }}</p>
                 <p class="text-sm text-ink">الصفوف: {{ implode('، ', $specialty['grade_names'] ?? []) ?: '—' }}</p>
+                <div class="rounded-xl border border-line bg-canvas px-3 py-2">
+                    <p class="text-xs font-medium text-muted">مهارات النشر (٣ على الأقل للتفعيل)</p>
+                    @if(count($previewSkills) > 0)
+                        <ul class="mt-1.5 flex flex-wrap gap-1.5">
+                            @foreach(array_slice($previewSkills, 0, 12) as $skill)
+                                <li class="rounded-lg bg-surface px-2 py-1 text-xs text-ink">{{ $skill }}</li>
+                            @endforeach
+                        </ul>
+                        @if(count($previewSkills) < 3)
+                            <p class="mt-1.5 text-xs text-danger">حالياً {{ count($previewSkills) }} — أكمل الخبرات/التعليم/العنوان أو المواد لتصل لثلاث مهارات.</p>
+                        @endif
+                    @else
+                        <p class="mt-1 text-xs text-danger">لا تظهر مهارات بعد — الخبرات والعنوان والمواد تُستخدم عند التفعيل.</p>
+                    @endif
+                </div>
             </article>
 
             @if(in_array($application->status, ['pending', 'rejected'], true))

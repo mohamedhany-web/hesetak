@@ -2,11 +2,15 @@
 
 namespace Tests\Feature;
 
+use App\Models\AcademicSubject;
+use App\Models\AcademicYear;
 use App\Models\HiringForm;
 use App\Models\HiringFormField;
 use App\Models\TutorApplication;
+use App\Models\TutorHiringSetting;
 use App\Models\User;
 use App\Services\HiringFormService;
+use App\Support\HesetakMatchCatalog;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
@@ -21,6 +25,11 @@ class HiringFormBuilderTest extends TestCase
     {
         parent::setUp();
         $this->buildFeatureSchema();
+        TutorHiringSetting::putMany([
+            'require_specialty' => true,
+            'require_interview' => false,
+            'require_contract' => false,
+        ]);
     }
 
     public function test_ensure_default_form_seeds_fields(): void
@@ -76,7 +85,7 @@ class HiringFormBuilderTest extends TestCase
         $user = User::factory()->create([
             'role' => 'instructor',
             'email' => 'tutor.dyn@example.com',
-            'phone' => '+966500000010',
+            'phone' => '01012345610',
             'is_active' => true,
             'password' => Hash::make('password'),
         ]);
@@ -107,7 +116,7 @@ class HiringFormBuilderTest extends TestCase
         $user = User::factory()->create([
             'role' => 'instructor',
             'email' => 'tutor.ok@example.com',
-            'phone' => '+966500000011',
+            'phone' => '01012345611',
             'is_active' => true,
             'password' => Hash::make('password'),
         ]);
@@ -120,7 +129,7 @@ class HiringFormBuilderTest extends TestCase
             'status' => TutorApplication::STATUS_DRAFT,
         ]);
 
-        $payload = $this->buildValidAnswersPayload($form, '+966500000011');
+        $payload = $this->buildValidAnswersPayload($form, '01012345611');
 
         $this->actingAs($user)
             ->post(route('public.tutor.apply.profile.store'), $payload)
@@ -152,7 +161,7 @@ class HiringFormBuilderTest extends TestCase
         $user = User::factory()->create([
             'role' => 'instructor',
             'email' => 'tutor.opt@example.com',
-            'phone' => '+966500000012',
+            'phone' => '01012345612',
             'is_active' => true,
             'password' => Hash::make('password'),
         ]);
@@ -166,7 +175,7 @@ class HiringFormBuilderTest extends TestCase
         ]);
 
         $this->actingAs($user)
-            ->post(route('public.tutor.apply.profile.store'), $this->buildValidAnswersPayload($form, '+966500000012'))
+            ->post(route('public.tutor.apply.profile.store'), $this->buildValidAnswersPayload($form, '01012345612'))
             ->assertRedirect(route('public.tutor.apply.profile'));
 
         $this->assertSame(TutorApplication::STATUS_PENDING, TutorApplication::query()->where('user_id', $user->id)->value('status'));
@@ -192,7 +201,7 @@ class HiringFormBuilderTest extends TestCase
     /**
      * @return array<string, mixed>
      */
-    private function buildValidAnswersPayload(HiringForm $form, string $phone = '+966500000099'): array
+    private function buildValidAnswersPayload(HiringForm $form, string $phone = '01012345699'): array
     {
         $form->load('activeFields');
         $answers = [];
@@ -244,9 +253,22 @@ class HiringFormBuilderTest extends TestCase
             $answers[$urlField->id] = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ';
         }
 
+        $year = AcademicYear::query()->firstOrCreate(
+            ['name' => 'ثانوي اختبار'],
+            ['is_active' => true, 'order' => 1]
+        );
+        $subject = AcademicSubject::query()->firstOrCreate(
+            ['name' => 'رياضيات اختبار', 'academic_year_id' => $year->id],
+            ['is_active' => true, 'order' => 1]
+        );
+        $curriculumKey = HesetakMatchCatalog::allowedCurriculumTypeKeys()[0] ?? 'egyptian';
+
         return [
             'answers' => $answers,
             'hiring_upload' => $uploads,
+            'teaching_subject_ids' => [$subject->id],
+            'academic_year_ids' => [$year->id],
+            'curriculum_types' => [$curriculumKey],
         ];
     }
 }

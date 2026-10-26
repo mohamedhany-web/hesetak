@@ -8,12 +8,14 @@ use App\Models\TutorApplication;
 use App\Models\User;
 use App\Services\HiringFormService;
 use App\Services\TutorApplicationStorage;
+use App\Support\EgyptMobilePhone;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\Rules\Password;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
@@ -37,11 +39,16 @@ class TutorApplyController extends Controller
             return redirect()->route('public.tutor.apply.profile');
         }
 
+        $normalizedPhone = EgyptMobilePhone::normalize((string) $request->input('phone', ''));
+        if ($normalizedPhone !== null) {
+            $request->merge(['phone' => $normalizedPhone]);
+        }
+
         $data = $request->validate([
             'full_name' => ['required', 'string', 'max:160'],
             'email' => ['required', 'email', 'max:190', 'unique:users,email'],
-            'phone' => ['required', 'string', 'max:40', 'unique:users,phone'],
-            'password' => ['required', 'string', 'confirmed', \Illuminate\Validation\Rules\Password::defaults()],
+            'phone' => array_merge(EgyptMobilePhone::rules(true), ['unique:users,phone']),
+            'password' => ['required', 'string', 'confirmed', Password::min(8)->max(72)->letters()->numbers()],
         ], [
             'full_name.required' => 'الاسم الكامل مطلوب.',
             'email.required' => 'البريد الإلكتروني مطلوب.',
@@ -51,10 +58,12 @@ class TutorApplyController extends Controller
             'password.required' => 'كلمة المرور مطلوبة.',
             'password.confirmed' => 'تأكيد كلمة المرور غير مطابق.',
             'password.min' => 'كلمة المرور يجب ألا تقل عن 8 أحرف.',
+            'password.letters' => 'كلمة المرور يجب أن تحتوي على حرف واحد على الأقل.',
+            'password.numbers' => 'كلمة المرور يجب أن تحتوي على رقم واحد على الأقل.',
         ]);
 
         $email = strtolower(trim($data['email']));
-        $phone = preg_replace('/\s+/', '', trim($data['phone'])) ?: trim($data['phone']);
+        $phone = $data['phone'];
 
         $user = DB::transaction(function () use ($data, $email, $phone) {
             $user = User::create([

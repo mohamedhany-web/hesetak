@@ -63,7 +63,7 @@
             : 'This email and password are your future login. After signup you complete your profile.' }}</p>
         </header>
 
-        <form method="POST" action="{{ route('public.tutor.apply.register') }}" class="mc-ta-form" novalidate>
+        <form method="POST" action="{{ route('public.tutor.apply.register') }}" class="mc-ta-form">
           @csrf
           <div class="mc-ta-grid">
             <div class="mc-ta-field is-wide">
@@ -80,20 +80,21 @@
 
             <div class="mc-ta-field">
               <label for="phone">{{ $isRtl ? 'الجوال / واتساب' : 'Phone / WhatsApp' }} <span class="mc-ta-req">*</span></label>
-              <input class="mc-input" id="phone" type="tel" name="phone" value="{{ old('phone') }}" required dir="ltr" autocomplete="tel" placeholder="+9665xxxxxxxx">
+              <input class="mc-input" id="phone" type="tel" name="phone" value="{{ old('phone') }}" required dir="ltr" autocomplete="tel" inputmode="numeric" pattern="01[0125][0-9]{8}" maxlength="11" minlength="11" placeholder="01012345678" title="{{ $isRtl ? '11 رقماً مصرياً مثل 01012345678' : '11-digit Egypt mobile e.g. 01012345678' }}">
+              <p class="mc-ta-help">{{ $isRtl ? '11 رقماً يبدأ بـ 010 أو 011 أو 012 أو 015' : '11 digits starting with 010, 011, 012, or 015' }}</p>
               @error('phone')<p class="mc-ta-err">{{ $message }}</p>@enderror
             </div>
 
             <div class="mc-ta-field">
               <label for="password">{{ $isRtl ? 'كلمة المرور' : 'Password' }} <span class="mc-ta-req">*</span></label>
-              <input class="mc-input" id="password" type="password" name="password" required minlength="8" autocomplete="new-password">
+              <input class="mc-input" id="password" type="password" name="password" required minlength="8" maxlength="72" pattern="(?=.*[A-Za-z\u0600-\u06FF])(?=.*\d).{8,}" autocomplete="new-password" title="{{ __('auth.password_rules_hint') }}">
               <p class="mc-ta-help">{{ __('auth.password_rules_hint') }}</p>
               @error('password')<p class="mc-ta-err">{{ $message }}</p>@enderror
             </div>
 
             <div class="mc-ta-field">
               <label for="password_confirmation">{{ $isRtl ? 'تأكيد كلمة المرور' : 'Confirm password' }} <span class="mc-ta-req">*</span></label>
-              <input class="mc-input" id="password_confirmation" type="password" name="password_confirmation" required minlength="8" autocomplete="new-password">
+              <input class="mc-input" id="password_confirmation" type="password" name="password_confirmation" required minlength="8" maxlength="72" autocomplete="new-password">
             </div>
           </div>
 

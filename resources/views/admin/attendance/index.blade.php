@@ -29,7 +29,7 @@
     @endif
 
     <form method="GET" action="{{ route('admin.attendance.index') }}" class="rounded-2xl border border-line bg-surface p-4 shadow-soft">
-        <div class="grid gap-3 md:grid-cols-3">
+        <div class="grid gap-3 md:grid-cols-4">
             <div>
                 <label for="lecture_id" class="{{ $labelClass }}">المحاضرة</label>
                 <select name="lecture_id" id="lecture_id" class="{{ $fieldClass }}">
@@ -42,7 +42,17 @@
                 </select>
             </div>
             <div>
-                <label for="status" class="{{ $labelClass }}">الحالة</label>
+                <label for="lecture_status" class="{{ $labelClass }}">حالة الجلسة / المحاضرة</label>
+                <select name="lecture_status" id="lecture_status" class="{{ $fieldClass }}">
+                    <option value="">كل الجلسات</option>
+                    <option value="past" {{ request('lecture_status') == 'past' ? 'selected' : '' }}>مكتملة أو فات موعدها</option>
+                    <option value="completed" {{ request('lecture_status') == 'completed' ? 'selected' : '' }}>مكتملة فقط</option>
+                    <option value="scheduled" {{ request('lecture_status') == 'scheduled' ? 'selected' : '' }}>مجدولة</option>
+                    <option value="in_progress" {{ request('lecture_status') == 'in_progress' ? 'selected' : '' }}>جارية</option>
+                </select>
+            </div>
+            <div>
+                <label for="status" class="{{ $labelClass }}">حالة حضور الطالب</label>
                 <select name="status" id="status" class="{{ $fieldClass }}">
                     <option value="">كل الحالات</option>
                     <option value="present" {{ request('status') == 'present' ? 'selected' : '' }}>حاضر</option>
@@ -55,7 +65,7 @@
                 <button type="submit" class="btn-press inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-xl bg-accent px-4 text-sm font-medium text-white hover:bg-[#0d4f4a]">
                     <i class="fas fa-search text-xs"></i> بحث
                 </button>
-                @if(request()->anyFilled(['lecture_id', 'status']))
+                @if(request()->anyFilled(['lecture_id', 'status', 'lecture_status']))
                     <a href="{{ route('admin.attendance.index') }}"
                        class="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-line text-muted transition hover:bg-accent-soft hover:text-accent"
                        title="إعادة تعيين">
