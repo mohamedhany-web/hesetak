@@ -110,12 +110,24 @@
                                         <i class="fas fa-eye text-xs"></i>
                                     </a>
                                     @if($app->user)
-                                        <a href="{{ route('public.instructors.show', $app->user) }}"
-                                           target="_blank"
-                                           class="btn-press inline-flex size-8 items-center justify-center rounded-lg border border-line text-muted transition hover:text-accent"
-                                           title="الملف العام">
-                                            <i class="fas fa-external-link-alt text-xs"></i>
-                                        </a>
+                                        @php
+                                            $publicListed = $app->isActivated()
+                                                && \App\Services\PublicInstructorDirectory::isPubliclyListed($app->user);
+                                        @endphp
+                                        @if($publicListed)
+                                            <a href="{{ route('public.instructors.show', $app->user) }}"
+                                               target="_blank"
+                                               class="btn-press inline-flex size-8 items-center justify-center rounded-lg border border-line text-muted transition hover:text-accent"
+                                               title="الملف العام">
+                                                <i class="fas fa-external-link-alt text-xs"></i>
+                                            </a>
+                                        @elseif($app->user->instructorProfile)
+                                            <a href="{{ route('admin.personal-branding.show', $app->user->instructorProfile) }}"
+                                               class="btn-press inline-flex size-8 items-center justify-center rounded-lg border border-line text-muted transition hover:text-accent"
+                                               title="ملف المطابقة">
+                                                <i class="fas fa-id-card text-xs"></i>
+                                            </a>
+                                        @endif
                                     @endif
                                 </div>
                             </td>

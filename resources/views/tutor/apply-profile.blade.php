@@ -27,7 +27,6 @@
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700;800&family=Lato:wght@400;700;900&family=Rubik:wght@400;500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <link rel="stylesheet" href="{{ route('assets.landing.css', ['sheet' => 'mycourses']) }}?v={{ $mcVer }}">
-  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.3/dist/cdn.min.js"></script>
 </head>
 <body class="mc-body mc-body--ta">
 @include('partials.landing.mycourses.nav')
@@ -82,7 +81,7 @@
             : 'Required fields are marked *. Upload clear document files.' }}</p>
         </header>
 
-        <form method="POST" action="{{ route('public.tutor.apply.profile.store') }}" enctype="multipart/form-data" class="mc-ta-form">
+        <form method="POST" action="{{ route('public.tutor.apply.profile.store') }}" enctype="multipart/form-data" class="mc-ta-form" id="tutorApplyProfileForm">
           @csrf
 
           @forelse($fields as $field)
@@ -234,5 +233,52 @@
 </main>
 
 @include('partials.landing.mycourses.footer')
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.3/dist/cdn.min.js"></script>
+<script>
+(function () {
+  var appId = @json($application->id ?? 0);
+  if (!appId) return;
+  var storageKey = 'hesetak_tutor_apply_draft_' + appId;
+  var form = document.getElementById('tutorApplyProfileForm');
+  if (!form) return;
+
+  function restoreDraft() {
+    try {
+      var raw = localStorage.getItem(storageKey);
+      if (!raw) return;
+      var data = JSON.parse(raw);
+      if (!data || typeof data !== 'object') return;
+      Object.keys(data).forEach(function (name) {
+        var el = form.elements.namedItem(name);
+        if (!el || el.type === 'file' || el.type === 'password') return;
+        if (el.type === 'checkbox' || el.type === 'radio') return;
+        if (String(el.value || '').trim() !== '') return;
+        el.value = data[name];
+      });
+    } catch (e) { /* ignore */ }
+  }
+
+  var saveTimer;
+  function scheduleSave() {
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(function () {
+      var payload = {};
+      Array.prototype.forEach.call(form.querySelectorAll('input[type="text"], input[type="email"], input[type="tel"], input[type="url"], input[type="number"], input[type="date"], textarea'), function (el) {
+        if (!el.name || el.type === 'file' || el.type === 'password') return;
+        if (el.type === 'checkbox' || el.type === 'radio') return;
+        payload[el.name] = el.value;
+      });
+      try { localStorage.setItem(storageKey, JSON.stringify(payload)); } catch (e) { /* ignore */ }
+    }, 800);
+  }
+
+  restoreDraft();
+  form.addEventListener('input', scheduleSave);
+  form.addEventListener('change', scheduleSave);
+  form.addEventListener('submit', function () {
+    try { localStorage.removeItem(storageKey); } catch (e) { /* ignore */ }
+  });
+})();
+</script>
 </body>
 </html>

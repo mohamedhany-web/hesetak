@@ -319,7 +319,10 @@ class TutorApplicationActivationService
         return $digits !== '' ? $digits : null;
     }
 
-    private static function skillsFromExperience(TutorApplication $application): ?string
+    /**
+     * @return list<string>
+     */
+    public static function previewSkillsList(TutorApplication $application): array
     {
         $parts = [];
 
@@ -357,7 +360,12 @@ class TutorApplicationActivationService
             }
         }
 
-        $parts = array_values(array_unique($parts));
+        return array_values(array_unique(array_filter($parts, fn ($p) => $p !== '')));
+    }
+
+    private static function skillsFromExperience(TutorApplication $application): ?string
+    {
+        $parts = self::previewSkillsList($application);
 
         return $parts === [] ? null : implode("\n", $parts);
     }

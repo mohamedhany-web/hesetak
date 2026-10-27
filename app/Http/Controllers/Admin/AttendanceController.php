@@ -15,35 +15,39 @@ class AttendanceController extends Controller
 {
     public function index(Request $request)
     {
-        $query = AttendanceRecord::with(['lecture.course', 'student']);
+        $query = AttendanceRecord::query()
+            ->with(['lecture.course', 'student'])
+            ->leftJoin('lectures', 'attendance_records.lecture_id', '=', 'lectures.id')
+            ->select('attendance_records.*');
 
         if ($request->filled('lecture_id')) {
-            $query->where('lecture_id', $request->lecture_id);
+            $query->where('attendance_records.lecture_id', $request->lecture_id);
         }
 
         if ($request->filled('status')) {
-            $query->where('status', $request->status);
+            $query->where('attendance_records.status', $request->status);
         }
 
+        $lectureStatusFilter = $request->filled('lecture_status')
+            ? (string) $request->lecture_status
+            : ($request->filled('status') ? 'past' : null);
+
         // فلتر حالة المحاضرة (مكتملة / فاتت) — منفصل عن حالة حضور الطالب
-        if ($request->filled('lecture_status')) {
-            $lectureStatus = (string) $request->lecture_status;
-            if ($lectureStatus === 'past') {
-                $query->whereHas('lecture', function ($q) {
-                    $q->where(function ($inner) {
-                        $inner->where('status', 'completed')
-                            ->orWhere(function ($q2) {
-                                $q2->whereNotNull('scheduled_at')
-                                    ->where('scheduled_at', '<', now());
-                            });
-                    });
+        if ($lectureStatusFilter !== null && $lectureStatusFilter !== '') {
+            if ($lectureStatusFilter === 'past') {
+                $query->where(function ($q) {
+                    $q->where('lectures.status', 'completed')
+                        ->orWhere(function ($q2) {
+                            $q2->whereNotNull('lectures.scheduled_at')
+                                ->where('lectures.scheduled_at', '<', now());
+                        });
                 });
             } else {
-                $query->whereHas('lecture', fn ($q) => $q->where('status', $lectureStatus));
+                $query->where('lectures.status', $lectureStatusFilter);
             }
         }
 
-        $records = $query->orderBy('created_at', 'desc')->paginate(20);
+        $records = $query->orderByDesc('lectures.scheduled_at')->paginate(20);
         $lectures = Lecture::with('course')
             ->orderByDesc('scheduled_at')
             ->limit(400)

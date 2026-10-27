@@ -41,7 +41,18 @@ class TutorApplicationController extends Controller
             'rejected' => TutorApplication::where('status', TutorApplication::STATUS_REJECTED)->count(),
             'blocked' => TutorApplication::where('status', TutorApplication::STATUS_BLOCKED_NO_SHOW)->count(),
             'total' => TutorApplication::count(),
-            'instructors' => User::query()->whereIn('role', ['instructor', 'teacher'])->where('is_active', true)->count(),
+            // نفس نطاق قائمة المفعّلين (بدون حسابات تجريبية) — لا تخلط مع كل حسابات المعلمين في المنصة.
+            'instructors' => TutorApplication::query()
+                ->activated()
+                ->whereRaw('LOWER(TRIM(COALESCE(full_name, ""))) NOT IN (?, ?)', ['test', 'اختبار'])
+                ->whereHas('user', function ($uq) {
+                    $uq->where('is_active', true)
+                        ->whereRaw('LOWER(TRIM(name)) NOT IN (?, ?)', ['test', 'اختبار'])
+                        ->where(function ($q) {
+                            $q->whereNull('email')->orWhere('email', 'not like', 'test@%');
+                        });
+                })
+                ->count(),
         ];
 
         $recentPending = TutorApplication::pending()->orderByDesc('id')->limit(6)->get();

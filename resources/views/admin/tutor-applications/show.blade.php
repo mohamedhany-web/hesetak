@@ -236,18 +236,7 @@
                 <h3 class="text-base font-semibold text-ink">المطابقة / التخصص</h3>
                 @php
                     $specialty = $specialty ?? ['complete' => false, 'missing' => [], 'subject_ids' => [], 'curriculum_types' => []];
-                    $previewSkills = array_values(array_filter(array_unique(array_merge(
-                        preg_split('/[\r\n,،|]+/u', (string) ($application->experience ?? ''), -1, PREG_SPLIT_NO_EMPTY) ?: [],
-                        array_filter([
-                            $application->education,
-                            $application->headline,
-                            $application->years_experience !== null ? ($application->years_experience.' سنوات خبرة') : null,
-                            $application->nationality,
-                            $application->city,
-                        ])
-                    ))));
-                    $previewSkills = array_map('trim', $previewSkills);
-                    $previewSkills = array_values(array_filter($previewSkills));
+                    $previewSkills = \App\Services\TutorApplicationActivationService::previewSkillsList($application);
                 @endphp
                 @if($specialty['complete'])
                     <p class="text-sm text-accent font-semibold">مكتمل ✓</p>

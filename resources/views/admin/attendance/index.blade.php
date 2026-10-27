@@ -76,6 +76,12 @@
         </div>
     </form>
 
+    @if(request('status') === 'late' && ! request()->filled('lecture_status'))
+        <p class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-2.5 text-xs text-amber-900">
+            عند البحث عن «متأخر» نعرض افتراضياً محاضرات مكتملة أو فات موعدها. لتخصيص ذلك اختر «حالة الجلسة / المحاضرة» أعلاه.
+        </p>
+    @endif
+
     <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
         <div class="border-b border-line px-4 py-3">
             <h3 class="text-sm font-semibold text-ink">سجلات الحضور</h3>

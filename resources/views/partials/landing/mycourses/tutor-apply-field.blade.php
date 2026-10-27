@@ -97,7 +97,10 @@
       </div>
       @break
     @default
-      <input class="mc-input" id="field_{{ $fid }}" type="text" name="answers[{{ $fid }}]" value="{{ $value }}" @if($field->is_required) required @endif placeholder="{{ $field->placeholder }}" autocomplete="off">
+      @php
+        $inputType = ($field->system_key === 'password' || (($field->settings['input_type'] ?? null) === 'password')) ? 'password' : 'text';
+      @endphp
+      <input class="mc-input" id="field_{{ $fid }}" type="{{ $inputType }}" name="answers[{{ $fid }}]" value="{{ $inputType === 'password' ? '' : $value }}" @if($field->is_required) required @endif placeholder="{{ $field->placeholder }}" autocomplete="{{ $inputType === 'password' ? 'new-password' : 'off' }}">
   @endswitch
 
   @error('answers.'.$fid)<p class="mc-ta-err">{{ $message }}</p>@enderror

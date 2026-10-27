@@ -11,7 +11,7 @@
         ['label' => 'بانتظار التفعيل', 'value' => $stats['approved'], 'href' => route('admin.tutor-applications.index', ['status' => 'approved']), 'icon' => 'fa-user-check', 'tone' => 'accent'],
         ['label' => 'مفعّلون', 'value' => $stats['activated'], 'href' => route('admin.tutor-applications.activated'), 'icon' => 'fa-chalkboard-teacher', 'tone' => 'accent'],
         ['label' => 'مرفوض', 'value' => $stats['rejected'], 'href' => route('admin.tutor-applications.index', ['status' => 'rejected']), 'icon' => 'fa-ban', 'tone' => 'danger'],
-        ['label' => 'حسابات معلّم نشطة', 'value' => $stats['instructors'], 'href' => route('admin.teachers.index'), 'icon' => 'fa-users', 'tone' => 'metal'],
+        ['label' => 'معلمون مفعّلون (حسابات)', 'value' => $stats['instructors'], 'href' => route('admin.tutor-applications.activated'), 'icon' => 'fa-users', 'tone' => 'metal'],
     ];
     $toneClass = [
         'accent' => 'bg-accent-soft text-accent',

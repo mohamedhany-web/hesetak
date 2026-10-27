@@ -11,6 +11,7 @@ use App\Support\EgyptMobilePhone;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rules\Password;
 use Illuminate\Validation\ValidationException;
 
 class HiringFormService
@@ -118,6 +119,23 @@ class HiringFormService
             }
 
             $base = [($required ? 'required' : 'nullable')];
+            $isPasswordField = $field->system_key === 'password'
+                || (($field->settings['input_type'] ?? null) === 'password');
+            if ($isPasswordField) {
+                $rules[$key] = array_merge($base, [
+                    'string',
+                    'max:72',
+                    Password::min(10)->letters()->numbers(),
+                ]);
+                $messages[$key.'.min'] = 'كلمة المرور يجب ألا تقل عن 10 أحرف.';
+                $messages[$key.'.letters'] = 'كلمة المرور يجب أن تحتوي على حرف واحد على الأقل.';
+                $messages[$key.'.numbers'] = 'كلمة المرور يجب أن تحتوي على رقم واحد على الأقل.';
+                if ($required) {
+                    $messages[$key.'.required'] = 'حقل «'.$field->label.'» مطلوب.';
+                }
+                continue;
+            }
+
             $rules[$key] = match ($field->type) {
                 HiringFormField::TYPE_EMAIL => array_merge($base, ['email', 'max:190']),
                 HiringFormField::TYPE_PHONE => array_merge($base, [

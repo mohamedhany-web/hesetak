@@ -6,6 +6,7 @@ use App\Support\StudentExclusiveSession;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Session;
 use Symfony\Component\HttpFoundation\Response;
@@ -33,7 +34,12 @@ class PreventConcurrentSessions
         $sessionId = Session::getId();
 
         if (StudentExclusiveSession::isCurrent($user, $sessionId)) {
-            StudentExclusiveSession::refreshTtl($user, $sessionId);
+            $stored = Cache::get(StudentExclusiveSession::cacheKey((int) $user->id));
+            if (! $stored) {
+                StudentExclusiveSession::claim($user, $sessionId);
+            } else {
+                StudentExclusiveSession::refreshTtl($user, $sessionId);
+            }
 
             return $next($request);
         }

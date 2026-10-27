@@ -34,8 +34,8 @@
                     </div>
 
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">رمز الوظيفة *</label>
-                        <input type="text" name="code" value="{{ old('code') }}" required 
+                        <label class="block text-sm font-medium text-gray-700 mb-2">رمز الوظيفة <span class="font-normal text-gray-500">(اختياري — يُولَّد تلقائياً إن تُرك فارغاً)</span></label>
+                        <input type="text" name="code" value="{{ old('code') }}"
                                class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
                         @error('code')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
                     </div>

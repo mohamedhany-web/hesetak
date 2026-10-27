@@ -51,7 +51,7 @@ class TutorApplyController extends Controller
             'email' => ['required', 'email', 'max:190', 'unique:users,email'],
             'country_code' => ['required', 'string', 'max:10'],
             'phone' => ['required', 'string', 'max:20'],
-            'password' => ['required', 'string', 'confirmed', Password::min(8)->max(72)->letters()->numbers()],
+            'password' => ['required', 'string', 'confirmed', self::tutorPasswordRule()],
         ], [
             'full_name.required' => 'الاسم الكامل مطلوب.',
             'email.required' => 'البريد الإلكتروني مطلوب.',
@@ -60,7 +60,7 @@ class TutorApplyController extends Controller
             'phone.required' => 'رقم الجوال مطلوب.',
             'password.required' => 'كلمة المرور مطلوبة.',
             'password.confirmed' => 'تأكيد كلمة المرور غير مطابق.',
-            'password.min' => 'كلمة المرور يجب ألا تقل عن 8 أحرف.',
+            'password.min' => 'كلمة المرور يجب ألا تقل عن 10 أحرف.',
             'password.letters' => 'كلمة المرور يجب أن تحتوي على حرف واحد على الأقل.',
             'password.numbers' => 'كلمة المرور يجب أن تحتوي على رقم واحد على الأقل.',
         ]);
@@ -78,6 +78,22 @@ class TutorApplyController extends Controller
             $raw = preg_replace('/\D/', '', $data['phone']) ?? '';
             if (str_starts_with($raw, '01')) {
                 $nationalNumber = substr($raw, 1);
+            }
+        }
+
+        $rawDigits = preg_replace('/\D/', '', $data['phone']) ?? '';
+        if (strlen($nationalNumber) < 9) {
+            return back()->withErrors(['phone' => 'رقم الجوال قصير جداً.'])->withInput()
+                ->with(compact('phoneCountries', 'defaultCountry'));
+        }
+        if (($country['code'] ?? '') === 'EG') {
+            if (strlen($rawDigits) < 10) {
+                return back()->withErrors(['phone' => 'رقم الجوال المصري يجب أن يكون 11 رقماً (مثل 01012345678).'])->withInput()
+                    ->with(compact('phoneCountries', 'defaultCountry'));
+            }
+            if (strlen($nationalNumber) !== 10) {
+                return back()->withErrors(['phone' => 'رقم الجوال المصري غير صحيح. يجب 10 أرقام بعد كود الدولة (مثل 1012345678).'])->withInput()
+                    ->with(compact('phoneCountries', 'defaultCountry'));
             }
         }
 
@@ -271,5 +287,10 @@ class TutorApplyController extends Controller
             ->with('success', app()->getLocale() === 'ar'
                 ? 'تم إرسال بياناتك للمراجعة. لن تُفتح لوحة المعلم إلا بعد تفعيل الإدارة.'
                 : 'Your details were submitted for review. The instructor dashboard opens only after admin activation.');
+    }
+
+    private static function tutorPasswordRule(): Password
+    {
+        return Password::min(10)->max(72)->letters()->numbers();
     }
 }

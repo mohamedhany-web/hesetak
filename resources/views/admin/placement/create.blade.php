@@ -93,6 +93,9 @@
                     <select name="student_service_entitlement_id" id="entitlementSelect" required class="{{ $field }}">
                         <option value="">اختر الطالب أولاً…</option>
                     </select>
+                    <p class="mt-1.5 text-[11px] text-muted">
+                        يظهر كل رصيد خصوصي قابل للحجز. لتسكين الطالب على أكثر من باقة: أكمل تسكيناً واحداً ثم «منح باقة» إن لزم، وعُد للتسكين مرة أخرى واختر الرصيد التالي.
+                    </p>
                     <div id="packageStatus" class="mt-3 rounded-xl border border-line bg-canvas/60 px-3 py-2.5 text-xs text-muted">
                         سيظهر هنا إن كان الطالب مشتركاً في باقة أم لا.
                     </div>

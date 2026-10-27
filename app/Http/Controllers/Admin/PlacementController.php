@@ -580,7 +580,8 @@ class PlacementController extends Controller
     public function updatePrivateSchedule(Request $request, OneToOneSession $oneToOneSession): RedirectResponse
     {
         if (! $oneToOneSession->isOpenPlacement()) {
-            return back()->with('error', 'لا يمكن تعديل موعد حصة مكتملة أو ملغاة.');
+            return back()->with('error', 'لا يمكن تعديل موعد حصة مكتملة أو ملغاة.')
+                ->with('_placement_session_id', $oneToOneSession->id);
         }
 
         $data = $request->validate([
@@ -597,7 +598,8 @@ class PlacementController extends Controller
         );
         $scheduledAt = AppTimezone::parseAppointmentInput((string) $data['scheduled_at'], $clockTz);
         if (! $scheduledAt) {
-            return back()->withInput()->with('error', 'صيغة الموعد غير صالحة.');
+            return back()->withInput()->with('error', 'صيغة الموعد غير صالحة.')
+                ->with('_placement_session_id', $oneToOneSession->id);
         }
 
         $duration = (int) ($data['duration_minutes'] ?? $oneToOneSession->duration_minutes ?? OneToOneSession::defaultDurationMinutes());
@@ -613,10 +615,12 @@ class PlacementController extends Controller
                 notify: true
             );
         } catch (\InvalidArgumentException $e) {
-            return back()->withInput()->with('error', $e->getMessage());
+            return back()->withInput()->with('error', $e->getMessage())
+                ->with('_placement_session_id', $oneToOneSession->id);
         }
 
-        return back()->with('success', 'تم تحديث موعد الحصة ومزامنة غرفة Live.');
+        return back()->with('success', 'تم تحديث موعد الحصة ومزامنة غرفة Live.')
+            ->with('_placement_session_id', $oneToOneSession->id);
     }
 
     public function updateGroupSchedule(Request $request, TutoringGroupBooking $tutoringGroupBooking): RedirectResponse

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\EmployeeJob;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class EmployeeJobController extends Controller
 {
@@ -65,7 +66,12 @@ class EmployeeJobController extends Controller
             'description' => 'nullable|string',
             'responsibilities' => 'nullable|string',
             'min_salary' => 'nullable|numeric|min:0',
-            'max_salary' => 'nullable|numeric|min:0|gte:min_salary',
+            'max_salary' => [
+                'nullable',
+                'numeric',
+                'min:0',
+                Rule::when($request->filled('min_salary'), 'gte:min_salary'),
+            ],
             'is_active' => 'boolean',
         ]);
 
@@ -111,7 +117,12 @@ class EmployeeJobController extends Controller
             'description' => 'nullable|string',
             'responsibilities' => 'nullable|string',
             'min_salary' => 'nullable|numeric|min:0',
-            'max_salary' => 'nullable|numeric|min:0|gte:min_salary',
+            'max_salary' => [
+                'nullable',
+                'numeric',
+                'min:0',
+                Rule::when($request->filled('min_salary'), 'gte:min_salary'),
+            ],
             'is_active' => 'boolean',
             'permissions' => 'nullable|array',
             'permissions.*' => 'string|max:64',

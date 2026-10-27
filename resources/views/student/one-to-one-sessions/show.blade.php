@@ -14,9 +14,9 @@
     $canJoinSession = $canJoinSession ?? false;
     $sessionLockReason = $sessionLockReason ?? null;
     $awaiting = method_exists($session, 'isAwaitingTeacherStart') && $session->isAwaitingTeacherStart();
-    // حتى لو ended_at معلّق من محاولة سابقة، secureEnter يعيد فتح الغرفة طالما الحصة مجدولة.
+    // دخول مباشر للغرفة (نفس مسار المحاضرات الخاصة) — reopenMeeting يُزيل ended_at العالق قبل الدخول.
     $joinHref = ($isScheduled && $session->classroomMeeting && $canJoinSession)
-        ? route('classroom.secure-enter', $session->classroomMeeting)
+        ? route('student.classroom.room', $session->classroomMeeting)
         : null;
     $recordingHref = ($session->classroomMeeting
         && $session->classroomMeeting->hasBrowserRecording()

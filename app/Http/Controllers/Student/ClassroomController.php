@@ -10,6 +10,7 @@ use App\Models\OneToOneSession;
 use App\Models\TutoringGroupBooking;
 use App\Services\ClassroomCurriculumPresentService;
 use App\Services\ClassroomMeetingAccessService;
+use App\Support\StudentExclusiveSession;
 use App\Services\OneToOneSessionUnlockService;
 use App\Services\OneToOneSessionService;
 use App\Services\TutoringGroupOrchestrationService;
@@ -213,6 +214,9 @@ class ClassroomController extends Controller
         $user = Auth::user();
         $this->reopenMeetingIfSessionStillScheduled($meeting);
         $this->ensureMeetingCanEnter($meeting, $user);
+        if (StudentExclusiveSession::appliesTo($user)) {
+            StudentExclusiveSession::refreshTtl($user, session()->getId());
+        }
 
         return redirect()->to(ClassroomMeetingAccessService::roomUrlForUser($meeting, $user));
     }
@@ -269,6 +273,9 @@ class ClassroomController extends Controller
         $user = Auth::user();
         $this->reopenMeetingIfSessionStillScheduled($meeting);
         $this->ensureMeetingCanEnter($meeting, $user);
+        if (StudentExclusiveSession::appliesTo($user)) {
+            StudentExclusiveSession::refreshTtl($user, session()->getId());
+        }
         $isHost = ClassroomMeetingAccessService::userIsHost($meeting, $user);
         $canManageMeeting = $isHost && ($user->isInstructor() || $user->isAdmin());
 
@@ -1732,8 +1739,8 @@ class ClassroomController extends Controller
     }
 
     /**
-     * غرفة أُغلقت من محاولة/موعد قديم ثم أُعيدت جدولة الحصة لموعد لاحق → أعد فتحها عند الدخول.
-     * لا نفتح إذا أُنهيت الحصة قرب موعدها الحالي (إنهاء شرعي من المعلم).
+     * غرفة أُغلقت مبكراً/بالخطأ بينما الحصة ما زالت مجدولة وغير منتهية الصلاحية → أعد فتحها عند الدخول.
+     * يمنع رجوع زر «ادخل الآن» لنفس الصفحة برسالة «انتهى هذا الاجتماع» بصمت ظاهرياً.
      */
     private function reopenMeetingIfSessionStillScheduled(ClassroomMeeting $meeting): void
     {
@@ -1755,8 +1762,8 @@ class ClassroomController extends Controller
             return;
         }
 
-        // فجوة واضحة بين الإغلاق والموعد الجديد = إعادة جدولة بعد إغلاق قديم
-        if ($meeting->ended_at->gte($session->scheduled_at->copy()->subHours(2))) {
+        // لا نُعيد فتح حصص فات وقتها فعلاً (انتهت المدة + مهلة السماح).
+        if (OneToOneSessionUnlockService::isStale($session)) {
             return;
         }
 

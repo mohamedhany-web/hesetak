@@ -20,7 +20,7 @@
     @endif
 
     <form method="GET" class="grid gap-3 rounded-2xl border border-line bg-surface p-4 sm:grid-cols-4">
-        <input type="search" name="search" value="{{ request('search') }}" placeholder="بحث طالب…" class="{{ $fieldClass }}">
+        <input type="search" name="search" value="{{ request('search') }}" placeholder="بحث طالب / باقة / مجموعة…" class="{{ $fieldClass }}">
         <select name="status" class="{{ $fieldClass }}">
             <option value="">كل الحالات</option>
             @foreach(['active'=>'نشط','expired'=>'منتهٍ','cancelled'=>'ملغى'] as $k=>$v)

@@ -896,6 +896,7 @@ class AdminController extends Controller
         if (!$defaultCountry || !is_array($defaultCountry)) {
             $defaultCountry = ['code' => 'SA', 'dial_code' => '+966', 'name_ar' => 'السعودية', 'name_en' => 'Saudi Arabia'];
         }
+        $roles = \App\Models\Role::orderBy('display_name')->get();
 
         $sanitizedData = [
             'name' => strip_tags(trim($request->input('name', ''))),
@@ -955,25 +956,25 @@ class AdminController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return back()->withErrors($validator)->withInput()->with(compact('phoneCountries', 'defaultCountry'));
+            return back()->withErrors($validator)->withInput()->with(compact('phoneCountries', 'defaultCountry', 'roles'));
         }
 
         // التحقق من صحة رقم الهاتف حسب الدولة
         $dialCodeForLookup = ($sanitizedData['country_code'] === 'OTHER' || $sanitizedData['country_code'] === '') ? '' : $sanitizedData['country_code'];
         $country = collect($phoneCountries)->firstWhere('dial_code', $dialCodeForLookup);
         if (!$country || !isset($country['validation']['regex'])) {
-            return back()->withErrors(['phone' => 'كود الدولة غير مدعوم.'])->withInput()->with(compact('phoneCountries', 'defaultCountry'));
+            return back()->withErrors(['phone' => 'كود الدولة غير مدعوم.'])->withInput()->with(compact('phoneCountries', 'defaultCountry', 'roles'));
         }
         $nationalNumber = preg_replace('/\D/', '', $sanitizedData['phone']);
         $nationalNumber = ltrim($nationalNumber, '0');
         if (!preg_match($country['validation']['regex'], $nationalNumber)) {
             $example = $country['example'] ?? $country['placeholder'] ?? '';
-            return back()->withErrors(['phone' => 'رقم الهاتف غير صحيح لهذه الدولة. مثال: ' . $example])->withInput()->with(compact('phoneCountries', 'defaultCountry'));
+            return back()->withErrors(['phone' => 'رقم الهاتف غير صحيح لهذه الدولة. مثال: ' . $example])->withInput()->with(compact('phoneCountries', 'defaultCountry', 'roles'));
         }
         $dial = $country['dial_code'] ?? '';
         $fullPhone = ($dial === '' || $dial === 'OTHER') ? ('OTHER_' . $nationalNumber) : ($dial . $nationalNumber);
         if (User::where('phone', $fullPhone)->exists()) {
-            return back()->withErrors(['phone' => 'رقم الهاتف مستخدم مسبقاً'])->withInput()->with(compact('phoneCountries', 'defaultCountry'));
+            return back()->withErrors(['phone' => 'رقم الهاتف مستخدم مسبقاً'])->withInput()->with(compact('phoneCountries', 'defaultCountry', 'roles'));
         }
 
         $committed = false;
@@ -1074,7 +1075,7 @@ class AdminController extends Controller
             return back()
                 ->withErrors(['error' => $errorMessage])
                 ->withInput()
-                ->with(compact('phoneCountries', 'defaultCountry'));
+                ->with(compact('phoneCountries', 'defaultCountry', 'roles'));
         }
     }
 

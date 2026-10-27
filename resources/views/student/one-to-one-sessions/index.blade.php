@@ -40,11 +40,11 @@
     @forelse($sessions as $i => $session)
         @php
             $duration = (int) ($session->duration_minutes ?: 50);
-            $canJoin = $session->status === \App\Models\OneToOneSession::STATUS_SCHEDULED && $session->classroomMeeting;
+            $canJoin = $session->status === \App\Models\OneToOneSession::STATUS_SCHEDULED
+                && $session->classroomMeeting
+                && \App\Services\OneToOneSessionUnlockService::canStudentJoin($session, auth()->user());
             $joinHref = $canJoin
-                ? (Route::has('student.classroom.room')
-                    ? route('student.classroom.room', $session->classroomMeeting)
-                    : $session->joinUrl())
+                ? route('student.classroom.room', $session->classroomMeeting)
                 : null;
             $recordingHref = ($session->classroomMeeting
                 && $session->classroomMeeting->hasBrowserRecording()
