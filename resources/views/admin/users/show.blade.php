@@ -180,11 +180,13 @@
                             الملفات العامة للمعلمين
                         </a>
                     @endif
-                    @if(Route::has('public.instructors.show'))
+                    @if(Route::has('public.instructors.show') && $brandingProfile && $brandingProfile->status === \App\Models\InstructorProfile::STATUS_APPROVED)
                         <a href="{{ route('public.instructors.show', $user) }}" target="_blank" rel="noopener" class="btn-press inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-line bg-surface px-4 text-sm font-medium text-ink-soft transition hover:border-accent/30 hover:text-accent">
                             <i class="fas fa-external-link-alt text-xs"></i>
                             فتح صفحة المعلم العامة
                         </a>
+                    @elseif($isTeacherAccount && $brandingProfile)
+                        <p class="rounded-xl border border-amber-100 bg-amber-50 px-3 py-2 text-xs text-amber-800">الصفحة العامة تظهر بعد اعتماد الملف التعريفي.</p>
                     @endif
                     @if($user->id !== auth()->id())
                         <button type="button" onclick="deleteUser(this)"

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\InstructorRequest;
+use App\Models\User;
 use Illuminate\Http\Request;
 
 class InstructorRequestController extends Controller
@@ -42,6 +43,46 @@ class InstructorRequestController extends Controller
         ];
 
         return view('admin.instructor-requests.index', compact('requests', 'stats'));
+    }
+
+    /**
+     * نموذج إنشاء طلب مدرب
+     */
+    public function create()
+    {
+        $instructors = User::query()
+            ->whereIn('role', ['instructor', 'teacher'])
+            ->orderBy('name')
+            ->get(['id', 'name', 'email']);
+
+        return view('admin.instructor-requests.create', compact('instructors'));
+    }
+
+    /**
+     * حفظ طلب مدرب جديد
+     */
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'instructor_id' => 'required|exists:users,id',
+            'subject' => 'required|string|max:255',
+            'message' => 'required|string|max:5000',
+        ]);
+
+        $instructor = User::query()->findOrFail($validated['instructor_id']);
+        if (! $instructor->isInstructor()) {
+            return back()->withInput()->with('error', 'المستخدم المحدد ليس مدرباً.');
+        }
+
+        InstructorRequest::create([
+            'instructor_id' => $validated['instructor_id'],
+            'subject' => $validated['subject'],
+            'message' => $validated['message'],
+            'status' => 'pending',
+        ]);
+
+        return redirect()->route('admin.instructor-requests.index')
+            ->with('success', 'تم إنشاء الطلب بنجاح');
     }
 
     /**

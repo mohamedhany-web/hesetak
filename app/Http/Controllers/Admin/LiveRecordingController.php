@@ -123,13 +123,23 @@ class LiveRecordingController extends Controller
         $validated = $request->validate([
             'session_id'        => 'required|exists:live_sessions,id',
             'title'             => 'nullable|string|max:255',
-            'storage_disk'      => 'required|in:local,r2',
-            'file_path'         => 'required|string|max:500',
+            'storage_disk'      => 'nullable|in:local,r2',
+            'file_path'         => 'nullable|string|max:500',
             'external_url'      => 'nullable|url|max:500',
+            'video'             => 'nullable|file|mimetypes:video/mp4,video/webm,video/quicktime,video/x-msvideo|max:'.config('upload_limits.max_upload_kb', 512000),
             'duration_seconds'  => 'nullable|integer|min:0',
             'file_size'         => 'nullable|integer|min:0',
             'is_published'      => 'boolean',
         ]);
+
+        $hasVideo = $request->hasFile('video');
+        $hasPath = filled($validated['file_path'] ?? null);
+        $hasExternal = filled($validated['external_url'] ?? null);
+        if (! $hasVideo && ! $hasPath && ! $hasExternal) {
+            return back()->withInput()->withErrors([
+                'file_path' => 'أرفق ملف فيديو أو أدخل مسار الملف أو رابطاً خارجياً.',
+            ]);
+        }
 
         $session = LiveSession::find($validated['session_id']);
         $validated['title'] = $validated['title'] ?: ('تسجيل ' . $session->title);
@@ -138,9 +148,41 @@ class LiveRecordingController extends Controller
         $validated['duration_seconds'] = $validated['duration_seconds'] ?? 0;
         $validated['file_size'] = $validated['file_size'] ?? 0;
 
+        if ($hasVideo) {
+            $uploadDisk = $this->resolveLiveRecordingUploadDisk();
+            $storageDisk = $uploadDisk === 'live_recordings_r2' ? 'r2' : 'local';
+            $file = $request->file('video');
+            $path = $file->store(
+                'live-recordings/session-'.$validated['session_id'],
+                $uploadDisk
+            );
+            $validated['file_path'] = $path;
+            $validated['file_size'] = (int) $file->getSize();
+            $validated['storage_disk'] = $storageDisk;
+        } else {
+            $validated['storage_disk'] = $validated['storage_disk'] ?? 'r2';
+        }
+
+        unset($validated['video']);
+
         LiveRecording::create($validated);
 
         return redirect()->route('admin.live-recordings.index')->with('success', 'تم إضافة التسجيل بنجاح.');
+    }
+
+    private function resolveLiveRecordingUploadDisk(): string
+    {
+        if (filled(env('R2_LIVE_RECORDINGS_BUCKET')) || filled(env('AWS_BUCKET'))) {
+            try {
+                Storage::disk('live_recordings_r2');
+
+                return 'live_recordings_r2';
+            } catch (\Throwable $e) {
+                // fallback to local
+            }
+        }
+
+        return 'local';
     }
 
     public function show(LiveRecording $liveRecording)

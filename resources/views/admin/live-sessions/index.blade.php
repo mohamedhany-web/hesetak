@@ -155,7 +155,7 @@
                                 @endif
                             </td>
                             <td class="px-4 py-3 text-center tabular-nums text-ink-soft">{{ $session->attendance_count }}</td>
-                            <td class="px-4 py-3 text-xs text-muted">{{ $session->scheduled_at?->format('Y/m/d H:i') ?? '—' }}</td>
+                            <td class="px-4 py-3 text-xs text-muted">{{ \App\Support\AppTimezone::formatFor($session->scheduled_at, auth()->user()?->timezoneCode(), 'Y/m/d H:i') }}</td>
                             <td class="px-4 py-3">
                                 <div class="flex items-center justify-center gap-1">
                                     @if($session->status === 'live')

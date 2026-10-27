@@ -1419,6 +1419,8 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
             Route::post('/leads/{salesLead}/transition', [\App\Http\Controllers\Admin\CrmLeadController::class, 'transition'])->name('leads.transition');
             Route::post('/leads/{salesLead}/note', [\App\Http\Controllers\Admin\CrmLeadController::class, 'addNote'])->name('leads.note');
             Route::get('/commissions', [\App\Http\Controllers\Admin\CrmCommissionController::class, 'index'])->name('commissions.index');
+            Route::get('/commissions/create', [\App\Http\Controllers\Admin\CrmCommissionController::class, 'create'])->name('commissions.create');
+            Route::post('/commissions', [\App\Http\Controllers\Admin\CrmCommissionController::class, 'store'])->name('commissions.store');
             Route::post('/commissions/{commission}/approve', [\App\Http\Controllers\Admin\CrmCommissionController::class, 'approve'])->name('commissions.approve');
             Route::get('/audit', [\App\Http\Controllers\Admin\CrmAuditLogController::class, 'index'])->name('audit.index');
             Route::get('/groups', [\App\Http\Controllers\Admin\CrmGroupController::class, 'index'])->name('groups.index');
@@ -1800,6 +1802,8 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
 
         // إدارة الإجازات
         Route::get('/leaves', [\App\Http\Controllers\Admin\AdminLeaveController::class, 'index'])->name('leaves.index');
+        Route::get('/leaves/create', [\App\Http\Controllers\Admin\AdminLeaveController::class, 'create'])->name('leaves.create');
+        Route::post('/leaves', [\App\Http\Controllers\Admin\AdminLeaveController::class, 'store'])->name('leaves.store');
         Route::get('/leaves/{leave}', [\App\Http\Controllers\Admin\AdminLeaveController::class, 'show'])->name('leaves.show');
         Route::post('/leaves/{leave}/approve', [\App\Http\Controllers\Admin\AdminLeaveController::class, 'approve'])->name('leaves.approve');
         Route::post('/leaves/{leave}/reject', [\App\Http\Controllers\Admin\AdminLeaveController::class, 'reject'])->name('leaves.reject');
@@ -1807,6 +1811,8 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         // طلبات المدربين للإدارة
         Route::prefix('instructor-requests')->name('instructor-requests.')->group(function () {
             Route::get('/', [\App\Http\Controllers\Admin\InstructorRequestController::class, 'index'])->name('index');
+            Route::get('/create', [\App\Http\Controllers\Admin\InstructorRequestController::class, 'create'])->name('create');
+            Route::post('/', [\App\Http\Controllers\Admin\InstructorRequestController::class, 'store'])->name('store');
             Route::get('/{instructorRequest}', [\App\Http\Controllers\Admin\InstructorRequestController::class, 'show'])->name('show');
             Route::post('/{instructorRequest}/respond', [\App\Http\Controllers\Admin\InstructorRequestController::class, 'respond'])->name('respond');
         });
@@ -1836,6 +1842,7 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
             // قوالب الرسائل
             Route::get('/templates', [\App\Http\Controllers\Admin\MessagesController::class, 'templates'])->name('templates');
             Route::post('/templates', [\App\Http\Controllers\Admin\MessagesController::class, 'storeTemplate'])->name('templates.store');
+            Route::match(['put', 'patch'], '/templates/{template}', [\App\Http\Controllers\Admin\MessagesController::class, 'updateTemplate'])->name('templates.update');
             Route::delete('/templates/{template}', [\App\Http\Controllers\Admin\MessagesController::class, 'destroyTemplate'])->name('templates.destroy');
 
             // إعدادات WhatsApp API
@@ -1941,6 +1948,8 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::get('/platform-wallets', [\App\Http\Controllers\Admin\PlatformWalletHubController::class, 'index'])->name('platform-wallets.index');
 
         Route::get('/parents', [\App\Http\Controllers\Admin\ParentChildController::class, 'index'])->name('parents.index');
+        Route::get('/parents/create', [\App\Http\Controllers\Admin\ParentChildController::class, 'create'])->name('parents.create');
+        Route::post('/parents', [\App\Http\Controllers\Admin\ParentChildController::class, 'store'])->name('parents.store');
         Route::get('/parents/{user}', [\App\Http\Controllers\Admin\ParentChildController::class, 'show'])->name('parents.show');
         Route::post('/parents/{user}/link', [\App\Http\Controllers\Admin\ParentChildController::class, 'link'])->name('parents.link');
         Route::post('/parents/{user}/unlink', [\App\Http\Controllers\Admin\ParentChildController::class, 'unlink'])->name('parents.unlink');
@@ -2002,6 +2011,12 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::prefix('n8n')->name('n8n.')->group(function () {
             Route::get('/live-session-reports', [\App\Http\Controllers\Admin\N8nLiveReportsController::class, 'index'])
                 ->name('live-session-reports.index');
+            Route::post('/live-session-reports/{report}/retry', [\App\Http\Controllers\Admin\N8nLiveReportsController::class, 'retry'])
+                ->name('live-session-reports.retry');
+            Route::post('/live-session-reports/{report}/mark-completed', [\App\Http\Controllers\Admin\N8nLiveReportsController::class, 'markCompleted'])
+                ->name('live-session-reports.mark-completed');
+            Route::post('/live-session-reports/{report}/mark-failed', [\App\Http\Controllers\Admin\N8nLiveReportsController::class, 'markFailed'])
+                ->name('live-session-reports.mark-failed');
             Route::get('/settings', [\App\Http\Controllers\Admin\N8nSettingsController::class, 'index'])
                 ->name('settings');
             Route::post('/settings', [\App\Http\Controllers\Admin\N8nSettingsController::class, 'update'])

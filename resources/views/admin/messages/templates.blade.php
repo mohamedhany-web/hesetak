@@ -64,8 +64,14 @@
                             </div>
                             
                             <div class="flex space-x-1 space-x-reverse">
-                                <button onclick="editTemplate({{ $template->id }})" 
-                                        class="text-blue-600 hover:text-blue-800 p-2">
+                                <button type="button"
+                                        onclick="editTemplate(this)"
+                                        class="text-blue-600 hover:text-blue-800 p-2"
+                                        data-update-url="{{ route('admin.messages.templates.update', $template) }}"
+                                        data-name="{{ e($template->name) }}"
+                                        data-title="{{ e($template->title) }}"
+                                        data-type="{{ e($template->type) }}"
+                                        data-content="{{ e($template->content) }}">
                                     <i class="fas fa-edit"></i>
                                 </button>
                                 <button onclick="useTemplate('{{ addslashes($template->content) }}', '{{ $template->type }}', '{{ $template->title }}')"
@@ -178,6 +184,81 @@
     </div>
 </div>
 
+<!-- مودال تعديل قالب -->
+<div id="editTemplateModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-white rounded-xl shadow-xl max-w-2xl w-full">
+            <div class="p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold text-gray-900">
+                        {{ __('تعديل القالب') }}
+                    </h3>
+                    <button type="button" onclick="hideEditTemplateModal()" class="text-gray-400 hover:text-gray-600">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+
+                <form id="editTemplateForm" method="POST">
+                    @csrf
+                    @method('PUT')
+
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            {{ __('اسم القالب') }}
+                        </label>
+                        <input type="text" name="name" id="edit_template_name" required
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900">
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            {{ __('عنوان القالب') }}
+                        </label>
+                        <input type="text" name="title" id="edit_template_title" required
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900">
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            {{ __('نوع القالب') }}
+                        </label>
+                        <select name="type" id="edit_template_type" required
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900">
+                            <option value="">{{ __('اختر النوع...') }}</option>
+                            <option value="student_report">{{ __('تقرير طالب') }}</option>
+                            <option value="exam_result">{{ __('نتيجة امتحان') }}</option>
+                            <option value="general_announcement">{{ __('إعلان عام') }}</option>
+                            <option value="parent_report">{{ __('تقرير لولي الأمر') }}</option>
+                            <option value="course_reminder">{{ __('تذكير بالكورس') }}</option>
+                            <option value="welcome_message">{{ __('رسالة ترحيب') }}</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            {{ __('محتوى القالب') }}
+                        </label>
+                        <textarea name="content" id="edit_template_content" rows="8" required
+                                  class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"></textarea>
+                    </div>
+
+                    <div class="flex space-x-2 space-x-reverse">
+                        <button type="submit"
+                                class="flex-1 text-white px-4 py-2 rounded-lg font-medium shadow-sm transition-colors"
+                                style="background-color:#2563eb;">
+                            {{ __('حفظ التعديلات') }}
+                        </button>
+                        <button type="button" onclick="hideEditTemplateModal()"
+                                class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+                            {{ __('إلغاء') }}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
 @push('scripts')
 <script>
 function showCreateTemplateModal() {
@@ -199,9 +280,17 @@ function useTemplate(content, type, title) {
     window.location.href = '{{ route("admin.messages.create") }}?' + params.toString();
 }
 
-function editTemplate(templateId) {
-    // يمكن إضافة مودال تحرير القالب
-    console.log('Edit template:', templateId);
+function editTemplate(button) {
+    document.getElementById('editTemplateForm').action = button.getAttribute('data-update-url') || '';
+    document.getElementById('edit_template_name').value = button.getAttribute('data-name') || '';
+    document.getElementById('edit_template_title').value = button.getAttribute('data-title') || '';
+    document.getElementById('edit_template_type').value = button.getAttribute('data-type') || '';
+    document.getElementById('edit_template_content').value = button.getAttribute('data-content') || '';
+    document.getElementById('editTemplateModal').classList.remove('hidden');
+}
+
+function hideEditTemplateModal() {
+    document.getElementById('editTemplateModal').classList.add('hidden');
 }
 </script>
 @endpush

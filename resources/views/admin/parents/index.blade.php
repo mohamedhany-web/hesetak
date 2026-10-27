@@ -19,6 +19,10 @@
             <h2 class="mt-1 text-2xl font-semibold tracking-tight text-ink md:text-[28px]">أولياء الأمور والأبناء</h2>
             <p class="mt-1 text-sm text-muted">إدارة ربط ولي الأمر بأبناء الطلاب عبر parent_id.</p>
         </div>
+        <a href="{{ route('admin.parents.create') }}" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl bg-accent px-4 text-sm font-medium text-white">
+            <i class="fas fa-plus text-xs"></i>
+            إضافة ولي أمر
+        </a>
     </section>
 
     <form method="GET" class="rounded-2xl border border-line bg-surface p-4 shadow-soft">

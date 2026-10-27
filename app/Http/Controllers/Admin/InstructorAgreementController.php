@@ -125,8 +125,9 @@ class InstructorAgreementController extends Controller
         $isConsultation = $request->type === 'consultation_session';
         $agreement = InstructorAgreement::create([
             'instructor_id' => $request->instructor_id,
-            'type' => $isCoursePercentage ? 'course_price' : ($isConsultation ? 'consultation_session' : $request->type),
-            'rate' => $isCoursePercentage ? 0 : (float) $request->rate,
+            // عمود type في DB: course_price|hourly_rate|monthly_salary — الاستشارات عبر billing_type.
+            'type' => ($isCoursePercentage || $isConsultation) ? 'course_price' : $request->type,
+            'rate' => $isCoursePercentage ? 0 : (float) ($request->rate ?? 0),
             'billing_type' => $isCoursePercentage
                 ? InstructorAgreement::BILLING_COURSE_PERCENTAGE
                 : ($isConsultation ? InstructorAgreement::BILLING_CONSULTATION : null),
@@ -211,8 +212,8 @@ class InstructorAgreementController extends Controller
         $isConsultation = $request->type === 'consultation_session';
         $agreement->update([
             'instructor_id' => $request->instructor_id,
-            'type' => $isCoursePercentage ? 'course_price' : ($isConsultation ? 'consultation_session' : $request->type),
-            'rate' => $isCoursePercentage ? 0 : (float) $request->rate,
+            'type' => ($isCoursePercentage || $isConsultation) ? 'course_price' : $request->type,
+            'rate' => $isCoursePercentage ? 0 : (float) ($request->rate ?? 0),
             'billing_type' => $isCoursePercentage
                 ? InstructorAgreement::BILLING_COURSE_PERCENTAGE
                 : ($isConsultation ? InstructorAgreement::BILLING_CONSULTATION : null),

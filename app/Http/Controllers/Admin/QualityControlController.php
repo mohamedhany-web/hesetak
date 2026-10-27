@@ -79,7 +79,7 @@ class QualityControlController extends Controller
     }
 
     /**
-     * رقابة الطلاب
+     * رقابة الطالب — متابعة نشاط الطلاب حسب آخر ظهور.
      */
     public function students(Request $request)
     {
@@ -98,9 +98,11 @@ class QualityControlController extends Controller
             $query->where('is_active', $request->status === 'active');
         }
 
-        $students = $query->latest()->paginate(20);
+        $students = $query
+            ->orderByRaw('last_login_at IS NULL ASC')
+            ->orderByDesc('last_login_at')
+            ->paginate(20);
 
-        // إحصائيات لكل طالب
         $students->getCollection()->transform(function($student) {
             $student->enrollments_count = $student->courseEnrollments()->count();
             $student->completed_courses = $student->courseEnrollments()->where('status', 'completed')->count();

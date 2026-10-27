@@ -359,6 +359,29 @@ class MessagesController extends Controller
     }
 
     /**
+     * تحديث قالب رسالة
+     */
+    public function updateTemplate(Request $request, MessageTemplate $template)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255|unique:message_templates,name,'.$template->id,
+            'title' => 'required|string|max:255',
+            'content' => 'required|string',
+            'type' => 'required|string|in:'.implode(',', array_keys(MessageTemplate::getTypes())),
+        ]);
+
+        $template->update([
+            'name' => $request->name,
+            'title' => $request->title,
+            'content' => $request->content,
+            'type' => $request->type,
+            'variables' => MessageTemplate::getAvailableVariables($request->type),
+        ]);
+
+        return back()->with('success', 'تم تحديث القالب بنجاح');
+    }
+
+    /**
      * الحصول على المستلمين حسب النوع
      */
     private function getRecipients(Request $request)

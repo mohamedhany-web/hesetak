@@ -737,11 +737,19 @@ class User extends Authenticatable
     }
 
     /**
+     * استبعاد حسابات تجريبية باسم Test/اختبار من قوائم إجراءات المعلمين.
+     */
+    public function scopeExcludeDemoPlaceholders($query)
+    {
+        return $query->whereRaw('LOWER(TRIM(COALESCE(name, ""))) NOT IN (?, ?)', ['test', 'اختبار']);
+    }
+
+    /**
      * scope للمدربين
      */
     public function scopeInstructors($query)
     {
-        return $query->where('role', 'instructor');
+        return $query->where('role', 'instructor')->excludeDemoPlaceholders();
     }
 
     /**
@@ -749,7 +757,7 @@ class User extends Authenticatable
      */
     public function scopeTeachers($query)
     {
-        return $query->where('role', 'instructor');
+        return $query->where('role', 'instructor')->excludeDemoPlaceholders();
     }
 
     /**

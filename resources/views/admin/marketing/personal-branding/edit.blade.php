@@ -46,12 +46,36 @@
                 {{ \App\Models\InstructorProfile::statusLabel($personal_branding->status) }}
             </span>
             <p class="mt-2 max-w-2xl text-xs text-muted">تعديل المحتوى لا يغيّر الحالة تلقائياً. للموافقة أو الرفض استخدم صفحة المراجعة.</p>
+            @isset($publication)
+                @unless($publication['ok'] ?? false)
+                    <div class="mt-3 max-w-2xl rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-900">
+                        <p class="font-semibold">لا يمكن النشر حتى استكمال:</p>
+                        <ul class="mt-2 list-inside list-disc space-y-1">
+                            @foreach($publication['missing'] ?? [] as $item)
+                                <li>{{ $item }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endunless
+            @endisset
         </div>
+        <div class="flex flex-wrap gap-2">
+            @if($personal_branding->status === \App\Models\InstructorProfile::STATUS_PENDING_REVIEW && ($publication['ok'] ?? false))
+                <form method="POST" action="{{ route('admin.personal-branding.approve', $personal_branding) }}"
+                      onsubmit="return confirm('تأكيد الموافقة على هذا الملف ونشره؟');">
+                    @csrf
+                    <button type="submit" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl bg-emerald-600 px-4 text-sm font-medium text-white hover:bg-emerald-700">
+                        <i class="fas fa-check text-xs"></i>
+                        موافقة ونشر
+                    </button>
+                </form>
+            @endif
         <a href="{{ route('admin.personal-branding.show', $personal_branding) }}"
            class="btn-press inline-flex h-9 items-center gap-2 rounded-xl border border-line bg-surface px-4 text-sm font-medium text-ink-soft transition hover:border-accent/30 hover:text-accent">
             <i class="fas fa-arrow-right text-xs"></i>
             رجوع للمراجعة
         </a>
+        </div>
     </section>
 
     <form method="POST" action="{{ route('admin.personal-branding.update', $personal_branding) }}" enctype="multipart/form-data" class="space-y-5">

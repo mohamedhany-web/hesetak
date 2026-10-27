@@ -3,9 +3,11 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Support\AdminArchitectureManual;
 use App\Support\AdminOpsGuideCatalog;
 use Illuminate\Support\Facades\Route;
 use Illuminate\View\View;
+use Throwable;
 
 class OpsGuideController extends Controller
 {
@@ -14,7 +16,15 @@ class OpsGuideController extends Controller
         $sections = collect(AdminOpsGuideCatalog::sections())->map(function (array $section) {
             $section['items'] = collect($section['items'])->map(function (array $item) {
                 $route = $item['route'] ?? null;
-                $item['url'] = ($route && Route::has($route)) ? route($route) : null;
+                $item['url'] = null;
+                if ($route && Route::has($route)) {
+                    $params = AdminArchitectureManual::defaultRouteParameters()[$route] ?? [];
+                    try {
+                        $item['url'] = route($route, $params);
+                    } catch (Throwable) {
+                        $item['url'] = null;
+                    }
+                }
 
                 return $item;
             })->all();

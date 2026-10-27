@@ -9,7 +9,7 @@
     $labelClass = 'mb-1.5 block text-xs font-medium text-muted';
     $kpis = [
         ['label' => 'طلبات الفترة', 'value' => number_format($stats['orders_total']), 'icon' => 'fa-shopping-bag', 'tone' => 'accent', 'note' => 'كل الطلبات الجديدة'],
-        ['label' => 'معلّقة الآن', 'value' => number_format($stats['pending']), 'icon' => 'fa-clock', 'tone' => 'metal', 'note' => 'بانتظار الاعتماد'],
+        ['label' => 'معلّقة في الفترة', 'value' => number_format($stats['pending']), 'icon' => 'fa-clock', 'tone' => 'metal', 'note' => 'طلبات معلّقة أُنشئت ضمن التاريخ المحدد'],
         ['label' => 'إيراد الفترة', 'value' => format_money($stats['revenue_period']), 'icon' => 'fa-coins', 'tone' => 'accent', 'note' => 'معتمد بالريال'],
         ['label' => 'إيراد الشهر', 'value' => format_money($stats['revenue_month']), 'icon' => 'fa-calendar', 'tone' => 'muted', 'note' => 'من أول الشهر'],
     ];
@@ -92,14 +92,15 @@
 
     <div class="grid grid-cols-1 gap-5 xl:grid-cols-2">
         <article class="overflow-hidden rounded-2xl border border-line bg-surface p-5 shadow-soft">
-            <h3 class="text-base font-semibold text-ink">طلبات جديدة يومياً</h3>
+            <h3 class="text-base font-semibold text-ink" title="عدد طلبات الطلبات (Orders) حسب يوم الإنشاء — كل عمود = مجموع الطلبات المُنشأة في ذلك اليوم ضمن الفترة المحددة">عدد طلبات الطلبات (Orders) حسب يوم الإنشاء</h3>
+            <p class="mt-1 text-xs text-muted">الأرقام فوق الأعمدة = عدد الطلبات المُنشأة في ذلك اليوم (created_at).</p>
             <div class="mt-4 flex h-40 items-end gap-1">
                 @php $maxD = max($daily->max() ?: 0, 1); @endphp
                 @forelse($daily as $day => $count)
                     <div class="group flex min-w-0 flex-1 flex-col items-center justify-end">
-                        <span class="mb-1 text-[10px] tabular-nums text-muted">{{ $count }}</span>
-                        <div class="mx-auto w-full max-w-[24px] rounded-t bg-accent/80 transition group-hover:bg-accent" style="height: {{ max(4, ($count / $maxD) * 100) }}%"></div>
-                        <span class="mt-1 w-full truncate text-center text-[9px] text-muted" title="{{ $day }}">{{ \Illuminate\Support\Str::afterLast($day, '-') }}</span>
+                        <span class="mb-1 text-[10px] tabular-nums text-muted" title="{{ $day }}: {{ $count }} طلب">{{ $count }}</span>
+                        <div class="mx-auto w-full max-w-[24px] rounded-t bg-accent/80 transition group-hover:bg-accent" style="height: {{ max(4, ($count / $maxD) * 100) }}%" title="{{ $day }} — {{ $count }} طلب"></div>
+                        <span class="mt-1 w-full truncate text-center text-[9px] text-muted" title="{{ $day }} — {{ $count }} طلب">{{ \Illuminate\Support\Carbon::parse($day)->format('Y-m-d') }}</span>
                     </div>
                 @empty
                     <p class="w-full py-8 text-center text-sm text-muted">لا بيانات في هذه الفترة.</p>

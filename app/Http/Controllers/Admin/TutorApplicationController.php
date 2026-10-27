@@ -96,6 +96,14 @@ class TutorApplicationController extends Controller
             ->orderByDesc('activated_at')
             ->orderByDesc('id');
 
+        $query->whereRaw('LOWER(TRIM(COALESCE(full_name, ""))) NOT IN (?, ?)', ['test', 'اختبار'])
+            ->whereHas('user', function ($uq) {
+                $uq->whereRaw('LOWER(TRIM(name)) NOT IN (?, ?)', ['test', 'اختبار'])
+                    ->where(function ($q) {
+                        $q->whereNull('email')->orWhere('email', 'not like', 'test@%');
+                    });
+            });
+
         if ($request->filled('search')) {
             $s = trim((string) $request->search);
             $query->where(function ($q) use ($s) {

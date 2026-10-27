@@ -14,6 +14,11 @@ class CourseController extends Controller
 {
     public function index()
     {
+        // قوالب admin/courses غير موجودة — المنتج الفعلي هو advanced-courses.
+        if (! view()->exists('admin.courses.index')) {
+            return redirect()->route('admin.advanced-courses.index');
+        }
+
         $courses = Course::with(['subject', 'classroom'])
             ->withCount(['lessons', 'enrollments'])
             ->orderBy('created_at', 'desc')
@@ -24,7 +29,7 @@ class CourseController extends Controller
 
     public function create()
     {
-        return view('admin.courses.create');
+        return redirect()->route('admin.advanced-courses.create');
     }
 
     public function store(Request $request)

@@ -81,9 +81,10 @@ class InstructorPersonalBrandingController extends Controller
 
     public function edit(InstructorProfile $personal_branding)
     {
-        $personal_branding->load('user');
+        $personal_branding->load('user.teachingLearningPaths');
+        $publication = InstructorProfilePublication::evaluate($personal_branding);
 
-        return view('admin.marketing.personal-branding.edit', compact('personal_branding'));
+        return view('admin.marketing.personal-branding.edit', compact('personal_branding', 'publication'));
     }
 
     public function update(Request $request, InstructorProfile $personal_branding)

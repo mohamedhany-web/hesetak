@@ -31,7 +31,7 @@ class SalesAnalyticsController extends Controller
 
         $stats = [
             'orders_total' => Order::query()->whereBetween('created_at', [$from, $to])->count(),
-            'pending' => Order::pending()->count(),
+            'pending' => Order::pending()->whereBetween('created_at', [$from, $to])->count(),
             'approved_period' => Order::approved()->whereBetween('approved_at', [$from, $to])->count(),
             'revenue_period' => (float) Order::approved()->whereBetween('approved_at', [$from, $to])->sum('amount'),
             'revenue_month' => (float) Order::approved()->where('approved_at', '>=', now()->startOfMonth())->sum('amount'),

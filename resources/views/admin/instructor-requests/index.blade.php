@@ -13,9 +13,15 @@
 
     <!-- إحصائيات -->
     <section class="rounded-3xl bg-white/95 backdrop-blur border border-slate-200 shadow-lg overflow-hidden">
-        <div class="px-5 py-6 sm:px-8 lg:px-12 border-b border-slate-200">
-            <h2 class="text-2xl font-bold text-slate-900">طلبات المدربين</h2>
-            <p class="text-sm text-slate-500 mt-2">مراجعة الطلبات المقدمة من المدربين والرد عليها</p>
+        <div class="px-5 py-6 sm:px-8 lg:px-12 border-b border-slate-200 flex flex-wrap items-start justify-between gap-4">
+            <div>
+                <h2 class="text-2xl font-bold text-slate-900">طلبات المدربين</h2>
+                <p class="text-sm text-slate-500 mt-2">مراجعة الطلبات المقدمة من المدربين والرد عليها</p>
+            </div>
+            <a href="{{ route('admin.instructor-requests.create') }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-700">
+                <i class="fas fa-plus text-xs"></i>
+                طلب جديد
+            </a>
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 p-5 sm:p-8">
             <div class="rounded-2xl border border-slate-200 bg-white/70 p-5">

@@ -18,7 +18,7 @@
         <p class="mt-2 text-xs">اضبط <code>LIVE_RECORDINGS_WEBHOOK_TOKEN</code> في .env ثم استخدمه في الهيدر.</p>
     </div>
 
-    <form method="POST" action="{{ route('admin.live-recordings.store') }}" class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 space-y-5">
+    <form method="POST" action="{{ route('admin.live-recordings.store') }}" enctype="multipart/form-data" class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 space-y-5">
         @csrf
         <div class="grid md:grid-cols-2 gap-5">
             <div class="md:col-span-2">
@@ -36,15 +36,22 @@
                 <input type="text" name="title" value="{{ old('title') }}" placeholder="اختياري — يُستخدم عنوان الجلسة إن تُرك فارغاً" class="w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white">
             </div>
             <div>
-                <label class="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-1">مكان التخزين <span class="text-red-500">*</span></label>
+                <label class="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-1">مكان التخزين (عند الإدخال اليدوي)</label>
                 <select name="storage_disk" id="storage_disk" class="w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white">
                     <option value="r2" {{ old('storage_disk', 'r2') === 'r2' ? 'selected' : '' }}>Cloudflare R2 (بعد رفع Jibri)</option>
                     <option value="local" {{ old('storage_disk') === 'local' ? 'selected' : '' }}>محلي (storage)</option>
                 </select>
             </div>
+            <div class="md:col-span-2">
+                <label class="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-1">رفع ملف فيديو (اختياري)</label>
+                <input type="file" name="video" accept="video/mp4,video/webm,video/quicktime,.mp4,.webm,.mov"
+                       class="w-full rounded-lg border border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white text-sm file:mr-3 file:rounded-lg file:border-0 file:bg-emerald-600 file:px-4 file:py-2 file:text-white">
+                <p class="text-xs text-slate-500 mt-1">إن رفعت ملفاً يُخزَّن تلقائياً (R2 إن وُجد إعداد، وإلا محلياً) ولا يلزم إدخال مسار يدوي.</p>
+                @error('video')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
+            </div>
             <div>
-                <label class="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-1">مسار الملف في R2 أو storage <span class="text-red-500">*</span></label>
-                <input type="text" name="file_path" value="{{ old('file_path') }}" required placeholder="مثال: live-recordings/session-1/2025-03-16-rec.mp4" class="w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white">
+                <label class="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-1">مسار الملف في R2 أو storage</label>
+                <input type="text" name="file_path" value="{{ old('file_path') }}" placeholder="مثال: live-recordings/session-1/2025-03-16-rec.mp4" class="w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white">
                 <p class="text-xs text-slate-500 mt-1">المفتاح (key) كما ظهر بعد الرفع إلى R2، أو المسار النسبي داخل storage للمحلي.</p>
                 @error('file_path')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
             </div>

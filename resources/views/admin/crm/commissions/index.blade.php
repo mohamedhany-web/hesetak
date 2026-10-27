@@ -1,10 +1,22 @@
 @extends('layouts.admin')
 
 @section('title', 'عمولات CRM')
-@section('header', 'CRM — العمولات')
+@section('page_title', 'CRM — العمولات')
 
 @section('content')
 <div class="space-y-4">
+    @if(session('success'))
+        <div class="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">{{ session('success') }}</div>
+    @endif
+
+    <section class="flex flex-wrap items-end justify-between gap-4">
+        <p class="text-sm text-muted">متابعة واعتماد عمولات المبيعات والتسويق</p>
+        <a href="{{ route('admin.crm.commissions.create') }}" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl bg-accent px-4 text-sm font-medium text-white">
+            <i class="fas fa-plus text-xs"></i>
+            عمولة يدوية
+        </a>
+    </section>
+
     <div class="grid grid-cols-3 gap-3">
         <div class="rounded-xl bg-white border p-4"><p class="text-xs text-slate-500">معلقة</p><p class="text-2xl font-bold">{{ $stats['pending'] }}</p></div>
         <div class="rounded-xl bg-white border p-4"><p class="text-xs text-slate-500">معتمدة</p><p class="text-2xl font-bold text-emerald-700">{{ $stats['approved'] }}</p></div>
@@ -16,9 +28,9 @@
                 <th class="px-4 py-3 text-right">Lead</th><th class="px-4 py-3 text-right">المستفيد</th><th class="px-4 py-3 text-right">النوع</th><th class="px-4 py-3 text-right">المبلغ</th><th class="px-4 py-3 text-right">الحالة</th><th></th>
             </tr></thead>
             <tbody class="divide-y">
-                @foreach($commissions as $c)
+                @forelse($commissions as $c)
                     <tr>
-                        <td class="px-4 py-3">#{{ $c->sales_lead_id }} {{ $c->lead?->name }}</td>
+                        <td class="px-4 py-3">@if($c->sales_lead_id)#{{ $c->sales_lead_id }} {{ $c->lead?->name }}@else<span class="text-muted">—</span>@endif</td>
                         <td class="px-4 py-3">{{ $c->user?->name }}</td>
                         <td class="px-4 py-3">{{ $c->typeLabel() }}</td>
                         <td class="px-4 py-3 font-bold">{{ format_money($c->commission_amount_egp) }}</td>
@@ -31,7 +43,11 @@
                             @endif
                         </td>
                     </tr>
-                @endforeach
+                @empty
+                    <tr>
+                        <td colspan="6" class="px-4 py-12 text-center text-muted">لا توجد عمولات مسجّلة بعد. يمكنك إضافة عمولة يدوية من الزر أعلاه.</td>
+                    </tr>
+                @endforelse
             </tbody>
         </table>
         <div class="p-4">{{ $commissions->links() }}</div>

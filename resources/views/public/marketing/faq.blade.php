@@ -3,6 +3,19 @@
 @section('content')
 @php
     $p = __('hesetak_pages.faq');
+    $hasDbFaqs = isset($faqs) && $faqs->flatten()->count() > 0;
+    $teacherCategories = ['teacher', 'teachers', 'معلم', 'مدرب', 'teacher_apply'];
+    if ($hasDbFaqs) {
+        $allDbFaqs = $faqs->flatten();
+        $dbStudentFaqs = $allDbFaqs->filter(function ($faq) use ($teacherCategories) {
+            $cat = strtolower(trim((string) ($faq->category ?? '')));
+            return $cat === '' || ! in_array($cat, $teacherCategories, true);
+        });
+        $dbTeacherFaqs = $allDbFaqs->filter(function ($faq) use ($teacherCategories) {
+            $cat = strtolower(trim((string) ($faq->category ?? '')));
+            return in_array($cat, $teacherCategories, true);
+        });
+    }
 @endphp
 <section class="mc-page-hero">
   <div class="mc-container">
@@ -21,27 +34,49 @@
 
     <div class="mc-tab-panel" data-mc-panel="student" role="tabpanel">
       <div class="mc-faq-list">
-        @foreach($p['student'] as $faq)
-          <details class="mc-faq-item">
-            <summary>{{ $faq['q'] }}</summary>
-            <p>{{ $faq['a'] }}</p>
-          </details>
-        @endforeach
+        @if($hasDbFaqs)
+          @forelse($dbStudentFaqs as $faq)
+            <details class="mc-faq-item">
+              <summary>{{ $faq->question }}</summary>
+              <p>{{ $faq->answer }}</p>
+            </details>
+          @empty
+            <p class="mc-lead">{{ app()->getLocale() === 'ar' ? 'لا أسئلة في هذا القسم بعد.' : 'No questions in this section yet.' }}</p>
+          @endforelse
+        @else
+          @foreach($p['student'] as $faq)
+            <details class="mc-faq-item">
+              <summary>{{ $faq['q'] }}</summary>
+              <p>{{ $faq['a'] }}</p>
+            </details>
+          @endforeach
+        @endif
       </div>
     </div>
 
     <div class="mc-tab-panel" data-mc-panel="teacher" role="tabpanel" hidden>
       <div class="mc-faq-list">
-        @foreach($p['teacher'] as $faq)
-          <details class="mc-faq-item">
-            <summary>{{ $faq['q'] }}</summary>
-            <p>{{ $faq['a'] }}</p>
-          </details>
-        @endforeach
+        @if($hasDbFaqs)
+          @forelse($dbTeacherFaqs as $faq)
+            <details class="mc-faq-item">
+              <summary>{{ $faq->question }}</summary>
+              <p>{{ $faq->answer }}</p>
+            </details>
+          @empty
+            <p class="mc-lead">{{ app()->getLocale() === 'ar' ? 'لا أسئلة للمعلمين في لوحة التحكم بعد.' : 'No teacher FAQs from admin yet.' }}</p>
+          @endforelse
+        @else
+          @foreach($p['teacher'] as $faq)
+            <details class="mc-faq-item">
+              <summary>{{ $faq['q'] }}</summary>
+              <p>{{ $faq['a'] }}</p>
+            </details>
+          @endforeach
+        @endif
       </div>
     </div>
 
-    @if(!empty($defaultFaqs) && is_array($defaultFaqs) && count($defaultFaqs))
+    @if(! $hasDbFaqs && !empty($defaultFaqs) && is_array($defaultFaqs) && count($defaultFaqs))
       <div style="margin-top:2rem">
         <h2 class="mc-title" style="font-size:1.25rem;margin-bottom:1rem">{{ app()->getLocale() === 'ar' ? 'المزيد' : 'More' }}</h2>
         <div class="mc-faq-list">
@@ -50,20 +85,6 @@
               <summary>{{ is_array($faq) ? ($faq['question'] ?? $faq['q'] ?? '') : '' }}</summary>
               <p>{{ is_array($faq) ? ($faq['answer'] ?? $faq['a'] ?? '') : '' }}</p>
             </details>
-          @endforeach
-        </div>
-      </div>
-    @elseif(isset($faqs) && $faqs->flatten()->count())
-      <div style="margin-top:2rem">
-        <h2 class="mc-title" style="font-size:1.25rem;margin-bottom:1rem">{{ app()->getLocale() === 'ar' ? 'من لوحة التحكم' : 'From admin' }}</h2>
-        <div class="mc-faq-list">
-          @foreach($faqs as $category => $items)
-            @foreach($items as $faq)
-              <details class="mc-faq-item">
-                <summary>{{ $faq->question }}</summary>
-                <p>{{ $faq->answer }}</p>
-              </details>
-            @endforeach
           @endforeach
         </div>
       </div>
