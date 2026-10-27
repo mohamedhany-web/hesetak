@@ -531,9 +531,13 @@ class AuthController extends Controller
 
         $map = [];
         foreach ($years as $year) {
+            // نفس منطق الكتالوج: مواد المرحلة + مواد عامة (academic_year_id فارغ)
             $map[(string) $year->id] = \App\Models\AcademicSubject::query()
                 ->active()
-                ->where('academic_year_id', $year->id)
+                ->where(function ($q) use ($year) {
+                    $q->whereNull('academic_year_id')
+                        ->orWhere('academic_year_id', $year->id);
+                })
                 ->ordered()
                 ->get(['id', 'name'])
                 ->map(fn ($s) => ['id' => (int) $s->id, 'name' => (string) $s->name])

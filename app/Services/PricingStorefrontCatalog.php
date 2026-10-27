@@ -161,7 +161,12 @@ class PricingStorefrontCatalog
             return (float) max(1, (int) round($amount));
         }
 
-        return (float) (max(5, (int) (round($amount / 5) * 5)));
+        if ($amount < 100) {
+            return (float) (max(10, (int) (round($amount / 5) * 5)));
+        }
+
+        // مبالغ أكبر: تقريب لعشرات مغلقة (50، 60، 100…)
+        return (float) (max(10, (int) (round($amount / 10) * 10)));
     }
 
     /**
@@ -223,7 +228,15 @@ class PricingStorefrontCatalog
             );
         }
 
-        usort($options, static fn (array $a, array $b) => ((int) ($b['sessions'] ?? 0)) <=> ((int) ($a['sessions'] ?? 0)));
+        // من الأكبر للأصغر حسب الإجمالي ثم عدد الحصص (أسهل مقارنة للولي)
+        usort($options, static function (array $a, array $b) {
+            $total = ((float) ($b['total'] ?? 0)) <=> ((float) ($a['total'] ?? 0));
+            if ($total !== 0) {
+                return $total;
+            }
+
+            return ((int) ($b['sessions'] ?? 0)) <=> ((int) ($a['sessions'] ?? 0));
+        });
 
         return $options;
     }

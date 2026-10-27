@@ -16,7 +16,9 @@ class ForgotPasswordController extends Controller
     public function showLinkRequestForm(Request $request)
     {
         $authBackgroundUrl = \App\Providers\AppServiceProvider::authBackgroundUrl();
-        $sent = $request->boolean('sent') || filled(session('status'));
+        // ?again=1 يفتح النموذج لإعادة الإرسال مع الإبقاء على تنبيه «تحقق من بريدك» إن وُجد
+        $sent = ! $request->boolean('again')
+            && ($request->boolean('sent') || filled(session('status')));
         $sentEmail = session('reset_email', old('email'));
 
         return view('auth.forgot-password', compact('authBackgroundUrl', 'sent', 'sentEmail'));

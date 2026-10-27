@@ -36,7 +36,7 @@
         <i class="fas fa-sign-in-alt" aria-hidden="true"></i>
         <span>{{ __('auth.go_to_login') }}</span>
       </a>
-      <a href="{{ route('password.request') }}" class="lasles-auth-link">{{ __('auth.send_reset_again') }}</a>
+      <a href="{{ route('password.request', ['sent' => 1, 'again' => 1]) }}" class="lasles-auth-link">{{ __('auth.send_reset_again') }}</a>
     </div>
   @else
     @if ($errors->any())
@@ -90,7 +90,23 @@
   var btn = document.getElementById('forgot-password-submit');
   var label = btn ? btn.querySelector('[data-label]') : null;
   var loadingText = form.getAttribute('data-loading-label') || '...';
+  var idleText = label ? label.textContent : '';
   var submitted = false;
+  var unlockTimer = null;
+
+  function unlock() {
+    submitted = false;
+    if (btn) {
+      btn.disabled = false;
+      btn.removeAttribute('aria-busy');
+    }
+    if (label) label.textContent = idleText;
+    if (unlockTimer) {
+      clearTimeout(unlockTimer);
+      unlockTimer = null;
+    }
+  }
+
   form.addEventListener('submit', function (e) {
     if (submitted) {
       e.preventDefault();
@@ -102,7 +118,11 @@
       btn.setAttribute('aria-busy', 'true');
     }
     if (label) label.textContent = loadingText;
+    // لو الطلب علق (شبكة/SMTP) نرجّع الزر بعد 20 ثانية بدل التحميل اللانهائي
+    unlockTimer = setTimeout(unlock, 20000);
   });
+
+  window.addEventListener('pageshow', function () { unlock(); });
 })();
 </script>
 @endpush

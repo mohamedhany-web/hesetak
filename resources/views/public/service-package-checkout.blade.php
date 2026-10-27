@@ -294,30 +294,22 @@
               <div class="mc-co-callout">
                 <i class="fas fa-university" aria-hidden="true"></i>
                 <div>
-                  <strong>{{ $isRtl ? 'ادفع بالتحويل البنكي ثم أكّد الشراء' : 'Pay by bank transfer, then confirm' }}</strong>
-                  <p>{{ $isRtl ? '1) اختر حساب حصتك 2) حوّل المبلغ 3) ارفع الإيصال 4) اضغط تأكيد الدفع. نفعّل رصيد الحصص بعد المراجعة.' : '1) Pick Hesetak account 2) Transfer 3) Upload receipt 4) Confirm payment. Credits activate after review.' }}</p>
+                  <strong>{{ $isRtl ? 'الدفع بتحويل بنكي لحساب حصتك' : 'Pay by bank transfer to Hesetak' }}</strong>
+                  <p>{{ $isRtl ? '1) اختر حساب حصتك المستلم من القائمة 2) حوّل المبلغ من تطبيقك البنكي 3) ارفع صورة الإيصال 4) اضغط «تأكيد التحويل والشراء».' : '1) Choose Hesetak receiving account 2) Transfer from your bank 3) Upload receipt 4) Tap Confirm transfer & purchase.' }}</p>
                 </div>
               </div>
               <p class="mc-co-offline__pkg">{{ $package->name }} · {{ $package->formattedPrice() }}</p>
-              <form method="POST" action="{{ route('public.service-packages.store', $package) }}" enctype="multipart/form-data" x-data="{paymentMethod:'bank_transfer', isSubmitting:false}" @submit="isSubmitting = true" class="mc-cco-manual">
+              <form method="POST" action="{{ route('public.service-packages.store', $package) }}" enctype="multipart/form-data" x-data="{isSubmitting:false}" @submit="isSubmitting = true" class="mc-cco-manual">
                 @csrf
+                <input type="hidden" name="payment_method" value="bank_transfer">
                 @if(request('year'))<input type="hidden" name="academic_year_id" value="{{ request('year') }}">@endif
                 @if(request('subject'))<input type="hidden" name="academic_subject_id" value="{{ request('subject') }}">@endif
                 @if(request('curriculum_type'))<input type="hidden" name="curriculum_type" value="{{ request('curriculum_type') }}">@endif
 
                 <div class="mc-co-field">
-                  <label for="mc-pkg-method">{{ $isRtl ? 'طريقة الدفع' : 'Payment method' }}</label>
-                  <select name="payment_method" id="mc-pkg-method" x-model="paymentMethod" required>
-                    <option value="bank_transfer">{{ $isRtl ? 'تحويل بنكي / محفظة' : 'Bank / wallet transfer' }}</option>
-                    <option value="cash">{{ $isRtl ? 'نقدي (بعد التنسيق)' : 'Cash (after coordination)' }}</option>
-                    <option value="other">{{ $isRtl ? 'طريقة أخرى' : 'Other' }}</option>
-                  </select>
-                </div>
-
-                <div class="mc-co-field" x-show="paymentMethod === 'bank_transfer'" x-cloak>
-                  <label for="mc-pkg-wallet">{{ $isRtl ? 'إلى أي حساب نحوّل؟ (حسابات المنصة)' : 'Which platform account should you transfer to?' }}</label>
-                  <select name="wallet_id" id="mc-pkg-wallet" :required="paymentMethod === 'bank_transfer'">
-                    <option value="">{{ $isRtl ? 'اختر حساب التحويل' : 'Select transfer account' }}</option>
+                  <label for="mc-pkg-wallet">{{ $isRtl ? 'حساب حصتك المستلم (بنك / محفظة المنصة)' : 'Hesetak receiving account (bank / wallet)' }}</label>
+                  <select name="wallet_id" id="mc-pkg-wallet" required>
+                    <option value="">{{ $isRtl ? 'اختر الحساب الذي ستحوّل إليه' : 'Select the account to transfer to' }}</option>
                     @foreach($wallets as $wallet)
                       <option value="{{ $wallet->id }}">
                         {{ $wallet->name ?: ($isRtl ? 'حساب منصة' : 'Platform account') }}
@@ -327,23 +319,23 @@
                     @endforeach
                   </select>
                   <p class="mc-co-hint" style="margin-top:.35rem;font-size:.9rem;opacity:.85">
-                    {{ $isRtl ? 'هذا حساب حصتك المستلم — ليس رقم حسابك أنت.' : 'This is Hesetak’s receiving account — not your own account number.' }}
+                    {{ $isRtl ? 'القائمة = حسابات حصتك فقط. لا تكتب رقم حسابك الشخصي هنا.' : 'This list is Hesetak accounts only. Do not enter your personal account number here.' }}
                   </p>
                 </div>
 
                 <div class="mc-co-field">
-                  <label for="mc-pkg-proof">{{ $isRtl ? 'صورة إيصال التحويل (مطلوب)' : 'Transfer receipt photo (required)' }}</label>
+                  <label for="mc-pkg-proof">{{ $isRtl ? 'صورة إيصال التحويل (مطلوب لإثبات الدفع)' : 'Transfer receipt photo (required as payment proof)' }}</label>
                   <input type="file" name="payment_proof" id="mc-pkg-proof" accept="image/*" required>
                 </div>
 
                 <div class="mc-co-field">
                   <label for="mc-pkg-notes">{{ $isRtl ? 'ملاحظات (اختياري)' : 'Notes (optional)' }}</label>
-                  <textarea name="notes" id="mc-pkg-notes" rows="3" placeholder="{{ $isRtl ? 'مثال: حوّلت عبر STC Pay' : 'e.g. Sent via STC Pay' }}"></textarea>
+                  <textarea name="notes" id="mc-pkg-notes" rows="3" placeholder="{{ $isRtl ? 'مثال: حوّلت عبر STC Pay الساعة 8 مساءً' : 'e.g. Sent via STC Pay at 8pm' }}"></textarea>
                 </div>
 
                 <button type="submit" class="mc-btn mc-btn--lg mc-btn--secondary mc-co-pay-btn" :disabled="isSubmitting">
-                  <i class="fas fa-lock" aria-hidden="true"></i>
-                  <span x-text="isSubmitting ? '{{ $isRtl ? 'جاري تأكيد الدفع…' : 'Confirming…' }}' : '{{ $isRtl ? 'تأكيد الدفع وإرسال الطلب' : 'Confirm payment & submit' }}'"></span>
+                  <i class="fas fa-check-circle" aria-hidden="true"></i>
+                  <span x-text="isSubmitting ? '{{ $isRtl ? 'جاري تأكيد التحويل…' : 'Confirming transfer…' }}' : '{{ $isRtl ? 'تأكيد التحويل والشراء' : 'Confirm transfer & purchase' }}'"></span>
                 </button>
               </form>
               <a href="{{ $waUrl }}" class="mc-btn mc-btn--md mc-btn--outline" style="margin-top:.75rem" target="_blank" rel="noopener">
@@ -360,7 +352,8 @@
             @endif
 
             <div class="mc-co-secondary">
-              <a href="{{ $backPricingUrl ?? route('public.pricing') }}" class="mc-btn mc-btn--md mc-btn--soft">{{ $isRtl ? '← العودة لنفس المرحلة/المادة' : '← Back to same stage/subject' }}</a>
+              <a href="{{ $backPricingUrl ?? route('public.pricing') }}" class="mc-btn mc-btn--md mc-btn--soft">{{ $isRtl ? '← الرجوع لباقات نفس المرحلة/المادة' : '← Back to packages for this stage/subject' }}</a>
+              <a href="{{ route('public.pricing') }}#mc-pricing-storefront" class="mc-btn mc-btn--md mc-btn--outline">{{ $isRtl ? 'كل الباقات' : 'All packages' }}</a>
               @if($canPayOnline)
                 <a href="{{ $waUrl }}" class="mc-btn mc-btn--md mc-btn--outline" target="_blank" rel="noopener">
                   <i class="fab fa-whatsapp" aria-hidden="true"></i> {{ $isRtl ? 'استفسار واتساب' : 'WhatsApp help' }}

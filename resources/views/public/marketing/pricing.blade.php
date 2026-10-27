@@ -109,13 +109,16 @@
     @endif
 
     @if($selYear || $selSubject || $selCurriculum)
-      <p class="mc-pric-back" style="margin:0 0 1rem">
-        <a href="{{ $stageUrl(null, null, $selCurriculum ?: null) }}" class="mc-btn mc-btn--sm mc-btn--soft">
+      <p class="mc-pric-back" style="margin:0 0 1rem;display:flex;flex-wrap:wrap;gap:.5rem;align-items:center">
+        <a href="{{ route('public.pricing') }}#mc-pricing-storefront" class="mc-btn mc-btn--sm mc-btn--soft">
           <i class="fas fa-arrow-{{ $isRtl ? 'right' : 'left' }}" aria-hidden="true"></i>
+          {{ $isRtl ? 'كل الباقات' : 'All packages' }}
+        </a>
+        <a href="{{ $stageUrl(null, null, $selCurriculum ?: null) }}" class="mc-btn mc-btn--sm mc-btn--outline">
           {{ $isRtl ? 'العودة لكل المراحل' : 'Back to all stages' }}
         </a>
         @if($selSubject)
-          <a href="{{ $stageUrl($selYear ? (int) $selYear : null, null) }}" class="mc-btn mc-btn--sm mc-btn--outline" style="margin-inline-start:.5rem">
+          <a href="{{ $stageUrl($selYear ? (int) $selYear : null, null) }}" class="mc-btn mc-btn--sm mc-btn--outline">
             {{ $isRtl ? 'كل مواد المرحلة' : 'All subjects in stage' }}
           </a>
         @endif
