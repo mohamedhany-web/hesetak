@@ -45,8 +45,8 @@ class LectureController extends Controller
 
     public function create(Request $request)
     {
-        $courses = AdvancedCourse::where('is_active', true)->get();
-        $instructors = User::where('role', 'instructor')->where('is_active', true)->get();
+        $courses = AdvancedCourse::query()->orderByDesc('is_active')->orderBy('title')->get(['id', 'title', 'is_active', 'instructor_id']);
+        $instructors = User::whereIn('role', ['instructor', 'teacher'])->where('is_active', true)->orderBy('name')->get();
         $preselectedCourseId = $request->query('course_id');
 
         return view('admin.lectures.create', compact('courses', 'instructors', 'preselectedCourseId'));

@@ -46,6 +46,14 @@ class AboutPageController extends Controller
             'about_section_1_body' => ['nullable', 'string', 'max:4000'],
             'about_section_2_title' => ['nullable', 'string', 'max:180'],
             'about_section_2_body' => ['nullable', 'string', 'max:4000'],
+            'about_feature_1_title' => ['nullable', 'string', 'max:120'],
+            'about_feature_1_body' => ['nullable', 'string', 'max:400'],
+            'about_feature_2_title' => ['nullable', 'string', 'max:120'],
+            'about_feature_2_body' => ['nullable', 'string', 'max:400'],
+            'about_feature_3_title' => ['nullable', 'string', 'max:120'],
+            'about_feature_3_body' => ['nullable', 'string', 'max:400'],
+            'about_feature_4_title' => ['nullable', 'string', 'max:120'],
+            'about_feature_4_body' => ['nullable', 'string', 'max:400'],
         ]);
 
         foreach (PublicAboutSettings::editableKeys() as $key) {

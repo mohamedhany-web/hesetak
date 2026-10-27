@@ -44,12 +44,18 @@
 
       <div class="mc-co-top__row">
         <div>
-          <p class="mc-eyebrow">{{ $isRtl ? 'خطوة أخيرة' : 'Final step' }}</p>
-          <h1 class="mc-co-title">{{ $isRtl ? 'أكمل شراء باقتك' : 'Complete your package' }}</h1>
+          <p class="mc-eyebrow">{{ !empty($isUrgent) ? ($isRtl ? 'حصة مستعجلة اليوم' : 'Urgent lesson today') : ($isRtl ? 'خطوة أخيرة' : 'Final step') }}</p>
+          <h1 class="mc-co-title">{{ !empty($isUrgent) ? ($isRtl ? 'تفاصيل الحصة المستعجلة ثم الدفع' : 'Urgent lesson details, then pay') : ($isRtl ? 'أكمل شراء باقتك' : 'Complete your package') }}</h1>
           <p class="mc-co-lead">
-            {{ $isRtl
-              ? 'راجع الملخص، ادفع بأمان، ويُضاف رصيد الحصص لحسابك تلقائياً بعد نجاح الدفع.'
-              : 'Review the summary, pay securely, and session credits are added automatically after payment succeeds.' }}
+            @if(!empty($isUrgent))
+              {{ $isRtl
+                ? 'راجع تفاصيل الباقة أدناه ثم أكمل الدفع لتفعيل رصيد حصة واحدة مستعجلة.'
+                : 'Review the package details below, then complete payment to activate one urgent lesson credit.' }}
+            @else
+              {{ $isRtl
+                ? 'راجع الملخص، ادفع بأمان، ويُضاف رصيد الحصص لحسابك تلقائياً بعد نجاح الدفع.'
+                : 'Review the summary, pay securely, and session credits are added automatically after payment succeeds.' }}
+            @endif
           </p>
         </div>
         <ol class="mc-co-steps" aria-label="{{ $isRtl ? 'خطوات الشراء' : 'Checkout steps' }}">

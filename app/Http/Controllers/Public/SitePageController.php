@@ -32,6 +32,7 @@ class SitePageController extends Controller
                 'meta_title' => $about['meta_title'] ?: ($content['meta_title'] ?? null),
                 'meta_description' => $about['meta_description'] ?: ($content['meta_description'] ?? null),
                 'sections' => $about['sections'] !== [] ? $about['sections'] : ($content['sections'] ?? []),
+                'features' => $about['features'] ?? [],
             ]);
         }
 

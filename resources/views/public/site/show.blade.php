@@ -6,6 +6,7 @@
   $children = $node['children'] ?? [];
   $parent = $node['parent'] ?? null;
   $sections = $content['sections'] ?? [];
+  $features = $content['features'] ?? [];
   $ctaPrimary = route('public.instructors.index');
   $ctaPrimaryLabel = __('landing.mc.hero.cta_primary');
   if (str_starts_with($pageKey, 'account')) {
@@ -60,6 +61,27 @@
 </section>
 @endif
 
+@if($pageKey === 'about' && count($features))
+<section class="mc-section">
+  <div class="mc-container">
+    <div class="mc-section-head mc-section-head--tight" style="margin-bottom:1rem">
+      <div>
+        <p class="mc-eyebrow">{{ $isRtl ? 'لماذا حصتك' : 'Why Hesetak' }}</p>
+        <h2 class="mc-title">{{ $isRtl ? 'مميزات المنصة' : 'Platform highlights' }}</h2>
+      </div>
+    </div>
+    <div class="mc-features mc-features--lighting">
+      @foreach($features as $feature)
+        <article class="mc-feature mc-feature--lighting">
+          <h3>{{ $feature['title'] ?? '' }}</h3>
+          <p>{{ $feature['body'] ?? '' }}</p>
+        </article>
+      @endforeach
+    </div>
+  </div>
+</section>
+@endif
+
 @if(count($sections))
 <section class="mc-section mc-section--muted">
   <div class="mc-container">
@@ -84,7 +106,11 @@
       </div>
       <div style="display:flex;flex-wrap:wrap;gap:.75rem">
         <a href="{{ route('public.instructors.index') }}" class="mc-btn mc-btn--lg mc-btn--secondary">{{ __('landing.mc.hero.cta_primary') }}</a>
-        <a href="{{ route('register') }}" class="mc-btn mc-btn--lg mc-btn--outline" style="border-color:#fff;color:#fff!important">{{ __('landing.nav.register') }}</a>
+        @auth
+          <a href="{{ route('dashboard') }}" class="mc-btn mc-btn--lg mc-btn--outline" style="border-color:#fff;color:#fff!important">{{ __('landing.nav.dashboard') }}</a>
+        @else
+          <a href="{{ route('register') }}" class="mc-btn mc-btn--lg mc-btn--outline" style="border-color:#fff;color:#fff!important">{{ __('landing.nav.register') }}</a>
+        @endauth
       </div>
     </div>
   </div>

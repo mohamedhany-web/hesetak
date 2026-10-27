@@ -158,9 +158,12 @@ class ServicePackageCheckoutController extends Controller
                 ->get()
             : collect();
 
+        $isUrgent = request()->boolean('urgent') || request()->query('urgent') === '1';
+
         return view('public.service-package-checkout', [
             'package' => $servicePackage,
             'indexable' => false,
+            'isUrgent' => $isUrgent,
             'fawaterakUseGateway' => $fawaterakUseGateway,
             'fawaterakMisconfigured' => $fawaterakMisconfigured,
             'fawaterakIntegration' => $fawaterakIntegration,

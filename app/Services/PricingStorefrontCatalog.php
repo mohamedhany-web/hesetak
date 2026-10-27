@@ -314,6 +314,24 @@ class PricingStorefrontCatalog
         ?int $yearId = null,
         ?int $subjectId = null,
     ): string {
+        // حصة مستعجلة: صفحة تفاصيل الباقة/الدفع مع وسم urgent — لا تذهب لكتالوج عام
+        if ($kind === 'urgent') {
+            $match = $this->checkoutPackageForSessions(1, $package, $yearId, $subjectId)
+                ?? $package
+                ?? ServicePackage::query()->storefront()->ordered()->first();
+
+            if ($match) {
+                $query = array_filter([
+                    'year' => $yearId,
+                    'subject' => $subjectId,
+                    'urgent' => 1,
+                    'sessions' => 1,
+                ]);
+
+                return route('public.service-packages.checkout', $match).'?'.http_build_query($query);
+            }
+        }
+
         $match = $this->checkoutPackageForSessions($sessions, $package, $yearId, $subjectId);
         if ($match) {
             $query = array_filter([
@@ -453,12 +471,17 @@ class PricingStorefrontCatalog
         ?ServicePackagePricingRule $urgent,
         bool $isRtl,
     ): array {
-        $unit = $this->unitPriceFor($yearId, $track, $standard);
         $yearName = $yearId && Schema::hasTable('academic_years')
             ? (AcademicYear::query()->find($yearId)?->name ?? '')
             : '';
 
         $linkedPackage = $this->packageForSubject($subject->id, $yearId);
+        // سعر البطاقة من باقة المادة إن وُجدت — لا نشارك سعر قاعدة واحدة لكل المواد
+        if ($linkedPackage && (float) $linkedPackage->price > 0 && (int) $linkedPackage->units_count > 0) {
+            $unit = $this->niceMoney($linkedPackage->pricePerUnit());
+        } else {
+            $unit = $this->unitPriceFor($yearId, $track, $standard);
+        }
         $options = $this->buildPriceOptions($unit, $standard, $urgent, $linkedPackage, $yearId, (int) $subject->id);
 
         if ($linkedPackage) {

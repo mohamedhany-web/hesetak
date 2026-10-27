@@ -5,6 +5,10 @@
   $mcCss = public_path('css/landing/mycourses.css');
   $mcVer = is_file($mcCss) ? (string) filemtime($mcCss) : (string) time();
   $mcActive = 'for-teachers';
+  $phoneCountries = $phoneCountries ?? config('phone_countries.countries', []);
+  $defaultCountry = $defaultCountry ?? (collect($phoneCountries)->firstWhere('code', config('phone_countries.default_country', 'SA')) ?: collect($phoneCountries)->first());
+  $oldDial = old('country_code', $defaultCountry['dial_code'] ?? '+966');
+  $pickedCountry = collect($phoneCountries)->firstWhere('dial_code', $oldDial) ?? $defaultCountry;
 @endphp
 <!DOCTYPE html>
 <html lang="{{ $locale }}" dir="{{ $isRtl ? 'rtl' : 'ltr' }}">
@@ -78,10 +82,22 @@
               @error('email')<p class="mc-ta-err">{{ $message }}</p>@enderror
             </div>
 
-            <div class="mc-ta-field">
+            <div class="mc-ta-field is-wide">
               <label for="phone">{{ $isRtl ? 'الجوال / واتساب' : 'Phone / WhatsApp' }} <span class="mc-ta-req">*</span></label>
-              <input class="mc-input" id="phone" type="tel" name="phone" value="{{ old('phone') }}" required dir="ltr" autocomplete="tel" inputmode="numeric" pattern="01[0125][0-9]{8}" maxlength="11" minlength="11" placeholder="01012345678" title="{{ $isRtl ? '11 رقماً مصرياً مثل 01012345678' : '11-digit Egypt mobile e.g. 01012345678' }}">
-              <p class="mc-ta-help">{{ $isRtl ? '11 رقماً يبدأ بـ 010 أو 011 أو 012 أو 015' : '11 digits starting with 010, 011, 012, or 015' }}</p>
+              <div class="mc-ta-phone" dir="ltr" style="display:flex;gap:.5rem;align-items:stretch">
+                <select class="mc-select" id="country_code" name="country_code" required aria-label="{{ $isRtl ? 'كود الدولة' : 'Country code' }}" style="max-width:11rem;flex:0 0 auto">
+                  @foreach($phoneCountries as $country)
+                    <option
+                      value="{{ $country['dial_code'] }}"
+                      data-placeholder="{{ $country['placeholder'] ?? '' }}"
+                      @selected(($pickedCountry['dial_code'] ?? '') === ($country['dial_code'] ?? ''))
+                    >{{ $country['dial_code'] }} · {{ $isRtl ? ($country['name_ar'] ?? $country['name_en'] ?? '') : ($country['name_en'] ?? $country['name_ar'] ?? '') }}</option>
+                  @endforeach
+                </select>
+                <input class="mc-input" id="phone" type="tel" name="phone" value="{{ old('phone') }}" required dir="ltr" autocomplete="tel-national" inputmode="numeric" maxlength="15" placeholder="{{ $pickedCountry['placeholder'] ?? '5xxxxxxxx' }}" style="flex:1">
+              </div>
+              <p class="mc-ta-help">{{ $isRtl ? 'اختر كود الدولة ثم أدخل الرقم المحلي بدون كود الدولة.' : 'Pick a country code, then enter the national number without the dial code.' }}</p>
+              @error('country_code')<p class="mc-ta-err">{{ $message }}</p>@enderror
               @error('phone')<p class="mc-ta-err">{{ $message }}</p>@enderror
             </div>
 

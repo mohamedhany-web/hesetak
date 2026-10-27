@@ -93,24 +93,35 @@ class ExamController extends Controller
             'passing_marks.required' => 'درجة النجاح مطلوبة',
         ]);
 
-        $data = $request->all();
-        
+        $data = $request->only([
+            'advanced_course_id',
+            'course_lesson_id',
+            'title',
+            'description',
+            'instructions',
+            'duration_minutes',
+            'attempts_allowed',
+            'passing_marks',
+            'total_marks',
+            'start_time',
+            'end_time',
+        ]);
+
         // تحويل checkboxes
         $booleanFields = [
             'randomize_questions', 'randomize_options', 'show_results_immediately',
             'show_correct_answers', 'show_explanations', 'allow_review',
             'require_camera', 'require_microphone', 'prevent_tab_switch',
-            'auto_submit', 'is_active'
+            'auto_submit', 'is_active',
         ];
 
         foreach ($booleanFields as $field) {
             $data[$field] = $request->has($field);
         }
 
-        // إضافة المستخدم الحالي كمنشئ للامتحان
+        // لا تكتب course_id من ?course_id= — FK القديمة على جدول courses
+        $data['course_id'] = null;
         $data['created_by'] = auth()->id();
-
-        // تعيين إجمالي الدرجات إلى 0 إذا لم يتم تحديده (سيتم حسابه لاحقاً عند إضافة الأسئلة)
         $data['total_marks'] = $data['total_marks'] ?? 0;
 
         $exam = Exam::create($data);

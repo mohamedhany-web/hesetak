@@ -30,7 +30,11 @@
         @endforeach
       </div>
       <div style="margin-top:1.5rem;display:flex;flex-wrap:wrap;gap:.75rem">
-        <a href="{{ route('register') }}" class="mc-btn mc-btn--md mc-btn--primary">{{ __('landing.nav.register') }}</a>
+        @auth
+          <a href="{{ route('dashboard') }}" class="mc-btn mc-btn--md mc-btn--primary">{{ __('landing.nav.dashboard') }}</a>
+        @else
+          <a href="{{ route('register') }}" class="mc-btn mc-btn--md mc-btn--primary">{{ __('landing.nav.register') }}</a>
+        @endauth
         <a href="{{ route('public.instructors.index') }}" class="mc-btn mc-btn--md mc-btn--outline">{{ __('landing.mc.hero.cta_primary') }}</a>
       </div>
     </div>

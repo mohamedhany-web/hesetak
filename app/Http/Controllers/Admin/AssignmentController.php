@@ -81,7 +81,8 @@ class AssignmentController extends Controller
 
         $course = AdvancedCourse::find($validated['advanced_course_id']);
         $validated['teacher_id'] = $course->instructor_id ?? null;
-        $validated['course_id'] = $validated['advanced_course_id'];
+        // course_id كان يشير لجدول courses القديم — لا نكتب معرف advanced_courses فيه
+        $validated['course_id'] = null;
         $validated['allow_late_submission'] = $request->has('allow_late_submission');
 
         $assignment = Assignment::create($validated);
@@ -150,7 +151,7 @@ class AssignmentController extends Controller
                 ->firstOrFail();
         }
 
-        $validated['course_id'] = $validated['advanced_course_id'];
+        $validated['course_id'] = null;
         $validated['allow_late_submission'] = $request->has('allow_late_submission');
         $course = AdvancedCourse::find($validated['advanced_course_id']);
         $validated['teacher_id'] = $course->instructor_id ?? $assignment->teacher_id;

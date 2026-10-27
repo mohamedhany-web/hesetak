@@ -42,8 +42,13 @@
         </a>
       @endforeach
     </div>
-    <p class="mc-lead" style="margin-top:1.1rem">
-      <a href="{{ route('public.pricing') }}" class="lasles-auth-link" style="font-weight:600">{{ $isRtl ? 'جاهز تشتري رصيد حصص؟ افتح باقات الحصص' : 'Ready to buy hour credits? Open lesson packages' }}</a>
-    </p>
+    <div style="margin-top:1.25rem;display:flex;flex-wrap:wrap;gap:.75rem;align-items:center">
+      <a href="{{ route('public.pricing') }}" class="mc-btn mc-btn--md mc-btn--secondary">
+        {{ $isRtl ? 'جاهز تشتري رصيد حصص؟ افتح باقات الحصص' : 'Ready to buy hour credits? Open lesson packages' }}
+      </a>
+      <a href="{{ route('public.pricing') }}#mc-pricing-storefront" class="mc-btn mc-btn--md mc-btn--outline">
+        {{ $isRtl ? 'عرض باقات الحصص المعلنة' : 'See listed lesson packages' }}
+      </a>
+    </div>
   </div>
 </section>

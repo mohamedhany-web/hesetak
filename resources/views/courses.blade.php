@@ -133,10 +133,6 @@
     </div>
   </section>
 
-  <div class="mc-section mc-section--compact">
-    @include('partials.landing.mycourses.path-guide', ['pathGuideActive' => 'courses'])
-  </div>
-
   <section class="mc-section mc-section--tight mc-dir-results">
     <div class="mc-container">
       @if($courses->isNotEmpty())
@@ -227,6 +223,10 @@
     </div>
   </section>
 
+  <div class="mc-section mc-section--compact">
+    @include('partials.landing.mycourses.path-guide', ['pathGuideActive' => 'courses'])
+  </div>
+
   <section class="mc-section mc-section--compact">
     <div class="mc-container">
       <div class="mc-cta">
@@ -235,8 +235,8 @@
           <p>{{ $p['parent_cta_desc'] }}</p>
         </div>
         <div class="mc-cta__actions">
-          <a href="#mc-cat-title" class="mc-btn mc-btn--lg mc-btn--secondary">{{ $p['show_all'] }}</a>
-          <a href="{{ route('public.pricing') }}" class="mc-btn mc-btn--lg mc-btn--ghost-on-dark">{{ $p['cta_packages'] }}</a>
+          <a href="{{ route('public.courses') }}" class="mc-btn mc-btn--lg mc-btn--secondary">{{ $isRtl ? 'تصفّح كل الكورسات المستقلة' : 'Browse all independent courses' }}</a>
+          <a href="{{ route('public.pricing') }}" class="mc-btn mc-btn--lg mc-btn--ghost-on-dark">{{ $isRtl ? 'باقات الحصص 1:1 (رصيد ساعات)' : '1:1 lesson packages (hour credits)' }}</a>
         </div>
       </div>
     </div>

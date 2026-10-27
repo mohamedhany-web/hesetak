@@ -9,6 +9,7 @@ use App\Models\AdvancedCourse;
 use App\Models\InstructorProfile;
 use App\Models\ServicePackage;
 use App\Services\PublicInstructorDirectory;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\View\View;
@@ -20,6 +21,7 @@ class SearchController extends Controller
         $q = trim((string) $request->query('q', ''));
         $locale = app()->getLocale();
         $isRtl = $locale === 'ar';
+        $tokens = $this->tokens($q);
 
         $instructors = collect();
         $packages = collect();
@@ -27,21 +29,17 @@ class SearchController extends Controller
         $subjects = collect();
         $years = collect();
 
-        if (mb_strlen($q) >= 2) {
-            $like = '%'.$q.'%';
-
+        if (count($tokens) >= 1 && mb_strlen($q) >= 2) {
             if (Schema::hasTable('instructor_profiles')) {
                 $instructors = InstructorProfile::query()
                     ->approved()
-                    ->where(function ($query) use ($like) {
-                        $query->where('headline', 'like', $like)
-                            ->orWhere('skills', 'like', $like)
-                            ->orWhere('bio', 'like', $like)
-                            ->orWhereHas('user', function ($userQuery) use ($like) {
-                                $userQuery->whereIn('role', ['instructor', 'teacher'])
-                                    ->where('is_active', true)
-                                    ->where('name', 'like', $like);
-                            });
+                    ->where(function (Builder $query) use ($tokens) {
+                        $this->requireAllTokens($query, $tokens, ['headline', 'skills']);
+                        $query->orWhereHas('user', function (Builder $userQuery) use ($tokens) {
+                            $userQuery->whereIn('role', ['instructor', 'teacher'])
+                                ->where('is_active', true);
+                            $this->requireAllTokens($userQuery, $tokens, ['name']);
+                        });
                     })
                     ->with(['user:'.implode(',', PublicInstructorDirectory::userSelect())])
                     ->limit(8)
@@ -51,10 +49,8 @@ class SearchController extends Controller
             if (Schema::hasTable('service_packages')) {
                 $packages = ServicePackage::query()
                     ->storefront()
-                    ->where(function ($query) use ($like) {
-                        $query->where('name', 'like', $like)
-                            ->orWhere('tagline', 'like', $like)
-                            ->orWhere('description', 'like', $like);
+                    ->where(function (Builder $query) use ($tokens) {
+                        $this->requireAllTokens($query, $tokens, ['name', 'tagline']);
                     })
                     ->orderByDesc('units_count')
                     ->limit(8)
@@ -64,11 +60,8 @@ class SearchController extends Controller
             if (Schema::hasTable('advanced_courses')) {
                 $courses = AdvancedCourse::query()
                     ->where('is_active', true)
-                    ->where(function ($query) use ($like) {
-                        $query->where('title', 'like', $like)
-                            ->orWhere('description', 'like', $like)
-                            ->orWhere('category', 'like', $like)
-                            ->orWhere('programming_language', 'like', $like);
+                    ->where(function (Builder $query) use ($tokens) {
+                        $this->requireAllTokens($query, $tokens, ['title', 'category']);
                     })
                     ->limit(8)
                     ->get(['id', 'title', 'thumbnail', 'level', 'duration_hours', 'category', 'language']);
@@ -77,7 +70,9 @@ class SearchController extends Controller
             if (Schema::hasTable('academic_subjects')) {
                 $subjects = AcademicSubject::query()
                     ->active()
-                    ->where('name', 'like', $like)
+                    ->where(function (Builder $query) use ($tokens) {
+                        $this->requireAllTokens($query, $tokens, ['name']);
+                    })
                     ->with('academicYear:id,name')
                     ->limit(8)
                     ->get(['id', 'name', 'academic_year_id']);
@@ -86,9 +81,8 @@ class SearchController extends Controller
             if (Schema::hasTable('academic_years')) {
                 $years = AcademicYear::query()
                     ->publicCatalog()
-                    ->where(function ($query) use ($like) {
-                        $query->where('name', 'like', $like)
-                            ->orWhere('tagline', 'like', $like);
+                    ->where(function (Builder $query) use ($tokens) {
+                        $this->requireAllTokens($query, $tokens, ['name', 'tagline']);
                     })
                     ->ordered()
                     ->limit(6)
@@ -111,5 +105,37 @@ class SearchController extends Controller
             'years' => $years,
             'hasQuery' => mb_strlen($q) >= 2,
         ]);
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function tokens(string $q): array
+    {
+        $parts = preg_split('/\s+/u', mb_strtolower(trim($q))) ?: [];
+
+        return array_values(array_filter($parts, fn ($t) => mb_strlen($t) >= 2));
+    }
+
+    /**
+     * كل كلمة بحث يجب أن تظهر في أحد الحقول (AND بين الكلمات، OR بين الحقول).
+     *
+     * @param  list<string>  $tokens
+     * @param  list<string>  $columns
+     */
+    private function requireAllTokens(Builder $query, array $tokens, array $columns): void
+    {
+        foreach ($tokens as $token) {
+            $like = '%'.$token.'%';
+            $query->where(function (Builder $inner) use ($like, $columns) {
+                foreach ($columns as $i => $column) {
+                    if ($i === 0) {
+                        $inner->where($column, 'like', $like);
+                    } else {
+                        $inner->orWhere($column, 'like', $like);
+                    }
+                }
+            });
+        }
     }
 }

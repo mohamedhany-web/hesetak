@@ -34,7 +34,8 @@
 
             return $facet;
         })->values();
-    $popularSkills = collect($skillFacets)->take(8)->values();
+    // شرائح المواد فقط (وليس نص المهارات الحر مثل أسماء المعلمين)
+    $popularSkills = $skillChoices->take(10)->values();
     $filterQuery = fn (array $extra = []) => array_filter(array_merge([
         'q' => $q !== '' ? $q : null,
         'skill' => $skill !== '' ? $skill : null,
@@ -42,6 +43,7 @@
         'curriculum' => $curriculum !== '' ? $curriculum : null,
         'sort' => $sort !== 'newest' ? $sort : null,
     ], $extra), fn ($v) => $v !== null && $v !== '');
+    $clearAllUrl = route('public.instructors.index', ['all' => 1]);
 @endphp
 <!DOCTYPE html>
 <html lang="{{ $locale }}" dir="{{ $isRtl ? 'rtl' : 'ltr' }}">
@@ -145,24 +147,25 @@
         <div class="mc-dir-bar__actions">
           <button type="submit" class="mc-btn mc-btn--md mc-btn--primary">{{ __('public.instructors_apply') }}</button>
           @if($hasActiveFilters)
-            <a href="{{ route('public.instructors.index') }}" class="mc-btn mc-btn--md mc-btn--soft">{{ __('public.instructors_clear') }}</a>
+            <a href="{{ $clearAllUrl }}" class="mc-btn mc-btn--md mc-btn--soft">{{ __('public.instructors_clear') }}</a>
           @endif
         </div>
       </form>
 
       @if($popularSkills->isNotEmpty())
-        <div class="mc-dir-chips" role="list" aria-label="{{ __('public.instructors_popular') }}">
+        <div class="mc-dir-chips" role="list" aria-label="{{ __('public.instructors_skill_label') }}">
           <a
             role="listitem"
             class="mc-dir-chip {{ $skill === '' ? 'is-on' : '' }}"
             href="{{ route('public.instructors.index', $filterQuery(['skill' => null])) }}"
           >{{ __('public.instructors_skill_all') }}</a>
           @foreach($popularSkills as $facet)
+            @php $chipValue = $facet['value'] ?? $facet['label'] ?? ''; @endphp
             <a
               role="listitem"
-              class="mc-dir-chip {{ $skill === $facet['label'] ? 'is-on' : '' }}"
-              href="{{ route('public.instructors.index', $filterQuery(['skill' => $facet['label']])) }}"
-            >{{ $facet['label'] }} <em>{{ $facet['count'] }}</em></a>
+              class="mc-dir-chip {{ ($skill === $chipValue || $skill === ($facet['label'] ?? '')) ? 'is-on' : '' }}"
+              href="{{ route('public.instructors.index', $filterQuery(['skill' => $chipValue])) }}"
+            >{{ $facet['label'] }}@if(!empty($facet['count'])) <em>{{ $facet['count'] }}</em>@endif</a>
           @endforeach
         </div>
       @endif
@@ -225,7 +228,7 @@
         <div class="mc-empty mc-dir-empty">
           <p>{{ $hasActiveFilters ? __('public.instructors_empty_filtered') : __('public.instructors_empty_hint') }}</p>
           @if($hasActiveFilters)
-            <a href="{{ route('public.instructors.index') }}" class="mc-btn mc-btn--md mc-btn--soft">{{ __('public.instructors_show_all') }}</a>
+            <a href="{{ $clearAllUrl }}" class="mc-btn mc-btn--md mc-btn--soft">{{ __('public.instructors_show_all') }}</a>
           @endif
         </div>
       @endif

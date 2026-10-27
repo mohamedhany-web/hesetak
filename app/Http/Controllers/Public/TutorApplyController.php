@@ -8,7 +8,6 @@ use App\Models\TutorApplication;
 use App\Models\User;
 use App\Services\HiringFormService;
 use App\Services\TutorApplicationStorage;
-use App\Support\EgyptMobilePhone;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -30,7 +29,11 @@ class TutorApplyController extends Controller
             return redirect()->route('public.tutor.apply.profile');
         }
 
-        return view('tutor.apply-register');
+        $phoneCountries = config('phone_countries.countries', []);
+        $defaultCountry = collect($phoneCountries)->firstWhere('code', config('phone_countries.default_country', 'SA'))
+            ?: collect($phoneCountries)->first();
+
+        return view('tutor.apply-register', compact('phoneCountries', 'defaultCountry'));
     }
 
     public function register(Request $request): RedirectResponse
@@ -39,22 +42,22 @@ class TutorApplyController extends Controller
             return redirect()->route('public.tutor.apply.profile');
         }
 
-        $normalizedPhone = EgyptMobilePhone::normalize((string) $request->input('phone', ''));
-        if ($normalizedPhone !== null) {
-            $request->merge(['phone' => $normalizedPhone]);
-        }
+        $phoneCountries = config('phone_countries.countries', []);
+        $defaultCountry = collect($phoneCountries)->firstWhere('code', config('phone_countries.default_country', 'SA'))
+            ?: collect($phoneCountries)->first();
 
         $data = $request->validate([
             'full_name' => ['required', 'string', 'max:160'],
             'email' => ['required', 'email', 'max:190', 'unique:users,email'],
-            'phone' => array_merge(EgyptMobilePhone::rules(true), ['unique:users,phone']),
+            'country_code' => ['required', 'string', 'max:10'],
+            'phone' => ['required', 'string', 'max:20'],
             'password' => ['required', 'string', 'confirmed', Password::min(8)->max(72)->letters()->numbers()],
         ], [
             'full_name.required' => 'الاسم الكامل مطلوب.',
             'email.required' => 'البريد الإلكتروني مطلوب.',
             'email.unique' => 'هذا البريد مسجّل مسبقاً. سجّل الدخول ثم أكمل بياناتك.',
+            'country_code.required' => 'كود الدولة مطلوب.',
             'phone.required' => 'رقم الجوال مطلوب.',
-            'phone.unique' => 'رقم الجوال مسجّل مسبقاً.',
             'password.required' => 'كلمة المرور مطلوبة.',
             'password.confirmed' => 'تأكيد كلمة المرور غير مطابق.',
             'password.min' => 'كلمة المرور يجب ألا تقل عن 8 أحرف.',
@@ -62,8 +65,36 @@ class TutorApplyController extends Controller
             'password.numbers' => 'كلمة المرور يجب أن تحتوي على رقم واحد على الأقل.',
         ]);
 
+        $country = collect($phoneCountries)->firstWhere('dial_code', $data['country_code']);
+        if (! $country || empty($country['validation']['regex'])) {
+            return back()->withErrors(['country_code' => 'كود الدولة غير مدعوم.'])->withInput()
+                ->with(compact('phoneCountries', 'defaultCountry'));
+        }
+
+        $nationalNumber = preg_replace('/\D/', '', $data['phone']) ?? '';
+        $nationalNumber = ltrim($nationalNumber, '0');
+        // مصر: الإبقاء على 1xxxxxxxxx بعد إزالة صفر المقدمة إن وُجد 01…
+        if (($country['code'] ?? '') === 'EG' && str_starts_with($nationalNumber, '1') === false) {
+            $raw = preg_replace('/\D/', '', $data['phone']) ?? '';
+            if (str_starts_with($raw, '01')) {
+                $nationalNumber = substr($raw, 1);
+            }
+        }
+
+        if (! preg_match($country['validation']['regex'], $nationalNumber)) {
+            $example = $country['example'] ?? $country['placeholder'] ?? '';
+
+            return back()->withErrors(['phone' => 'رقم الجوال غير صحيح لهذه الدولة. مثال: '.$example])->withInput()
+                ->with(compact('phoneCountries', 'defaultCountry'));
+        }
+
+        $phone = ($country['dial_code'] ?? '').$nationalNumber;
+        if (User::where('phone', $phone)->exists()) {
+            return back()->withErrors(['phone' => 'رقم الجوال مسجّل مسبقاً.'])->withInput()
+                ->with(compact('phoneCountries', 'defaultCountry'));
+        }
+
         $email = strtolower(trim($data['email']));
-        $phone = $data['phone'];
 
         $user = DB::transaction(function () use ($data, $email, $phone) {
             $user = User::create([

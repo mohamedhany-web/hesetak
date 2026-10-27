@@ -304,7 +304,7 @@
                 @guest
                   <a href="{{ route('login', ['redirect' => $instrPageUrl]) }}" class="mc-btn mc-btn--md mc-btn--soft">{{ $isRtl ? 'تسجيل الدخول' : 'Log in' }}</a>
                 @endguest
-                <a href="{{ route('public.instructors.index') }}" class="mc-btn mc-btn--md mc-btn--outline">{{ __('public.all_instructors_link') }}</a>
+                <a href="{{ route('public.instructors.index', ['all' => 1]) }}" class="mc-btn mc-btn--md mc-btn--outline">{{ __('public.all_instructors_link') }}</a>
               </div>
             @else
               <p class="mc-tp-alert">{{ $isRtl ? 'رصيد الباقة مستهلك حالياً — يمكنك حجز الحصة التجريبية المجانية أعلاه، أو تجديد الباقة لتثبيت مواعيد إضافية.' : 'Package credits are used up — you can still book the free trial above, or renew to lock more sessions.' }}</p>
@@ -411,7 +411,7 @@
         </div>
         <div class="mc-cta__actions">
           <a href="#mc-tp-book" class="mc-btn mc-btn--lg mc-btn--secondary">{{ $isRtl ? 'احجز الآن' : 'Book now' }}</a>
-          <a href="{{ route('public.instructors.index') }}" class="mc-btn mc-btn--lg mc-btn--ghost-on-dark">{{ __('public.all_instructors_link') }}</a>
+          <a href="{{ route('public.instructors.index', ['all' => 1]) }}" class="mc-btn mc-btn--lg mc-btn--ghost-on-dark">{{ __('public.all_instructors_link') }}</a>
         </div>
       </div>
     </div>

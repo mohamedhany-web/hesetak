@@ -40,13 +40,20 @@ class InstructorController extends Controller
             $curriculum = '';
         }
 
-        // طالب مسجّل بمرحلة/منهج → تطبيق افتراضي إن لم يُحدَّد فلتر في الرابط.
-        $viewer = \App\Support\StudentLearningProfile::fromAuth();
-        if ($stage === '' && $viewer->hasStage()) {
-            $stage = (string) $viewer->yearId;
-        }
-        if ($curriculum === '' && $viewer->hasCurriculum()) {
-            $curriculum = (string) $viewer->curriculumType;
+        // ?all=1 = عرض الدليل كاملاً بدون فلاتر افتراضية من ملف الطالب
+        $showAll = $request->boolean('all') || $request->query('all') === '1';
+        if ($showAll) {
+            $stage = '';
+            $curriculum = '';
+        } else {
+            // طالب مسجّل → افتراضي فقط إن لم يُمرَّر stage/curriculum في الرابط أصلاً
+            $viewer = \App\Support\StudentLearningProfile::fromAuth();
+            if ($stage === '' && $viewer->hasStage() && ! $request->exists('stage')) {
+                $stage = (string) $viewer->yearId;
+            }
+            if ($curriculum === '' && $viewer->hasCurriculum() && ! $request->exists('curriculum')) {
+                $curriculum = (string) $viewer->curriculumType;
+            }
         }
 
         $stages = collect();
@@ -168,11 +175,13 @@ class InstructorController extends Controller
         if ($curriculum !== '') {
             $profiles = $profiles->filter(function (InstructorProfile $profile) use ($curriculum) {
                 $keys = $profile->curriculumTypeKeys();
+                // معلمون بلا نوع منهج معلن يبقون ظاهرين (لا نخفي القائمة كلها)
+                if ($keys === []) {
+                    return true;
+                }
 
-                return $keys !== [] && (
-                    in_array($curriculum, $keys, true)
-                    || HesetakMatchCatalog::profileMatchesCurriculumType($keys, $curriculum, '')
-                );
+                return in_array($curriculum, $keys, true)
+                    || HesetakMatchCatalog::profileMatchesCurriculumType($keys, $curriculum, '');
             })->values();
         }
 

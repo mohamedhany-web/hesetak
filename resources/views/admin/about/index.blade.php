@@ -100,6 +100,25 @@
             </div>
         </article>
 
+        <article class="rounded-2xl border border-line bg-surface p-5 shadow-soft sm:p-6 space-y-4">
+            <div class="mb-1">
+                <h3 class="text-base font-semibold text-ink">مميزات المنصة (Lighting cards)</h3>
+                <p class="mt-0.5 text-xs text-muted">تظهر كبطاقات مضيئة تحت المقدمة في /about — اترك العنوان فارغاً لإخفاء البطاقة.</p>
+            </div>
+            @foreach([1, 2, 3, 4] as $fi)
+              <div class="grid gap-4 sm:grid-cols-2 rounded-xl border border-line/70 p-4">
+                <div>
+                  <label class="{{ $labelClass }}" for="about_feature_{{ $fi }}_title">ميزة {{ $fi }} — العنوان</label>
+                  <input type="text" name="about_feature_{{ $fi }}_title" id="about_feature_{{ $fi }}_title" value="{{ old('about_feature_'.$fi.'_title', $v['about_feature_'.$fi.'_title'] ?? '') }}" class="{{ $fieldClass }}">
+                </div>
+                <div>
+                  <label class="{{ $labelClass }}" for="about_feature_{{ $fi }}_body">ميزة {{ $fi }} — النص</label>
+                  <textarea name="about_feature_{{ $fi }}_body" id="about_feature_{{ $fi }}_body" rows="2" class="{{ $areaClass }}">{{ old('about_feature_'.$fi.'_body', $v['about_feature_'.$fi.'_body'] ?? '') }}</textarea>
+                </div>
+              </div>
+            @endforeach
+        </article>
+
         <div class="flex flex-wrap gap-3">
             <button type="submit" class="btn-press inline-flex h-11 items-center gap-2 rounded-xl bg-accent px-6 text-sm font-medium text-white">
                 <i class="fas fa-save text-xs"></i>

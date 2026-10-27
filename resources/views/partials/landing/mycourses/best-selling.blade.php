@@ -13,7 +13,9 @@
           <i class="fas fa-gift" aria-hidden="true"></i>
           {{ app()->getLocale() === 'ar' ? 'إهداء باقة' : 'Gift a package' }}
         </a>
-        <a class="mc-link-more" href="{{ route('public.pricing') }}">{{ __('landing.mc.packages.more') }} →</a>
+        <a class="mc-btn mc-btn--sm mc-btn--secondary" href="{{ route('public.pricing') }}#mc-pricing-storefront">
+          {{ app()->getLocale() === 'ar' ? 'عرض كل باقات الحصص' : 'See all lesson packages' }}
+        </a>
       </div>
     </div>
 
