@@ -5,9 +5,11 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\AdvancedCourse;
 use App\Models\Package;
+use App\Models\ServicePackage;
 use App\Models\TutoringGroupPackage;
 use App\Services\TutoringGroupPackagePricingService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
@@ -167,6 +169,22 @@ class PackageController extends Controller
 
         $exampleCalc = TutoringGroupPackagePricingService::calculate(10, 8, 3, 200);
 
+        $servicePackages = collect();
+        $servicePackageStats = ['total' => 0, 'active' => 0, 'featured' => 0];
+        if (Schema::hasTable('service_packages')) {
+            $servicePackages = ServicePackage::query()
+                ->with(['academicYear:id,name', 'academicSubject:id,name'])
+                ->orderByDesc('is_featured')
+                ->ordered()
+                ->limit(40)
+                ->get();
+            $servicePackageStats = [
+                'total' => ServicePackage::query()->count(),
+                'active' => ServicePackage::query()->where('is_active', true)->count(),
+                'featured' => ServicePackage::query()->where('is_featured', true)->count(),
+            ];
+        }
+
         return view('admin.packages.index', compact(
             'packages',
             'courses',
@@ -177,7 +195,9 @@ class PackageController extends Controller
             'tutoringPackages',
             'tutoringStats',
             'pricingTiers',
-            'exampleCalc'
+            'exampleCalc',
+            'servicePackages',
+            'servicePackageStats'
         ));
     }
 

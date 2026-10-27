@@ -332,14 +332,19 @@ class PricingStorefrontCatalog
             }
         }
 
-        $match = $this->checkoutPackageForSessions($sessions, $package, $yearId, $subjectId);
+        // نفس مسار الدفع لكل خيار (2 / 8 / …) — لا نوجّه لصفحة منشئ مختلفة
+        $match = $this->checkoutPackageForSessions($sessions, $package, $yearId, $subjectId)
+            ?? $package
+            ?? ServicePackage::query()->storefront()->ordered()->first();
+
         if ($match) {
             $query = array_filter([
                 'year' => $yearId,
                 'subject' => $subjectId,
+                'sessions' => $sessions,
             ]);
 
-            return route('public.service-packages.checkout', $match).($query !== [] ? '?'.http_build_query($query) : '');
+            return route('public.service-packages.checkout', $match).'?'.http_build_query($query);
         }
 
         return route('public.service-packages.index', array_filter([
@@ -374,9 +379,36 @@ class PricingStorefrontCatalog
             });
         }
 
-        return $query
+        $exact = $query
             ->orderByRaw('CASE WHEN academic_subject_id IS NULL THEN 1 ELSE 0 END')
             ->orderByRaw('CASE WHEN academic_year_id IS NULL THEN 1 ELSE 0 END')
+            ->ordered()
+            ->first();
+
+        if ($exact) {
+            return $exact;
+        }
+
+        // أقرب باقة لنفس المادة/المرحلة (حتى لو units_count مختلف) لتوحيد صفحة التفاصيل
+        if ($preferred) {
+            return $preferred;
+        }
+
+        $fallback = ServicePackage::query()->storefront();
+        if ($subjectId) {
+            $fallback->where(function ($q) use ($subjectId) {
+                $q->where('academic_subject_id', $subjectId)->orWhereNull('academic_subject_id');
+            });
+        }
+        if ($yearId) {
+            $fallback->where(function ($q) use ($yearId) {
+                $q->where('academic_year_id', $yearId)->orWhereNull('academic_year_id');
+            });
+        }
+
+        return $fallback
+            ->orderByRaw('CASE WHEN academic_subject_id IS NULL THEN 1 ELSE 0 END')
+            ->orderByRaw('ABS(units_count - ?)', [$sessions])
             ->ordered()
             ->first();
     }

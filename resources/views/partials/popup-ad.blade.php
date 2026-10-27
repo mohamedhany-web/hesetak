@@ -32,14 +32,26 @@
 <style>
 .mc-popup-ad {
     position: fixed !important;
+    top: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    left: 0 !important;
     inset: 0 !important;
-    z-index: 100050 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    height: 100dvh !important;
+    margin: 0 !important;
+    z-index: 2147483000 !important;
     display: flex !important;
     align-items: center;
     justify-content: center;
     padding: 1rem;
     box-sizing: border-box;
     animation: mcPopupOverlayIn 0.28s ease-out;
+    /* يمنع تأثر position:fixed بأسلاف فيها transform/filter */
+    transform: none !important;
+    filter: none !important;
+    perspective: none !important;
 }
 .mc-popup-ad__backdrop {
     position: absolute;
@@ -164,6 +176,10 @@
 (function () {
     var overlay = document.getElementById('popup-ad-overlay');
     if (!overlay) return;
+    // انقل للـ body حتى لا يُحبس أسفل المحتوى أو داخل stacking context
+    if (overlay.parentElement !== document.body) {
+        document.body.appendChild(overlay);
+    }
     var closeBtn = document.getElementById('popup-ad-close');
     function hide() {
         overlay.style.opacity = '0';
@@ -171,9 +187,11 @@
         setTimeout(function () {
             overlay.style.display = 'none';
             document.documentElement.style.removeProperty('overflow');
+            document.body.style.removeProperty('overflow');
         }, 280);
     }
     document.documentElement.style.overflow = 'hidden';
+    document.body.style.overflow = 'hidden';
     if (closeBtn) closeBtn.addEventListener('click', hide);
     overlay.querySelectorAll('[data-popup-ad-dismiss]').forEach(function (el) {
         el.addEventListener('click', hide);

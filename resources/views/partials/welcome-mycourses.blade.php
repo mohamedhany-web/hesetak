@@ -11,7 +11,7 @@
   {{-- Homepage shop IA: Hero → Promo mosaic → Trending → Best selling → Testimonials --}}
   @include('partials.landing.mycourses.hero-shop')
   @include('partials.landing.mycourses.promo-mosaic')
-  @include('partials.landing.mycourses.trending')
+  @include('partials.landing.mycourses.curriculum-browser')
   @include('partials.landing.mycourses.best-selling')
   @include('partials.landing.mycourses.testimonials')
 </main>

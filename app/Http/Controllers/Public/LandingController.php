@@ -15,6 +15,7 @@ use App\Models\SiteTestimonial;
 use App\Models\User;
 use App\Services\CourseSubscriptionService;
 use App\Services\PackageCatalogFilterService;
+use App\Support\HesetakMatchCatalog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
@@ -95,7 +96,17 @@ class LandingController extends Controller
 
         $payload = config('app.debug')
             ? $buildHomePayload()
-            : Cache::remember('landing.home.v20.'.$locale, 180, $buildHomePayload);
+            : Cache::remember('landing.home.v21.'.$locale, 180, $buildHomePayload);
+
+        // متصفح المنهج للرئيسية: منهج → صف → مادة (بدل قسم المعلمين فقط)
+        $payload['curriculumBrowserTracks'] = array_values(HesetakMatchCatalog::curriculumTypes());
+        $payload['curriculumBrowserStages'] = Schema::hasTable('academic_years')
+            ? AcademicYear::query()
+                ->publicCatalog()
+                ->ordered()
+                ->with(['subjects' => fn ($q) => $q->active()->ordered()->select(['id', 'name', 'slug', 'academic_year_id'])])
+                ->get(['id', 'name', 'slug'])
+            : collect();
 
         $catalogService = app(PackageCatalogFilterService::class);
         $packageCatalog = Schema::hasTable('service_packages')

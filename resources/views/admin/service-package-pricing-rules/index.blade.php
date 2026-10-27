@@ -43,63 +43,12 @@
         </div>
     @endif
 
-    <div class="grid gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(420px,.8fr)]">
-        <section class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
-            <div class="border-b border-line px-4 py-3">
-                <h3 class="font-semibold text-ink">قواعد التسعير الحالية</h3>
-            </div>
-            <div class="overflow-x-auto">
-                <table class="min-w-full text-sm">
-                    <thead class="bg-canvas-muted text-xs text-muted">
-                        <tr>
-                            <th class="px-4 py-3 text-start">الخدمة</th>
-                            <th class="px-4 py-3 text-start">سعر الحصة</th>
-                            <th class="px-4 py-3 text-start">الحدود</th>
-                            <th class="px-4 py-3 text-start">المدة/الصلاحية</th>
-                            <th class="px-4 py-3 text-start">الخصومات</th>
-                            <th class="px-4 py-3 text-start">إجراءات</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($rules as $rule)
-                            <tr class="border-t border-line">
-                                <td class="px-4 py-3">
-                                    <div class="font-semibold text-ink">{{ $rule->name }}</div>
-                                    <div class="text-xs text-muted">{{ $rule->scopeLabel() }} · {{ $rule->kindLabel() }} · {{ $rule->is_active ? 'نشطة' : 'موقوفة' }}</div>
-                                </td>
-                                <td class="px-4 py-3 font-semibold">{{ number_format((float) $rule->price_per_session, 2) }} {{ currency_symbol() }}</td>
-                                <td class="px-4 py-3">{{ $rule->min_sessions }}–{{ $rule->max_sessions }} <span class="text-xs text-muted">/ خطوة {{ $rule->session_step }}</span></td>
-                                <td class="px-4 py-3">{{ $rule->session_minutes }} د <span class="block text-xs text-muted">{{ $rule->duration_days }} يوم</span></td>
-                                <td class="px-4 py-3 text-xs">
-                                    @forelse($rule->discount_tiers ?? [] as $tier)
-                                        <span class="mb-1 inline-flex rounded-full bg-canvas-muted px-2 py-1">{{ $tier['min_sessions'] }}+ = {{ $tier['discount_percent'] }}%</span>
-                                    @empty
-                                        <span class="text-muted">بدون</span>
-                                    @endforelse
-                                </td>
-                                <td class="px-4 py-3">
-                                    <div class="flex gap-2">
-                                        <a href="{{ route('admin.service-package-pricing-rules.index', ['edit' => $rule->id]) }}" class="text-accent hover:underline">تعديل</a>
-                                        <form method="POST" action="{{ route('admin.service-package-pricing-rules.destroy', $rule) }}" onsubmit="return confirm('حذف قاعدة التسعير؟')">
-                                            @csrf @method('DELETE')
-                                            <button class="text-danger hover:underline">حذف</button>
-                                        </form>
-                                    </div>
-                                </td>
-                            </tr>
-                        @empty
-                            <tr><td colspan="6" class="px-4 py-8 text-center text-muted">لا توجد قواعد تسعير.</td></tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-        </section>
-
-        <section class="rounded-2xl border border-line bg-surface p-4 shadow-soft sm:p-5">
+    <div class="grid gap-5 xl:grid-cols-[minmax(420px,.9fr)_minmax(0,1.1fr)]">
+        <section class="rounded-2xl border border-accent/25 bg-surface p-4 shadow-soft sm:p-5 order-1 xl:order-none" id="pricing-rule-form">
             <div class="mb-4 flex items-center justify-between gap-3">
                 <div>
-                    <h3 class="font-semibold text-ink">{{ $editing ? 'تعديل قاعدة التسعير' : 'إضافة قاعدة تسعير' }}</h3>
-                    <p class="text-xs text-muted">جميع الأسعار بالريال السعودي (ر.س).</p>
+                    <h3 class="font-semibold text-ink">{{ $editing ? 'تعديل قاعدة التسعير' : 'إضافة قاعدة تسعير (مدخلات الحصص)' }}</h3>
+                    <p class="text-xs text-muted">املأ الحقول ثم احفظ — الأسعار بالريال السعودي (ر.س).</p>
                 </div>
                 @if($editing)
                     <a href="{{ route('admin.service-package-pricing-rules.index') }}" class="text-sm text-accent">إلغاء</a>
@@ -119,6 +68,7 @@
                         <label class="{{ $label }}" for="scope">الخدمة التي يُستخدم فيها *</label>
                         <select id="scope" name="scope" class="{{ $field }}">
                             @foreach(\App\Models\ServicePackage::scopes() as $value => $scopeLabel)
+                                @continue($value === \App\Models\ServicePackage::SCOPE_TUTORING_COLLECTIVE)
                                 <option value="{{ $value }}" @selected(old('scope', $editRule->scope) === $value)>{{ $scopeLabel }}</option>
                             @endforeach
                         </select>
@@ -185,6 +135,57 @@
                     {{ $editing ? 'حفظ التعديلات' : 'إضافة قاعدة التسعير' }}
                 </button>
             </form>
+        </section>
+
+        <section class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft order-2">
+            <div class="border-b border-line px-4 py-3">
+                <h3 class="font-semibold text-ink">قواعد التسعير الحالية</h3>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="min-w-full text-sm">
+                    <thead class="bg-canvas-muted text-xs text-muted">
+                        <tr>
+                            <th class="px-4 py-3 text-start">الخدمة</th>
+                            <th class="px-4 py-3 text-start">سعر الحصة</th>
+                            <th class="px-4 py-3 text-start">الحدود</th>
+                            <th class="px-4 py-3 text-start">المدة/الصلاحية</th>
+                            <th class="px-4 py-3 text-start">الخصومات</th>
+                            <th class="px-4 py-3 text-start">إجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($rules as $rule)
+                            <tr class="border-t border-line">
+                                <td class="px-4 py-3">
+                                    <div class="font-semibold text-ink">{{ $rule->name }}</div>
+                                    <div class="text-xs text-muted">{{ $rule->scopeLabel() }} · {{ $rule->kindLabel() }} · {{ $rule->is_active ? 'نشطة' : 'موقوفة' }}</div>
+                                </td>
+                                <td class="px-4 py-3 font-semibold">{{ number_format((float) $rule->price_per_session, 2) }} {{ currency_symbol() }}</td>
+                                <td class="px-4 py-3">{{ $rule->min_sessions }}–{{ $rule->max_sessions }} <span class="text-xs text-muted">/ خطوة {{ $rule->session_step }}</span></td>
+                                <td class="px-4 py-3">{{ $rule->session_minutes }} د <span class="block text-xs text-muted">{{ $rule->duration_days }} يوم</span></td>
+                                <td class="px-4 py-3 text-xs">
+                                    @forelse($rule->discount_tiers ?? [] as $tier)
+                                        <span class="mb-1 inline-flex rounded-full bg-canvas-muted px-2 py-1">{{ $tier['min_sessions'] }}+ = {{ $tier['discount_percent'] }}%</span>
+                                    @empty
+                                        <span class="text-muted">بدون</span>
+                                    @endforelse
+                                </td>
+                                <td class="px-4 py-3">
+                                    <div class="flex gap-2">
+                                        <a href="{{ route('admin.service-package-pricing-rules.index', ['edit' => $rule->id]) }}#pricing-rule-form" class="text-accent hover:underline">تعديل</a>
+                                        <form method="POST" action="{{ route('admin.service-package-pricing-rules.destroy', $rule) }}" onsubmit="return confirm('حذف قاعدة التسعير؟')">
+                                            @csrf @method('DELETE')
+                                            <button class="text-danger hover:underline">حذف</button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr><td colspan="6" class="px-4 py-8 text-center text-muted">لا توجد قواعد تسعير.</td></tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
         </section>
     </div>
 </div>

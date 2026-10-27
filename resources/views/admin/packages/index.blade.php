@@ -5,7 +5,7 @@
 
 @section('content')
 @php
-    $activeTab = request('tab', 'packages');
+    $activeTab = request('tab', 'lessons');
     $fieldClass = 'h-11 w-full rounded-xl border border-line bg-surface px-4 text-sm text-ink transition focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20';
     $labelClass = 'mb-1.5 block text-xs font-medium text-muted';
 @endphp
@@ -38,6 +38,12 @@
     @endif
 
     <nav class="flex flex-wrap gap-2 rounded-2xl border border-line bg-surface p-2 shadow-soft">
+        <button type="button" @click="activeTab = 'lessons'"
+                :class="activeTab === 'lessons' ? 'bg-accent text-white' : 'text-ink-soft hover:bg-accent-soft hover:text-accent'"
+                class="btn-press inline-flex h-10 items-center gap-2 rounded-xl px-4 text-sm font-medium transition">
+            <i class="fas fa-chalkboard-user text-xs"></i>
+            باقات الحصص 1:1 ({{ $servicePackageStats['total'] ?? 0 }})
+        </button>
         <button type="button" @click="activeTab = 'packages'"
                 :class="activeTab === 'packages' ? 'bg-accent text-white' : 'text-ink-soft hover:bg-accent-soft hover:text-accent'"
                 class="btn-press inline-flex h-10 items-center gap-2 rounded-xl px-4 text-sm font-medium transition">
@@ -51,6 +57,76 @@
             أسعار البرامج ({{ $courseStats['total'] ?? 0 }})
         </button>
     </nav>
+
+    {{-- ===== باقات الحصص الفردية (حصتك) ===== --}}
+    <div x-show="activeTab === 'lessons'" x-cloak class="space-y-5">
+        <section class="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-line bg-surface p-4 shadow-soft">
+            <div>
+                <h3 class="text-base font-semibold text-ink">باقات الحصص الفردية 1:1</h3>
+                <p class="mt-1 text-sm text-muted">هذه الباقات تظهر في /pricing وتُستخدم لرصيد الحصص. أدِرها من شاشة باقات الحصص أو عدّل الأسعار هنا عبر الرابط.</p>
+            </div>
+            <div class="flex flex-wrap gap-2">
+                <a href="{{ route('admin.service-package-pricing-rules.index') }}" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl border border-line px-4 text-sm">قواعد التسعير</a>
+                <a href="{{ route('admin.service-packages.create') }}" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl bg-accent px-4 text-sm font-medium text-white">
+                    <i class="fas fa-plus text-xs"></i> باقة حصص جديدة
+                </a>
+                <a href="{{ route('admin.service-packages.index') }}" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl border border-line px-4 text-sm">كل باقات الحصص</a>
+            </div>
+        </section>
+        <section class="grid gap-3 sm:grid-cols-3">
+            <article class="rounded-2xl border border-line bg-surface p-4 shadow-soft">
+                <p class="text-xs text-muted">الإجمالي</p>
+                <p class="mt-1 text-2xl font-semibold">{{ $servicePackageStats['total'] ?? 0 }}</p>
+            </article>
+            <article class="rounded-2xl border border-line bg-surface p-4 shadow-soft">
+                <p class="text-xs text-muted">نشطة</p>
+                <p class="mt-1 text-2xl font-semibold text-emerald-700">{{ $servicePackageStats['active'] ?? 0 }}</p>
+            </article>
+            <article class="rounded-2xl border border-line bg-surface p-4 shadow-soft">
+                <p class="text-xs text-muted">مميزة / رئيسية</p>
+                <p class="mt-1 text-2xl font-semibold">{{ $servicePackageStats['featured'] ?? 0 }}</p>
+            </article>
+        </section>
+        <div class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
+            <table class="min-w-full text-sm">
+                <thead class="bg-canvas-muted text-xs text-muted">
+                    <tr>
+                        <th class="px-4 py-3 text-start">الباقة</th>
+                        <th class="px-4 py-3 text-start">الحصص</th>
+                        <th class="px-4 py-3 text-start">المرحلة / المادة</th>
+                        <th class="px-4 py-3 text-start">السعر</th>
+                        <th class="px-4 py-3 text-start">الحالة</th>
+                        <th class="px-4 py-3 text-start">إجراءات</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse(($servicePackages ?? collect()) as $sp)
+                        <tr class="border-t border-line">
+                            <td class="px-4 py-3 font-semibold text-ink">{{ $sp->name }}</td>
+                            <td class="px-4 py-3 tabular-nums">{{ (int) $sp->units_count }}</td>
+                            <td class="px-4 py-3 text-muted">
+                                {{ $sp->academicYear?->name ?? '—' }}
+                                @if($sp->academicSubject)
+                                    · {{ $sp->academicSubject->name }}
+                                @endif
+                            </td>
+                            <td class="px-4 py-3 tabular-nums font-semibold">{{ number_format((float) $sp->price, 0) }} {{ currency_symbol() }}</td>
+                            <td class="px-4 py-3">
+                                <span class="rounded-full px-2 py-0.5 text-xs font-bold {{ $sp->is_active ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500' }}">
+                                    {{ $sp->is_active ? 'نشطة' : 'موقوفة' }}
+                                </span>
+                            </td>
+                            <td class="px-4 py-3">
+                                <a href="{{ route('admin.service-packages.edit', $sp) }}" class="text-accent hover:underline">تعديل</a>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr><td colspan="6" class="px-4 py-10 text-center text-muted">لا توجد باقات حصص بعد. أنشئ أول باقة من الزر أعلاه.</td></tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+    </div>
 
     {{-- ===== باقات البرامج المسجّلة ===== --}}
     <div x-show="activeTab === 'packages'" x-cloak class="space-y-5">
@@ -379,7 +455,5 @@
             </article>
         @endif
     </div>
-
-    {{-- ===== باقات الحصص المباشرة ===== --}}
 
 @endsection

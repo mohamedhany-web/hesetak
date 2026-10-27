@@ -26,15 +26,23 @@ class LibraryFolderController extends Controller
 
     public function index(): View
     {
-        $folders = LibraryFolder::query()
-            ->with(['academicYear:id,name', 'instructor:id,name'])
-            ->withCount([
-                'recordings' => fn ($q) => $q->where('is_published', true)->where('status', 'ready'),
-                'materials',
-                'libraryVideos' => fn ($q) => $q->where('is_published', true),
-            ])
-            ->ordered()
-            ->get();
+        try {
+            $folders = LibraryFolder::query()
+                ->with(['academicYear:id,name', 'instructor:id,name'])
+                ->withCount([
+                    'libraryVideos',
+                    'materials',
+                ])
+                ->ordered()
+                ->get();
+        } catch (\Throwable $e) {
+            // تجنّب 500 من withCount على علاقات اختيارية — أعرض المجلدات أولاً
+            report($e);
+            $folders = LibraryFolder::query()
+                ->with(['academicYear:id,name', 'instructor:id,name'])
+                ->ordered()
+                ->get();
+        }
 
         return view('admin.libraries.folders.index', compact('folders'));
     }
