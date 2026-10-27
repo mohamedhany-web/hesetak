@@ -129,25 +129,27 @@
     lock(teacherLink, teachers.pathname + teachers.search);
   }
 
-  if (rootId === 'mc-curr') {
-    document.querySelectorAll('.mc-curr-stage[data-stage-id]').forEach(function (card) {
-      card.addEventListener('click', function (event) {
-        event.preventDefault();
-        stage.value = card.getAttribute('data-stage-id') || '';
-        subject.value = '';
-        sync();
-        form.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        if (!track.value) {
-          track.focus();
-          if (goal) {
-            goal.hidden = false;
-            goal.textContent = @json(($p['match_pick_curriculum_next'] ?? null) ?: 'اختر نوع المنهج ثم المادة لإكمال طلبك بالأعلى');
-          }
-          if (note) note.textContent = needNote;
-        } else {
-          subject.focus();
+  function bindStageCards() {
+    if (rootId !== 'mc-curr') return;
+    // التفويض ضروري: بطاقات الكتالوج تأتي بعد هذا السكربت في الـ DOM
+    document.addEventListener('click', function (event) {
+      var card = event.target.closest && event.target.closest('.mc-curr-stage[data-stage-id]');
+      if (!card) return;
+      event.preventDefault();
+      stage.value = card.getAttribute('data-stage-id') || '';
+      subject.value = '';
+      sync();
+      form.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      if (!track.value) {
+        track.focus();
+        if (goal) {
+          goal.hidden = false;
+          goal.textContent = @json(($p['match_pick_curriculum_next'] ?? null) ?: 'اختر نوع المنهج ثم المادة لإكمال طلبك بالأعلى');
         }
-      });
+        if (note) note.textContent = needNote;
+      } else {
+        subject.focus();
+      }
     });
   }
 
@@ -161,6 +163,7 @@
     event.preventDefault();
   });
 
+  bindStageCards();
   // بعد الرجوع من المتصفح تُستعاد القيم بدون change → نعيد مزامنة الأزرار
   sync();
   window.addEventListener('pageshow', function () { sync(); });
