@@ -37,6 +37,24 @@ class StudentTeacherLinkService
             }
         }
 
+        if (Schema::hasTable('online_enrollments') && Schema::hasTable('advanced_courses')) {
+            $onlineCourseQuery = DB::table('online_enrollments')
+                ->where('user_id', $student->id);
+            if (Schema::hasColumn('online_enrollments', 'is_active')) {
+                $onlineCourseQuery->where('is_active', true);
+            }
+            $onlineCourseIds = $onlineCourseQuery->pluck('advanced_course_id');
+
+            if ($onlineCourseIds->isNotEmpty()) {
+                $ids = $ids->merge(
+                    AdvancedCourse::query()
+                        ->whereIn('id', $onlineCourseIds)
+                        ->whereNotNull('instructor_id')
+                        ->pluck('instructor_id')
+                );
+            }
+        }
+
         if (Schema::hasTable('tutoring_cohort_enrollments') && Schema::hasTable('tutoring_groups')) {
             $groupIds = DB::table('tutoring_cohort_enrollments as e')
                 ->join('tutoring_group_cohorts as c', 'c.id', '=', 'e.tutoring_group_cohort_id')

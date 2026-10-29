@@ -81,9 +81,18 @@
                         </form>
                     </td>
                     <td class="px-4 py-3 text-center">
-                        @if($rec->getUrl())
-                        <a href="{{ $rec->getUrl() }}" target="_blank" class="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-blue-500" title="مشاهدة"><i class="fas fa-external-link-alt text-xs"></i></a>
-                        @endif
+                        <div class="inline-flex items-center gap-1">
+                            @if($rec->getUrl())
+                            <a href="{{ $rec->getUrl() }}" target="_blank" class="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-blue-500" title="مشاهدة"><i class="fas fa-external-link-alt text-xs"></i></a>
+                            @endif
+                            <form method="POST" action="{{ route('admin.live-recordings.destroy', $rec) }}" class="inline" onsubmit="return confirm('حذف هذا التسجيل؟');">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/30 text-red-500" title="حذف">
+                                    <i class="fas fa-trash-alt text-xs"></i>
+                                </button>
+                            </form>
+                        </div>
                     </td>
                 </tr>
                 @empty

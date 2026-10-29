@@ -69,11 +69,20 @@ class TutorApplicationController extends Controller
 
     public function index(Request $request): View
     {
+        TutorApplication::query()
+            ->where('status', TutorApplication::STATUS_APPROVED)
+            ->whereNotNull('activated_at')
+            ->update(['status' => TutorApplication::STATUS_ACTIVATED]);
+
         $query = TutorApplication::query()->with(['user:id,name,email', 'reviewedByUser:id,name'])->orderByDesc('id');
 
         $allowedStatuses = array_keys(TutorApplication::statusLabels());
         if ($request->filled('status') && in_array($request->status, $allowedStatuses, true)) {
-            $query->where('status', $request->status);
+            if ($request->status === TutorApplication::STATUS_APPROVED) {
+                $query->awaitingActivation();
+            } else {
+                $query->where('status', $request->status);
+            }
         }
 
         if ($request->filled('search')) {

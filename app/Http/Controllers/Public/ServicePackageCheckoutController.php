@@ -13,6 +13,7 @@ use App\Services\CustomServicePackagePricingService;
 use App\Services\FawaterakApiService;
 use App\Services\FawaterakService;
 use App\Services\PaymentGatewaySettings;
+use App\Services\PricingStorefrontCatalog;
 use App\Services\PublicMediaStorage;
 use App\Services\StudentEntitlementService;
 use Illuminate\Http\JsonResponse;
@@ -159,11 +160,21 @@ class ServicePackageCheckoutController extends Controller
             : collect();
 
         $isUrgent = request()->boolean('urgent') || request()->query('urgent') === '1';
+        $quotedSessions = request()->filled('sessions') ? request()->integer('sessions') : null;
+
+        $checkoutQuote = app(PricingStorefrontCatalog::class)->quoteForCheckout(
+            $servicePackage,
+            $yearId,
+            $subjectId,
+            $isUrgent,
+            $quotedSessions,
+        );
 
         return view('public.service-package-checkout', [
             'package' => $servicePackage,
             'indexable' => false,
             'isUrgent' => $isUrgent,
+            'checkoutQuote' => $checkoutQuote,
             'fawaterakUseGateway' => $fawaterakUseGateway,
             'fawaterakMisconfigured' => $fawaterakMisconfigured,
             'fawaterakIntegration' => $fawaterakIntegration,

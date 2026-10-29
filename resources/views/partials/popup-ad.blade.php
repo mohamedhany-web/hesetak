@@ -1,7 +1,12 @@
-@php $ad = $ad ?? null; @endphp
+@php
+    $ad = $ad ?? null;
+    $ctaHref = ($ad && filled($ad->link_url))
+        ? $ad->link_url
+        : (($ad && $ad->cta_text) ? route('home') : null);
+@endphp
 @if($ad)
 {{-- CSS مستقل: الصفحة الرئيسية (mc-*) لا تحمّل Tailwind، لذلك لا نعتمد على fixed/inset utilities --}}
-<div id="popup-ad-overlay" class="mc-popup-ad" role="dialog" aria-modal="true" aria-labelledby="popup-ad-title">
+<div id="popup-ad-overlay" class="mc-popup-ad" role="dialog" aria-modal="true" aria-labelledby="popup-ad-title" data-popup-ad-id="{{ $ad->id }}">
     <div class="mc-popup-ad__backdrop" data-popup-ad-dismiss aria-hidden="true"></div>
     <div id="popup-ad-box" class="mc-popup-ad__card">
         <div class="mc-popup-ad__accent" aria-hidden="true"></div>
@@ -17,13 +22,13 @@
             @if(filled($ad->body))
                 <div class="mc-popup-ad__text">{!! nl2br(e($ad->body)) !!}</div>
             @endif
-            @if($ad->cta_text && $ad->link_url)
-                <a href="{{ $ad->link_url }}" target="_blank" rel="noopener" class="mc-popup-ad__cta">
+            @if($ad->cta_text && $ctaHref)
+                <a href="{{ $ctaHref }}" @if(filled($ad->link_url)) target="_blank" rel="noopener" @endif class="mc-popup-ad__cta" data-popup-ad-cta>
                     {{ $ad->cta_text }}
                     <i class="fas fa-arrow-left" aria-hidden="true"></i>
                 </a>
             @elseif($ad->cta_text)
-                <span class="mc-popup-ad__cta mc-popup-ad__cta--soft">{{ $ad->cta_text }}</span>
+                <a href="{{ route('home') }}" class="mc-popup-ad__cta mc-popup-ad__cta--soft" data-popup-ad-cta>{{ $ad->cta_text }}</a>
             @endif
         </div>
     </div>
@@ -48,7 +53,6 @@
     padding: 1rem;
     box-sizing: border-box;
     animation: mcPopupOverlayIn 0.28s ease-out;
-    /* يمنع تأثر position:fixed بأسلاف فيها transform/filter */
     transform: none !important;
     filter: none !important;
     perspective: none !important;
@@ -56,6 +60,7 @@
 .mc-popup-ad__backdrop {
     position: absolute;
     inset: 0;
+    z-index: 0;
     background:
         radial-gradient(circle at 18% 20%, rgba(201, 149, 42, 0.16), transparent 32%),
         radial-gradient(circle at 82% 78%, rgba(30, 78, 140, 0.28), transparent 36%),
@@ -66,7 +71,7 @@
 }
 .mc-popup-ad__card {
     position: relative;
-    z-index: 1;
+    z-index: 2;
     width: min(100%, 34rem);
     max-height: min(88vh, 40rem);
     overflow: auto;
@@ -85,6 +90,7 @@
     position: absolute;
     top: 0.85rem;
     inset-inline-end: 0.85rem;
+    z-index: 3;
     width: 2.35rem;
     height: 2.35rem;
     border: 0;
@@ -105,6 +111,8 @@
 .mc-popup-ad__body {
     padding: 1.6rem 1.5rem 1.75rem;
     text-align: center;
+    position: relative;
+    z-index: 2;
 }
 .mc-popup-ad__badge {
     display: inline-flex;
@@ -134,6 +142,9 @@
     white-space: pre-wrap;
 }
 .mc-popup-ad__cta {
+    position: relative;
+    z-index: 3;
+    pointer-events: auto;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -147,6 +158,7 @@
     background: #C9952A;
     border: 1px solid #C9952A;
     box-shadow: 0 12px 24px -14px rgba(201, 149, 42, 0.8);
+    cursor: pointer;
 }
 .mc-popup-ad__cta:hover {
     filter: brightness(1.05);
@@ -156,7 +168,6 @@
     border-color: #e2e8f0;
     color: #1E4E8C !important;
     box-shadow: none;
-    cursor: default;
 }
 @keyframes mcPopupOverlayIn {
     from { opacity: 0; }
@@ -176,12 +187,18 @@
 (function () {
     var overlay = document.getElementById('popup-ad-overlay');
     if (!overlay) return;
-    // انقل للـ body حتى لا يُحبس أسفل المحتوى أو داخل stacking context
+    var adId = overlay.getAttribute('data-popup-ad-id') || '';
     if (overlay.parentElement !== document.body) {
         document.body.appendChild(overlay);
     }
     var closeBtn = document.getElementById('popup-ad-close');
+    function markSeen() {
+        if (!adId) return;
+        var maxAge = 60 * 60 * 24;
+        document.cookie = 'popup_ad_seen=' + encodeURIComponent(adId) + '; path=/; max-age=' + maxAge + '; SameSite=Lax';
+    }
     function hide() {
+        markSeen();
         overlay.style.opacity = '0';
         overlay.style.pointerEvents = 'none';
         setTimeout(function () {
@@ -195,6 +212,9 @@
     if (closeBtn) closeBtn.addEventListener('click', hide);
     overlay.querySelectorAll('[data-popup-ad-dismiss]').forEach(function (el) {
         el.addEventListener('click', hide);
+    });
+    overlay.querySelectorAll('[data-popup-ad-cta]').forEach(function (el) {
+        el.addEventListener('click', markSeen);
     });
     document.addEventListener('keydown', function (e) {
         if (e.key === 'Escape') hide();

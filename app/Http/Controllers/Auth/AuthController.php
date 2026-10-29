@@ -329,6 +329,7 @@ class AuthController extends Controller
             'preferred_curriculum_type' => ['required', 'string', 'max:40'],
             'preferred_subject_ids' => ['nullable', 'array'],
             'preferred_subject_ids.*' => ['integer', 'exists:academic_subjects,id'],
+            'birth_date' => ['nullable', 'date', 'before:today'],
         ], [
             'name.required' => 'الاسم مطلوب',
             'country_code.required' => 'كود الدولة مطلوب',
@@ -432,6 +433,9 @@ class AuthController extends Controller
         ];
         if (\Illuminate\Support\Facades\Schema::hasColumn('users', 'parent_phone')) {
             $userPayload['parent_phone'] = $parentPhone['full'];
+        }
+        if (\Illuminate\Support\Facades\Schema::hasColumn('users', 'birth_date') && $request->filled('birth_date')) {
+            $userPayload['birth_date'] = $request->date('birth_date')->format('Y-m-d');
         }
         if (\Illuminate\Support\Facades\Schema::hasColumn('users', 'academic_grade_id')) {
             $userPayload['academic_grade_id'] = $gradeId;

@@ -163,12 +163,18 @@ class TutorApplication extends Model
 
     public function scopeAwaitingActivation($query)
     {
-        return $query->where('status', self::STATUS_APPROVED)->whereNotNull('user_id');
+        return $query
+            ->where('status', self::STATUS_APPROVED)
+            ->whereNull('activated_at')
+            ->whereNotNull('user_id');
     }
 
     public function scopeActivated($query)
     {
-        return $query->where('status', self::STATUS_ACTIVATED);
+        return $query->where(function ($q) {
+            $q->where('status', self::STATUS_ACTIVATED)
+                ->orWhereNotNull('activated_at');
+        });
     }
 
     public function isActivated(): bool

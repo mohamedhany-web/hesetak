@@ -148,6 +148,15 @@
     </div>
 
     <div class="lasles-auth-field">
+      <label for="birth_date">{{ $isRtl ? 'تاريخ الميلاد (اختياري)' : 'Birth date (optional)' }}</label>
+      <input type="date" id="birth_date" name="birth_date" value="{{ old('birth_date') }}"
+             max="{{ now()->format('Y-m-d') }}"
+             class="lasles-auth-input @error('birth_date') has-error @enderror">
+      <p class="lasles-auth-hint">{{ $isRtl ? 'يساعدنا على تخصيص المسارات المناسبة لعمر الطالب.' : 'Helps us suggest age-appropriate paths.' }}</p>
+      @error('birth_date')<p class="lasles-auth-error">{{ $message }}</p>@enderror
+    </div>
+
+    <div class="lasles-auth-field">
       <label for="preferred_curriculum_type">{{ __('auth.curriculum_type') }}</label>
       <select id="preferred_curriculum_type" name="preferred_curriculum_type" required class="lasles-auth-input @error('preferred_curriculum_type') has-error @enderror">
         <option value="">{{ __('auth.curriculum_type_placeholder') }}</option>

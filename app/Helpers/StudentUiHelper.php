@@ -24,6 +24,13 @@ if (! function_exists('student_ui')) {
             }
         }
 
+        if ($key === 'show_libraries' && auth()->check()) {
+            $user = auth()->user();
+            if ($user && \App\Services\LibraryFolderAccessService::hasAnyLibraryEntitlement($user)) {
+                return true;
+            }
+        }
+
         return $configured;
     }
 }

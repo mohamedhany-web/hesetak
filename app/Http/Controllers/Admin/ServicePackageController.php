@@ -104,7 +104,7 @@ class ServicePackageController extends Controller
 
     public function update(Request $request, ServicePackage $servicePackage): RedirectResponse
     {
-        $data = $this->validated($request, $servicePackage->id);
+        $data = $this->validated($request, $servicePackage->id, $request->boolean('is_active'));
         $data = $this->normalizeSchoolLinks($data);
         $data = $this->normalizeCommercialPlan($data, $request);
         $data['currency'] = $this->normalizeCurrency($data['currency'] ?? null);
@@ -363,14 +363,22 @@ class ServicePackageController extends Controller
         return $data;
     }
 
-    protected function validated(Request $request, ?int $ignoreId = null): array
+    protected function validated(Request $request, ?int $ignoreId = null, bool $enforceNoDemo = true): array
     {
+        $textRules = static function (array $base, bool $enforce): array {
+            if ($enforce) {
+                $base[] = new \App\Rules\NoDemoPlaceholder;
+            }
+
+            return $base;
+        };
+
         return $request->validate([
-            'name' => ['required', 'string', 'max:255', new \App\Rules\NoDemoPlaceholder],
+            'name' => $textRules(['required', 'string', 'max:255'], $enforceNoDemo),
             'slug' => ['nullable', 'string', 'max:255', 'regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/'],
-            'description' => ['nullable', 'string', 'max:5000', new \App\Rules\NoDemoPlaceholder],
-            'tagline' => ['nullable', 'string', 'max:255', new \App\Rules\NoDemoPlaceholder],
-            'badge' => ['nullable', 'string', 'max:64', new \App\Rules\NoDemoPlaceholder],
+            'description' => $textRules(['nullable', 'string', 'max:5000'], $enforceNoDemo),
+            'tagline' => $textRules(['nullable', 'string', 'max:255'], $enforceNoDemo),
+            'badge' => $textRules(['nullable', 'string', 'max:64'], $enforceNoDemo),
             'scope' => ['required', 'in:global,tutoring_individual,tutoring_collective,private_lessons'],
             'plan_type' => ['nullable', 'in:school,private,premier'],
             'term_months' => ['nullable', 'integer', 'in:1,3,6'],

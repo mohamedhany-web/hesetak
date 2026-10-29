@@ -299,6 +299,7 @@ class AdvancedCourseController extends Controller
         $data['monthly_price_after_discount'] = $monthlyList > 0
             ? $this->normalizeOptionalSalePrice($request->input('monthly_price_after_discount'), $monthlyList)
             : null;
+        $data['is_free'] = $list <= 0 && ! ((($data['billing_mode'] ?? '') === 'monthly') && $monthlyList > 0);
         $data['duration_hours'] = $data['duration_hours'] ?? 0;
         $data['duration_minutes'] = $data['duration_minutes'] ?? 0;
         $data['language'] = $data['language'] ?? 'ar';
@@ -515,6 +516,7 @@ class AdvancedCourseController extends Controller
         $data['monthly_price_after_discount'] = $monthlyList > 0
             ? $this->normalizeOptionalSalePrice($request->input('monthly_price_after_discount'), $monthlyList)
             : null;
+        $data['is_free'] = $list <= 0 && ! ((($data['billing_mode'] ?? '') === 'monthly') && $monthlyList > 0);
         $data['duration_hours'] = $data['duration_hours'] ?? 0;
         $data['duration_minutes'] = $data['duration_minutes'] ?? 0;
         $data['language'] = $data['language'] ?? 'ar';

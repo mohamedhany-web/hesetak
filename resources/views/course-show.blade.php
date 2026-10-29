@@ -185,6 +185,22 @@
           @endif
         </div>
 
+        @if(($servicePackages ?? collect())->isNotEmpty() && ! $isEnrolled)
+          <div class="mc-cd-packages" style="margin:1rem 0 0;padding:1rem;border:1px solid #e2e8f0;border-radius:0.85rem;background:#f8fafc">
+            <p class="mc-cd-price__note" style="margin:0 0 0.65rem">{{ $isRtl ? 'باقات حصص مرتبطة بهذا المسار' : 'Lesson packages for this path' }}</p>
+            <ul style="list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:0.5rem">
+              @foreach($servicePackages as $pkg)
+                <li>
+                  <a href="{{ route('public.service-packages.checkout', $pkg) }}?{{ http_build_query(array_filter(['year' => $course->academic_year_id, 'subject' => $course->academic_subject_id])) }}" class="mc-btn mc-btn--md mc-btn--outline" style="width:100%;justify-content:space-between">
+                    <span>{{ $pkg->name }}</span>
+                    <span>{{ $pkg->formattedPrice() }}</span>
+                  </a>
+                </li>
+              @endforeach
+            </ul>
+          </div>
+        @endif
+
         <div class="mc-cd-actions">
           @auth
             @if($isEnrolled)

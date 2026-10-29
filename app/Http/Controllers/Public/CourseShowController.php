@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Public;
 use App\Http\Controllers\Controller;
 use App\Models\AdvancedCourse;
 use App\Models\InstructorProfile;
+use App\Models\ServicePackage;
+use App\Services\PricingStorefrontCatalog;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
@@ -57,11 +59,34 @@ class CourseShowController extends Controller
             $relatedCourses = $relatedCourses->concat($extra)->values();
         }
 
+        $servicePackages = collect();
+        if ($course->academic_subject_id) {
+            $catalog = app(PricingStorefrontCatalog::class);
+            $linked = $catalog->storefrontPackageForSubject(
+                (int) $course->academic_subject_id,
+                $course->academic_year_id ? (int) $course->academic_year_id : null,
+            );
+            if ($linked) {
+                $servicePackages = collect([$linked]);
+            } elseif ($course->delivery_type === 'one_to_one') {
+                $servicePackages = ServicePackage::query()
+                    ->storefront()
+                    ->when($course->academic_year_id, fn ($q) => $q->where(function ($inner) use ($course) {
+                        $inner->whereNull('academic_year_id')
+                            ->orWhere('academic_year_id', $course->academic_year_id);
+                    }))
+                    ->ordered()
+                    ->limit(3)
+                    ->get();
+            }
+        }
+
         return view('course-show', [
             'course' => $course,
             'relatedCourses' => $relatedCourses,
             'isEnrolled' => $isEnrolled,
             'instructorApproved' => $instructorApproved,
+            'servicePackages' => $servicePackages,
             'mcActive' => 'courses',
         ]);
     }

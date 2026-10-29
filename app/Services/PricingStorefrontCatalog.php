@@ -36,6 +36,69 @@ class PricingStorefrontCatalog
      *   urgent_rule: ?ServicePackagePricingRule
      * }
      */
+    public function storefrontPackageForSubject(int $subjectId, ?int $yearId): ?ServicePackage
+    {
+        return $this->packageForSubject($subjectId, $yearId);
+    }
+
+    /**
+     * @return array{sessions: int, unit: float, total: float, currency: string}|null
+     */
+    public function quoteForCheckout(
+        ServicePackage $package,
+        ?int $yearId,
+        ?int $subjectId,
+        bool $isUrgent,
+        ?int $sessionsOverride = null,
+    ): ?array {
+        $sessions = max(1, (int) ($sessionsOverride ?? $package->units_count));
+        $track = (string) ($package->curriculum_type ?? '');
+        $standard = $this->standardRule();
+        $baseUnit = $this->unitPriceFor($yearId, $track ?: 'saudi', $standard);
+
+        if ($baseUnit <= 0) {
+            $fallback = $this->rates->quotePackage($package, $yearId, $track ?: null);
+            if (($fallback['unit'] ?? 0) <= 0) {
+                return null;
+            }
+            $unit = (float) $fallback['unit'];
+            if ($isUrgent) {
+                $sessions = 1;
+            } elseif ($sessionsOverride) {
+                $unit = round($unit, 2);
+            }
+            $total = round($unit * $sessions, 2);
+
+            return [
+                'sessions' => $sessions,
+                'unit' => $unit,
+                'total' => $total,
+                'currency' => (string) ($fallback['currency'] ?? platform_currency()),
+            ];
+        }
+
+        if ($isUrgent) {
+            $urgent = $this->urgentRule();
+            $unit = $urgent
+                ? $this->niceMoney((float) $urgent->price_per_session)
+                : $this->niceMoney(max($baseUnit, 1) * 1.2);
+            $premiumFloor = $this->niceMoney(max($baseUnit, 1) * 1.2);
+            if ($unit < $premiumFloor) {
+                $unit = $premiumFloor;
+            }
+            $sessions = 1;
+        } else {
+            $unit = $this->unitAfterDiscount($baseUnit, $sessions, $standard);
+        }
+
+        return [
+            'sessions' => $sessions,
+            'unit' => $unit,
+            'total' => $this->niceMoney($unit * $sessions),
+            'currency' => platform_currency(),
+        ];
+    }
+
     public function build(?int $yearId, ?int $subjectId, ?string $curriculumType): array
     {
         $catalog = $this->catalogFilter->catalog(

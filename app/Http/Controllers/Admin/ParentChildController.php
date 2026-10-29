@@ -88,7 +88,18 @@ class ParentChildController extends Controller
                 return back()->withInput()->with('error', 'لا يمكن ترقية هذا الحساب إلى ولي أمر.');
             }
             if ($parent->role !== 'parent') {
-                $parent->update(['role' => 'parent']);
+                try {
+                    $parent->update(['role' => 'parent']);
+                } catch (\Illuminate\Database\QueryException $e) {
+                    if (str_contains($e->getMessage(), 'role') || str_contains($e->getMessage(), 'ENUM')) {
+                        return back()->withInput()->with(
+                            'error',
+                            'تعذّر ترقية الحساب إلى ولي أمر: دور «parent» غير مدعوم في قاعدة البيانات بعد. شغّل ترحيل الأدوار (2026_10_29_120000_add_parent_role_to_users_enum) ثم أعد المحاولة.'
+                        );
+                    }
+
+                    throw $e;
+                }
             }
             if (! empty($data['name'])) {
                 $parent->update(['name' => $data['name']]);
@@ -104,15 +115,26 @@ class ParentChildController extends Controller
                 return back()->withInput()->withErrors(['email' => 'البريد الإلكتروني مطلوب لإنشاء حساب جديد.']);
             }
 
-            $parent = User::create([
-                'name' => $data['name'],
-                'email' => $data['email'],
-                'phone' => $data['phone'] ?? null,
-                'password' => Hash::make($data['password']),
-                'role' => 'parent',
-                'is_active' => true,
-                'uuid' => (string) Str::uuid(),
-            ]);
+            try {
+                $parent = User::create([
+                    'name' => $data['name'],
+                    'email' => $data['email'],
+                    'phone' => $data['phone'] ?? null,
+                    'password' => Hash::make($data['password']),
+                    'role' => 'parent',
+                    'is_active' => true,
+                    'uuid' => (string) Str::uuid(),
+                ]);
+            } catch (\Illuminate\Database\QueryException $e) {
+                if (str_contains($e->getMessage(), 'role') || str_contains($e->getMessage(), 'ENUM')) {
+                    return back()->withInput()->with(
+                        'error',
+                        'تعذّر إنشاء حساب ولي الأمر: دور «parent» غير مدعوم في قاعدة البيانات بعد. شغّل ترحيل الأدوار (2026_10_29_120000_add_parent_role_to_users_enum) ثم أعد المحاولة.'
+                    );
+                }
+
+                throw $e;
+            }
         }
 
         if (! empty($data['student_id'])) {

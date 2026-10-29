@@ -28,7 +28,7 @@
             <h3 class="text-sm font-semibold text-ink">بيانات المحاضرة</h3>
         </div>
 
-        <form action="{{ route('admin.lectures.store') }}" method="POST" class="p-5 sm:p-6">
+        <form action="{{ route('admin.lectures.store') }}" method="POST" enctype="multipart/form-data" class="p-5 sm:p-6">
             @csrf
 
             <div class="space-y-5">
@@ -105,13 +105,23 @@
                 </div>
 
                 <div>
-                    <label class="{{ $labelClass }}" for="recording_url">رابط تسجيل المحاضرة (بعد الانتهاء)</label>
+                    <label class="{{ $labelClass }}" for="recording_url">رابط فيديو المحاضرة (Bunny / اختياري)</label>
                     <input type="url" name="recording_url" id="recording_url" value="{{ old('recording_url') }}"
                            class="{{ $fieldClass }}"
-                           placeholder="رابط التسجيل أو الفيديو المسجل">
+                           placeholder="https://…mediadelivery.net/…">
                     @error('recording_url')
                         <p class="mt-1 text-xs text-rose-600">{{ $message }}</p>
                     @enderror
+                </div>
+
+                <div>
+                    <label class="{{ $labelClass }}" for="material_files">مرفقات المحاضرة (اختياري)</label>
+                    <input type="file" name="material_files[]" id="material_files" multiple
+                           class="{{ $fieldClass }}"
+                           accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.zip,.rar,.png,.jpg,.jpeg">
+                    <p class="mt-1 text-xs text-muted">يمكن رفع أكثر من ملف — نفس خيارات المعلم.</p>
+                    @error('material_files')<p class="mt-1 text-xs text-rose-600">{{ $message }}</p>@enderror
+                    @error('material_files.*')<p class="mt-1 text-xs text-rose-600">{{ $message }}</p>@enderror
                 </div>
 
                 <div>

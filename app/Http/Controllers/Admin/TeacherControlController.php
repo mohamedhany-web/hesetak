@@ -531,26 +531,15 @@ class TeacherControlController extends Controller
         bool $requireAvailability
     ): void {
         if ($session->status === OneToOneSession::STATUS_SCHEDULED && $session->classroom_meeting_id) {
-            if ($requireAvailability && ! OneToOneAvailabilityService::isSlotAvailable(
-                (int) $session->instructor_id,
+            OneToOneSessionService::rescheduleSession(
+                $session,
                 $scheduledAt,
                 (int) ($session->duration_minutes ?: OneToOneSession::defaultDurationMinutes()),
-                $session->id
-            )) {
-                throw new \InvalidArgumentException('هذا الموعد غير متاح — ربما حُجز أو خارج جدول المعلم.');
-            }
-
-            $session->loadMissing('classroomMeeting');
-            $session->update([
-                'scheduled_at' => $scheduledAt,
-                'booked_by_user_id' => $actor->id,
-            ]);
-            if ($session->classroomMeeting) {
-                $session->classroomMeeting->update([
-                    'scheduled_for' => $scheduledAt,
-                    'planned_duration_minutes' => (int) ($session->duration_minutes ?: OneToOneSession::defaultDurationMinutes()),
-                ]);
-            }
+                $actor,
+                $requireAvailability,
+                false,
+                true
+            );
 
             return;
         }

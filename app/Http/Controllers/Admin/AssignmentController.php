@@ -7,10 +7,13 @@ use App\Models\Assignment;
 use App\Models\AssignmentSubmission;
 use App\Models\AdvancedCourse;
 use App\Models\CourseLesson;
+use App\Models\CourseSection;
+use App\Models\CurriculumItem;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Schema;
 
 class AssignmentController extends Controller
 {
@@ -87,6 +90,7 @@ class AssignmentController extends Controller
 
         $assignment = Assignment::create($validated);
         $courseId = $validated['advanced_course_id'];
+        $this->attachAssignmentToCourseCurriculum($assignment, (int) $courseId);
 
         return redirect()->route('admin.assignments.by-course', $courseId)
             ->with('success', 'تم إنشاء الواجب بنجاح');
@@ -218,5 +222,49 @@ class AssignmentController extends Controller
         $submission->update($validated);
 
         return back()->with('success', 'تم تقييم التسليم بنجاح');
+    }
+
+    /**
+     * إضافة الواجب لقسم المنهج حتى يظهر للطالب داخل الكورس.
+     */
+    private function attachAssignmentToCourseCurriculum(Assignment $assignment, int $courseId): void
+    {
+        if (! Schema::hasTable('course_sections') || ! Schema::hasTable('curriculum_items')) {
+            return;
+        }
+
+        $section = CourseSection::query()
+            ->where('advanced_course_id', $courseId)
+            ->where('is_active', true)
+            ->orderBy('order')
+            ->first();
+
+        if (! $section) {
+            $section = CourseSection::create([
+                'advanced_course_id' => $courseId,
+                'title' => 'الواجبات',
+                'order' => 1,
+                'is_active' => true,
+            ]);
+        }
+
+        $already = CurriculumItem::query()
+            ->where('course_section_id', $section->id)
+            ->where('item_type', Assignment::class)
+            ->where('item_id', $assignment->id)
+            ->exists();
+
+        if ($already) {
+            return;
+        }
+
+        $lastOrder = (int) ($section->items()->max('order') ?? 0);
+        CurriculumItem::create([
+            'course_section_id' => $section->id,
+            'item_type' => Assignment::class,
+            'item_id' => $assignment->id,
+            'order' => $lastOrder + 1,
+            'is_active' => true,
+        ]);
     }
 }

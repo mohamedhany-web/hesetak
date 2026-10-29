@@ -20,10 +20,12 @@
                 @if($lecture->course)
                     <span class="su-chip su-soft-1"><i class="fas fa-book" aria-hidden="true"></i> {{ Str::limit($lecture->course->title, 30) }}</span>
                 @endif
+                @if($lecture->scheduled_at)
                 <span class="su-chip su-soft-2">
                     <i class="fas fa-calendar-alt" aria-hidden="true"></i>
                     {{ $lecture->scheduled_at->format('Y/m/d H:i') }}
                 </span>
+                @endif
                 @php
                     $chip = match ($lecture->status) {
                         'scheduled' => 'su-soft-1',

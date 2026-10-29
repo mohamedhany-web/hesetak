@@ -153,7 +153,6 @@ class LandingController extends Controller
             }
             if ($ad && (int) $ad->id !== $seenId) {
                 $payload['activePopupAd'] = $ad;
-                cookie()->queue(cookie($cookieKey, (string) $ad->id, 60 * 24)); // يوم واحد
             }
         }
 

@@ -24,6 +24,10 @@
   $features = collect($package->featureList())->filter()->take(6)->values();
   $gifts = collect($package->giftList())->filter()->take(4)->values();
   $user = auth()->user();
+  $checkoutQuote = $checkoutQuote ?? null;
+  $displaySessions = (int) ($checkoutQuote['sessions'] ?? $package->units_count);
+  $displayUnit = isset($checkoutQuote['unit']) ? (float) $checkoutQuote['unit'] : null;
+  $displayTotal = isset($checkoutQuote['total']) ? (float) $checkoutQuote['total'] : null;
 @endphp
 
 @push('head')
@@ -105,7 +109,7 @@
             @endif
             <li>
               <span>{{ $isRtl ? 'عدد الحصص' : 'Sessions' }}</span>
-              <strong>{{ $package->units_count }}</strong>
+              <strong>{{ $displaySessions }}</strong>
             </li>
             <li>
               <span>{{ $isRtl ? 'مدة الحصة' : 'Session length' }}</span>
@@ -117,7 +121,7 @@
             </li>
             <li>
               <span>{{ $isRtl ? 'سعر الحصة' : 'Per session' }}</span>
-              <strong>{{ $package->formattedPricePerUnit() }}</strong>
+              <strong>{{ $displayUnit !== null ? format_money($displayUnit, 0) : $package->formattedPricePerUnit() }}</strong>
             </li>
             <li>
               <span>{{ $isRtl ? 'صلاحية الرصيد' : 'Validity' }}</span>
@@ -165,7 +169,7 @@
                 <p class="mc-co-total__save">{{ $isRtl ? 'وفّرت' : 'You save' }} {{ format_money($package->savingsAmount()) }} ({{ $package->savingsPercent() }}%)</p>
               @endif
             </div>
-            <strong>{{ $package->formattedPrice() }}</strong>
+            <strong>{{ $displayTotal !== null ? format_money($displayTotal, 0) : $package->formattedPrice() }}</strong>
           </div>
 
           <ul class="mc-co-trust">

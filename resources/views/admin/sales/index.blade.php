@@ -8,8 +8,8 @@
     $fieldClass = 'h-11 w-full rounded-xl border border-line bg-surface px-4 text-sm text-ink transition focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20';
     $labelClass = 'mb-1.5 block text-xs font-medium text-muted';
     $kpis = [
-        ['label' => 'طلبات الفترة', 'value' => number_format($stats['orders_total']), 'icon' => 'fa-shopping-bag', 'tone' => 'accent', 'note' => 'كل الطلبات الجديدة'],
-        ['label' => 'معلّقة في الفترة', 'value' => number_format($stats['pending']), 'icon' => 'fa-clock', 'tone' => 'metal', 'note' => 'طلبات معلّقة أُنشئت ضمن التاريخ المحدد'],
+        ['label' => 'طلبات الفترة', 'value' => number_format($stats['orders_total']), 'icon' => 'fa-shopping-bag', 'tone' => 'accent', 'note' => 'كل الطلبات المُنشأة ضمن التاريخ المحدد (created_at)'],
+        ['label' => 'معلّقة في الفترة', 'value' => number_format($stats['pending']), 'icon' => 'fa-clock', 'tone' => 'metal', 'note' => 'طلبات بحالة «معلّقة» وأُنشئت ضمن نفس الفترة — وليس كل المعلّق في النظام'],
         ['label' => 'إيراد الفترة', 'value' => format_money($stats['revenue_period']), 'icon' => 'fa-coins', 'tone' => 'accent', 'note' => 'معتمد بالريال'],
         ['label' => 'إيراد الشهر', 'value' => format_money($stats['revenue_month']), 'icon' => 'fa-calendar', 'tone' => 'muted', 'note' => 'من أول الشهر'],
     ];
@@ -75,7 +75,7 @@
 
     @if($stats['conversion'] !== null)
         <div class="rounded-2xl border border-line bg-surface px-4 py-3 text-sm text-ink shadow-soft">
-            نسبة التحويل التقريبية (معتمد ÷ طلبات جديدة):
+            نسبة التحويل في الفترة (طلبات معتمدة ÷ إجمالي الطلبات الجديدة في الفترة):
             <strong class="text-accent">{{ $stats['conversion'] }}%</strong>
         </div>
     @endif
@@ -92,8 +92,8 @@
 
     <div class="grid grid-cols-1 gap-5 xl:grid-cols-2">
         <article class="overflow-hidden rounded-2xl border border-line bg-surface p-5 shadow-soft">
-            <h3 class="text-base font-semibold text-ink" title="عدد طلبات الطلبات (Orders) حسب يوم الإنشاء — كل عمود = مجموع الطلبات المُنشأة في ذلك اليوم ضمن الفترة المحددة">عدد طلبات الطلبات (Orders) حسب يوم الإنشاء</h3>
-            <p class="mt-1 text-xs text-muted">الأرقام فوق الأعمدة = عدد الطلبات المُنشأة في ذلك اليوم (created_at).</p>
+            <h3 class="text-base font-semibold text-ink">طلبات يومية ضمن الفترة</h3>
+            <p class="mt-1 text-xs text-muted">كل عمود = عدد الطلبات المُنشأة في ذلك اليوم (created_at) ضمن «من–إلى» أعلاه — وليس إيراداً يومياً.</p>
             <div class="mt-4 flex h-40 items-end gap-1">
                 @php $maxD = max($daily->max() ?: 0, 1); @endphp
                 @forelse($daily as $day => $count)

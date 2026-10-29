@@ -114,7 +114,11 @@ class LiveRecordingController extends Controller
 
     public function create()
     {
-        $sessions = LiveSession::select('id', 'title', 'scheduled_at')->orderByDesc('scheduled_at')->get();
+        $sessions = LiveSession::select('id', 'title', 'scheduled_at')
+            ->orderByDesc('scheduled_at')
+            ->limit(200)
+            ->get();
+
         return view('admin.live-recordings.create', compact('sessions'));
     }
 

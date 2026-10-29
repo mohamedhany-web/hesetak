@@ -58,6 +58,7 @@ class CrmCommissionController extends Controller
         $data = $request->validate([
             // عمود sales_lead_id على الإنتاج غير قابل للإفراغ.
             'sales_lead_id' => ['required', 'integer', 'exists:sales_leads,id'],
+            'order_id' => ['nullable', 'integer', 'exists:orders,id'],
             'user_id' => ['required', 'integer', 'exists:users,id'],
             'type' => ['required', 'in:'.implode(',', array_keys(CrmCommission::typeLabels()))],
             'base_amount_egp' => ['nullable', 'numeric', 'min:0'],
@@ -79,6 +80,7 @@ class CrmCommissionController extends Controller
 
         CrmCommission::create([
             'sales_lead_id' => $data['sales_lead_id'],
+            'order_id' => $data['order_id'] ?? null,
             'user_id' => $data['user_id'],
             'type' => $data['type'],
             'base_amount_egp' => $data['base_amount_egp'] ?? 0,

@@ -8,6 +8,8 @@ use App\Models\AdvancedCourse;
 use App\Models\CourseLesson;
 use App\Models\TeamsAttendanceFile;
 use App\Models\User;
+use App\Models\LectureMaterial;
+use App\Services\LectureMaterialStorage;
 use App\Services\PublicMediaStorage;
 use App\Services\TeamsAttendanceImportService;
 use App\Support\AppTimezone;
@@ -70,6 +72,8 @@ class LectureController extends Controller
             'has_attendance_tracking' => 'boolean',
             'has_assignment' => 'boolean',
             'has_evaluation' => 'boolean',
+            'material_files' => 'nullable|array',
+            'material_files.*' => 'nullable|file|max:'.config('upload_limits.max_upload_kb'),
         ]);
 
         if (!empty($validated['recording_url'])) {
@@ -84,7 +88,28 @@ class LectureController extends Controller
         $validated = AppTimezone::shiftRequestDateTime($request, $validated, 'scheduled_at');
         unset($validated['timezone']);
 
+        unset($validated['material_files']);
+
         $lecture = Lecture::create($validated);
+
+        $materialFiles = $request->file('material_files');
+        if (is_array($materialFiles)) {
+            foreach ($materialFiles as $file) {
+                if (! $file || ! $file->isValid()) {
+                    continue;
+                }
+                $path = LectureMaterialStorage::store($file, (int) $lecture->id);
+                LectureMaterial::create([
+                    'lecture_id' => $lecture->id,
+                    'title' => pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME),
+                    'file_name' => $file->getClientOriginalName(),
+                    'file_path' => $path,
+                    'storage_disk' => LectureMaterialStorage::resolvedDisk(),
+                    'is_visible_to_student' => true,
+                    'sort_order' => 0,
+                ]);
+            }
+        }
 
         return redirect()->route('admin.lectures.by-course', $lecture->course_id)
             ->with('success', 'تم إنشاء المحاضرة بنجاح');

@@ -80,20 +80,14 @@ class InstructorAgreementController extends Controller
 
     public function create()
     {
-        // المدربون الذين لديهم على الأقل كورس أونلاين مُعيَّن لهم (instructor_id)
-        $instructorIdsWithCourses = AdvancedCourse::where('is_active', true)
-            ->whereNotNull('instructor_id')
-            ->distinct()
-            ->pluck('instructor_id');
-        $instructors = User::where(function($q) {
+        $instructors = User::where(function ($q) {
                 $q->where('role', 'instructor')
-                  ->orWhere('role', 'teacher')
-                  ->orWhereHas('roles', function($roleQuery) {
-                      $roleQuery->whereIn('name', ['instructor', 'teacher']);
-                  });
+                    ->orWhere('role', 'teacher')
+                    ->orWhereHas('roles', function ($roleQuery) {
+                        $roleQuery->whereIn('name', ['instructor', 'teacher']);
+                    });
             })
             ->where('is_active', true)
-            ->whereIn('id', $instructorIdsWithCourses)
             ->orderBy('name')
             ->get();
         $advancedCourses = AdvancedCourse::where('is_active', true)
@@ -164,23 +158,14 @@ class InstructorAgreementController extends Controller
 
     public function edit(InstructorAgreement $agreement)
     {
-        $instructorIdsWithCourses = AdvancedCourse::where('is_active', true)
-            ->whereNotNull('instructor_id')
-            ->distinct()
-            ->pluck('instructor_id')
-            ->push($agreement->instructor_id)
-            ->filter()
-            ->unique()
-            ->values();
-        $instructors = User::where(function($q) {
+        $instructors = User::where(function ($q) {
                 $q->where('role', 'instructor')
-                  ->orWhere('role', 'teacher')
-                  ->orWhereHas('roles', function($roleQuery) {
-                      $roleQuery->whereIn('name', ['instructor', 'teacher']);
-                  });
+                    ->orWhere('role', 'teacher')
+                    ->orWhereHas('roles', function ($roleQuery) {
+                        $roleQuery->whereIn('name', ['instructor', 'teacher']);
+                    });
             })
             ->where('is_active', true)
-            ->whereIn('id', $instructorIdsWithCourses)
             ->orderBy('name')
             ->get();
         $advancedCourses = AdvancedCourse::where('is_active', true)

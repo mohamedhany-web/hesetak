@@ -705,7 +705,11 @@ function courseFocusMode() {
             this.lectureContent = html;
         },
         loadAssignment(assignmentId) {
-            this.lectureContent = '<div class="text-center text-gray-600 p-8"><i class="fas fa-tasks text-4xl mb-4"></i><p class="text-xl font-bold">عرض الواجب قريباً</p></div>';
+            if (!assignmentId) {
+                this.lectureContent = '<div class="text-center text-gray-600 p-8"><i class="fas fa-tasks text-4xl mb-4"></i><p>واجب غير متاح</p></div>';
+                return;
+            }
+            window.location.href = '{{ url('/student/assignments') }}/' + assignmentId;
         },
         async loadExam(examId) {
             this.selectedLesson = null;

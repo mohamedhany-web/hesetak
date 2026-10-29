@@ -1721,6 +1721,10 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
                 ->middleware('throttle:30,1')
                 ->name('inbox.mark-all-read');
             Route::get('/create', [\App\Http\Controllers\Admin\NotificationController::class, 'create'])->name('create');
+            Route::get('/statistics', [\App\Http\Controllers\Admin\NotificationController::class, 'statistics'])->name('statistics');
+            Route::get('/target-count', [\App\Http\Controllers\Admin\NotificationController::class, 'getTargetCount'])
+                ->middleware('throttle:60,1')
+                ->name('target-count');
             Route::get('/{notification}/open-support-ticket', [\App\Http\Controllers\Admin\NotificationController::class, 'openSupportTicket'])
                 ->middleware('throttle:60,1')
                 ->name('open-support-ticket');
@@ -1734,16 +1738,12 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
             Route::post('/quick-send', [\App\Http\Controllers\Admin\NotificationController::class, 'quickSend'])
                 ->middleware('throttle:30,5')
                 ->name('quick-send');
-            Route::get('/target-count', [\App\Http\Controllers\Admin\NotificationController::class, 'getTargetCount'])
-                ->middleware('throttle:60,1')
-                ->name('target-count');
             Route::post('/mark-all-read', [\App\Http\Controllers\Admin\NotificationController::class, 'markAllAsRead'])
                 ->middleware('throttle:10,1')
                 ->name('mark-all-read');
             Route::post('/cleanup', [\App\Http\Controllers\Admin\NotificationController::class, 'cleanup'])
                 ->middleware('throttle:5,10')
                 ->name('cleanup');
-            Route::get('/statistics', [\App\Http\Controllers\Admin\NotificationController::class, 'statistics'])->name('statistics');
         });
 
         // إشعارات الموظفين
