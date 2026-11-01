@@ -3,6 +3,13 @@
     $heroWebp = public_path('img/mycourses/hero-tutor-student.webp');
     $heroFile = is_file($heroWebp) ? 'mycourses/hero-tutor-student.webp' : 'mycourses/hero-tutor-student.png';
     $heroImage = public_img_url($heroFile);
+    $heroSettingPath = \App\Models\Setting::getValue('home_hero_image_path');
+    if ($heroSettingPath) {
+        $fromStorage = \App\Services\PublicStorageUrl::fromPath($heroSettingPath);
+        if ($fromStorage) {
+            $heroImage = $fromStorage;
+        }
+    }
 @endphp
 <section class="dp-hero" aria-labelledby="dp-hero-title">
   <figure class="dp-hero__media">

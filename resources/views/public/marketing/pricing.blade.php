@@ -74,7 +74,7 @@
   <div class="mc-container">
     <p class="mc-pric-path-tip">
       {{ __('public.pricing_path_tip') }}
-      <a href="{{ route('public.courses') }}">{{ __('public.pricing_path_tip_courses') }}</a>
+      <a href="{{ route('public.courses') }}" class="mc-btn mc-btn--sm mc-btn--secondary">{{ __('public.pricing_path_tip_courses') }}</a>
     </p>
 
     @if($selectedCurriculumMeta)
@@ -181,20 +181,51 @@
       @else
         <div class="mc-pric-grid">
           @foreach($cards as $card)
+            @php
+              $cardHref = $card['checkout_url'] ?? null;
+              if (! $cardHref && ! empty($card['price_options'][0]['href'])) {
+                  $cardHref = $card['price_options'][0]['href'];
+              }
+              if ($cardHref && ($selYear || $selSubject)) {
+                  $cardQuery = array_filter([
+                      'year' => $selYear ? (int) $selYear : null,
+                      'subject' => $selSubject ? (int) $selSubject : null,
+                  ]);
+                  if ($cardQuery !== []) {
+                      $join = str_contains($cardHref, '?') ? '&' : '?';
+                      $cardHref .= $join.http_build_query($cardQuery);
+                  }
+              }
+            @endphp
             <article class="mc-pric-card tone-{{ $card['tone'] ?? 0 }}">
-              <div class="mc-pric-card__cover" aria-hidden="true">
-                <i class="fas {{ $card['icon'] ?? 'fa-graduation-cap' }}"></i>
-                <div class="mc-pric-card__devices">
-                  @foreach(($card['devices'] ?? []) as $device)
-                    <span>{{ $device }}</span>
-                  @endforeach
+              @if($cardHref)
+                <a href="{{ $cardHref }}" class="mc-pric-card__cover mc-pric-card__cover-link" aria-hidden="true">
+                  <i class="fas {{ $card['icon'] ?? 'fa-graduation-cap' }}"></i>
+                  <div class="mc-pric-card__devices">
+                    @foreach(($card['devices'] ?? []) as $device)
+                      <span>{{ $device }}</span>
+                    @endforeach
+                  </div>
+                </a>
+              @else
+                <div class="mc-pric-card__cover" aria-hidden="true">
+                  <i class="fas {{ $card['icon'] ?? 'fa-graduation-cap' }}"></i>
+                  <div class="mc-pric-card__devices">
+                    @foreach(($card['devices'] ?? []) as $device)
+                      <span>{{ $device }}</span>
+                    @endforeach
+                  </div>
                 </div>
-              </div>
+              @endif
               <div class="mc-pric-card__body">
                 @if(!empty($card['badge']))
                   <span class="mc-pric-card__badge">{{ $card['badge'] }}</span>
                 @endif
-                <h3 class="mc-pric-card__title">{{ \App\Support\LocalizedCatalogLabel::text($card['title']) }}</h3>
+                @if($cardHref)
+                  <h3 class="mc-pric-card__title"><a href="{{ $cardHref }}" class="mc-pric-card__title-link">{{ \App\Support\LocalizedCatalogLabel::text($card['title']) }}</a></h3>
+                @else
+                  <h3 class="mc-pric-card__title">{{ \App\Support\LocalizedCatalogLabel::text($card['title']) }}</h3>
+                @endif
                 @if(!empty($card['description']))
                   <p class="mc-pric-card__desc">{{ \App\Support\LocalizedCatalogLabel::text($card['description']) }}</p>
                 @endif
@@ -204,6 +235,9 @@
                       <li><i class="fas fa-check" aria-hidden="true"></i><span>{{ $feature }}</span></li>
                     @endforeach
                   </ul>
+                @endif
+                @if($cardHref)
+                  <p class="mc-pric-card__detail"><a href="{{ $cardHref }}" class="mc-link-more">{{ $isRtl ? 'تفاصيل الباقة' : 'Package details' }} →</a></p>
                 @endif
                 <div class="mc-pric-card__prices">
                   @foreach(($card['price_options'] ?? []) as $opt)

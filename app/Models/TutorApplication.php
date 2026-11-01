@@ -177,6 +177,19 @@ class TutorApplication extends Model
         });
     }
 
+    /** نفس مرشحات قائمة المفعّلين (بدون حسابات تجريبية). */
+    public function scopeActivatedHubVisible($query)
+    {
+        return $query->activated()
+            ->whereRaw('LOWER(TRIM(COALESCE(full_name, ""))) NOT IN (?, ?)', ['test', 'اختبار'])
+            ->whereHas('user', function ($uq) {
+                $uq->whereRaw('LOWER(TRIM(name)) NOT IN (?, ?)', ['test', 'اختبار'])
+                    ->where(function ($q) {
+                        $q->whereNull('email')->orWhere('email', 'not like', 'test@%');
+                    });
+            });
+    }
+
     public function isActivated(): bool
     {
         return $this->status === self::STATUS_ACTIVATED;

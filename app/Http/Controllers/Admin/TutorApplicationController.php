@@ -37,22 +37,11 @@ class TutorApplicationController extends Controller
                 TutorApplication::STATUS_CONTRACT_SIGNED,
             ])->count(),
             'approved' => TutorApplication::awaitingActivation()->count(),
-            'activated' => TutorApplication::activated()->count(),
+            'activated' => TutorApplication::activatedHubVisible()->count(),
             'rejected' => TutorApplication::where('status', TutorApplication::STATUS_REJECTED)->count(),
             'blocked' => TutorApplication::where('status', TutorApplication::STATUS_BLOCKED_NO_SHOW)->count(),
             'total' => TutorApplication::count(),
-            // نفس نطاق قائمة المفعّلين (بدون حسابات تجريبية) — لا تخلط مع كل حسابات المعلمين في المنصة.
-            'instructors' => TutorApplication::query()
-                ->activated()
-                ->whereRaw('LOWER(TRIM(COALESCE(full_name, ""))) NOT IN (?, ?)', ['test', 'اختبار'])
-                ->whereHas('user', function ($uq) {
-                    $uq->where('is_active', true)
-                        ->whereRaw('LOWER(TRIM(name)) NOT IN (?, ?)', ['test', 'اختبار'])
-                        ->where(function ($q) {
-                            $q->whereNull('email')->orWhere('email', 'not like', 'test@%');
-                        });
-                })
-                ->count(),
+            'instructors' => TutorApplication::activatedHubVisible()->count(),
         ];
 
         $recentPending = TutorApplication::pending()->orderByDesc('id')->limit(6)->get();
@@ -111,18 +100,10 @@ class TutorApplicationController extends Controller
     public function activated(Request $request): View
     {
         $query = TutorApplication::query()
-            ->activated()
+            ->activatedHubVisible()
             ->with(['user:id,name,email,phone,is_active,role,created_at', 'activatedByUser:id,name'])
             ->orderByDesc('activated_at')
             ->orderByDesc('id');
-
-        $query->whereRaw('LOWER(TRIM(COALESCE(full_name, ""))) NOT IN (?, ?)', ['test', 'اختبار'])
-            ->whereHas('user', function ($uq) {
-                $uq->whereRaw('LOWER(TRIM(name)) NOT IN (?, ?)', ['test', 'اختبار'])
-                    ->where(function ($q) {
-                        $q->whereNull('email')->orWhere('email', 'not like', 'test@%');
-                    });
-            });
 
         if ($request->filled('search')) {
             $s = trim((string) $request->search);

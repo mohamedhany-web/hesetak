@@ -9,8 +9,10 @@ use App\Models\QuestionCategory;
 use App\Models\AdvancedCourse;
 use App\Models\CourseLesson;
 use App\Models\ExamQuestion;
+use App\Support\AttachesCourseCurriculumItems;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class ExamController extends Controller
 {
@@ -119,12 +121,23 @@ class ExamController extends Controller
             $data[$field] = $request->has($field);
         }
 
+        if (Schema::hasColumn('exams', 'is_active')) {
+            $data['is_active'] = $request->boolean('is_active', true);
+        }
+        if (Schema::hasColumn('exams', 'is_published')) {
+            $data['is_published'] = true;
+        }
+        if (Schema::hasColumn('exams', 'show_in_sidebar')) {
+            $data['show_in_sidebar'] = true;
+        }
+
         // لا تكتب course_id من ?course_id= — FK القديمة على جدول courses
         $data['course_id'] = null;
         $data['created_by'] = auth()->id();
         $data['total_marks'] = $data['total_marks'] ?? 0;
 
         $exam = Exam::create($data);
+        AttachesCourseCurriculumItems::attach((int) $data['advanced_course_id'], $exam, 'الامتحانات');
 
         return redirect()->route('admin.exams.questions.manage', $exam)
             ->with('success', 'تم إنشاء الامتحان بنجاح. يمكنك الآن إضافة الأسئلة.');

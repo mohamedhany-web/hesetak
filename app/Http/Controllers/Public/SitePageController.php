@@ -23,16 +23,24 @@ class SitePageController extends Controller
             ];
         }
 
+        $aboutConfigured = false;
+        $hideAboutFeatures = false;
         if ($page === 'about') {
             $about = PublicAboutSettings::payload();
+            $aboutConfigured = PublicAboutSettings::isConfigured();
+            $hideAboutFeatures = $aboutConfigured
+                && count($about['sections']) > 0
+                && PublicAboutSettings::featuresAreDefaultDemo();
             $content = array_merge($content, [
                 'kicker' => $about['kicker'],
                 'title' => $about['title'],
                 'lead' => $about['lead'],
                 'meta_title' => $about['meta_title'] ?: ($content['meta_title'] ?? null),
                 'meta_description' => $about['meta_description'] ?: ($content['meta_description'] ?? null),
-                'sections' => $about['sections'] !== [] ? $about['sections'] : ($content['sections'] ?? []),
-                'features' => $about['features'] ?? [],
+                'sections' => $aboutConfigured
+                    ? $about['sections']
+                    : ($about['sections'] !== [] ? $about['sections'] : ($content['sections'] ?? [])),
+                'features' => $hideAboutFeatures ? [] : ($about['features'] ?? []),
             ]);
         }
 
@@ -40,6 +48,8 @@ class SitePageController extends Controller
             'pageKey' => $page,
             'node' => $node,
             'content' => $content,
+            'hideAboutBottomCta' => $page === 'about',
+            'hideAboutFeatures' => $hideAboutFeatures,
             'laslesNavActive' => $page,
             'pageTitle' => match ($page) {
                 'about' => __('seo.about.title'),

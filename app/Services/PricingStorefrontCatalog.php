@@ -174,22 +174,31 @@ class PricingStorefrontCatalog
 
         return AcademicSubject::query()
             ->active()
-            ->where('academic_year_id', $yearId)
+            ->where(function ($q) use ($yearId) {
+                $q->where('academic_year_id', $yearId);
+                if (Schema::hasTable('academic_subject_years')) {
+                    $q->orWhereHas('years', fn ($yq) => $yq->where('academic_years.id', $yearId));
+                }
+            })
             ->ordered()
             ->get(['id', 'name', 'slug', 'academic_year_id', 'icon']);
     }
 
     protected function standardRule(): ?ServicePackagePricingRule
     {
+        // قواعد الحصص الفردية + النطاق العام (global) أو بدون scope — لتظهر في واجهة الباقات.
         return ServicePackagePricingRule::query()
             ->active()
             ->where(function ($q) {
                 $q->where('kind', 'standard')->orWhereNull('kind');
             })
-            ->whereIn('scope', [
-                ServicePackage::SCOPE_TUTORING_INDIVIDUAL,
-                ServicePackage::SCOPE_PRIVATE_LESSONS,
-            ])
+            ->where(function ($q) {
+                $q->whereIn('scope', [
+                    ServicePackage::SCOPE_TUTORING_INDIVIDUAL,
+                    ServicePackage::SCOPE_PRIVATE_LESSONS,
+                    ServicePackage::SCOPE_GLOBAL,
+                ])->orWhereNull('scope');
+            })
             ->ordered()
             ->first();
     }

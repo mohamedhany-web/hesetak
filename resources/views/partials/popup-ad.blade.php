@@ -1,8 +1,27 @@
 @php
     $ad = $ad ?? null;
-    $ctaHref = ($ad && filled($ad->link_url))
-        ? $ad->link_url
-        : (($ad && $ad->cta_text) ? route('home') : null);
+    $rawLink = trim((string) ($ad->link_url ?? ''));
+    $invalidLinks = ['', '#', 'javascript:void(0)', 'javascript:void(0);'];
+    $homeUrl = route('home');
+    $ctaHref = null;
+    $ctaOpensBlank = false;
+    if ($ad && $ad->cta_text) {
+        if ($rawLink !== '' && ! in_array(strtolower($rawLink), $invalidLinks, true)) {
+            $isHome = $rawLink === $homeUrl
+                || $rawLink === url('/')
+                || $rawLink === '/';
+            if ($isHome) {
+                $ctaHref = $homeUrl;
+            } elseif (str_starts_with($rawLink, 'http://') || str_starts_with($rawLink, 'https://') || str_starts_with($rawLink, '/')) {
+                $ctaHref = $rawLink;
+                $ctaOpensBlank = ! $isHome;
+            } else {
+                $ctaHref = $homeUrl;
+            }
+        } else {
+            $ctaHref = $homeUrl;
+        }
+    }
 @endphp
 @if($ad)
 {{-- CSS مستقل: الصفحة الرئيسية (mc-*) لا تحمّل Tailwind، لذلك لا نعتمد على fixed/inset utilities --}}
@@ -23,12 +42,10 @@
                 <div class="mc-popup-ad__text">{!! nl2br(e($ad->body)) !!}</div>
             @endif
             @if($ad->cta_text && $ctaHref)
-                <a href="{{ $ctaHref }}" @if(filled($ad->link_url)) target="_blank" rel="noopener" @endif class="mc-popup-ad__cta" data-popup-ad-cta>
+                <a href="{{ $ctaHref }}" @if($ctaOpensBlank) target="_blank" rel="noopener" @endif class="mc-popup-ad__cta" data-popup-ad-cta>
                     {{ $ad->cta_text }}
                     <i class="fas fa-arrow-left" aria-hidden="true"></i>
                 </a>
-            @elseif($ad->cta_text)
-                <a href="{{ route('home') }}" class="mc-popup-ad__cta mc-popup-ad__cta--soft" data-popup-ad-cta>{{ $ad->cta_text }}</a>
             @endif
         </div>
     </div>

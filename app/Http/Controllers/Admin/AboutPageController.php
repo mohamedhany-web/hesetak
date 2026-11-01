@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Setting;
 use App\Services\PublicAboutSettings;
+use App\Services\PublicMediaStorage;
+use App\Services\PublicStorageUrl;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -29,8 +31,13 @@ class AboutPageController extends Controller
                 : (string) $default;
         }
 
+        $heroPath = Setting::getValue('home_hero_image_path');
+        $heroPreviewUrl = $heroPath ? PublicStorageUrl::fromPath($heroPath) : null;
+
         return view('admin.about.index', [
             'values' => $values,
+            'heroPath' => $heroPath,
+            'heroPreviewUrl' => $heroPreviewUrl,
         ]);
     }
 
@@ -54,10 +61,27 @@ class AboutPageController extends Controller
             'about_feature_3_body' => ['nullable', 'string', 'max:400'],
             'about_feature_4_title' => ['nullable', 'string', 'max:120'],
             'about_feature_4_body' => ['nullable', 'string', 'max:400'],
+            'home_hero_image' => ['nullable', 'image', 'max:'.config('upload_limits.max_upload_kb')],
+            'remove_home_hero_image' => ['nullable', 'boolean'],
         ]);
 
         foreach (PublicAboutSettings::editableKeys() as $key) {
             Setting::setValue($key, $validated[$key] ?? null);
+        }
+
+        if ($request->boolean('remove_home_hero_image')) {
+            $prev = Setting::getValue('home_hero_image_path');
+            if ($prev) {
+                PublicMediaStorage::delete($prev);
+            }
+            Setting::setValue('home_hero_image_path', null);
+        } elseif ($request->hasFile('home_hero_image')) {
+            $prev = Setting::getValue('home_hero_image_path');
+            if ($prev) {
+                PublicMediaStorage::delete($prev);
+            }
+            $path = PublicMediaStorage::store($request->file('home_hero_image'), 'marketing/home-hero');
+            Setting::setValue('home_hero_image_path', $path);
         }
 
         PublicAboutSettings::forgetCache();

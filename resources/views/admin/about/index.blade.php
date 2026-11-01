@@ -32,9 +32,34 @@
         <div class="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">{{ session('success') }}</div>
     @endif
 
-    <form action="{{ route('admin.about.update') }}" method="POST" class="space-y-5">
+    <form action="{{ route('admin.about.update') }}" method="POST" class="space-y-5" enctype="multipart/form-data">
         @csrf
         @method('PUT')
+
+        <article class="rounded-2xl border border-line bg-surface p-5 shadow-soft sm:p-6 space-y-4">
+            <div class="mb-1 flex items-center gap-3">
+                <span class="inline-flex size-9 items-center justify-center rounded-xl bg-accent-soft text-accent"><i class="fas fa-image text-sm"></i></span>
+                <div>
+                    <h3 class="text-base font-semibold text-ink">صورة بطل الصفحة الرئيسية</h3>
+                    <p class="mt-0.5 text-xs text-muted">تظهر في الهيرو أعلى / — إن تُركت فارغة يُستخدم الافتراضي.</p>
+                </div>
+            </div>
+            @if(!empty($heroPreviewUrl))
+                <img src="{{ $heroPreviewUrl }}" alt="" class="max-h-48 w-auto rounded-xl border border-line object-cover">
+            @endif
+            <div class="grid gap-4 sm:grid-cols-2">
+                <div>
+                    <label class="{{ $labelClass }}" for="home_hero_image">رفع صورة جديدة</label>
+                    <input type="file" name="home_hero_image" id="home_hero_image" accept="image/*" class="{{ $fieldClass }}">
+                </div>
+                <div class="flex items-end">
+                    <label class="inline-flex items-center gap-2 text-sm text-ink-soft">
+                        <input type="checkbox" name="remove_home_hero_image" value="1" class="rounded border-line">
+                        إزالة الصورة المخصصة
+                    </label>
+                </div>
+            </div>
+        </article>
 
         <article class="rounded-2xl border border-line bg-surface p-5 shadow-soft sm:p-6 space-y-4">
             <div class="mb-1 flex items-center gap-3">

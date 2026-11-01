@@ -13,6 +13,7 @@ use App\Services\LectureMaterialStorage;
 use App\Services\PublicMediaStorage;
 use App\Services\TeamsAttendanceImportService;
 use App\Support\AppTimezone;
+use App\Support\AttachesCourseCurriculumItems;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
@@ -91,6 +92,7 @@ class LectureController extends Controller
         unset($validated['material_files']);
 
         $lecture = Lecture::create($validated);
+        AttachesCourseCurriculumItems::attach((int) $lecture->course_id, $lecture, 'المحاضرات');
 
         $materialFiles = $request->file('material_files');
         if (is_array($materialFiles)) {

@@ -46,8 +46,8 @@
       <a href="{{ route('public.pricing') }}" class="mc-btn mc-btn--md mc-btn--secondary">
         {{ $isRtl ? 'جاهز تشتري رصيد حصص؟ افتح باقات الحصص' : 'Ready to buy hour credits? Open lesson packages' }}
       </a>
-      <a href="{{ route('public.pricing') }}#mc-pricing-storefront" class="mc-btn mc-btn--md mc-btn--outline">
-        {{ $isRtl ? 'عرض باقات الحصص المعلنة' : 'See listed lesson packages' }}
+      <a href="{{ route('public.courses') }}" class="mc-btn mc-btn--md mc-btn--outline">
+        {{ $isRtl ? 'عرض باقات الكورسات' : 'Browse course packages' }}
       </a>
     </div>
   </div>

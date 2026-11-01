@@ -54,6 +54,11 @@
           <p class="mc-eyebrow">{{ $p['eyebrow'] }}</p>
           <h1 id="mc-cat-title">{!! __('hesetak_pages.courses.title_html', ['brand' => e($brand)]) !!}</h1>
           <p class="mc-catalog-head__lead">{{ $p['lead'] }}</p>
+          <p style="margin-top:1rem">
+            <a href="{{ route('public.pricing') }}#mc-pricing-storefront" class="mc-btn mc-btn--lg mc-btn--primary">
+              {{ $isRtl ? 'باقات الحصص الفردية' : 'Private lesson packages' }}
+            </a>
+          </p>
         </div>
         <p class="mc-dir-head__count">
           <strong>{{ number_format($resultCount) }}</strong>

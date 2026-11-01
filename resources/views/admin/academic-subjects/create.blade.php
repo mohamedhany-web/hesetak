@@ -63,6 +63,16 @@
                             <option value="{{ $year->id }}" @selected((string) old('academic_year_id', $selectedTrack) === (string) $year->id)>{{ $year->name }}</option>
                         @endforeach
                     </select>
+                    <p class="mt-1 text-xs text-muted">السنة الأولى في القائمة التالية تُستخدم كمرحلة أساسية (للتوافق مع السابق).</p>
+                </div>
+                <div class="sm:col-span-2">
+                    <label class="{{ $labelClass }}" for="academic_year_ids">مراحل إضافية (متعدد)</label>
+                    <select name="academic_year_ids[]" id="academic_year_ids" class="{{ $fieldClass }}" multiple size="6">
+                        @php $oldYears = array_map('strval', old('academic_year_ids', $selectedTrack ? [(string) $selectedTrack] : [])); @endphp
+                        @foreach($academicYears as $year)
+                            <option value="{{ $year->id }}" @selected(in_array((string) $year->id, $oldYears, true))>{{ $year->name }}</option>
+                        @endforeach
+                    </select>
                 </div>
                 <div>
                     <label class="{{ $labelClass }}" for="name">اسم المادة <span class="text-danger">*</span></label>

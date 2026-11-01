@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
 
@@ -31,6 +32,11 @@ class AcademicSubject extends Model
     public function academicYear()
     {
         return $this->belongsTo(AcademicYear::class);
+    }
+
+    public function years(): BelongsToMany
+    {
+        return $this->belongsToMany(AcademicYear::class, 'academic_subject_years');
     }
 
     public function tutoringGroups(): HasMany

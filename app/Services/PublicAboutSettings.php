@@ -67,6 +67,39 @@ class PublicAboutSettings
         Cache::forget(self::CACHE_KEY);
     }
 
+    /** هل حُفظ أي مفتاح «من نحن» في الإعدادات (حتى لو فارغاً)؟ */
+    public static function isConfigured(): bool
+    {
+        return Setting::query()
+            ->whereIn('key', self::editableKeys())
+            ->exists();
+    }
+
+    /** بطاقات المميزات ما زالت قيم العرض الافتراضية (لم تُخصَّص من الإدارة). */
+    public static function featuresAreDefaultDemo(): bool
+    {
+        $defaults = self::defaults();
+        $stored = Setting::query()
+            ->whereIn('key', array_keys($defaults))
+            ->pluck('value', 'key')
+            ->all();
+
+        foreach ([1, 2, 3, 4] as $i) {
+            foreach (['title', 'body'] as $part) {
+                $key = "about_feature_{$i}_{$part}";
+                if (array_key_exists($key, $stored)) {
+                    $storedVal = trim((string) $stored[$key]);
+                    $defaultVal = trim((string) ($defaults[$key] ?? ''));
+                    if ($storedVal !== '' && $storedVal !== $defaultVal) {
+                        return false;
+                    }
+                }
+            }
+        }
+
+        return true;
+    }
+
     /**
      * @return array{
      *   kicker: string,
@@ -87,7 +120,7 @@ class PublicAboutSettings
                 ->all();
 
             $get = function (string $key) use ($defaults, $stored): string {
-                if (array_key_exists($key, $stored) && $stored[$key] !== null && trim((string) $stored[$key]) !== '') {
+                if (array_key_exists($key, $stored) && $stored[$key] !== null) {
                     return (string) $stored[$key];
                 }
 

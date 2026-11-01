@@ -61,7 +61,7 @@
 </section>
 @endif
 
-@if($pageKey === 'about' && count($features))
+@if($pageKey === 'about' && count($features) && empty($hideAboutFeatures))
 <section class="mc-section">
   <div class="mc-container">
     <div class="mc-section-head mc-section-head--tight" style="margin-bottom:1rem">
@@ -97,6 +97,7 @@
 </section>
 @endif
 
+@if(empty($hideAboutBottomCta))
 <section class="mc-section">
   <div class="mc-container">
     <div class="mc-cta">
@@ -115,4 +116,5 @@
     </div>
   </div>
 </section>
+@endif
 @endsection

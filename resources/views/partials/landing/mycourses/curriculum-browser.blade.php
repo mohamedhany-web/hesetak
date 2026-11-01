@@ -164,13 +164,50 @@
         '<a href="' + teachers.pathname + teachers.search + '" class="mc-btn mc-btn--md mc-btn--outline">' + (labels.ctaTeachers || '') + '</a>' +
       '</div>';
   }
+  function pickFirstSubject() {
+    var stage = currentStage();
+    if (!stage || !(stage.subjects || []).length) {
+      state.subjectId = '';
+      return;
+    }
+    if (!state.subjectId || !(stage.subjects || []).some(function (s) { return s.id === state.subjectId; })) {
+      state.subjectId = stage.subjects[0].id;
+    }
+  }
+
+  var carouselPaused = false;
+  var carouselTimer = null;
+
+  function startCarousel() {
+    if (carouselTimer) clearInterval(carouselTimer);
+    carouselTimer = setInterval(function () {
+      if (carouselPaused) return;
+      var stage = currentStage();
+      var list = stage ? (stage.subjects || []) : [];
+      if (list.length < 2) return;
+      var idx = list.findIndex(function (s) { return s.id === state.subjectId; });
+      var next = list[(idx + 1 + list.length) % list.length];
+      if (next) {
+        state.subjectId = next.id;
+        renderSubjects();
+        renderPanel();
+      }
+    }, 1000);
+  }
+
+  root.addEventListener('click', function () {
+    carouselPaused = true;
+  }, true);
+
   function render() {
     renderTracks();
     renderStages();
+    pickFirstSubject();
     renderSubjects();
     renderPanel();
   }
   render();
+  startCarousel();
 })();
 </script>
 @endif

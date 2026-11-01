@@ -80,6 +80,21 @@
                         @endforeach
                     </select>
                 </div>
+                <div class="sm:col-span-2">
+                    <label class="{{ $labelClass }}" for="academic_year_ids">مراحل إضافية (متعدد)</label>
+                    @php
+                        $linkedYearIds = $academicSubject->years->pluck('id')->map(fn ($id) => (string) $id)->all();
+                        if ($linkedYearIds === [] && $academicSubject->academic_year_id) {
+                            $linkedYearIds = [(string) $academicSubject->academic_year_id];
+                        }
+                        $oldYears = array_map('strval', old('academic_year_ids', $linkedYearIds));
+                    @endphp
+                    <select name="academic_year_ids[]" id="academic_year_ids" class="{{ $fieldClass }}" multiple size="6">
+                        @foreach($academicYears as $year)
+                            <option value="{{ $year->id }}" @selected(in_array((string) $year->id, $oldYears, true))>{{ $year->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
                 <div>
                     <label class="{{ $labelClass }}" for="name">اسم المادة <span class="text-danger">*</span></label>
                     <input id="name" type="text" name="name" value="{{ old('name', $academicSubject->name) }}" required maxlength="255" class="{{ $fieldClass }}">

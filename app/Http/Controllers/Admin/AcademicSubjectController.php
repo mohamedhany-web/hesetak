@@ -56,6 +56,8 @@ class AcademicSubjectController extends Controller
     {
         $validated = $request->validate([
             'academic_year_id' => 'nullable|exists:academic_years,id',
+            'academic_year_ids' => 'nullable|array',
+            'academic_year_ids.*' => 'integer|exists:academic_years,id',
             'name' => 'required|string|max:255',
             'code' => [
                 'required',
@@ -75,12 +77,13 @@ class AcademicSubjectController extends Controller
             'code.unique' => 'رمز المادة موجود مسبقاً في هذه السنة',
         ]);
 
-        $yearId = $validated['academic_year_id'] ?? null;
+        $yearIds = array_values(array_unique(array_map('intval', $request->input('academic_year_ids', []))));
+        $yearId = $yearIds[0] ?? ($validated['academic_year_id'] ?? null);
         if ($yearId === '' || $yearId === null) {
             $yearId = null;
         }
 
-        AcademicSubject::create([
+        $subject = AcademicSubject::create([
             'academic_year_id' => $yearId,
             'name' => $validated['name'],
             'code' => $validated['code'],
@@ -93,6 +96,12 @@ class AcademicSubjectController extends Controller
             'order' => $validated['order'] ?? 0,
             'is_active' => $request->boolean('is_active', true),
         ]);
+
+        if ($yearIds !== []) {
+            $subject->years()->sync($yearIds);
+        } elseif ($yearId) {
+            $subject->years()->sync([$yearId]);
+        }
 
         return redirect()
             ->route('admin.academic-subjects.index', array_filter(['track' => $yearId]))
@@ -126,6 +135,7 @@ class AcademicSubjectController extends Controller
     public function edit(AcademicSubject $academicSubject): View
     {
         $academicYears = AcademicYear::orderBy('order')->orderBy('name')->get();
+        $academicSubject->load('years:id');
 
         return view('admin.academic-subjects.edit', compact('academicSubject', 'academicYears'));
     }
@@ -134,6 +144,8 @@ class AcademicSubjectController extends Controller
     {
         $validated = $request->validate([
             'academic_year_id' => 'nullable|exists:academic_years,id',
+            'academic_year_ids' => 'nullable|array',
+            'academic_year_ids.*' => 'integer|exists:academic_years,id',
             'name' => 'required|string|max:255',
             'code' => [
                 'required',
@@ -159,7 +171,8 @@ class AcademicSubjectController extends Controller
             'code.unique' => 'رمز المادة موجود مسبقاً في هذه السنة',
         ]);
 
-        $yearId = $validated['academic_year_id'] ?? null;
+        $yearIds = array_values(array_unique(array_map('intval', $request->input('academic_year_ids', []))));
+        $yearId = $yearIds[0] ?? ($validated['academic_year_id'] ?? null);
         if ($yearId === '' || $yearId === null) {
             $yearId = null;
         }
@@ -177,6 +190,14 @@ class AcademicSubjectController extends Controller
             'order' => $validated['order'] ?? 0,
             'is_active' => $request->boolean('is_active'),
         ]);
+
+        if ($yearIds !== []) {
+            $academicSubject->years()->sync($yearIds);
+        } elseif ($yearId) {
+            $academicSubject->years()->sync([$yearId]);
+        } else {
+            $academicSubject->years()->detach();
+        }
 
         return redirect()
             ->route('admin.academic-subjects.show', $academicSubject)
