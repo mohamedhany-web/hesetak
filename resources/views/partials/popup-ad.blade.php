@@ -231,7 +231,18 @@
         el.addEventListener('click', hide);
     });
     overlay.querySelectorAll('[data-popup-ad-cta]').forEach(function (el) {
-        el.addEventListener('click', markSeen);
+        el.addEventListener('click', function (e) {
+            markSeen();
+            var href = (el.getAttribute('href') || '').trim();
+            var here = window.location.origin + '/';
+            var isHomeTarget = !href || href === '/' || href === here || href === window.location.origin
+                || href === window.location.href.split('#')[0];
+            if (isHomeTarget && (window.location.pathname === '/' || window.location.pathname === '')) {
+                e.preventDefault();
+                hide();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        });
     });
     document.addEventListener('keydown', function (e) {
         if (e.key === 'Escape') hide();

@@ -28,18 +28,18 @@ class SitePageController extends Controller
         if ($page === 'about') {
             $about = PublicAboutSettings::payload();
             $aboutConfigured = PublicAboutSettings::isConfigured();
-            $hideAboutFeatures = $aboutConfigured
-                && count($about['sections']) > 0
-                && PublicAboutSettings::featuresAreDefaultDemo();
+            // أخفِ بطاقات المميزات الافتراضية دائماً حتى لا يبقى المحتوى القديم بجانب تعديلات العميل.
+            $hideAboutFeatures = PublicAboutSettings::featuresAreDefaultDemo();
+            $langSections = is_array($content['sections'] ?? null) ? $content['sections'] : [];
+            $aboutSections = is_array($about['sections'] ?? null) ? $about['sections'] : [];
             $content = array_merge($content, [
                 'kicker' => $about['kicker'],
                 'title' => $about['title'],
                 'lead' => $about['lead'],
                 'meta_title' => $about['meta_title'] ?: ($content['meta_title'] ?? null),
                 'meta_description' => $about['meta_description'] ?: ($content['meta_description'] ?? null),
-                'sections' => $aboutConfigured
-                    ? $about['sections']
-                    : ($about['sections'] !== [] ? $about['sections'] : ($content['sections'] ?? [])),
+                // إن لم تُحفظ إعدادات «من نحن» بعد، اعرض أقسام الترجمة فقط (بدون أقسام الديمو الافتراضية).
+                'sections' => $aboutConfigured ? $aboutSections : $langSections,
                 'features' => $hideAboutFeatures ? [] : ($about['features'] ?? []),
             ]);
         }
