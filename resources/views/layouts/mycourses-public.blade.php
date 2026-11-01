@@ -44,6 +44,7 @@
     @yield('content')
 </main>
 @include('partials.landing.mycourses.footer')
+@include('partials.unregister-service-worker')
 @stack('scripts')
 </body>
 </html>

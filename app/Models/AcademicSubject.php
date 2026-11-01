@@ -74,6 +74,21 @@ class AcademicSubject extends Model
         return $query->whereNull('academic_year_id');
     }
 
+    /** مواد مرحلة معيّنة عبر العمود أو جدول الربط المتعدد. */
+    public function scopeForYear($query, ?int $yearId)
+    {
+        if (! $yearId) {
+            return $query->whereNull('academic_year_id');
+        }
+
+        return $query->where(function ($q) use ($yearId) {
+            $q->where('academic_year_id', $yearId);
+            if (\Illuminate\Support\Facades\Schema::hasTable('academic_subject_years')) {
+                $q->orWhereHas('years', fn ($yq) => $yq->where('academic_years.id', $yearId));
+            }
+        });
+    }
+
     public function faIcon(): string
     {
         $icon = trim((string) $this->icon);

@@ -84,15 +84,22 @@ class PublicFooterSettings
             ];
 
             $socials = [];
+            $seenUrls = [];
             foreach ($socialMap as $meta) {
                 $url = trim((string) ($merged[$meta['key']] ?? ''));
-                if ($url !== '') {
-                    $socials[] = [
-                        'url' => $url,
-                        'icon' => $meta['icon'],
-                        'label' => $meta['label'],
-                    ];
+                if ($url === '') {
+                    continue;
                 }
+                $norm = rtrim(strtolower($url), '/');
+                if (isset($seenUrls[$norm])) {
+                    continue;
+                }
+                $seenUrls[$norm] = true;
+                $socials[] = [
+                    'url' => $url,
+                    'icon' => $meta['icon'],
+                    'label' => $meta['label'],
+                ];
             }
 
             return [

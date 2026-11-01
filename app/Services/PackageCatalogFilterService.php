@@ -171,7 +171,9 @@ class PackageCatalogFilterService
             ->where(function ($q) use ($yearId) {
                 $q->whereNull('academic_year_id');
                 if ($yearId) {
-                    $q->orWhere('academic_year_id', $yearId);
+                    $q->orWhere(function ($inner) use ($yearId) {
+                        $inner->forYear($yearId);
+                    });
                 }
             })
             ->orderBy('order')

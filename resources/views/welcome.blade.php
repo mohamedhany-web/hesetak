@@ -36,5 +36,6 @@
 </head>
 <body class="mc-body mc-body--shop">
 @include('partials.welcome-mycourses')
+@include('partials.unregister-service-worker')
 </body>
 </html>

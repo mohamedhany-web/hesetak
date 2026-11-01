@@ -10,16 +10,25 @@
     $cards = $pricingCards ?? [];
     $selYear = $catalog['selected_year_id'] ?? null;
     $selSubject = $catalog['selected_subject_id'] ?? null;
+    $selSubjects = collect($catalog['selected_subject_ids'] ?? [])
+        ->when($selSubject, fn ($c) => $c->push((int) $selSubject))
+        ->map(fn ($id) => (int) $id)
+        ->filter(fn ($id) => $id > 0)
+        ->unique()
+        ->values()
+        ->all();
     $selCurriculum = $catalog['selected_curriculum_type'] ?? null;
     $customUrl = $customBuilderUrl ?? route('public.service-packages.index', ['catalog' => 1]).'#private-builder';
     $curriculumTypes = \App\Support\HesetakMatchCatalog::curriculumTypes();
 
-    $stageUrl = static function (?int $yearId, ?int $subjectId = null, ?string $curriculum = null) use ($catalog): string {
+    $stageUrl = static function (?int $yearId, ?array $subjectIds = null, ?string $curriculum = null) use ($catalog): string {
+        $ids = array_values(array_filter(array_map('intval', $subjectIds ?? [])));
         $query = array_filter([
             'year' => $yearId ?: null,
             'curriculum_type' => $curriculum ?: ($catalog['selected_curriculum_type'] ?? null),
-            'subject' => $subjectId ?: null,
-        ]);
+            'subject' => $ids[0] ?? null,
+            'subjects' => $ids !== [] ? $ids : null,
+        ], fn ($v) => $v !== null && $v !== []);
 
         return route('public.pricing', $query).'#mc-pricing-storefront';
     };
@@ -117,7 +126,7 @@
         <a href="{{ $stageUrl(null, null, $selCurriculum ?: null) }}" class="mc-btn mc-btn--sm mc-btn--outline">
           {{ $isRtl ? 'العودة لكل المراحل' : 'Back to all stages' }}
         </a>
-        @if($selSubject)
+        @if($selSubjects !== [])
           <a href="{{ $stageUrl($selYear ? (int) $selYear : null, null) }}" class="mc-btn mc-btn--sm mc-btn--outline">
             {{ $isRtl ? 'كل مواد المرحلة' : 'All subjects in stage' }}
           </a>
@@ -125,7 +134,7 @@
       </p>
     @endif
 
-    <div class="mc-pric-filter" aria-labelledby="mc-pric-stage-label">
+    <div class="mc-pric-filter" aria-labelledby="mc-pric-stage-label" id="mc-pric-stage-block">
       <h2 id="mc-pric-stage-label" class="mc-pric-filter__label">2. {{ __('public.pricing_filter_stage') }}</h2>
       <p class="mc-pric-filter__hint">{{ __('public.pricing_filter_stage_hint') }}</p>
       <div class="mc-pric-stages" role="tablist" aria-label="{{ __('public.pricing_filter_stage') }}">
@@ -153,17 +162,19 @@
       </div>
     </div>
 
-    <div class="mc-pric-filter" aria-labelledby="mc-pric-subject-label">
+    <div class="mc-pric-filter" aria-labelledby="mc-pric-subject-label" id="mc-pric-subject-block">
       <h2 id="mc-pric-subject-label" class="mc-pric-filter__label">3. {{ __('public.pricing_filter_subject') }}</h2>
-      <p class="mc-pric-filter__hint">{{ __('public.pricing_filter_subject_hint') }}</p>
+      <p class="mc-pric-filter__hint">{{ $isRtl ? 'يمكنك اختيار أكثر من مادة — اضغط لإضافة/إزالة الاختيار.' : 'You can select multiple subjects — tap to add/remove.' }}</p>
       @if($subjects->isNotEmpty())
         <div class="mc-pric-subjects" role="list">
           @foreach($subjects as $subject)
             @php
-              $isSubjectOn = (int) $selSubject === (int) $subject->id;
-              $subjectHref = $isSubjectOn
-                ? $stageUrl($selYear ? (int) $selYear : null, null)
-                : $stageUrl($selYear ? (int) $selYear : null, (int) $subject->id);
+              $sid = (int) $subject->id;
+              $isSubjectOn = in_array($sid, $selSubjects, true);
+              $nextIds = $isSubjectOn
+                ? array_values(array_filter($selSubjects, fn ($id) => (int) $id !== $sid))
+                : array_values(array_unique(array_merge($selSubjects, [$sid])));
+              $subjectHref = $stageUrl($selYear ? (int) $selYear : null, $nextIds !== [] ? $nextIds : null);
             @endphp
             <a href="{{ $subjectHref }}" class="mc-pric-chip {{ $isSubjectOn ? 'is-on' : '' }}" role="listitem">{{ \App\Support\LocalizedCatalogLabel::text($subject->name) }}</a>
           @endforeach
@@ -173,7 +184,7 @@
       @endif
     </div>
 
-    <div class="mc-pric-filter" aria-labelledby="mc-pric-packages-label">
+    <div class="mc-pric-filter" aria-labelledby="mc-pric-packages-label" id="mc-pric-packages-block">
       <h2 id="mc-pric-packages-label" class="mc-pric-filter__label">4. {{ __('public.pricing_packages_title') }}</h2>
       <p class="mc-pric-filter__hint">{{ __('public.pricing_packages_sub') }}</p>
       @if(empty($cards))
@@ -278,3 +289,22 @@
   </div>
 </section>
 @endsection
+
+@push('scripts')
+<script>
+(function () {
+  var params = new URLSearchParams(window.location.search);
+  var hasCurriculum = params.has('curriculum_type') && params.get('curriculum_type');
+  var hasYear = params.has('year') && params.get('year');
+  var hasSubject = (params.has('subject') && params.get('subject')) || (params.getAll('subjects[]').length + params.getAll('subjects').length) > 0;
+  var target = null;
+  if (hasSubject) target = document.getElementById('mc-pric-packages-block');
+  else if (hasYear) target = document.getElementById('mc-pric-subject-block');
+  else if (hasCurriculum) target = document.getElementById('mc-pric-stage-block');
+  if (!target) return;
+  window.setTimeout(function () {
+    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 80);
+})();
+</script>
+@endpush

@@ -72,16 +72,7 @@
             </div>
             <div class="grid grid-cols-1 gap-4 p-4 sm:grid-cols-2 sm:p-5">
                 <div class="sm:col-span-2">
-                    <label class="{{ $labelClass }}" for="academic_year_id">المرحلة الدراسية <span class="font-normal text-muted">(اختياري)</span></label>
-                    <select name="academic_year_id" id="academic_year_id" class="{{ $fieldClass }}">
-                        <option value="">— مادة عامة (بدون سنة) —</option>
-                        @foreach($academicYears as $year)
-                            <option value="{{ $year->id }}" @selected((string) old('academic_year_id', $academicSubject->academic_year_id) === (string) $year->id)>{{ $year->name }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="sm:col-span-2">
-                    <label class="{{ $labelClass }}" for="academic_year_ids">مراحل إضافية (متعدد)</label>
+                    <label class="{{ $labelClass }}">المراحل الدراسية (يمكن اختيار أكثر من مرحلة)</label>
                     @php
                         $linkedYearIds = $academicSubject->years->pluck('id')->map(fn ($id) => (string) $id)->all();
                         if ($linkedYearIds === [] && $academicSubject->academic_year_id) {
@@ -89,11 +80,15 @@
                         }
                         $oldYears = array_map('strval', old('academic_year_ids', $linkedYearIds));
                     @endphp
-                    <select name="academic_year_ids[]" id="academic_year_ids" class="{{ $fieldClass }}" multiple size="6">
+                    <div class="grid gap-2 rounded-xl border border-line bg-canvas/40 p-3 sm:grid-cols-2">
                         @foreach($academicYears as $year)
-                            <option value="{{ $year->id }}" @selected(in_array((string) $year->id, $oldYears, true))>{{ $year->name }}</option>
+                            <label class="inline-flex items-center gap-2 text-sm text-ink">
+                                <input type="checkbox" name="academic_year_ids[]" value="{{ $year->id }}" class="rounded border-line" @checked(in_array((string) $year->id, $oldYears, true))>
+                                <span>{{ $year->name }}</span>
+                            </label>
                         @endforeach
-                    </select>
+                    </div>
+                    <p class="mt-1 text-xs text-muted">نفس المادة يمكن ربطها بعدة مراحل (ابتدائي + متوسط…) دون تكرار الرمز.</p>
                 </div>
                 <div>
                     <label class="{{ $labelClass }}" for="name">اسم المادة <span class="text-danger">*</span></label>

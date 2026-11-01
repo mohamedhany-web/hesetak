@@ -142,6 +142,14 @@
             </label>
           </template>
         </div>
+        <div style="margin-top:.65rem;display:flex;flex-wrap:wrap;gap:.5rem">
+          <button type="button" class="lasles-auth-linkbtn" @click="selectedSubjects = subjects.map((s) => String(s.id))">
+            {{ __('auth.preferred_subjects_select_all') }}
+          </button>
+          <button type="button" class="lasles-auth-linkbtn" @click="selectedSubjects = []" x-show="selectedSubjects.length">
+            {{ __('auth.preferred_subjects_clear') }}
+          </button>
+        </div>
         <p class="lasles-auth-hint">{{ __('auth.preferred_subjects_hint') }}</p>
         @error('preferred_subject_ids')<p class="lasles-auth-error">{{ $message }}</p>@enderror
       </div>

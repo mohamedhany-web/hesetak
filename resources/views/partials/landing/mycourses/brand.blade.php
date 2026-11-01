@@ -1,7 +1,8 @@
 @php
     $brandHref = $brandHref ?? route('home');
     $brandId = $brandId ?? null;
-    $brandMarkUrl = public_img_url('brand/hesetak-mark.png');
+    $brandMarkUrl = \App\Services\AdminPanelBranding::logoPublicUrl()
+        ?: public_img_url('brand/hesetak-mark.png');
     $brandFallback = \App\Services\AdminPanelBranding::inlineFallbackDataUri();
 @endphp
 <a href="{{ $brandHref }}" class="mc-brand"@if($brandId) id="{{ $brandId }}"@endif>

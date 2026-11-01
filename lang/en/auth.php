@@ -45,6 +45,8 @@ return [
     'parent_subjects_note' => 'You can pick subjects of interest now, and refine them later per child in the profile.',
     'preferred_subjects' => 'Subjects',
     'preferred_subjects_hint' => 'Pick one or more subjects for your stage.',
+    'preferred_subjects_select_all' => 'Select all subjects',
+    'preferred_subjects_clear' => 'Clear selection',
     'parent_subjects_hint' => 'Pick subjects your children need (you can edit later).',
     'reset_password_email_subject' => 'Reset your password',
     'reset_password_email_greeting' => 'Hello!',

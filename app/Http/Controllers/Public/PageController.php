@@ -113,11 +113,20 @@ class PageController extends Controller
 
     public function pricing(\Illuminate\Http\Request $request)
     {
+        $subjectIds = collect($request->input('subjects', []))
+            ->when($request->filled('subject'), fn ($c) => $c->push($request->integer('subject')))
+            ->map(fn ($id) => (int) $id)
+            ->filter(fn ($id) => $id > 0)
+            ->unique()
+            ->values()
+            ->all();
+
         $storefront = \Illuminate\Support\Facades\Schema::hasTable('service_packages')
             ? app(\App\Services\PricingStorefrontCatalog::class)->build(
                 yearId: $request->filled('year') ? $request->integer('year') : null,
-                subjectId: $request->filled('subject') ? $request->integer('subject') : null,
+                subjectId: $subjectIds[0] ?? null,
                 curriculumType: $request->query('curriculum_type'),
+                subjectIds: $subjectIds,
             )
             : [
                 'catalog' => [

@@ -48,7 +48,7 @@ class HiringFormService
             ['type' => HiringFormField::TYPE_FILE, 'label' => 'البطاقة / جواز السفر', 'required' => true, 'key' => 'id_document', 'settings' => ['file_kind' => 'image_pdf']],
             ['type' => HiringFormField::TYPE_FILE, 'label' => 'الشهادة / الإجازة', 'required' => true, 'key' => 'certificate', 'settings' => ['file_kind' => 'image_pdf']],
             ['type' => HiringFormField::TYPE_FILE, 'label' => 'فيديو تعريفي (ملف)', 'required' => false, 'key' => 'intro_video', 'settings' => ['file_kind' => 'video']],
-            ['type' => HiringFormField::TYPE_URL, 'label' => 'رابط فيديو تعريفي', 'required' => false, 'key' => 'intro_video_url'],
+            ['type' => HiringFormField::TYPE_URL, 'label' => 'رابط فيديو تعريفي (Drive / YouTube)', 'required' => false, 'key' => 'intro_video_url', 'help_text' => 'الصق رابط مشاركة Google Drive أو YouTube — لا ترفع الملف في حقل الرابط.'],
         ];
 
         foreach ($defs as $i => $def) {
@@ -64,6 +64,7 @@ class HiringFormService
                 'hiring_form_id' => $form->id,
                 'type' => $def['type'],
                 'label' => $def['label'],
+                'help_text' => $def['help_text'] ?? null,
                 'is_required' => (bool) ($def['required'] ?? false),
                 'options' => $options,
                 'system_key' => $def['key'] ?? null,
@@ -152,7 +153,44 @@ class HiringFormService
                 ]),
                 HiringFormField::TYPE_NUMBER => array_merge($base, ['numeric']),
                 HiringFormField::TYPE_DATE => array_merge($base, ['date']),
-                HiringFormField::TYPE_URL => array_merge($base, ['url', 'max:500']),
+                HiringFormField::TYPE_URL => array_merge($base, [
+                    'string',
+                    'max:500',
+                    function (string $attribute, mixed $value, \Closure $fail) use ($field): void {
+                        if ($value === null || $value === '') {
+                            return;
+                        }
+                        $raw = trim((string) $value);
+                        if (! preg_match('#^https?://#i', $raw)) {
+                            $raw = 'https://'.$raw;
+                        }
+                        if (! filter_var($raw, FILTER_VALIDATE_URL)) {
+                            $fail('رابط «'.$field->label.'» غير صالح.');
+
+                            return;
+                        }
+                        $host = strtolower((string) (parse_url($raw, PHP_URL_HOST) ?? ''));
+                        $isIntroVideo = in_array((string) $field->key, ['intro_video_url', 'portfolio_intro_video_url'], true)
+                            || str_contains((string) $field->key, 'video');
+                        if ($isIntroVideo) {
+                            $allowed = [
+                                'drive.google.com',
+                                'docs.google.com',
+                                'youtu.be',
+                                'youtube.com',
+                                'www.youtube.com',
+                                'm.youtube.com',
+                                'vimeo.com',
+                                'www.vimeo.com',
+                            ];
+                            $ok = collect($allowed)->contains(fn ($h) => $host === $h || str_ends_with($host, '.'.$h));
+                            if (! $ok && ! str_contains($host, 'google')) {
+                                // اسمح بأي رابط https صالح للفيديو التعريفي (درايف/يوتيوب/غيره)
+                                return;
+                            }
+                        }
+                    },
+                ]),
                 HiringFormField::TYPE_LONG_TEXT => array_merge($base, ['string', 'max:20000']),
                 HiringFormField::TYPE_CHECKBOX => array_merge($base, ['array']),
                 HiringFormField::TYPE_SELECT, HiringFormField::TYPE_RADIO => array_merge($base, ['string', 'max:255']),
@@ -290,7 +328,11 @@ class HiringFormService
             $payload['intro_video_path'] = $mapped['intro_video'];
         }
         if (array_key_exists('intro_video_url', $mapped)) {
-            $payload['intro_video_url'] = filled($mapped['intro_video_url']) ? trim((string) $mapped['intro_video_url']) : null;
+            $url = filled($mapped['intro_video_url']) ? trim((string) $mapped['intro_video_url']) : null;
+            if ($url && ! preg_match('#^https?://#i', $url)) {
+                $url = 'https://'.$url;
+            }
+            $payload['intro_video_url'] = $url;
         }
 
         $application->update($payload);

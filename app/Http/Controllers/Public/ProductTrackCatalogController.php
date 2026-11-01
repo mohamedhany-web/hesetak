@@ -65,6 +65,18 @@ class ProductTrackCatalogController extends Controller
                 ->orderByDesc('id')
                 ->paginate(12)
                 ->withQueryString();
+
+            // إن لم يُعلَّم أي كورس بهذا المسار، اعرض أحدث الكورسات النشطة حتى لا تبقى الصفحة فارغة بلا هدف.
+            if ($courses->total() === 0) {
+                $courses = AdvancedCourse::query()
+                    ->where('is_active', true)
+                    ->with(['instructor:id,name', 'courseCategory:id,name'])
+                    ->orderByDesc('is_featured')
+                    ->orderByDesc('id')
+                    ->paginate(12)
+                    ->withQueryString();
+                $showingFallback = true;
+            }
         }
 
         return view('public.product-track-catalog', [
@@ -76,10 +88,14 @@ class ProductTrackCatalogController extends Controller
             'heroTitle' => $isRtl ? $titleAr : $titleEn,
             'heroLead' => $isRtl ? $leadAr : $leadEn,
             'courses' => $courses,
+            'showingFallback' => $showingFallback ?? false,
             'upsellUrl' => route('public.pricing'),
             'libraryUrl' => \Illuminate\Support\Facades\Route::has('public.courses')
                 ? route('public.courses')
                 : url('/courses'),
+            'adminHintUrl' => \Illuminate\Support\Facades\Route::has('admin.advanced-courses.index')
+                ? route('admin.advanced-courses.index')
+                : null,
         ]);
     }
 }

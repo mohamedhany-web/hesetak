@@ -34,19 +34,9 @@ class PreventBrowserHtmlCache
             return $response;
         }
 
-        $path = '/'.ltrim($request->path(), '/');
-        $isPublicMarketing = ! $request->user()
-            && ! \App\Support\PublicSeo::isPrivatePath($path)
-            && $response->getStatusCode() === 200;
-
-        if ($isPublicMarketing) {
-            $response->headers->set('Cache-Control', 'public, max-age=300, stale-while-revalidate=60');
-            $response->headers->remove('Pragma');
-            $response->headers->remove('Expires');
-
-            return $response;
-        }
-
+        // صفحات التسويق فيها @auth في النافبار — الكاش العام بدون Vary: Cookie
+        // يجعل الطالب يرى أزرار «تسجيل دخول / إنشاء حساب» بعد تسجيل الدخول.
+        $response->headers->set('Vary', 'Cookie');
         $response->headers->set('Cache-Control', 'private, no-cache, no-store, must-revalidate, max-age=0');
         $response->headers->set('Pragma', 'no-cache');
         $response->headers->set('Expires', '0');

@@ -75,7 +75,8 @@ class ServicePackageController extends Controller
         $data['is_active'] = $request->boolean('is_active', true);
         $data['is_featured'] = $request->boolean('is_featured');
 
-        ServicePackage::create($data);
+        $package = ServicePackage::create($data);
+        $package->syncSubjectLinks($request->input('academic_subject_ids', array_filter([(int) ($data['academic_subject_id'] ?? 0)])));
         $this->bustStorefrontCache();
 
         return redirect()->route('admin.service-packages.index')->with('success', 'تم إنشاء باقة الخدمات.');
@@ -115,6 +116,7 @@ class ServicePackageController extends Controller
         $data['is_featured'] = $request->boolean('is_featured');
 
         $servicePackage->update($data);
+        $servicePackage->syncSubjectLinks($request->input('academic_subject_ids', array_filter([(int) ($data['academic_subject_id'] ?? 0)])));
         $this->bustStorefrontCache();
 
         return redirect()->route('admin.service-packages.index')->with('success', 'تم تحديث الباقة.');
@@ -389,6 +391,8 @@ class ServicePackageController extends Controller
             'tutoring_group_id' => ['nullable', 'exists:tutoring_groups,id'],
             'academic_year_id' => ['nullable', 'exists:academic_years,id'],
             'academic_subject_id' => ['nullable', 'exists:academic_subjects,id'],
+            'academic_subject_ids' => ['nullable', 'array'],
+            'academic_subject_ids.*' => ['integer', 'exists:academic_subjects,id'],
             'curriculum_type' => ['nullable', 'string', 'in:'.implode(',', HesetakMatchCatalog::allowedCurriculumTypeKeys() ?: ['__none__'])],
             'units_count' => ['required', 'integer', 'min:1', 'max:500'],
             'session_minutes' => ['nullable', 'integer', 'min:15', 'max:480'],

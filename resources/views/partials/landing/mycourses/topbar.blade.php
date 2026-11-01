@@ -53,8 +53,12 @@
               <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor" aria-hidden="true"><path d="M19.6 8.4a6.5 6.5 0 0 1-3.8-1.2v7.1a5.6 5.6 0 1 1-4.8-5.5v2.5a3.1 3.1 0 1 0 2.2 3v-11h2.5a4.1 4.1 0 0 0 3.9 3.8v2.3z"/></svg>
             @elseif(str_contains($social['icon'], 'telegram'))
               <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor" aria-hidden="true"><path d="M21.7 4.3 2.9 11.5c-1.3.5-1.3 1.2-.2 1.5l4.8 1.5 1.8 5.6c.2.7.4 1 1 .7l2.7-2.3 5.6 4.1c1 .6 1.8.3 2.1-.9L22.9 5.5c.3-1.3-.5-1.9-1.2-1.2z"/></svg>
+            @elseif(str_contains($social['icon'], 'snapchat'))
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor" aria-hidden="true"><path d="M12.05 2c-1.8 0-6.2.5-6.2 5.15 0 1.2.2 2.05-.55 2.95-.35.4-.2.75.2.7 1.05-.15 1.7.3 2.15 1.05.4.7 1.5 1.5 3.05 1.85v1.35c-.85.1-1.55.35-2.1.7-.85.55-1.05 1.3-.55 1.75.35.3.85.25 1.35 0 .45-.2.9-.3 1.4-.3.35 0 .7.05 1 .2.55.25 1.15.55 1.85.55s1.3-.3 1.85-.55c.3-.15.65-.2 1-.2.5 0 .95.1 1.4.3.5.25 1 .3 1.35 0 .5-.45.3-1.2-.55-1.75-.55-.35-1.25-.6-2.1-.7V13.7c1.55-.35 2.65-1.15 3.05-1.85.45-.75 1.1-1.2 2.15-1.05.4.05.55-.3.2-.7-.75-.9-.55-1.75-.55-2.95C18.25 2.5 13.85 2 12.05 2z"/></svg>
+            @elseif(str_contains($social['icon'], 'x-twitter') || str_contains($social['icon'], 'twitter'))
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor" aria-hidden="true"><path d="M18.9 2H22l-6.8 7.8L23 22h-6.2l-4.9-6.4L6.5 22H3.4l7.3-8.3L1 2h6.4l4.4 5.8L18.9 2zm-1.1 18h1.7L6.3 3.9H4.5L17.8 20z"/></svg>
             @else
-              <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor" aria-hidden="true"><path d="M18 3h-3a5 5 0 0 0-5 5v2H7v3h3v8h3v-8h3l1-3h-4V8a1 1 0 0 1 1-1h3z"/></svg>
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18"/></svg>
             @endif
           </a>
         @empty

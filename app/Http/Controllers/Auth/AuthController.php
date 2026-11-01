@@ -540,7 +540,9 @@ class AuthController extends Controller
                 ->active()
                 ->where(function ($q) use ($year) {
                     $q->whereNull('academic_year_id')
-                        ->orWhere('academic_year_id', $year->id);
+                        ->orWhere(function ($inner) use ($year) {
+                            $inner->forYear((int) $year->id);
+                        });
                 })
                 ->ordered()
                 ->get(['id', 'name'])

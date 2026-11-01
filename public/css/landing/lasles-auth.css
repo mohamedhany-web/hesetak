@@ -306,6 +306,17 @@ html[dir="rtl"] select.lasles-auth-input {
   color: var(--lasles-muted);
   line-height: 1.5;
 }
+.lasles-auth-linkbtn {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  color: var(--lasles-navy, #1E4E8C);
+  font: 600 .8rem/1.4 var(--lasles-font, inherit);
+  text-decoration: underline;
+  cursor: pointer;
+}
+.lasles-auth-linkbtn:hover { opacity: .85; }
 
 .lasles-auth-phone {
   display: grid;

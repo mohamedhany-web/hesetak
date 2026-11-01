@@ -1,4 +1,5 @@
 @php
+  $isRtl = $isRtl ?? (app()->getLocale() === 'ar');
   $fid = $field->id;
   $savedVal = $saved[(string) $fid]['value'] ?? null;
   if ($savedVal === null && $field->system_key) {
@@ -38,7 +39,10 @@
       <input class="mc-input" id="field_{{ $fid }}" type="date" name="answers[{{ $fid }}]" value="{{ $value }}" @if($field->is_required) required @endif>
       @break
     @case('url')
-      <input class="mc-input" id="field_{{ $fid }}" type="url" name="answers[{{ $fid }}]" value="{{ $value }}" @if($field->is_required) required @endif dir="ltr" placeholder="{{ $field->placeholder ?: 'https://' }}">
+      <input class="mc-input" id="field_{{ $fid }}" type="text" inputmode="url" name="answers[{{ $fid }}]" value="{{ $value }}" @if($field->is_required) required @endif dir="ltr" placeholder="{{ $field->placeholder ?: 'https://drive.google.com/...' }}">
+      @if(($field->system_key ?? $field->key ?? '') === 'intro_video_url' || str_contains((string) ($field->system_key ?? $field->key ?? ''), 'video'))
+        <p class="mc-ta-help">{{ $isRtl ? 'الصق رابط Google Drive أو YouTube هنا (ليس رفع ملف). تأكد أن الرابط عام لمن لديه الرابط.' : 'Paste a Google Drive or YouTube link here (not a file upload). Make sure the link is shareable.' }}</p>
+      @endif
       @break
     @case('select')
       <select class="mc-select" id="field_{{ $fid }}" name="answers[{{ $fid }}]" @if($field->is_required) required @endif>

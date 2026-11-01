@@ -37,6 +37,16 @@
       {{ $isRtl ? 'عنصر في هذا المسار' : 'items in this track' }}
     </p>
 
+    @if(!empty($showingFallback) && $courses->isNotEmpty())
+      <div class="mc-empty mc-empty--soft" style="margin-bottom:1rem;text-align:start">
+        <p>{{ $isRtl ? 'لا توجد كورسات موسومة كـ«مسجّلة» بعد — نعرض أحدث الكورسات النشطة. من لوحة الإدارة يمكن تحديد مسار المنتج = مسجّل.' : 'No courses tagged as recorded yet — showing latest active courses. Set product track = recorded in admin.' }}</p>
+        <div style="margin-top:.75rem;display:flex;flex-wrap:wrap;gap:.5rem">
+          <a href="{{ route('public.courses') }}" class="mc-btn mc-btn--sm mc-btn--primary">{{ $isRtl ? 'كل الكورسات المستقلة' : 'All independent courses' }}</a>
+          <a href="{{ $upsellUrl }}" class="mc-btn mc-btn--sm mc-btn--outline">{{ $isRtl ? 'باقات الحصص' : 'Lesson packages' }}</a>
+        </div>
+      </div>
+    @endif
+
     @if($courses->isNotEmpty())
       <div class="mc-catalog-grid">
         @foreach($courses as $course)

@@ -45,6 +45,8 @@ return [
     'parent_subjects_note' => 'يمكنك اختيار مواد اهتمام الأبناء الآن، وتعديلها لاحقاً لكل ابن من الملف.',
     'preferred_subjects' => 'المواد الدراسية',
     'preferred_subjects_hint' => 'اختر مادة أو أكثر تهمّك ضمن المرحلة.',
+    'preferred_subjects_select_all' => 'اختيار كل المواد',
+    'preferred_subjects_clear' => 'مسح الاختيار',
     'parent_subjects_hint' => 'اختر مواد اهتمام أبنائك ضمن المرحلة (يمكن تعديلها لاحقاً).',
     'reset_password_email_subject' => 'إعادة تعيين كلمة المرور',
     'reset_password_email_greeting' => 'مرحباً!',

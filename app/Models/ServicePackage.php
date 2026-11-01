@@ -5,7 +5,9 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 
 class ServicePackage extends Model
@@ -88,6 +90,23 @@ class ServicePackage extends Model
     public function academicSubject(): BelongsTo
     {
         return $this->belongsTo(AcademicSubject::class);
+    }
+
+    public function subjects(): BelongsToMany
+    {
+        return $this->belongsToMany(AcademicSubject::class, 'service_package_subjects');
+    }
+
+    public function syncSubjectLinks(array $subjectIds): void
+    {
+        $ids = array_values(array_unique(array_filter(array_map('intval', $subjectIds))));
+        if (Schema::hasTable('service_package_subjects')) {
+            $this->subjects()->sync($ids);
+        }
+        if ($ids !== []) {
+            $this->academic_subject_id = $ids[0];
+            $this->saveQuietly();
+        }
     }
 
     public function entitlements(): HasMany

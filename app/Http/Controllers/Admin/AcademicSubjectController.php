@@ -26,7 +26,7 @@ class AcademicSubjectController extends Controller
                     ->orderBy('title')
                     ->limit(4);
             }])
-            ->when($trackId, fn ($q) => $q->where('academic_year_id', $trackId))
+            ->when($trackId, fn ($q) => $q->forYear((int) $trackId))
             ->orderBy('academic_year_id')
             ->orderBy('order')
             ->orderBy('name')
@@ -63,7 +63,7 @@ class AcademicSubjectController extends Controller
                 'required',
                 'string',
                 'max:100',
-                Rule::unique('academic_subjects')->where(fn ($q) => $q->where('academic_year_id', $request->input('academic_year_id'))),
+                Rule::unique('academic_subjects', 'code'),
             ],
             'slug' => 'nullable|string|max:255|regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/|unique:academic_subjects,slug',
             'description' => 'nullable|string',
@@ -74,10 +74,13 @@ class AcademicSubjectController extends Controller
         ], [
             'name.required' => 'اسم المادة مطلوب',
             'code.required' => 'رمز المادة مطلوب',
-            'code.unique' => 'رمز المادة موجود مسبقاً في هذه السنة',
+            'code.unique' => 'رمز المادة مستخدم مسبقاً — اربط المادة بمراحل متعددة بدلاً من تكرارها',
         ]);
 
         $yearIds = array_values(array_unique(array_map('intval', $request->input('academic_year_ids', []))));
+        if ($yearIds === [] && $request->filled('academic_year_id')) {
+            $yearIds = [(int) $request->input('academic_year_id')];
+        }
         $yearId = $yearIds[0] ?? ($validated['academic_year_id'] ?? null);
         if ($yearId === '' || $yearId === null) {
             $yearId = null;
@@ -151,7 +154,7 @@ class AcademicSubjectController extends Controller
                 'required',
                 'string',
                 'max:100',
-                Rule::unique('academic_subjects')->where(fn ($q) => $q->where('academic_year_id', $request->input('academic_year_id')))->ignore($academicSubject->id),
+                Rule::unique('academic_subjects', 'code')->ignore($academicSubject->id),
             ],
             'slug' => [
                 'nullable',
@@ -168,10 +171,13 @@ class AcademicSubjectController extends Controller
         ], [
             'name.required' => 'اسم المادة مطلوب',
             'code.required' => 'رمز المادة مطلوب',
-            'code.unique' => 'رمز المادة موجود مسبقاً في هذه السنة',
+            'code.unique' => 'رمز المادة مستخدم مسبقاً — اربط المادة بمراحل متعددة بدلاً من تكرارها',
         ]);
 
         $yearIds = array_values(array_unique(array_map('intval', $request->input('academic_year_ids', []))));
+        if ($yearIds === [] && $request->filled('academic_year_id')) {
+            $yearIds = [(int) $request->input('academic_year_id')];
+        }
         $yearId = $yearIds[0] ?? ($validated['academic_year_id'] ?? null);
         if ($yearId === '' || $yearId === null) {
             $yearId = null;

@@ -172,9 +172,9 @@ class QualityControlController extends Controller
             ->orderByDesc('created_at')
             ->get();
 
-        // الواجبات (teacher_id)
+        // الواجبات (teacher_id) — لا توجد علاقة group على Assignment
         $assignments = Assignment::where('teacher_id', $instructor->id)
-            ->with(['course:id,title', 'group:id,name'])
+            ->with(['course:id,title'])
             ->orderByDesc('created_at')
             ->get();
 

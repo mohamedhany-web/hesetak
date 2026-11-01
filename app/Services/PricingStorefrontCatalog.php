@@ -99,8 +99,17 @@ class PricingStorefrontCatalog
         ];
     }
 
-    public function build(?int $yearId, ?int $subjectId, ?string $curriculumType): array
+    /**
+     * @param  list<int>  $subjectIds
+     */
+    public function build(?int $yearId, ?int $subjectId, ?string $curriculumType, array $subjectIds = []): array
     {
+        $subjectIds = array_values(array_unique(array_filter(array_map('intval', $subjectIds))));
+        if ($subjectId && ! in_array($subjectId, $subjectIds, true)) {
+            $subjectIds[] = $subjectId;
+        }
+        $subjectId = $subjectIds[0] ?? $subjectId;
+
         $catalog = $this->catalogFilter->catalog(
             yearId: $yearId,
             subjectId: $subjectId,
@@ -125,11 +134,10 @@ class PricingStorefrontCatalog
         $catalog['subjects'] = $this->subjectsForStage(
             $catalog['selected_year_id'] ? (int) $catalog['selected_year_id'] : null
         );
-        if ($subjectId && ! $catalog['subjects']->contains('id', $subjectId)) {
-            $catalog['selected_subject_id'] = null;
-        } else {
-            $catalog['selected_subject_id'] = $subjectId;
-        }
+        $validSubjectIds = $catalog['subjects']->pluck('id')->map(fn ($id) => (int) $id)->all();
+        $subjectIds = array_values(array_intersect($subjectIds, $validSubjectIds));
+        $catalog['selected_subject_ids'] = $subjectIds;
+        $catalog['selected_subject_id'] = $subjectIds[0] ?? null;
 
         $standardRule = $this->standardRule();
         $urgentRule = $this->urgentRule();
@@ -174,12 +182,7 @@ class PricingStorefrontCatalog
 
         return AcademicSubject::query()
             ->active()
-            ->where(function ($q) use ($yearId) {
-                $q->where('academic_year_id', $yearId);
-                if (Schema::hasTable('academic_subject_years')) {
-                    $q->orWhereHas('years', fn ($yq) => $yq->where('academic_years.id', $yearId));
-                }
-            })
+            ->forYear($yearId)
             ->ordered()
             ->get(['id', 'name', 'slug', 'academic_year_id', 'icon']);
     }
@@ -502,13 +505,21 @@ class PricingStorefrontCatalog
         $yearId = $catalog['selected_year_id'] ? (int) $catalog['selected_year_id'] : null;
         $track = $catalog['selected_curriculum_type'] ?? null;
         $selSubject = $catalog['selected_subject_id'] ? (int) $catalog['selected_subject_id'] : null;
+        $selSubjects = collect($catalog['selected_subject_ids'] ?? [])
+            ->map(fn ($id) => (int) $id)
+            ->filter(fn ($id) => $id > 0)
+            ->unique()
+            ->values();
+        if ($selSubject && $selSubjects->isEmpty()) {
+            $selSubjects = collect([$selSubject]);
+        }
 
         $cards = [];
 
-        // طريقة معلمي: بطاقة لكل مادة تحت المرحلة المختارة
+        // طريقة معلمي: بطاقة لكل مادة تحت المرحلة المختارة (مع دعم اختيار متعدد)
         if ($subjects->isNotEmpty()) {
-            $subjectList = $selSubject
-                ? $subjects->where('id', $selSubject)->values()
+            $subjectList = $selSubjects->isNotEmpty()
+                ? $subjects->whereIn('id', $selSubjects->all())->values()
                 : $subjects->sortBy(fn ($s) => mb_strtolower((string) $s->name), SORT_NATURAL)->values();
 
             foreach ($subjectList as $subject) {

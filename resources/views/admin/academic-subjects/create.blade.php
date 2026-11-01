@@ -56,23 +56,17 @@
             </div>
             <div class="grid grid-cols-1 gap-4 p-4 sm:grid-cols-2 sm:p-5">
                 <div class="sm:col-span-2">
-                    <label class="{{ $labelClass }}" for="academic_year_id">المرحلة الدراسية <span class="font-normal text-muted">(اختياري)</span></label>
-                    <select name="academic_year_id" id="academic_year_id" class="{{ $fieldClass }}">
-                        <option value="">— مادة عامة (بدون سنة) —</option>
+                    <label class="{{ $labelClass }}">المراحل الدراسية (يمكن اختيار أكثر من مرحلة)</label>
+                    @php $oldYears = array_map('strval', old('academic_year_ids', $selectedTrack ? [(string) $selectedTrack] : [])); @endphp
+                    <div class="grid gap-2 rounded-xl border border-line bg-canvas/40 p-3 sm:grid-cols-2">
                         @foreach($academicYears as $year)
-                            <option value="{{ $year->id }}" @selected((string) old('academic_year_id', $selectedTrack) === (string) $year->id)>{{ $year->name }}</option>
+                            <label class="inline-flex items-center gap-2 text-sm text-ink">
+                                <input type="checkbox" name="academic_year_ids[]" value="{{ $year->id }}" class="rounded border-line" @checked(in_array((string) $year->id, $oldYears, true))>
+                                <span>{{ $year->name }}</span>
+                            </label>
                         @endforeach
-                    </select>
-                    <p class="mt-1 text-xs text-muted">السنة الأولى في القائمة التالية تُستخدم كمرحلة أساسية (للتوافق مع السابق).</p>
-                </div>
-                <div class="sm:col-span-2">
-                    <label class="{{ $labelClass }}" for="academic_year_ids">مراحل إضافية (متعدد)</label>
-                    <select name="academic_year_ids[]" id="academic_year_ids" class="{{ $fieldClass }}" multiple size="6">
-                        @php $oldYears = array_map('strval', old('academic_year_ids', $selectedTrack ? [(string) $selectedTrack] : [])); @endphp
-                        @foreach($academicYears as $year)
-                            <option value="{{ $year->id }}" @selected(in_array((string) $year->id, $oldYears, true))>{{ $year->name }}</option>
-                        @endforeach
-                    </select>
+                    </div>
+                    <p class="mt-1 text-xs text-muted">اختر كل المراحل التي تُدرَّس فيها نفس المادة دون إنشاء صفوف مكررة.</p>
                 </div>
                 <div>
                     <label class="{{ $labelClass }}" for="name">اسم المادة <span class="text-danger">*</span></label>

@@ -106,7 +106,7 @@
                     <p class="mt-1 text-[11px] text-muted">يُستخدم عند وجود فلتر منهج في الكتالوج.</p>
                 </div>
                 <div>
-                    <label class="{{ $labelClass }}" for="academic_subject_id">المادة الدراسية (بطاقة الموقع)</label>
+                    <label class="{{ $labelClass }}" for="academic_subject_id">المادة الأساسية (بطاقة الموقع)</label>
                     <select id="academic_subject_id" name="academic_subject_id" class="{{ $fieldClass }}">
                         <option value="">— بدون ربط / عامة —</option>
                         @foreach($subjects as $subject)
@@ -120,6 +120,24 @@
                         @endforeach
                     </select>
                     <p class="mt-1 text-[11px] text-muted">بعد اختيار المرحلة تظهر موادها فقط — نفس شرائح المواد في الموقع.</p>
+                </div>
+                <div class="sm:col-span-2">
+                    <label class="{{ $labelClass }}">مواد إضافية داخل الباقة (متعدد)</label>
+                    @php
+                        $pkgSubjectIds = old('academic_subject_ids', $package->relationLoaded('subjects')
+                            ? $package->subjects->pluck('id')->all()
+                            : ($package->subjects()->pluck('academic_subjects.id')->all() ?: array_filter([(int) $package->academic_subject_id])));
+                        $pkgSubjectIds = array_map('strval', $pkgSubjectIds);
+                    @endphp
+                    <div class="grid max-h-48 gap-2 overflow-auto rounded-xl border border-line bg-canvas/40 p-3 sm:grid-cols-2">
+                        @foreach($subjects as $subject)
+                            <label class="inline-flex items-center gap-2 text-sm text-ink">
+                                <input type="checkbox" name="academic_subject_ids[]" value="{{ $subject->id }}" class="rounded border-line" @checked(in_array((string) $subject->id, $pkgSubjectIds, true))>
+                                <span>{{ $subject->name }}</span>
+                            </label>
+                        @endforeach
+                    </div>
+                    <p class="mt-1 text-[11px] text-muted">فعّل أكثر من مادة إن كانت الباقة تشمل عدة مواد — يظهر للطالب اختيار متعدد في واجهة الباقات.</p>
                 </div>
                 <div>
                     <label class="{{ $labelClass }}" for="tutoring_group_id">مجموعة مخصصة (اختياري)</label>
