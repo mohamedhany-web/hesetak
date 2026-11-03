@@ -29,8 +29,12 @@ class PackageBookingController extends Controller
     {
         abort_unless($servicePackage->is_active && ! $servicePackage->tutoring_group_id, 404);
 
-        $yearId = $request->filled('year') ? $request->integer('year') : ($servicePackage->academic_year_id ? (int) $servicePackage->academic_year_id : null);
-        $subjectId = $request->filled('subject') ? $request->integer('subject') : ($servicePackage->academic_subject_id ? (int) $servicePackage->academic_subject_id : null);
+        $yearId = $request->filled('year')
+            ? $request->integer('year')
+            : ($servicePackage->academic_year_id ? (int) $servicePackage->academic_year_id : null);
+        $subjectId = $request->filled('subject')
+            ? $request->integer('subject')
+            : ($servicePackage->academic_subject_id ? (int) $servicePackage->academic_subject_id : null);
         $curriculum = trim((string) $request->query('curriculum', $servicePackage->curriculum_type ?? ''));
 
         $years = Schema::hasTable('academic_years')
@@ -40,50 +44,17 @@ class PackageBookingController extends Controller
             ? AcademicSubject::query()->active()->when($yearId, fn ($q) => $q->forYear($yearId))->ordered()->get(['id', 'name', 'slug'])
             : collect();
 
-        $query = PublicInstructorDirectory::approvedActiveQuery()
-            ->with(['user:'.implode(',', PublicInstructorDirectory::userSelect())]);
-
-        if ($subjectId && Schema::hasColumn('instructor_profiles', 'teaching_subject_ids')) {
-            $subject = AcademicSubject::query()->find($subjectId);
-            $related = AcademicSubjectMatcher::idsForSkill(
-                (string) ($subject?->slug ?: $subject?->name ?: (string) $subjectId),
-                $yearId
-            );
-            if ($related->isEmpty()) {
-                $related = collect([(int) $subjectId]);
-            }
-            $query->where(function ($q) use ($related) {
-                foreach ($related as $sid) {
-                    $q->orWhereJsonContains('instructor_profiles.teaching_subject_ids', (int) $sid)
-                        ->orWhereJsonContains('instructor_profiles.teaching_subject_ids', (string) $sid);
-                }
-            });
+        $profiles = $this->teacherProfilesForBooking($yearId, $subjectId, $curriculum);
+        // إن ضيّقت المرحلة/المادة القائمة إلى صفر: وسّع تدريجياً حتى تظهر المعلمون المتاحون
+        if ($profiles->isEmpty() && $yearId) {
+            $profiles = $this->teacherProfilesForBooking(null, $subjectId, $curriculum);
         }
-
-        if ($yearId) {
-            $query->whereHas('user', function ($u) use ($yearId) {
-                $u->whereHas('teachingLearningPaths', fn ($y) => $y->where('academic_years.id', $yearId));
-            });
+        if ($profiles->isEmpty() && $subjectId) {
+            $profiles = $this->teacherProfilesForBooking(null, null, $curriculum);
         }
-
-        $profiles = $query->limit(48)->get()
-            ->filter(fn ($p) => PublicInstructorDirectory::isPublishableListing($p))
-            ->when($curriculum !== '', function ($collection) use ($curriculum) {
-                return $collection->filter(function ($p) use ($curriculum) {
-                    $hay = implode(' ', [
-                        (string) ($p->headline ?? ''),
-                        (string) ($p->skills ?? ''),
-                        (string) ($p->bio ?? ''),
-                    ]);
-
-                    return HesetakMatchCatalog::profileMatchesCurriculumType(
-                        method_exists($p, 'curriculumTypeKeys') ? $p->curriculumTypeKeys() : null,
-                        $curriculum,
-                        $hay
-                    );
-                });
-            })
-            ->values();
+        if ($profiles->isEmpty() && $curriculum !== '') {
+            $profiles = $this->teacherProfilesForBooking(null, null, '');
+        }
 
         $weeklyOptions = CustomServicePackagePricingService::PRIVATE_WEEKLY_OPTIONS;
         $termOptions = CustomServicePackagePricingService::PRIVATE_TERM_MONTHS;
@@ -287,5 +258,56 @@ class PackageBookingController extends Controller
             'subject' => $first['subject_id'] ?? null,
             'sessions' => $first['sessions'] ?? null,
         ]));
+    }
+
+    /**
+     * @return \Illuminate\Support\Collection<int, \App\Models\InstructorProfile>
+     */
+    protected function teacherProfilesForBooking(?int $yearId, ?int $subjectId, string $curriculum)
+    {
+        $query = PublicInstructorDirectory::approvedActiveQuery()
+            ->with(['user:'.implode(',', PublicInstructorDirectory::userSelect())]);
+
+        if ($subjectId && Schema::hasColumn('instructor_profiles', 'teaching_subject_ids')) {
+            $subject = AcademicSubject::query()->find($subjectId);
+            $related = AcademicSubjectMatcher::idsForSkill(
+                (string) ($subject?->slug ?: $subject?->name ?: (string) $subjectId),
+                $yearId
+            );
+            if ($related->isEmpty()) {
+                $related = collect([(int) $subjectId]);
+            }
+            $query->where(function ($q) use ($related) {
+                foreach ($related as $sid) {
+                    $q->orWhereJsonContains('instructor_profiles.teaching_subject_ids', (int) $sid)
+                        ->orWhereJsonContains('instructor_profiles.teaching_subject_ids', (string) $sid);
+                }
+            });
+        }
+
+        if ($yearId) {
+            $query->whereHas('user', function ($u) use ($yearId) {
+                $u->whereHas('teachingLearningPaths', fn ($y) => $y->where('academic_years.id', $yearId));
+            });
+        }
+
+        return $query->limit(48)->get()
+            ->filter(fn ($p) => PublicInstructorDirectory::isPublishableListing($p))
+            ->when($curriculum !== '', function ($collection) use ($curriculum) {
+                return $collection->filter(function ($p) use ($curriculum) {
+                    $hay = implode(' ', [
+                        (string) ($p->headline ?? ''),
+                        (string) ($p->skills ?? ''),
+                        (string) ($p->bio ?? ''),
+                    ]);
+
+                    return HesetakMatchCatalog::profileMatchesCurriculumType(
+                        method_exists($p, 'curriculumTypeKeys') ? $p->curriculumTypeKeys() : null,
+                        $curriculum,
+                        $hay
+                    );
+                });
+            })
+            ->values();
     }
 }
