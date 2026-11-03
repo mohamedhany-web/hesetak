@@ -12,8 +12,19 @@
     $isRtl = app()->getLocale() === 'ar';
     $locale = app()->getLocale();
     $viewerTz = $viewerTz ?? auth()->user()?->timezoneCode() ?? \App\Support\AppTimezone::academy();
+    $academyTz = $academyTz ?? \App\Support\AppTimezone::academy();
     $fcLocale = $isRtl ? 'ar' : 'en';
-    $upcoming = collect($events ?? [])->filter(fn ($e) => ($e->start_date ?? now()) >= now())->take(12);
+    $upcoming = collect($events ?? [])->filter(function ($e) {
+        $start = $e->start_date ?? null;
+        if (! $start) {
+            return false;
+        }
+        $ts = $start instanceof \Carbon\CarbonInterface
+            ? $start->copy()->utc()
+            : \Carbon\Carbon::parse($start)->utc();
+
+        return $ts->gte(now('UTC'));
+    })->take(12);
     $next = $upcoming->first();
     $privateHref = Route::has('instructor.one-to-one-sessions.index')
         ? route('instructor.one-to-one-sessions.index')
@@ -24,6 +35,16 @@
 @endphp
 
 <div class="id-page">
+    <p class="id-hero__meta" style="margin-bottom:.75rem">
+        <i class="fas fa-globe" aria-hidden="true"></i>
+        {{ $isRtl ? 'عرض الأوقات بتوقيتك:' : 'Times shown in your zone:' }}
+        <strong>{{ \App\Support\AppTimezone::label($viewerTz) }}</strong>
+        @if($academyTz !== $viewerTz)
+            · {{ $isRtl ? 'توقيت الأكاديمية:' : 'Academy zone:' }}
+            {{ \App\Support\AppTimezone::label($academyTz) }}
+        @endif
+        — {{ $isRtl ? 'عدّل منطقتك من الملف الشخصي إن ظهر فرق ساعات.' : 'Update your profile timezone if hours look shifted.' }}
+    </p>
     @if($next)
         <section class="id-hero" aria-label="{{ __('instructor.upcoming') }}">
             <div class="id-hero__copy">

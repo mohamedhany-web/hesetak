@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Student;
 
 use App\Http\Controllers\Controller;
+use App\Support\AttachesCourseCurriculumItems;
 use App\Models\LectureMaterial;
 use App\Models\LectureVideoQuestion;
 use App\Models\LectureVideoQuestionAnswer;
@@ -75,6 +76,8 @@ class MyCourseController extends Controller
             ])
             ->findOrFail($courseId);
 
+        AttachesCourseCurriculumItems::syncCourseContent((int) $course->id);
+
         // جلب الأقسام مع العناصر مرتبة
         $sections = $course->activeSections()
             ->with(['activeItems' => function ($query) {
@@ -98,6 +101,10 @@ class MyCourseController extends Controller
                 } elseif ($entity instanceof \App\Models\Assignment) {
                     $entity->load(['submissions' => function ($q) use ($user) {
                         $q->where('student_id', $user->id);
+                    }]);
+                } elseif ($entity instanceof \App\Models\Lecture) {
+                    $entity->load(['watchProgress' => function ($q) use ($user) {
+                        $q->where('user_id', $user->id);
                     }]);
                 }
             }
@@ -148,6 +155,8 @@ class MyCourseController extends Controller
                 },
             ])
             ->findOrFail($courseId);
+
+        AttachesCourseCurriculumItems::syncCourseContent((int) $course->id);
 
         // جلب الدرس إذا تم تمرير lesson_id
         $lesson = null;

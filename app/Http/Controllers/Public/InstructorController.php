@@ -15,6 +15,7 @@ use App\Models\User;
 use App\Services\OneToOneAvailabilityService;
 use App\Services\PublicInstructorDirectory;
 use App\Services\StudentEntitlementService;
+use App\Support\AcademicSubjectMatcher;
 use App\Support\HesetakMatchCatalog;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -107,17 +108,10 @@ class InstructorController extends Controller
 
         if ($q !== '') {
             $like = '%'.$q.'%';
-            $matchedSearchSubjectIds = collect();
-            if (Schema::hasTable('academic_subjects')) {
-                $matchedSearchSubjectIds = AcademicSubject::query()
-                    ->active()
-                    ->where(function ($s) use ($like, $q) {
-                        $s->where('name', 'like', $like)
-                            ->orWhere('slug', 'like', $like)
-                            ->orWhere('name', $q);
-                    })
-                    ->pluck('id');
-            }
+            $matchedSearchSubjectIds = AcademicSubjectMatcher::idsMatchingSearch(
+                $q,
+                $stageYear ? (int) $stageYear->id : null
+            );
             $query->where(function ($inner) use ($like, $matchedSearchSubjectIds) {
                 $inner->where('instructor_profiles.headline', 'like', $like)
                     ->orWhere('instructor_profiles.bio', 'like', $like)
@@ -134,25 +128,10 @@ class InstructorController extends Controller
         }
 
         if ($skill !== '') {
-            $matchedSubjectIds = collect();
-            if (Schema::hasTable('academic_subjects')) {
-                $subjectMatch = AcademicSubject::query()->active();
-                if ($stageYear) {
-                    $subjectMatch->forYear((int) $stageYear->id);
-                } else {
-                    $subjectMatch->where(function ($q) {
-                        $q->whereNull('academic_year_id')
-                            ->orWhereHas('academicYear', fn ($y) => $y->publicCatalog());
-                    });
-                }
-                $matchedSubjectIds = $subjectMatch
-                    ->where(function ($s) use ($skill) {
-                        $s->where('slug', $skill)
-                            ->orWhere('id', ctype_digit($skill) ? (int) $skill : 0)
-                            ->orWhere('name', $skill);
-                    })
-                    ->pluck('id');
-            }
+            $matchedSubjectIds = AcademicSubjectMatcher::idsForSkill(
+                $skill,
+                $stageYear ? (int) $stageYear->id : null
+            );
 
             $query->where(function ($inner) use ($matchedSubjectIds, $skill) {
                 if ($matchedSubjectIds->isNotEmpty() && Schema::hasColumn('instructor_profiles', 'teaching_subject_ids')) {

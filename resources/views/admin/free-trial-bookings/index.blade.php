@@ -47,6 +47,52 @@
         </div>
     @endif
 
+    <section class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
+        <div class="flex flex-wrap items-center gap-3 border-b border-line bg-canvas/60 px-5 py-4">
+            <div class="inline-flex size-9 items-center justify-center rounded-xl bg-accent-soft text-accent"><i class="fas fa-coins text-sm"></i></div>
+            <div>
+                <h3 class="text-sm font-semibold text-ink">حد رصيد الحصص التجريبية</h3>
+                <p class="text-xs text-muted">يُطبَّق عند حجز الطالب من الموقع. الافتراضي لكل طالب، ويمكن رفع الحد حسب الباقة.</p>
+            </div>
+        </div>
+        <form method="post" action="{{ route('admin.free-trial-bookings.credits') }}" class="space-y-4 p-5 sm:p-6">
+            @csrf
+            @method('PUT')
+            <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                <label class="block">
+                    <span class="{{ $labelClass }}">الحد الافتراضي لكل طالب</span>
+                    <input type="number" min="0" max="50" name="default_limit" value="{{ old('default_limit', $trialCreditDefault ?? 1) }}" class="{{ $fieldClass }}" required>
+                </label>
+            </div>
+            @if(!empty($trialCreditPackages))
+                <div class="overflow-x-auto rounded-xl border border-line">
+                    <table class="min-w-full text-sm">
+                        <thead class="bg-canvas/80 text-xs text-muted">
+                            <tr>
+                                <th class="px-3 py-2 text-start font-medium">الباقة</th>
+                                <th class="px-3 py-2 text-start font-medium">حد التجريبي (اتركه فارغاً = الافتراضي)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($trialCreditPackages as $pkgRow)
+                                <tr class="border-t border-line">
+                                    <td class="px-3 py-2 text-ink">{{ $pkgRow['name'] }}</td>
+                                    <td class="px-3 py-2">
+                                        <input type="number" min="0" max="50" name="package_limits[{{ $pkgRow['id'] }}]" value="{{ old('package_limits.'.$pkgRow['id'], $pkgRow['limit']) }}" class="{{ $fieldClass }}" placeholder="{{ $trialCreditDefault ?? 1 }}">
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            @endif
+            <button type="submit" class="btn-press inline-flex h-10 items-center gap-2 rounded-xl bg-accent px-5 text-sm font-medium text-white">
+                <i class="fas fa-save text-xs"></i>
+                حفظ حدود الرصيد
+            </button>
+        </form>
+    </section>
+
     <section class="admin-kpi-grid grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 2xl:grid-cols-9">
         @foreach($kpis as $kpi)
             <article class="rounded-2xl border border-line bg-surface p-4 shadow-soft">

@@ -658,7 +658,12 @@ class PricingStorefrontCatalog
     {
         $query = ServicePackage::query()
             ->storefront()
-            ->where('academic_subject_id', $subjectId);
+            ->where(function ($q) use ($subjectId) {
+                $q->where('academic_subject_id', $subjectId);
+                if (Schema::hasTable('service_package_subjects')) {
+                    $q->orWhereHas('subjects', fn ($s) => $s->where('academic_subjects.id', $subjectId));
+                }
+            });
 
         if ($yearId) {
             $query->where(function ($inner) use ($yearId) {

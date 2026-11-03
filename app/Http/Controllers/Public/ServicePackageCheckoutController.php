@@ -14,8 +14,10 @@ use App\Services\FawaterakApiService;
 use App\Services\FawaterakService;
 use App\Services\PaymentGatewaySettings;
 use App\Services\PricingStorefrontCatalog;
+use App\Services\PublicInstructorDirectory;
 use App\Services\PublicMediaStorage;
 use App\Services\StudentEntitlementService;
+use App\Support\AcademicSubjectMatcher;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -107,37 +109,56 @@ class ServicePackageCheckoutController extends Controller
     {
         abort_unless($servicePackage->is_active && ! $servicePackage->tutoring_group_id, 404);
 
-        $servicePackage->load(['academicYear:id,name', 'academicSubject:id,name']);
+        $servicePackage->load(['academicYear:id,name', 'academicSubject:id,name,slug']);
         if (Schema::hasTable('service_package_subjects')) {
             $servicePackage->load(['subjects:id,name,slug']);
-        }
-
-        $subjects = $servicePackage->relationLoaded('subjects') && $servicePackage->subjects->isNotEmpty()
-            ? $servicePackage->subjects
-            : collect(array_filter([$servicePackage->academicSubject]));
-
-        $subjectIds = $subjects->pluck('id')->map(fn ($id) => (int) $id)->filter()->values();
-        $teachersBySubject = [];
-        if ($subjectIds->isNotEmpty() && Schema::hasTable('instructor_profiles')) {
-            foreach ($subjects as $subject) {
-                $sid = (int) $subject->id;
-                $query = \App\Services\PublicInstructorDirectory::approvedActiveQuery()
-                    ->with(['user:'.implode(',', \App\Services\PublicInstructorDirectory::userSelect())]);
-                if (Schema::hasColumn('instructor_profiles', 'teaching_subject_ids')) {
-                    $query->where(function ($q) use ($sid) {
-                        $q->whereJsonContains('instructor_profiles.teaching_subject_ids', $sid)
-                            ->orWhereJsonContains('instructor_profiles.teaching_subject_ids', (string) $sid);
-                    });
-                }
-                $teachersBySubject[$sid] = $query->limit(8)->get()
-                    ->filter(fn ($p) => \App\Services\PublicInstructorDirectory::isPublishableListing($p))
-                    ->values();
-            }
         }
 
         $yearId = request()->filled('year')
             ? request()->integer('year')
             : ($servicePackage->academic_year_id ? (int) $servicePackage->academic_year_id : null);
+
+        $subjects = $servicePackage->relationLoaded('subjects') && $servicePackage->subjects->isNotEmpty()
+            ? $servicePackage->subjects
+            : collect(array_filter([$servicePackage->academicSubject]));
+
+        // باقة عامة: اعرض مواد المرحلة ليختار الطالب منها قبل الدفع
+        if ($subjects->isEmpty() && $yearId && Schema::hasTable('academic_subjects')) {
+            $subjects = AcademicSubject::query()
+                ->active()
+                ->forYear($yearId)
+                ->ordered()
+                ->limit(24)
+                ->get(['id', 'name', 'slug']);
+        }
+
+        $teachersBySubject = [];
+        if ($subjects->isNotEmpty() && Schema::hasTable('instructor_profiles')) {
+            foreach ($subjects as $subject) {
+                $sid = (int) $subject->id;
+                $relatedIds = AcademicSubjectMatcher::idsForSkill(
+                    (string) ($subject->slug ?: $subject->name),
+                    $yearId
+                );
+                if ($relatedIds->isEmpty()) {
+                    $relatedIds = collect([$sid]);
+                }
+                $query = PublicInstructorDirectory::approvedActiveQuery()
+                    ->with(['user:'.implode(',', PublicInstructorDirectory::userSelect())]);
+                if (Schema::hasColumn('instructor_profiles', 'teaching_subject_ids')) {
+                    $query->where(function ($q) use ($relatedIds) {
+                        foreach ($relatedIds as $rid) {
+                            $q->orWhereJsonContains('instructor_profiles.teaching_subject_ids', (int) $rid)
+                                ->orWhereJsonContains('instructor_profiles.teaching_subject_ids', (string) $rid);
+                        }
+                    });
+                }
+                $teachersBySubject[$sid] = $query->limit(8)->get()
+                    ->filter(fn ($p) => PublicInstructorDirectory::isPublishableListing($p))
+                    ->values();
+            }
+        }
+
         $subjectId = request()->filled('subject')
             ? request()->integer('subject')
             : ($servicePackage->academic_subject_id ? (int) $servicePackage->academic_subject_id : null);
@@ -154,6 +175,7 @@ class ServicePackageCheckoutController extends Controller
             'subjects' => $subjects,
             'teachersBySubject' => $teachersBySubject,
             'checkoutUrl' => $checkoutUrl,
+            'yearId' => $yearId,
             'mcActive' => 'pricing',
             'bodyClass' => 'mc-body--dir',
             'pageTitle' => $servicePackage->name.' — '.__('landing.nav.brand'),
@@ -220,10 +242,38 @@ class ServicePackageCheckoutController extends Controller
         $isUrgent = request()->boolean('urgent') || request()->query('urgent') === '1';
         $quotedSessions = request()->filled('sessions') ? request()->integer('sessions') : null;
 
+        $selectedSubjectIds = collect(request()->input('subjects', []))
+            ->map(fn ($id) => (int) $id)
+            ->filter()
+            ->unique()
+            ->values();
+        if ($selectedSubjectIds->isEmpty() && $subjectId) {
+            $selectedSubjectIds = collect([(int) $subjectId]);
+        }
+        $teacherFor = collect(request()->input('teacher_for', []))
+            ->mapWithKeys(fn ($tid, $sid) => [(int) $sid => (int) $tid])
+            ->filter(fn ($tid) => $tid > 0);
+        $scheduleNotes = trim((string) request()->input('schedule_notes', ''));
+        $bookingPrefs = [
+            'subjects' => $selectedSubjectIds->all(),
+            'teachers' => $teacherFor->all(),
+            'schedule_notes' => $scheduleNotes !== '' ? $scheduleNotes : null,
+        ];
+        session([
+            'package_checkout_prefs.'.$servicePackage->id => $bookingPrefs,
+        ]);
+
+        $selectedSubjects = $selectedSubjectIds->isNotEmpty() && Schema::hasTable('academic_subjects')
+            ? AcademicSubject::query()->whereIn('id', $selectedSubjectIds)->get(['id', 'name'])
+            : collect();
+        $selectedTeachers = $teacherFor->isNotEmpty()
+            ? \App\Models\User::query()->whereIn('id', $teacherFor->values())->get(['id', 'name'])->keyBy('id')
+            : collect();
+
         $checkoutQuote = app(PricingStorefrontCatalog::class)->quoteForCheckout(
             $servicePackage,
             $yearId,
-            $subjectId,
+            $subjectId ?: ($selectedSubjectIds->first() ?: null),
             $isUrgent,
             $quotedSessions,
         );
@@ -233,6 +283,10 @@ class ServicePackageCheckoutController extends Controller
             'indexable' => false,
             'isUrgent' => $isUrgent,
             'checkoutQuote' => $checkoutQuote,
+            'bookingPrefs' => $bookingPrefs,
+            'selectedSubjects' => $selectedSubjects,
+            'selectedTeachers' => $selectedTeachers,
+            'teacherFor' => $teacherFor,
             'fawaterakUseGateway' => $fawaterakUseGateway,
             'fawaterakMisconfigured' => $fawaterakMisconfigured,
             'fawaterakIntegration' => $fawaterakIntegration,
@@ -492,7 +546,7 @@ class ServicePackageCheckoutController extends Controller
                 'academic_subject_id' => $subjectId ?: ($meta['academic_subject_id'] ?? $servicePackage->academic_subject_id),
                 'quote_source' => $quote['source'],
                 'is_gift' => false,
-            ]);
+            ], $this->bookingPrefsFromSession((int) $servicePackage->id));
             $original = $servicePackage->original_price !== null
                 ? (float) $servicePackage->original_price
                 : (float) $quote['total'];
@@ -513,6 +567,11 @@ class ServicePackageCheckoutController extends Controller
                 'academic_subject_id' => $subjectId,
                 'curriculum_type' => is_string($curriculumType) ? $curriculumType : null,
             ]);
+            $prefs = $this->bookingPrefsFromSession((int) $servicePackage->id);
+            if ($prefs !== []) {
+                $meta = is_array($order->custom_package_data) ? $order->custom_package_data : [];
+                $order->update(['custom_package_data' => array_merge($meta, $prefs)]);
+            }
         }
 
         $request->session()->put('fawaterak_order_id', $order->id);
@@ -922,5 +981,35 @@ class ServicePackageCheckoutController extends Controller
         }
 
         return $order;
+    }
+
+    /**
+     * @return array{booking_subjects?: list<int>, booking_teachers?: array<int, int>, schedule_notes?: string}
+     */
+    private function bookingPrefsFromSession(int $packageId): array
+    {
+        $prefs = session('package_checkout_prefs.'.$packageId);
+        if (! is_array($prefs)) {
+            return [];
+        }
+
+        $out = [];
+        $subjects = collect($prefs['subjects'] ?? [])->map(fn ($id) => (int) $id)->filter()->unique()->values()->all();
+        if ($subjects !== []) {
+            $out['booking_subjects'] = $subjects;
+        }
+        $teachers = collect($prefs['teachers'] ?? [])
+            ->mapWithKeys(fn ($tid, $sid) => [(int) $sid => (int) $tid])
+            ->filter(fn ($tid) => $tid > 0)
+            ->all();
+        if ($teachers !== []) {
+            $out['booking_teachers'] = $teachers;
+        }
+        $notes = trim((string) ($prefs['schedule_notes'] ?? ''));
+        if ($notes !== '') {
+            $out['schedule_notes'] = Str::limit($notes, 1000);
+        }
+
+        return $out;
     }
 }

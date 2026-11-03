@@ -56,31 +56,85 @@
         @endforeach
         </div>
       </div>
+      <style>
+        [data-mc-quotes-carousel] { position: relative; overflow: hidden; }
+        [data-mc-quotes-carousel] .mc-quotes-carousel__track {
+          display: flex;
+          gap: 1rem;
+          transition: transform .45s ease;
+          will-change: transform;
+        }
+        [data-mc-quotes-carousel] .mc-quotes-carousel__slide {
+          flex: 0 0 min(100%, 22rem);
+          max-width: min(100%, 22rem);
+        }
+        [data-mc-quotes-carousel] .mc-quotes-carousel__nav {
+          display: flex; gap: .5rem; justify-content: center; margin-top: 1rem;
+        }
+        [data-mc-quotes-carousel] .mc-quotes-carousel__nav button {
+          inline-size: 2.25rem; block-size: 2.25rem; border-radius: 999px;
+          border: 1px solid color-mix(in srgb, var(--mc-ink, #0b1b33) 18%, transparent);
+          background: var(--mc-surface, #fff); cursor: pointer;
+        }
+      </style>
       <script>
       (function () {
         var root = document.querySelector('[data-mc-quotes-carousel]');
         if (!root) return;
         var track = root.querySelector('.mc-quotes-carousel__track');
         if (!track) return;
-        var slides = track.querySelectorAll('.mc-quotes-carousel__slide');
+        var slides = Array.prototype.slice.call(track.querySelectorAll('.mc-quotes-carousel__slide'));
         if (slides.length < 2) return;
         var index = 0;
         var paused = false;
-        function scrollToIndex(i) {
-          index = (i + slides.length) % slides.length;
-          var slide = slides[index];
-          if (!slide) return;
-          try {
-            slide.scrollIntoView({ behavior: 'smooth', inline: 'start', block: 'nearest' });
-          } catch (e) {
-            track.scrollLeft = slide.offsetLeft - track.offsetLeft;
-          }
+        var resumeTimer = null;
+        var isRtl = (document.documentElement.getAttribute('dir') || getComputedStyle(document.documentElement).direction || 'rtl') === 'rtl';
+
+        function slideStep() {
+          var first = slides[0];
+          if (!first) return 0;
+          var gap = parseFloat(getComputedStyle(track).gap || '0') || 0;
+          return first.getBoundingClientRect().width + gap;
         }
-        root.addEventListener('pointerdown', function () { paused = true; });
-        root.addEventListener('focusin', function () { paused = true; });
+
+        function goTo(i) {
+          index = (i + slides.length) % slides.length;
+          var delta = slideStep() * index;
+          // في RTL نحرّك للاتجاه المعاكس حتى تظهر الشريحة التالية
+          var x = isRtl ? delta : -delta;
+          track.style.transform = 'translate3d(' + x + 'px,0,0)';
+        }
+
+        function pauseBriefly() {
+          paused = true;
+          if (resumeTimer) clearTimeout(resumeTimer);
+          resumeTimer = setTimeout(function () { paused = false; }, 8000);
+        }
+
+        var nav = document.createElement('div');
+        nav.className = 'mc-quotes-carousel__nav';
+        nav.setAttribute('aria-hidden', 'false');
+        var prevBtn = document.createElement('button');
+        prevBtn.type = 'button';
+        prevBtn.setAttribute('aria-label', isRtl ? 'السابق' : 'Previous');
+        prevBtn.textContent = isRtl ? '›' : '‹';
+        var nextBtn = document.createElement('button');
+        nextBtn.type = 'button';
+        nextBtn.setAttribute('aria-label', isRtl ? 'التالي' : 'Next');
+        nextBtn.textContent = isRtl ? '‹' : '›';
+        prevBtn.addEventListener('click', function () { pauseBriefly(); goTo(index - 1); });
+        nextBtn.addEventListener('click', function () { pauseBriefly(); goTo(index + 1); });
+        nav.appendChild(prevBtn);
+        nav.appendChild(nextBtn);
+        root.appendChild(nav);
+
+        root.addEventListener('pointerdown', pauseBriefly);
+        root.addEventListener('focusin', pauseBriefly);
+        window.addEventListener('resize', function () { goTo(index); });
+        goTo(0);
         setInterval(function () {
           if (paused) return;
-          scrollToIndex(index + 1);
+          goTo(index + 1);
         }, 4000);
       })();
       </script>

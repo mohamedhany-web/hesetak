@@ -79,8 +79,9 @@ class TeachingCalendarService
             return [
                 'id' => $event->calendar_id ?? $event->id ?? null,
                 'title' => $event->title ?? '',
-                'start' => $start?->copy()->utc()->toIso8601String(),
-                'end' => $end?->copy()->utc()->toIso8601String(),
+                // صيغة UTC صريحة حتى لا يفسّر FullCalendar الوقت كتوقيت محلي مزدوج
+                'start' => $start?->copy()->utc()->format('Y-m-d\TH:i:s\Z'),
+                'end' => $end?->copy()->utc()->format('Y-m-d\TH:i:s\Z'),
                 'allDay' => (bool) ($event->is_all_day ?? false),
                 'color' => $event->color ?? '#0B3D91',
                 'type' => $event->type ?? 'lesson',

@@ -18,29 +18,46 @@ class CalendarController extends Controller
     public function index()
     {
         $user = Auth::user();
+        $viewerTz = AppTimezone::forInstructorId((int) $user->id);
+        $academyTz = AppTimezone::academy();
         $events = TeachingCalendarService::forInstructor(
             $user,
-            now()->subMonths(1),
-            now()->addMonths(3)
+            now($viewerTz)->subMonths(1)->utc(),
+            now($viewerTz)->addMonths(3)->utc()
         );
-        $viewerTz = AppTimezone::forUser($user);
 
         $stats = [
             'total' => $events->count(),
-            'upcoming' => $events->filter(fn ($event) => ($event->start_date ?? now()) >= now())->count(),
+            'upcoming' => $events->filter(function ($event) {
+                $start = $event->start_date ?? null;
+                if (! $start) {
+                    return false;
+                }
+                $ts = $start instanceof \Carbon\CarbonInterface
+                    ? $start->copy()->utc()
+                    : \Carbon\Carbon::parse($start)->utc();
+
+                return $ts->gte(now('UTC'));
+            })->count(),
         ];
 
-        return view('instructor.calendar.index', compact('events', 'stats', 'viewerTz'));
+        return view('instructor.calendar.index', compact('events', 'stats', 'viewerTz', 'academyTz'));
     }
 
     public function getEvents(Request $request)
     {
         $user = Auth::user();
-        $events = TeachingCalendarService::forInstructor(
-            $user,
-            $request->get('start'),
-            $request->get('end')
-        );
+        $viewerTz = AppTimezone::forInstructorId((int) $user->id);
+        $start = $request->get('start');
+        $end = $request->get('end');
+        // FullCalendar يرسل الحدود بتوقيت العرض؛ نحوّلها لـ UTC قبل الاستعلام
+        if (is_string($start) && $start !== '') {
+            $start = \Carbon\Carbon::parse($start, $viewerTz)->utc();
+        }
+        if (is_string($end) && $end !== '') {
+            $end = \Carbon\Carbon::parse($end, $viewerTz)->utc();
+        }
+        $events = TeachingCalendarService::forInstructor($user, $start, $end);
 
         return response()->json(TeachingCalendarService::toFullCalendar($events));
     }

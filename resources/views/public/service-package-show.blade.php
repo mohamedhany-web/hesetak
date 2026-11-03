@@ -6,6 +6,7 @@
   $subjects = $subjects ?? collect();
   $teachersBySubject = $teachersBySubject ?? [];
   $checkoutUrl = $checkoutUrl ?? route('public.pricing');
+  $yearId = $yearId ?? null;
 @endphp
 
 @section('content')
@@ -18,10 +19,6 @@
     @elseif(filled($package->description))
       <p class="mc-lead">{{ \Illuminate\Support\Str::limit(strip_tags($package->description), 180) }}</p>
     @endif
-    <div style="margin-top:1rem;display:flex;flex-wrap:wrap;gap:.65rem">
-      <a href="{{ $checkoutUrl }}" class="mc-btn mc-btn--lg mc-btn--primary">{{ $isRtl ? 'متابعة الشراء' : 'Continue to checkout' }}</a>
-      <a href="{{ route('public.pricing') }}" class="mc-btn mc-btn--lg mc-btn--soft">{{ $isRtl ? 'كل الباقات' : 'All packages' }}</a>
-    </div>
   </div>
 </section>
 
@@ -38,7 +35,7 @@
           <li>{{ $isRtl ? 'المرحلة:' : 'Stage:' }} <strong>{{ $package->academicYear->name }}</strong></li>
         @endif
         @if($subjects->isNotEmpty())
-          <li>{{ $isRtl ? 'المواد:' : 'Subjects:' }} <strong>{{ $subjects->pluck('name')->implode($isRtl ? '، ' : ', ') }}</strong></li>
+          <li>{{ $isRtl ? 'مواد يمكن اختيارها:' : 'Subjects you can pick:' }} <strong>{{ $subjects->pluck('name')->implode($isRtl ? '، ' : ', ') }}</strong></li>
         @endif
         <li>{{ $isRtl ? 'السعر:' : 'Price:' }} <strong>{{ $package->formattedPrice() }}</strong></li>
       </ul>
@@ -51,38 +48,92 @@
       @endif
     </article>
 
-    @forelse($subjects as $subject)
-      @php $teachers = $teachersBySubject[(int) $subject->id] ?? collect(); @endphp
-      <article class="mc-card" style="padding:1.25rem">
-        <h2 class="mc-title" style="font-size:1.1rem">{{ $isRtl ? 'معلمون لمادة' : 'Teachers for' }} {{ $subject->name }}</h2>
-        @if($teachers->isEmpty())
-          <p class="mc-lead" style="margin-top:.5rem">{{ $isRtl ? 'لا يوجد معلمون منشورون لهذه المادة حالياً — يمكنك الشراء ثم اختيار معلم لاحقاً.' : 'No published teachers for this subject yet — you can buy and pick a teacher later.' }}</p>
-          <a href="{{ route('public.instructors.index', ['skill' => $subject->slug]) }}" class="mc-btn mc-btn--sm mc-btn--outline" style="margin-top:.75rem">{{ $isRtl ? 'تصفح دليل المعلمين' : 'Browse teachers' }}</a>
+    <form method="get" action="{{ route('public.service-packages.checkout', $package) }}" id="pkg-build-form" class="mc-card" style="padding:1.25rem;display:grid;gap:1.25rem">
+      @if($yearId)
+        <input type="hidden" name="year" value="{{ (int) $yearId }}">
+      @endif
+      @if(request()->integer('sessions'))
+        <input type="hidden" name="sessions" value="{{ request()->integer('sessions') }}">
+      @endif
+
+      <div>
+        <h2 class="mc-title" style="font-size:1.1rem">{{ $isRtl ? '1) اختر المواد' : '1) Choose subjects' }}</h2>
+        <p class="mc-lead" style="margin-top:.35rem;font-size:.92rem">{{ $isRtl ? 'يمكنك اختيار أكثر من مادة ثم تحديد معلم لكل مادة قبل إتمام الدفع عبر البوابة.' : 'Pick one or more subjects, then a teacher per subject before gateway checkout.' }}</p>
+        @if($subjects->isEmpty())
+          <p class="mc-lead" style="margin-top:.75rem">{{ $isRtl ? 'باقة عامة — أكمل الشراء ثم اختر المعلم من الدليل.' : 'General package — complete purchase then pick a teacher from the directory.' }}</p>
         @else
-          <div class="mc-catalog-grid" style="margin-top:1rem">
-            @foreach($teachers as $profile)
-              @php $u = $profile->user; @endphp
-              @if($u)
-                <article class="mc-card">
-                  <div class="mc-card__body">
-                    <h3 class="mc-card__title"><a href="{{ route('public.instructors.show', $u) }}">{{ $u->name }}</a></h3>
-                    @if(filled($profile->headline))
-                      <p style="margin:.35rem 0;color:var(--mc-muted);font-size:.9rem">{{ \Illuminate\Support\Str::limit($profile->headline, 90) }}</p>
-                    @endif
-                    <a href="{{ route('public.instructors.show', $u) }}" class="mc-btn mc-btn--sm mc-btn--primary" style="margin-top:.75rem">{{ $isRtl ? 'الملف والمواعيد' : 'Profile & slots' }}</a>
-                  </div>
-                </article>
-              @endif
+          <div style="display:flex;flex-wrap:wrap;gap:.65rem;margin-top:.85rem">
+            @foreach($subjects as $subject)
+              <label class="mc-btn mc-btn--sm mc-btn--outline" style="cursor:pointer;display:inline-flex;align-items:center;gap:.4rem">
+                <input type="checkbox" name="subjects[]" value="{{ (int) $subject->id }}" data-subject-toggle="{{ (int) $subject->id }}" @checked(request()->integer('subject') === (int) $subject->id || $subjects->count() === 1)>
+                {{ $subject->name }}
+              </label>
             @endforeach
           </div>
         @endif
-      </article>
-    @empty
-      <article class="mc-card" style="padding:1.25rem">
-        <p class="mc-lead">{{ $isRtl ? 'باقة عامة — اختر المادة والمعلم بعد الشراء أو من دليل المعلمين.' : 'General package — pick subject and teacher after purchase or from the directory.' }}</p>
-        <a href="{{ route('public.instructors.index') }}" class="mc-btn mc-btn--sm mc-btn--outline" style="margin-top:.75rem">{{ $isRtl ? 'دليل المعلمين' : 'Teachers directory' }}</a>
-      </article>
-    @endforelse
+      </div>
+
+      @foreach($subjects as $subject)
+        @php $teachers = $teachersBySubject[(int) $subject->id] ?? collect(); @endphp
+        <div data-subject-panel="{{ (int) $subject->id }}" hidden>
+          <h3 class="mc-title" style="font-size:1rem">{{ $isRtl ? 'معلمون لمادة' : 'Teachers for' }} {{ $subject->name }}</h3>
+          @if($teachers->isEmpty())
+            <p class="mc-lead" style="margin-top:.5rem">{{ $isRtl ? 'لا يوجد معلمون منشورون لهذه المادة حالياً — يمكنك الشراء واختيار معلم لاحقاً.' : 'No published teachers for this subject yet — you can buy and pick later.' }}</p>
+            <a href="{{ route('public.instructors.index', ['skill' => $subject->slug]) }}" class="mc-btn mc-btn--sm mc-btn--outline" style="margin-top:.75rem">{{ $isRtl ? 'تصفح دليل المعلمين' : 'Browse teachers' }}</a>
+          @else
+            <div class="mc-catalog-grid" style="margin-top:.85rem">
+              @foreach($teachers as $profile)
+                @php $u = $profile->user; @endphp
+                @if($u)
+                  <label class="mc-card" style="cursor:pointer;padding:1rem;display:block">
+                    <div style="display:flex;gap:.65rem;align-items:flex-start">
+                      <input type="radio" name="teacher_for[{{ (int) $subject->id }}]" value="{{ (int) $u->id }}" style="margin-top:.35rem">
+                      <div>
+                        <strong>{{ $u->name }}</strong>
+                        @if(filled($profile->headline))
+                          <p style="margin:.35rem 0;color:var(--mc-muted);font-size:.9rem">{{ \Illuminate\Support\Str::limit($profile->headline, 90) }}</p>
+                        @endif
+                        <a href="{{ route('public.instructors.show', $u) }}" class="mc-link-more" style="font-size:.85rem" onclick="event.stopPropagation()">{{ $isRtl ? 'الملف والمواعيد' : 'Profile & slots' }}</a>
+                      </div>
+                    </div>
+                  </label>
+                @endif
+              @endforeach
+            </div>
+          @endif
+        </div>
+      @endforeach
+
+      <div>
+        <h3 class="mc-title" style="font-size:1rem">{{ $isRtl ? '2) ملاحظات المواعيد (اختياري)' : '2) Preferred times (optional)' }}</h3>
+        <textarea name="schedule_notes" rows="3" class="mc-input" style="width:100%;margin-top:.5rem;padding:.75rem;border-radius:.75rem;border:1px solid color-mix(in srgb, var(--mc-ink,#0b1b33) 16%, transparent)" placeholder="{{ $isRtl ? 'مثال: السبت والأحد مساءً بتوقيت الرياض' : 'e.g. Sat–Sun evenings Riyadh time' }}">{{ request('schedule_notes') }}</textarea>
+      </div>
+
+      <div style="display:flex;flex-wrap:wrap;gap:.65rem">
+        <button type="submit" class="mc-btn mc-btn--lg mc-btn--primary">{{ $isRtl ? 'متابعة الدفع عبر البوابة' : 'Continue to gateway checkout' }}</button>
+        <a href="{{ route('public.pricing') }}" class="mc-btn mc-btn--lg mc-btn--soft">{{ $isRtl ? 'كل الباقات' : 'All packages' }}</a>
+      </div>
+    </form>
   </div>
 </section>
+
+<script>
+(function () {
+  var form = document.getElementById('pkg-build-form');
+  if (!form) return;
+  function sync() {
+    form.querySelectorAll('[data-subject-toggle]').forEach(function (cb) {
+      var id = cb.getAttribute('data-subject-toggle');
+      var panel = form.querySelector('[data-subject-panel="' + id + '"]');
+      if (!panel) return;
+      panel.hidden = !cb.checked;
+      if (!cb.checked) {
+        panel.querySelectorAll('input[type="radio"]').forEach(function (r) { r.checked = false; });
+      }
+    });
+  }
+  form.addEventListener('change', sync);
+  sync();
+})();
+</script>
 @endsection

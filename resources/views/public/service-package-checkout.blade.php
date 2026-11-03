@@ -100,6 +100,30 @@
             @endif
           </header>
 
+          @php
+            $selectedSubjects = $selectedSubjects ?? collect();
+            $selectedTeachers = $selectedTeachers ?? collect();
+            $teacherFor = $teacherFor ?? collect();
+            $bookingPrefs = $bookingPrefs ?? [];
+          @endphp
+          @if($selectedSubjects->isNotEmpty() || !empty($bookingPrefs['schedule_notes']))
+            <div class="mc-co-summary__plan" style="margin-bottom:.75rem">
+              <p class="mc-co-summary__kicker">{{ $isRtl ? 'اختيارك قبل الدفع' : 'Your picks before payment' }}</p>
+              @foreach($selectedSubjects as $subj)
+                @php $tid = (int) ($teacherFor[(int) $subj->id] ?? 0); @endphp
+                <p style="margin:.25rem 0;font-size:.9rem">
+                  <strong>{{ $subj->name }}</strong>
+                  @if($tid && $selectedTeachers->has($tid))
+                    — {{ $selectedTeachers[$tid]->name }}
+                  @endif
+                </p>
+              @endforeach
+              @if(!empty($bookingPrefs['schedule_notes']))
+                <p style="margin:.35rem 0 0;font-size:.85rem;opacity:.85">{{ $bookingPrefs['schedule_notes'] }}</p>
+              @endif
+            </div>
+          @endif
+
           <ul class="mc-co-facts">
             @if($package->isCommercialPlan())
               <li>

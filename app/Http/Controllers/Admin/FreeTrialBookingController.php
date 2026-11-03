@@ -7,6 +7,7 @@ use App\Models\AcademicYear;
 use App\Models\FreeTrialBooking;
 use App\Models\User;
 use App\Services\FreeTrialBookingService;
+use App\Services\FreeTrialCreditSettings;
 use App\Support\AppTimezone;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -87,7 +88,34 @@ class FreeTrialBookingController extends Controller
             'bookings' => $bookings,
             'stats' => $stats,
             'goalOptions' => FreeTrialBooking::goalOptions(),
+            'trialCreditDefault' => FreeTrialCreditSettings::defaultLimit(),
+            'trialCreditPackages' => FreeTrialCreditSettings::packageLimitRows(),
         ]);
+    }
+
+    public function updateCredits(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'default_limit' => ['required', 'integer', 'min:0', 'max:50'],
+            'package_limits' => ['nullable', 'array'],
+            'package_limits.*' => ['nullable', 'integer', 'min:0', 'max:50'],
+        ]);
+
+        FreeTrialCreditSettings::setDefaultLimit((int) $data['default_limit']);
+        foreach (($data['package_limits'] ?? []) as $packageId => $limit) {
+            $pid = (int) $packageId;
+            if ($pid <= 0) {
+                continue;
+            }
+            FreeTrialCreditSettings::setPackageLimit(
+                $pid,
+                $limit === null || $limit === '' ? null : (int) $limit
+            );
+        }
+
+        return redirect()
+            ->route('admin.free-trial-bookings.index')
+            ->with('success', 'تم حفظ حدود رصيد الحصص التجريبية.');
     }
 
     public function create(): View

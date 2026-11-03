@@ -1649,6 +1649,7 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
 
         Route::get('free-trial-bookings/create', [\App\Http\Controllers\Admin\FreeTrialBookingController::class, 'create'])->name('free-trial-bookings.create');
         Route::post('free-trial-bookings', [\App\Http\Controllers\Admin\FreeTrialBookingController::class, 'store'])->name('free-trial-bookings.store');
+        Route::put('free-trial-bookings/credits', [\App\Http\Controllers\Admin\FreeTrialBookingController::class, 'updateCredits'])->name('free-trial-bookings.credits');
         Route::patch('free-trial-bookings/{freeTrialBooking}/status', [\App\Http\Controllers\Admin\FreeTrialBookingController::class, 'updateStatus'])->name('free-trial-bookings.update-status');
         Route::get('free-trial-bookings', [\App\Http\Controllers\Admin\FreeTrialBookingController::class, 'index'])->name('free-trial-bookings.index');
         Route::get('free-trial-bookings/{freeTrialBooking}', [\App\Http\Controllers\Admin\FreeTrialBookingController::class, 'show'])->name('free-trial-bookings.show');

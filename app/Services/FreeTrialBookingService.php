@@ -6,6 +6,7 @@ use App\Models\FreeTrialBooking;
 use App\Models\OneToOneSession;
 use App\Models\User;
 use App\Support\AppTimezone;
+use App\Services\FreeTrialCreditSettings;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -84,6 +85,13 @@ class FreeTrialBookingService
      */
     public static function book(array $data, ?int $userId = null): FreeTrialBooking
     {
+        if ($userId) {
+            $student = User::query()->find($userId);
+            if ($student) {
+                FreeTrialCreditSettings::assertStudentMayBook($student);
+            }
+        }
+
         $viewerTz = AppTimezone::normalize($data['timezone'] ?? null)
             ?? AppTimezone::timezoneForUsState($data['us_state'] ?? null)
             ?? AppTimezone::academy();
