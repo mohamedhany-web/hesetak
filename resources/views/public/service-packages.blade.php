@@ -53,9 +53,16 @@
 </section>
 
 @if($privateRule)
+@php
+  $onlineGatewayReady = !empty($fawaterakUseGateway) || !empty($paypalUseGateway) || !empty($stripeUseGateway);
+  $unitHint = number_format((float) $privateRule->price_per_session, 2).' '.currency_symbol();
+@endphp
 <section class="mc-section mc-section--muted" id="private-builder">
   <div class="mc-container">
-    <div class="mc-section-head"><h2>{{ $isRtl ? 'خصّص باقة حصص فردية' : 'Build a private lesson package' }}</h2><p>{{ $isRtl ? 'اختر المدة وعدد الحصص الأسبوعية، ثم احصل على السعر من قواعد المنصة.' : 'Choose term and weekly lessons to calculate your package.' }}</p></div>
+    <div class="mc-section-head">
+      <h2>{{ $isRtl ? 'خصّص باقة حصص فردية' : 'Build a private lesson package' }}</h2>
+      <p>{{ $isRtl ? 'المدة والحصص الأسبوعية وسعر الحصة تُضبط من لوحة الإدارة → قواعد التسعير. سعر الحصة الحالي: '.$unitHint : 'Term, weekly lessons and session price come from Admin → pricing rules. Current session price: '.$unitHint }}</p>
+    </div>
     <form method="POST" action="{{ route('public.service-packages.custom.store') }}" id="private-builder-form" class="mc-detail">
       @csrf
       <input type="hidden" name="pricing_rule_id" value="{{ $privateRule->id }}">
@@ -67,10 +74,13 @@
         <p>{{ $isRtl ? 'إجمالي الباقة' : 'Package total' }}</p><strong id="pv-total" class="mc-package__hours">−</strong>
         <p id="pv-details" style="color:var(--mc-muted)"></p>
         @auth
-          @if(!empty($fawaterakUseGateway))<button type="submit" class="mc-btn mc-btn--lg mc-btn--primary" style="width:100%">{{ $isRtl ? 'متابعة للدفع' : 'Continue to payment' }}</button>
-          @else<a href="{{ \App\Services\PublicFooterSettings::payload()['whatsapp_url'] ?? '#' }}" class="mc-btn mc-btn--lg mc-btn--outline" target="_blank" rel="noopener">{{ $isRtl ? 'تواصل للشراء' : 'Contact to buy' }}</a>@endif
+          @if($onlineGatewayReady)
+            <button type="submit" class="mc-btn mc-btn--lg mc-btn--primary" style="width:100%" id="pv-pay-btn">{{ $isRtl ? 'متابعة للدفع عبر البوابة' : 'Continue to gateway payment' }}</button>
+          @else
+            <a href="{{ route('public.pricing') }}" class="mc-btn mc-btn--lg mc-btn--primary" style="width:100%">{{ $isRtl ? 'اختر باقة جاهزة وادفع' : 'Pick a ready package and pay' }}</a>
+          @endif
         @else
-          <a href="{{ route('login') }}" class="mc-btn mc-btn--lg mc-btn--primary">{{ $isRtl ? 'سجّل للطلب' : 'Login to order' }}</a>
+          <a href="{{ route('login', ['redirect' => url()->full()]) }}" class="mc-btn mc-btn--lg mc-btn--primary" style="width:100%">{{ $isRtl ? 'سجّل ثم ادفع عبر البوابة' : 'Login then pay via gateway' }}</a>
         @endauth
       </aside>
     </form>
@@ -84,7 +94,33 @@
 (function(){
   document.querySelectorAll('[data-plan-card]').forEach(function(card){card.querySelectorAll('[data-term]').forEach(function(button){button.addEventListener('click',function(){card.querySelectorAll('[data-term]').forEach(function(item){item.classList.toggle('is-on',item===button)});card.querySelector('[data-price]').textContent=button.dataset.price;card.querySelector('[data-checkout]').href=button.dataset.href})})});
   var form=document.getElementById('private-builder-form');if(!form)return;
-  function refresh(){var term=form.querySelector('[name="term_months"]:checked'),weekly=form.querySelector('[name="weekly_sessions"]:checked'),rule=form.querySelector('[name="pricing_rule_id"]');if(!term||!weekly)return;var url=new URL(@json(route('public.service-packages.custom.quote')),location.origin);url.searchParams.set('pricing_rule_id',rule.value);url.searchParams.set('term_months',term.value);url.searchParams.set('weekly_sessions',weekly.value);fetch(url,{headers:{Accept:'application/json'}}).then(function(r){return r.json()}).then(function(data){document.getElementById('pv-total').textContent=Number(data.amount).toFixed(2)+' '+@json(currency_symbol());document.getElementById('pv-details').textContent=data.sessions+' '+@json($isRtl ? 'حصة' : 'sessions')})}
+  var totalEl=document.getElementById('pv-total');
+  var detailsEl=document.getElementById('pv-details');
+  var payBtn=document.getElementById('pv-pay-btn');
+  function refresh(){
+    var term=form.querySelector('[name="term_months"]:checked'),weekly=form.querySelector('[name="weekly_sessions"]:checked'),rule=form.querySelector('[name="pricing_rule_id"]');
+    if(!term||!weekly||!rule)return;
+    var url=new URL(@json(route('public.service-packages.custom.quote')),location.origin);
+    url.searchParams.set('pricing_rule_id',rule.value);
+    url.searchParams.set('term_months',term.value);
+    url.searchParams.set('weekly_sessions',weekly.value);
+    fetch(url,{headers:{Accept:'application/json'}}).then(function(r){return r.json().then(function(data){return {ok:r.ok,data:data}})}).then(function(res){
+      var data=res.data||{};
+      if(!res.ok || data.amount==null || isNaN(Number(data.amount))){
+        totalEl.textContent='—';
+        detailsEl.textContent=data.message||@json($isRtl ? 'تعذّر حساب السعر لهذه التركيبة.' : 'Could not price this combination.');
+        if(payBtn) payBtn.disabled=true;
+        return;
+      }
+      totalEl.textContent=Number(data.amount).toFixed(2)+' '+@json(currency_symbol());
+      detailsEl.textContent=(data.sessions||'')+' '+@json($isRtl ? 'حصة' : 'sessions')+' · '+Number(data.price_per_session||0).toFixed(2)+' '+@json($isRtl ? 'للحصة' : '/session');
+      if(payBtn) payBtn.disabled=false;
+    }).catch(function(){
+      totalEl.textContent='—';
+      detailsEl.textContent=@json($isRtl ? 'تعذّر الاتصال بحساب السعر.' : 'Price service unavailable.');
+      if(payBtn) payBtn.disabled=true;
+    });
+  }
   form.querySelectorAll('input[type=radio]').forEach(function(input){input.addEventListener('change',refresh)});refresh();
 })();
 </script>

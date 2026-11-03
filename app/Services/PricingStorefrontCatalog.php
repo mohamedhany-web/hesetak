@@ -573,6 +573,7 @@ class PricingStorefrontCatalog
             'checkout_url' => $row['checkout_url'] ?? route('public.service-packages.checkout', $model),
             'badge' => $row['badge'] ?? null,
             'package_id' => $model->id,
+            'cover_image_url' => $model->coverImageUrl(),
         ];
     }
 
@@ -627,6 +628,7 @@ class PricingStorefrontCatalog
                 'checkout_url' => route('public.service-packages.checkout', $linkedPackage),
                 'badge' => $linkedPackage->badge,
                 'package_id' => $linkedPackage->id,
+                'cover_image_url' => $linkedPackage->coverImageUrl(),
             ];
         }
 

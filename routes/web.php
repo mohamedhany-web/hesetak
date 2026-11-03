@@ -482,6 +482,12 @@ Route::get('/service-packages/custom/orders/{order}/fawaterak/methods', [\App\Ht
 Route::post('/service-packages/custom/orders/{order}/fawaterak/pay', [\App\Http\Controllers\Public\ServicePackageCheckoutController::class, 'fawaterakPayCustom'])
     ->middleware(['auth', 'throttle:30,1'])
     ->name('public.service-packages.custom.fawaterak.pay');
+Route::get('/service-packages/{servicePackage}/teachers', [\App\Http\Controllers\Public\PackageBookingController::class, 'teachers'])->name('public.package-booking.teachers');
+Route::get('/service-packages/{servicePackage}/teachers/{instructor}', [\App\Http\Controllers\Public\PackageBookingController::class, 'slots'])->name('public.package-booking.slots');
+Route::post('/service-packages/{servicePackage}/cart', [\App\Http\Controllers\Public\PackageBookingController::class, 'addToCart'])->name('public.package-booking.add-cart');
+Route::get('/package-cart', [\App\Http\Controllers\Public\PackageBookingController::class, 'cart'])->name('public.package-cart.index');
+Route::post('/package-cart/remove', [\App\Http\Controllers\Public\PackageBookingController::class, 'removeFromCart'])->name('public.package-cart.remove');
+Route::post('/package-cart/checkout', [\App\Http\Controllers\Public\PackageBookingController::class, 'checkoutCart'])->middleware('auth')->name('public.package-cart.checkout');
 Route::get('/service-packages/{servicePackage}', [\App\Http\Controllers\Public\ServicePackageCheckoutController::class, 'show'])->name('public.service-packages.show');
 Route::get('/service-packages/{servicePackage}/checkout', [\App\Http\Controllers\Public\ServicePackageCheckoutController::class, 'checkout'])->name('public.service-packages.checkout');
 Route::post('/service-packages/{servicePackage}/checkout', [\App\Http\Controllers\Public\ServicePackageCheckoutController::class, 'store'])->middleware('auth')->name('public.service-packages.store');

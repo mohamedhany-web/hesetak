@@ -160,6 +160,39 @@
             </div>
         </article>
 
+        {{-- How it works videos --}}
+        <article class="{{ $panel }}">
+            <div class="{{ $sectionHead }}">
+                <span class="inline-flex size-9 items-center justify-center rounded-xl bg-accent-soft text-accent"><i class="fas fa-play text-sm"></i></span>
+                <div class="min-w-0">
+                    <h3 class="text-base font-semibold text-ink">فيديوهات «كيف تعمل المنصة»</h3>
+                    <p class="mt-0.5 text-xs leading-6 text-muted">رابط يوتيوب/فيميو أو ملف MP4 مباشر لكل مسار (طالب / معلم). يظهر في صفحة /how-it-works.</p>
+                </div>
+            </div>
+            <div class="{{ $sectionBody }}">
+                <div class="grid gap-4 sm:grid-cols-2">
+                    <div>
+                        <label class="{{ $label }}" for="how_it_works_video_student">فيديو مسار الطالب / ولي الأمر</label>
+                        <input type="url" id="how_it_works_video_student" name="how_it_works_video_student"
+                               value="{{ old('how_it_works_video_student', $howItWorksStudentVideo ?? '') }}"
+                               class="{{ $input }} font-mono" dir="ltr" placeholder="https://www.youtube.com/watch?v=...">
+                        @error('how_it_works_video_student')
+                            <p class="mt-1.5 text-xs font-medium text-danger">{{ $message }}</p>
+                        @enderror
+                    </div>
+                    <div>
+                        <label class="{{ $label }}" for="how_it_works_video_teacher">فيديو مسار المعلم</label>
+                        <input type="url" id="how_it_works_video_teacher" name="how_it_works_video_teacher"
+                               value="{{ old('how_it_works_video_teacher', $howItWorksTeacherVideo ?? '') }}"
+                               class="{{ $input }} font-mono" dir="ltr" placeholder="https://www.youtube.com/watch?v=...">
+                        @error('how_it_works_video_teacher')
+                            <p class="mt-1.5 text-xs font-medium text-danger">{{ $message }}</p>
+                        @enderror
+                    </div>
+                </div>
+            </div>
+        </article>
+
         {{-- Footer --}}
         <article class="{{ $panel }}">
             <div class="{{ $sectionHead }}">

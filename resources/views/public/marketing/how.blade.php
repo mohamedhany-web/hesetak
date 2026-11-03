@@ -20,6 +20,15 @@
     </div>
 
     <div class="mc-tab-panel" data-mc-panel="student" role="tabpanel">
+      @if(!empty($studentVideoEmbed) || !empty($studentVideoDirect))
+        <div class="mc-tp-video" style="margin:0 0 1.5rem;border-radius:1rem;overflow:hidden;background:#0b1b33;aspect-ratio:16/9">
+          @if(!empty($studentVideoEmbed))
+            <iframe src="{{ $studentVideoEmbed }}" title="{{ $p['tab_student'] }}" allowfullscreen loading="lazy" style="width:100%;height:100%;border:0"></iframe>
+          @else
+            <video controls playsinline preload="metadata" style="width:100%;height:100%;object-fit:contain;background:#000"><source src="{{ $studentVideoDirect }}"></video>
+          @endif
+        </div>
+      @endif
       <div class="mc-steps">
         @foreach($p['student_steps'] as $i => $step)
           <div class="mc-step">
@@ -40,6 +49,15 @@
     </div>
 
     <div class="mc-tab-panel" data-mc-panel="teacher" role="tabpanel" hidden>
+      @if(!empty($teacherVideoEmbed) || !empty($teacherVideoDirect))
+        <div class="mc-tp-video" style="margin:0 0 1.5rem;border-radius:1rem;overflow:hidden;background:#0b1b33;aspect-ratio:16/9">
+          @if(!empty($teacherVideoEmbed))
+            <iframe src="{{ $teacherVideoEmbed }}" title="{{ $p['tab_teacher'] }}" allowfullscreen loading="lazy" style="width:100%;height:100%;border:0"></iframe>
+          @else
+            <video controls playsinline preload="metadata" style="width:100%;height:100%;object-fit:contain;background:#000"><source src="{{ $teacherVideoDirect }}"></video>
+          @endif
+        </div>
+      @endif
       <div class="mc-steps">
         @foreach($p['teacher_steps'] as $i => $step)
           <div class="mc-step">

@@ -64,15 +64,18 @@ class ServicePackageCheckoutController extends Controller
 
         $planMatrix = ServicePackage::commercialCatalogMatrix($commercialPackages);
 
+        // اختر قاعدة تسمح بأعلى عدد حصص (3 أشهر × 4 أسبوعياً = 48) لتجنّب فشل التسعير
         $privateRule = ServicePackagePricingRule::query()
             ->active()
             ->where('scope', ServicePackage::SCOPE_PRIVATE_LESSONS)
-            ->ordered()
+            ->orderByDesc('max_sessions')
+            ->orderBy('sort_order')
             ->first()
             ?: ServicePackagePricingRule::query()
                 ->active()
                 ->where('scope', ServicePackage::SCOPE_TUTORING_INDIVIDUAL)
-                ->ordered()
+                ->orderByDesc('max_sessions')
+                ->orderBy('sort_order')
                 ->first();
 
         $years = Schema::hasTable('academic_years')
@@ -401,17 +404,21 @@ class ServicePackageCheckoutController extends Controller
     {
         $data = $request->validate([
             'pricing_rule_id' => ['required', 'integer', 'exists:service_package_pricing_rules,id'],
-            'term_months' => ['required', 'integer', 'in:1,3'],
-            'weekly_sessions' => ['required', 'integer', 'in:1,2,3,4'],
+            'term_months' => ['required', 'integer', 'in:1,3,6,12'],
+            'weekly_sessions' => ['required', 'integer', 'in:1,2,3,4,5,6'],
         ]);
 
         $rule = ServicePackagePricingRule::query()->active()->findOrFail($data['pricing_rule_id']);
 
-        return response()->json(CustomServicePackagePricingService::calculatePrivateWeekly(
-            $rule,
-            (int) $data['term_months'],
-            (int) $data['weekly_sessions'],
-        ));
+        try {
+            return response()->json(CustomServicePackagePricingService::calculatePrivateWeekly(
+                $rule,
+                (int) $data['term_months'],
+                (int) $data['weekly_sessions'],
+            ));
+        } catch (\InvalidArgumentException $e) {
+            return response()->json(['message' => $e->getMessage(), 'amount' => null], 422);
+        }
     }
 
     public function storeCustom(Request $request): RedirectResponse
@@ -422,23 +429,30 @@ class ServicePackageCheckoutController extends Controller
                 ->with('info', 'سجّل الدخول لشراء الباقة الخاصة — سنعيدك لإتمام الدفع.');
         }
 
-        if (! PaymentGatewaySettings::isFawaterakEnabled()) {
+        $anyOnlineGateway = PaymentGatewaySettings::isFawaterakEnabled()
+            || PaymentGatewaySettings::isPaypalEnabled()
+            || PaymentGatewaySettings::isStripeEnabled()
+            || PaymentGatewaySettings::isKashierEnabled();
+
+        if (! $anyOnlineGateway) {
             return redirect()
-                ->route('public.pricing')
-                ->with('error', 'بوابة الدفع الإلكترونية (فواتيرك) غير مفعّلة حالياً. تواصل مع الدعم.');
+                ->route('public.service-packages.checkout', ['servicePackage' => $request->input('fallback_package_id', 7)])
+                ->with('error', 'بوابة الدفع غير مفعّلة حالياً — أكمل الشراء من صفحة الدفع أو تواصل مع الدعم.');
         }
 
-        [$useGateway, $misconfigured] = $this->fawaterakFlags();
-        if ($misconfigured || ! $useGateway) {
-            return redirect()
-                ->route('public.pricing')
-                ->with('error', 'تم تفعيل فواتيرك لكن الربط غير مكتمل على الخادم.');
+        if (PaymentGatewaySettings::isFawaterakEnabled()) {
+            [$useGateway, $misconfigured] = $this->fawaterakFlags();
+            if ($misconfigured || ! $useGateway) {
+                return redirect()
+                    ->route('public.pricing')
+                    ->with('error', 'تم تفعيل فواتيرك لكن الربط غير مكتمل على الخادم.');
+            }
         }
 
         $data = $request->validate([
             'pricing_rule_id' => ['required', 'integer', 'exists:service_package_pricing_rules,id'],
-            'term_months' => ['required', 'integer', 'in:1,3'],
-            'weekly_sessions' => ['required', 'integer', 'in:1,2,3,4'],
+            'term_months' => ['required', 'integer', 'in:1,3,6,12'],
+            'weekly_sessions' => ['required', 'integer', 'in:1,2,3,4,5,6'],
         ]);
 
         $rule = ServicePackagePricingRule::query()->active()->findOrFail($data['pricing_rule_id']);

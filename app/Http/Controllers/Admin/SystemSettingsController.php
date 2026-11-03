@@ -12,6 +12,7 @@ use App\Services\PayPalSettings;
 use App\Services\PaymentGatewaySettings;
 use App\Services\PlatformSecuritySettings;
 use App\Services\PlatformMediaSettings;
+use App\Services\HowItWorksMediaSettings;
 use App\Services\PublicFooterSettings;
 use App\Services\SiteDataWipeService;
 use Illuminate\Http\RedirectResponse;
@@ -69,6 +70,8 @@ class SystemSettingsController extends Controller
         $admin2faAppliesToCurrentUserRole = $currentUser && in_array((string) $currentUser->role, ['super_admin', 'admin'], true);
 
         $r2PublicUrl = Setting::getValue(PlatformMediaSettings::SETTING_R2_PUBLIC_URL) ?? '';
+        $howItWorksStudentVideo = HowItWorksMediaSettings::studentUrl() ?? '';
+        $howItWorksTeacherVideo = HowItWorksMediaSettings::teacherUrl() ?? '';
         $fawaterakGatewayEnabled = PaymentGatewaySettings::isFawaterakEnabled();
         $paypalGatewayEnabled = PayPalSettings::isEnabled();
         $kashierGatewayEnabled = KashierSettings::isEnabled();
@@ -81,6 +84,8 @@ class SystemSettingsController extends Controller
             'adminTwoFactorRequired',
             'admin2faAppliesToCurrentUserRole',
             'r2PublicUrl',
+            'howItWorksStudentVideo',
+            'howItWorksTeacherVideo',
             'fawaterakGatewayEnabled',
             'paypalGatewayEnabled',
             'kashierGatewayEnabled',
@@ -282,6 +287,8 @@ class SystemSettingsController extends Controller
             'social_telegram_url' => ['nullable', 'string', 'max:500'],
             'social_snapchat_url' => ['nullable', 'string', 'max:500'],
             'r2_public_url' => ['nullable', 'string', 'max:500'],
+            'how_it_works_video_student' => ['nullable', 'string', 'max:1000'],
+            'how_it_works_video_teacher' => ['nullable', 'string', 'max:1000'],
         ];
 
         $footerData = [];
@@ -295,6 +302,8 @@ class SystemSettingsController extends Controller
                 'admin_panel_logo' => $request->file('admin_panel_logo'),
                 'remove_admin_panel_logo' => $request->boolean('remove_admin_panel_logo'),
                 'r2_public_url' => $request->input('r2_public_url'),
+                'how_it_works_video_student' => $request->input('how_it_works_video_student'),
+                'how_it_works_video_teacher' => $request->input('how_it_works_video_teacher'),
             ]),
             array_merge($footerRules, [
                 'admin_panel_logo' => ['nullable', 'image', 'max:'.config('upload_limits.max_upload_kb'), 'mimes:jpg,jpeg,png,webp,gif'],
@@ -350,6 +359,20 @@ class SystemSettingsController extends Controller
         );
         PlatformMediaSettings::forgetCache();
         AdminPanelBranding::forgetLogoUrlCache();
+
+        $studentVideo = isset($validated['how_it_works_video_student'])
+            ? trim((string) $validated['how_it_works_video_student'])
+            : '';
+        $teacherVideo = isset($validated['how_it_works_video_teacher'])
+            ? trim((string) $validated['how_it_works_video_teacher'])
+            : '';
+        foreach (['how_it_works_video_student' => $studentVideo, 'how_it_works_video_teacher' => $teacherVideo] as $field => $url) {
+            if ($url !== '' && ! filter_var($url, FILTER_VALIDATE_URL)) {
+                return back()->withErrors([$field => 'رابط فيديو غير صالح.'])->withInput();
+            }
+        }
+        HowItWorksMediaSettings::setStudentUrl($studentVideo !== '' ? $studentVideo : null);
+        HowItWorksMediaSettings::setTeacherUrl($teacherVideo !== '' ? $teacherVideo : null);
 
         PublicFooterSettings::forgetCache();
 

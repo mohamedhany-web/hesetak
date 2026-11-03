@@ -198,7 +198,16 @@
                   $checkoutHref = $card['price_options'][0]['href'];
               }
               $detailsHref = null;
-              if (! empty($card['package_id']) && \Illuminate\Support\Facades\Route::has('public.service-packages.show')) {
+              if (! empty($card['package_id']) && \Illuminate\Support\Facades\Route::has('public.package-booking.teachers')) {
+                  $detailsHref = route('public.package-booking.teachers', (int) $card['package_id']);
+                  $cardQuery = array_filter([
+                      'year' => $selYear ? (int) $selYear : null,
+                      'subject' => $selSubject ? (int) $selSubject : null,
+                  ]);
+                  if ($cardQuery !== []) {
+                      $detailsHref .= '?'.http_build_query($cardQuery);
+                  }
+              } elseif (! empty($card['package_id']) && \Illuminate\Support\Facades\Route::has('public.service-packages.show')) {
                   $detailsHref = route('public.service-packages.show', (int) $card['package_id']);
                   $cardQuery = array_filter([
                       'year' => $selYear ? (int) $selYear : null,
@@ -223,8 +232,10 @@
             @endphp
             <article class="mc-pric-card tone-{{ $card['tone'] ?? 0 }}">
               @if($cardHref)
-                <a href="{{ $cardHref }}" class="mc-pric-card__cover mc-pric-card__cover-link" aria-hidden="true">
-                  <i class="fas {{ $card['icon'] ?? 'fa-graduation-cap' }}"></i>
+                <a href="{{ $cardHref }}" class="mc-pric-card__cover mc-pric-card__cover-link" aria-hidden="true" @if(!empty($card['cover_image_url'])) style="background-image:url('{{ $card['cover_image_url'] }}');background-size:cover;background-position:center" @endif>
+                  @if(empty($card['cover_image_url']))
+                    <i class="fas {{ $card['icon'] ?? 'fa-graduation-cap' }}"></i>
+                  @endif
                   <div class="mc-pric-card__devices">
                     @foreach(($card['devices'] ?? []) as $device)
                       <span>{{ $device }}</span>
@@ -232,8 +243,10 @@
                   </div>
                 </a>
               @else
-                <div class="mc-pric-card__cover" aria-hidden="true">
-                  <i class="fas {{ $card['icon'] ?? 'fa-graduation-cap' }}"></i>
+                <div class="mc-pric-card__cover" aria-hidden="true" @if(!empty($card['cover_image_url'])) style="background-image:url('{{ $card['cover_image_url'] }}');background-size:cover;background-position:center" @endif>
+                  @if(empty($card['cover_image_url']))
+                    <i class="fas {{ $card['icon'] ?? 'fa-graduation-cap' }}"></i>
+                  @endif
                   <div class="mc-pric-card__devices">
                     @foreach(($card['devices'] ?? []) as $device)
                       <span>{{ $device }}</span>

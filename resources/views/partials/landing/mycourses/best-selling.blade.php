@@ -34,7 +34,13 @@
               ? number_format((float) $row['display_price'], 2).' '.($row['currency'] ?? 'SAR')
               : $pkg->formattedPrice();
             $perks = $isArr ? ($row['features'] ?? []) : (is_array($pkg->features ?? null) ? $pkg->features : []);
-            $checkout = $isArr ? ($row['checkout_url'] ?? '#') : route('public.service-packages.checkout', $pkg);
+            $pkgId = $isArr ? (int) ($row['id'] ?? ($pkg->id ?? 0)) : (int) ($pkg->id ?? 0);
+            $checkout = ($pkgId > 0 && \Illuminate\Support\Facades\Route::has('public.package-booking.teachers'))
+              ? route('public.package-booking.teachers', $pkgId)
+              : ($isArr ? ($row['checkout_url'] ?? '#') : route('public.service-packages.checkout', $pkg));
+            $coverUrl = $isArr
+              ? ($row['cover_image_url'] ?? ($pkg?->coverImageUrl() ?? null))
+              : ($pkg?->coverImageUrl() ?? null);
             $giftUrl = $isArr ? ($row['gift_url'] ?? route('public.gift-package.show')) : route('public.gift-package.show', ['package' => $pkg->id]);
             $badge = $isArr ? ($row['badge'] ?? null) : ($pkg->badge ?? null);
             $tagline = $isArr ? ($row['tagline'] ?? null) : ($pkg->tagline ?? null);
@@ -48,6 +54,11 @@
           <article class="mc-package {{ $recommended ? 'mc-package--recommended' : '' }}">
             @if(!empty($badge))
               <span class="mc-package__badge">{{ $badge }}</span>
+            @endif
+            @if(!empty($coverUrl))
+              <a href="{{ $checkout }}" style="display:block;margin:0 0 .75rem;border-radius:.85rem;overflow:hidden;aspect-ratio:16/10;background:#0b1b33">
+                <img src="{{ $coverUrl }}" alt="{{ $name }}" style="display:block;width:100%;height:100%;object-fit:cover">
+              </a>
             @endif
             <h3>{{ $name }}</h3>
             @if($hoursLabel !== '')

@@ -32,6 +32,7 @@ class ServicePackage extends Model
         'description',
         'tagline',
         'badge',
+        'cover_image_path',
         'scope',
         'plan_type',
         'term_months',
@@ -255,6 +256,16 @@ class ServicePackage extends Model
         }
 
         return true;
+    }
+
+    public function coverImageUrl(): ?string
+    {
+        $path = trim((string) ($this->cover_image_path ?? ''));
+        if ($path === '') {
+            return null;
+        }
+
+        return \App\Services\PublicMediaStorage::publicUrl($path);
     }
 
     public function label(): string

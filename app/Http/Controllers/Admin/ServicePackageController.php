@@ -8,6 +8,7 @@ use App\Models\AcademicYear;
 use App\Models\ServicePackage;
 use App\Models\TutoringGroup;
 use App\Models\User;
+use App\Services\PublicMediaStorage;
 use App\Services\StudentEntitlementService;
 use App\Support\HesetakMatchCatalog;
 use Illuminate\Http\RedirectResponse;
@@ -75,7 +76,9 @@ class ServicePackageController extends Controller
         $data['is_active'] = $request->boolean('is_active', true);
         $data['is_featured'] = $request->boolean('is_featured');
 
+        unset($data['cover_image'], $data['remove_cover_image']);
         $package = ServicePackage::create($data);
+        $this->syncCoverImage($request, $package);
         $package->syncSubjectLinks($request->input('academic_subject_ids', array_filter([(int) ($data['academic_subject_id'] ?? 0)])));
         $this->bustStorefrontCache();
 
@@ -114,8 +117,10 @@ class ServicePackageController extends Controller
             : ServicePackage::uniqueSlug($data['name'], $servicePackage->id);
         $data['is_active'] = $request->boolean('is_active');
         $data['is_featured'] = $request->boolean('is_featured');
+        unset($data['cover_image'], $data['remove_cover_image']);
 
         $servicePackage->update($data);
+        $this->syncCoverImage($request, $servicePackage);
         $servicePackage->syncSubjectLinks($request->input('academic_subject_ids', array_filter([(int) ($data['academic_subject_id'] ?? 0)])));
         $this->bustStorefrontCache();
 
@@ -381,6 +386,8 @@ class ServicePackageController extends Controller
             'description' => $textRules(['nullable', 'string', 'max:5000'], $enforceNoDemo),
             'tagline' => $textRules(['nullable', 'string', 'max:255'], $enforceNoDemo),
             'badge' => $textRules(['nullable', 'string', 'max:64'], $enforceNoDemo),
+            'cover_image' => ['nullable', 'image', 'max:5120'],
+            'remove_cover_image' => ['nullable', 'boolean'],
             'scope' => ['required', 'in:global,tutoring_individual,tutoring_collective,private_lessons'],
             'plan_type' => ['nullable', 'in:school,private,premier'],
             'term_months' => ['nullable', 'integer', 'in:1,3,6'],
@@ -409,6 +416,27 @@ class ServicePackageController extends Controller
         $code = strtoupper(trim((string) ($currency ?: platform_currency())));
 
         return in_array($code, ['SAR', 'USD', 'EGP'], true) ? $code : platform_currency();
+    }
+
+    private function syncCoverImage(Request $request, ServicePackage $package): void
+    {
+        if ($request->boolean('remove_cover_image') && filled($package->cover_image_path)) {
+            PublicMediaStorage::delete($package->cover_image_path);
+            $package->forceFill(['cover_image_path' => null])->save();
+
+            return;
+        }
+
+        if (! $request->hasFile('cover_image')) {
+            return;
+        }
+
+        $path = PublicMediaStorage::store(
+            $request->file('cover_image'),
+            'packages/covers',
+            $package->cover_image_path
+        );
+        $package->forceFill(['cover_image_path' => $path])->save();
     }
 
     private function bustStorefrontCache(): void

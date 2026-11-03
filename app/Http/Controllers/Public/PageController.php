@@ -81,10 +81,19 @@ class PageController extends Controller
 
     public function how()
     {
+        $studentVideo = \App\Services\HowItWorksMediaSettings::studentUrl();
+        $teacherVideo = \App\Services\HowItWorksMediaSettings::teacherUrl();
+
         return view('public.marketing.how', [
             'mcActive' => 'how',
             'pageTitle' => __('seo.how.title'),
             'pageDescription' => __('seo.how.description'),
+            'studentVideoUrl' => $studentVideo,
+            'studentVideoEmbed' => $studentVideo ? \App\Helpers\VideoHelper::getEmbedUrl($studentVideo) : null,
+            'studentVideoDirect' => $studentVideo ? \App\Helpers\VideoHelper::getDirectVideoUrl($studentVideo) : null,
+            'teacherVideoUrl' => $teacherVideo,
+            'teacherVideoEmbed' => $teacherVideo ? \App\Helpers\VideoHelper::getEmbedUrl($teacherVideo) : null,
+            'teacherVideoDirect' => $teacherVideo ? \App\Helpers\VideoHelper::getDirectVideoUrl($teacherVideo) : null,
         ]);
     }
 

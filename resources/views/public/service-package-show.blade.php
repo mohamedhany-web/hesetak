@@ -19,6 +19,16 @@
     @elseif(filled($package->description))
       <p class="mc-lead">{{ \Illuminate\Support\Str::limit(strip_tags($package->description), 180) }}</p>
     @endif
+    @if($package->coverImageUrl())
+      <div style="margin-top:1rem;max-width:420px;border-radius:1rem;overflow:hidden">
+        <img src="{{ $package->coverImageUrl() }}" alt="{{ $package->name }}" style="display:block;width:100%;height:auto">
+      </div>
+    @endif
+    <div style="margin-top:1rem;display:flex;flex-wrap:wrap;gap:.65rem">
+      <a href="{{ route('public.package-booking.teachers', array_filter(['servicePackage' => $package->id, 'year' => $yearId ?? null, 'subject' => request()->integer('subject') ?: null])) }}" class="mc-btn mc-btn--lg mc-btn--primary">{{ $isRtl ? 'اختر معلماً ثم المواعيد' : 'Pick teacher & slots' }}</a>
+      <a href="{{ $checkoutUrl }}" class="mc-btn mc-btn--lg mc-btn--soft">{{ $isRtl ? 'دفع مباشر' : 'Pay directly' }}</a>
+      <a href="{{ route('public.package-cart.index') }}" class="mc-btn mc-btn--lg mc-btn--outline">{{ $isRtl ? 'السلة' : 'Cart' }}</a>
+    </div>
   </div>
 </section>
 

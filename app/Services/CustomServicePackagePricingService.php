@@ -8,9 +8,9 @@ use InvalidArgumentException;
 
 class CustomServicePackagePricingService
 {
-    public const PRIVATE_TERM_MONTHS = [1, 3];
+    public const PRIVATE_TERM_MONTHS = [1, 3, 6, 12];
 
-    public const PRIVATE_WEEKLY_OPTIONS = [1, 2, 3, 4];
+    public const PRIVATE_WEEKLY_OPTIONS = [1, 2, 3, 4, 5, 6];
 
     public static function calculate(ServicePackagePricingRule $rule, int $sessions): array
     {
@@ -52,7 +52,7 @@ class CustomServicePackagePricingService
         }
 
         if (! in_array($termMonths, self::PRIVATE_TERM_MONTHS, true)) {
-            throw new InvalidArgumentException('مدة الاشتراك يجب أن تكون شهر أو 3 أشهر.');
+            throw new InvalidArgumentException('مدة الاشتراك غير مدعومة. اختر من القيم المتاحة.');
         }
 
         if (! in_array($weeklySessions, self::PRIVATE_WEEKLY_OPTIONS, true)) {
@@ -60,6 +60,8 @@ class CustomServicePackagePricingService
         }
 
         $sessions = $weeklySessions * 4 * $termMonths;
+        // باقة الحصص الأسبوعية: السعر من القاعدة مباشرة دون حد max_sessions القديم
+        // (حدود القاعدة كانت لبناء «عدد حصص» الحر وليست لـ أسابيع×أشهر).
         $quote = self::quoteFromSessions($rule, $sessions, [
             'duration_days' => $termMonths * 30,
             'term_months' => $termMonths,
@@ -68,6 +70,7 @@ class CustomServicePackagePricingService
             'weekly_group_sessions' => 0,
             'plan_type' => ServicePackage::PLAN_PRIVATE,
             'builder' => 'private_weekly',
+            'skip_session_bounds' => true,
         ]);
 
         $quote['name'] = $termMonths === 1
@@ -81,8 +84,10 @@ class CustomServicePackagePricingService
     {
         $min = max(1, (int) $rule->min_sessions);
         $max = max($min, (int) $rule->max_sessions);
+        $skipBounds = ! empty($extra['skip_session_bounds']);
+        unset($extra['skip_session_bounds']);
 
-        if ($sessions < $min || $sessions > $max) {
+        if (! $skipBounds && ($sessions < $min || $sessions > $max)) {
             throw new InvalidArgumentException("عدد الحصص الناتج ({$sessions}) خارج حدود التسعير ({$min}–{$max}). عدّل المدة أو الحصص الأسبوعية.");
         }
 

@@ -215,12 +215,21 @@
         @endif
 
         @if($hasIntroVideo)
-          <div class="mc-tp-block">
+          <div class="mc-tp-block" id="mc-tp-intro">
             <p class="mc-eyebrow">{{ $isRtl ? 'فيديو تعريفي' : 'Intro video' }}</p>
             <h3 class="mc-tp-sub">{{ $isRtl ? 'تعرّف على أسلوب الشرح قبل الحجز' : 'See their teaching style before booking' }}</h3>
-            <button type="button" class="mc-btn mc-btn--md mc-btn--outline" id="mcTpIntroOpenInline" aria-haspopup="dialog" aria-controls="mcTpIntroModal">
-              <i class="fas fa-play" aria-hidden="true"></i>
-              {{ $isRtl ? 'تشغيل الفيديو التعريفي' : 'Play intro video' }}
+            <div class="mc-tp-video" style="margin-top:.75rem;border-radius:1rem;overflow:hidden;background:#0b1b33;aspect-ratio:16/9">
+              @if($introEmbedUrl)
+                <iframe src="{{ $introEmbedUrl }}" title="{{ $name }}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy" style="width:100%;height:100%;border:0"></iframe>
+              @elseif($introDirectVideo)
+                <video controls playsinline preload="metadata" poster="{{ $profile->photo_url }}" style="width:100%;height:100%;object-fit:contain;background:#000">
+                  <source src="{{ $introDirectVideo }}" type="video/mp4">
+                </video>
+              @endif
+            </div>
+            <button type="button" class="mc-btn mc-btn--md mc-btn--outline" id="mcTpIntroOpenInline" aria-haspopup="dialog" aria-controls="mcTpIntroModal" style="margin-top:.75rem">
+              <i class="fas fa-expand" aria-hidden="true"></i>
+              {{ $isRtl ? 'عرض بملء الشاشة' : 'Open fullscreen' }}
             </button>
           </div>
         @endif

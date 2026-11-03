@@ -26,7 +26,7 @@
         </div>
     @endif
 
-    <form method="POST" action="{{ $action }}" class="space-y-5">
+    <form method="POST" action="{{ $action }}" class="space-y-5" enctype="multipart/form-data">
         @csrf
         @if($mode === 'edit') @method('PUT') @endif
 
@@ -35,6 +35,19 @@
                 <div class="sm:col-span-2">
                     <label class="{{ $labelClass }}" for="name">اسم الباقة *</label>
                     <input id="name" name="name" value="{{ old('name', $package->name) }}" required class="{{ $fieldClass }}">
+                </div>
+                <div class="sm:col-span-2">
+                    <label class="{{ $labelClass }}" for="cover_image">صورة الباقة (واجهة الموقع)</label>
+                    @if($mode === 'edit' && $package->coverImageUrl())
+                        <div class="mb-3 overflow-hidden rounded-xl border border-line" style="max-width:280px">
+                            <img src="{{ $package->coverImageUrl() }}" alt="" style="display:block;width:100%;height:auto">
+                        </div>
+                        <label class="mb-2 inline-flex items-center gap-2 text-xs text-muted">
+                            <input type="checkbox" name="remove_cover_image" value="1"> حذف الصورة الحالية
+                        </label>
+                    @endif
+                    <input id="cover_image" type="file" name="cover_image" accept="image/*" class="{{ $fieldClass }}">
+                    <p class="mt-1 text-[11px] text-muted">تظهر على بطاقات الباقات في الرئيسية وصفحة التفاصيل. PNG/JPG حتى 5MB.</p>
                 </div>
                 <div>
                     <label class="{{ $labelClass }}" for="slug">الرابط</label>
