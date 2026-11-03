@@ -200,9 +200,14 @@
               $detailsHref = null;
               if (! empty($card['package_id']) && \Illuminate\Support\Facades\Route::has('public.package-booking.teachers')) {
                   $detailsHref = route('public.package-booking.teachers', (int) $card['package_id']);
+                  // بطاقة مادة: مرّر subject من مفتاح البطاقة إن وُجد (sub-53)
+                  $cardSubjectId = $selSubject ? (int) $selSubject : null;
+                  if (! $cardSubjectId && preg_match('/^sub-(\d+)$/', (string) ($card['key'] ?? ''), $m)) {
+                      $cardSubjectId = (int) $m[1];
+                  }
                   $cardQuery = array_filter([
                       'year' => $selYear ? (int) $selYear : null,
-                      'subject' => $selSubject ? (int) $selSubject : null,
+                      'subject' => $cardSubjectId,
                   ]);
                   if ($cardQuery !== []) {
                       $detailsHref .= '?'.http_build_query($cardQuery);

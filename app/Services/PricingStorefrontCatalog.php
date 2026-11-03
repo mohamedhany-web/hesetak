@@ -625,7 +625,10 @@ class PricingStorefrontCatalog
                 'tone' => abs(crc32($subject->name)) % 5,
                 'icon' => $subject->faIcon() ?: $this->iconForName($subject->name),
                 'price_options' => $options,
-                'checkout_url' => route('public.service-packages.checkout', $linkedPackage),
+                'checkout_url' => route('public.package-booking.teachers', $linkedPackage).'?'.http_build_query(array_filter([
+                    'year' => $yearId,
+                    'subject' => (int) $subject->id,
+                ])),
                 'badge' => $linkedPackage->badge,
                 'package_id' => $linkedPackage->id,
                 'cover_image_url' => $linkedPackage->coverImageUrl(),
@@ -637,6 +640,22 @@ class PricingStorefrontCatalog
             ? trim('معلم أو معلمة لمادة '.$subject->name.($yearName !== '' ? ' لجميع صفوف '.$yearName : ''))
             : trim('A tutor for '.$subject->name.($yearName !== '' ? ' · '.$yearName : ''));
 
+        // بدون باقة مربوطة بالمادة: استخدم باقة الاستورفرونت الافتراضية لمسار المعلمين ثم الدفع
+        $fallbackPackage = ServicePackage::query()->storefront()->ordered()->first();
+        $teachersQuery = array_filter([
+            'year' => $yearId,
+            'subject' => $subject->id,
+        ]);
+        $teachersUrl = $fallbackPackage
+            ? route('public.package-booking.teachers', $fallbackPackage).(
+                $teachersQuery !== [] ? '?'.http_build_query($teachersQuery) : ''
+            )
+            : route('public.service-packages.index', array_filter([
+                'catalog' => 1,
+                'year' => $yearId,
+                'subject' => $subject->id,
+            ])).'#private-builder';
+
         return [
             'key' => 'sub-'.$subject->id,
             'title' => $title,
@@ -646,13 +665,10 @@ class PricingStorefrontCatalog
             'tone' => abs(crc32($subject->name)) % 5,
             'icon' => $subject->faIcon() ?: $this->iconForName($subject->name),
             'price_options' => $options,
-            'checkout_url' => route('public.service-packages.index', array_filter([
-                'catalog' => 1,
-                'year' => $yearId,
-                'subject' => $subject->id,
-            ])).'#private-builder',
+            'checkout_url' => $teachersUrl,
             'badge' => null,
-            'package_id' => null,
+            'package_id' => $fallbackPackage?->id,
+            'cover_image_url' => $fallbackPackage?->coverImageUrl(),
         ];
     }
 
