@@ -146,17 +146,30 @@ class PackageCatalogFilterService
     }
 
     /**
-     * باقات الرئيسية / الأكثر مبيعًا: المميزة فقط كما تُدار من الإدارة.
+     * باقات الرئيسية / الأكثر مبيعًا: المميزة أولاً، وإن خلت نعرض أعلى الباقات النشطة.
      */
     public function homeShowcase(int $limit = 6): Collection
     {
-        return $this->catalog(
+        $featured = $this->catalog(
             yearId: null,
             subjectId: null,
             curriculumType: null,
             limit: $limit,
             applyViewerDefaults: false,
             featuredOnly: true,
+        )['packages'];
+
+        if ($featured->isNotEmpty()) {
+            return $featured;
+        }
+
+        return $this->catalog(
+            yearId: null,
+            subjectId: null,
+            curriculumType: null,
+            limit: $limit,
+            applyViewerDefaults: false,
+            featuredOnly: false,
         )['packages'];
     }
 

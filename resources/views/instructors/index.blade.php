@@ -268,5 +268,21 @@
 document.getElementById('teachers-list')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 </script>
 @endif
+<script>
+(function () {
+  var form = document.querySelector('form.mc-dir-bar, form[action*="instructors"]');
+  if (!form) form = document.querySelector('.mc-dir-bar') && document.querySelector('.mc-dir-bar').closest('form');
+  if (!form) return;
+  ['stage', 'curriculum'].forEach(function (name) {
+    var el = form.querySelector('[name="' + name + '"]');
+    if (!el) return;
+    el.addEventListener('change', function () {
+      var skill = form.querySelector('[name="skill"]');
+      if (skill) skill.value = '';
+      form.requestSubmit ? form.requestSubmit() : form.submit();
+    });
+  });
+})();
+</script>
 </body>
 </html>

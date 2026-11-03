@@ -423,7 +423,14 @@ class StudentSchoolHomeService
                 /** @var OneToOneSession $sample */
                 $sample = $group->first();
                 $total = max(1, $group->count());
-                $completed = $group->where('status', OneToOneSession::STATUS_COMPLETED)->count();
+                $completed = $group->filter(function (OneToOneSession $s) {
+                    if ($s->status === OneToOneSession::STATUS_COMPLETED) {
+                        return true;
+                    }
+                    $meeting = $s->classroomMeeting;
+
+                    return $meeting && filled($meeting->ended_at ?? null);
+                })->count();
                 $percent = (int) round(($completed / $total) * 100);
                 $next = $group
                     ->filter(fn (OneToOneSession $s) => $s->status === OneToOneSession::STATUS_SCHEDULED

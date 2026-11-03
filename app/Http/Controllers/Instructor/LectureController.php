@@ -12,6 +12,7 @@ use App\Services\LectureMaterialStorage;
 use App\Services\PublicMediaStorage;
 use App\Services\TeamsAttendanceImportService;
 use App\Support\AppTimezone;
+use App\Support\AttachesCourseCurriculumItems;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -191,6 +192,8 @@ class LectureController extends Controller
             $lecture->min_watch_percent_to_unlock_next = $validated['min_watch_percent_to_unlock_next'];
             $lecture->save();
         }
+
+        AttachesCourseCurriculumItems::attach((int) $course->id, $lecture, 'المحاضرات');
 
         // حفظ مواد المحاضرة (ملفات مرفوعة)
         $materialFiles = $request->file('material_files');

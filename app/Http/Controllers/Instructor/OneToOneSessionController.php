@@ -25,6 +25,7 @@ class OneToOneSessionController extends Controller
             ->where('instructor_id', $instructorId)
             ->with(['course', 'student', 'classroomMeeting', 'enrollment'])
             ->orderByRaw("CASE status WHEN 'pending_schedule' THEN 0 WHEN 'scheduled' THEN 1 ELSE 2 END")
+            ->orderByRaw('scheduled_at IS NULL')
             ->orderBy('scheduled_at')
             ->orderBy('session_number')
             ->paginate(25);

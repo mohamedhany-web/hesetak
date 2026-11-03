@@ -242,7 +242,14 @@
               </ul>
             @endif
 
-            @if(count($skillChips) > 0)
+            @if(($teachingSubjects ?? collect())->isNotEmpty())
+              <p class="mc-eyebrow" style="margin-top:1rem">{{ $isRtl ? 'المواد التدريسية' : 'Teaching subjects' }}</p>
+              <div class="mc-cats" style="margin-top:.5rem">
+                @foreach($teachingSubjects as $subj)
+                  <a class="mc-cat" href="{{ route('public.instructors.index', ['skill' => $subj->slug]) }}"><span class="mc-cat__dot" aria-hidden="true"></span>{{ $subj->name }}</a>
+                @endforeach
+              </div>
+            @elseif(count($skillChips) > 0)
               <div class="mc-cats" style="margin-top:1rem">
                 @foreach($skillChips as $skill)
                   <a class="mc-cat" href="{{ route('public.instructors.index', ['skill' => $skill]) }}"><span class="mc-cat__dot" aria-hidden="true"></span>{{ $skill }}</a>

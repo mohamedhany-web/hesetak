@@ -319,8 +319,8 @@ class ClassroomController extends Controller
                 ->with('error', 'انتهى هذا الاجتماع.');
         }
 
-        // أي طرف مصرّح يدخل يبدأ الجلسة حتى يتمكن الطرف الآخر من الانضمام داخل المنصة.
-        if (! $meeting->started_at) {
+        // يبدأ العدّ فقط عندما يدخل المضيف (معلم/أدمن) — لا عند فتح الطالب للغرفة قبل «ادخل الآن».
+        if (! $meeting->started_at && $canManageMeeting) {
             $meeting->update(['started_at' => now()]);
             $meeting->refresh();
         }
@@ -376,6 +376,9 @@ class ClassroomController extends Controller
 
         $roomExitUrl = $this->classroomRoomExitUrl($meeting, $user, $canManageMeeting);
 
+        // تسجيل تلقائي صامت للأدمن فقط (رقابة) — لا للطالب ولا للمعلم.
+        $enableSilentAutoRecording = $canManageMeeting && $user->isAdmin();
+
         $viewName = ($canManageMeeting || request()->routeIs('instructor.*'))
             ? 'student.classroom.room'
             : 'student.classroom.room-student';
@@ -389,6 +392,7 @@ class ClassroomController extends Controller
                 'meetingEndsAt',
                 'useInstructorRoutes',
                 'canManageMeeting',
+                'enableSilentAutoRecording',
                 'subscriptionFeatureMenuItems',
                 'subscriptionPackageLabel',
                 'guestJoinEnabled',

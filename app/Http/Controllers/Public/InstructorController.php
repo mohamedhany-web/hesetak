@@ -78,9 +78,12 @@ class InstructorController extends Controller
         if (Schema::hasTable('academic_subjects')) {
             $subjectQuery = AcademicSubject::query()->active()->ordered();
             if ($stageYear) {
-                $subjectQuery->where('academic_year_id', $stageYear->id);
+                $subjectQuery->forYear((int) $stageYear->id);
             } else {
-                $subjectQuery->whereHas('academicYear', fn ($y) => $y->publicCatalog());
+                $subjectQuery->where(function ($q) {
+                    $q->whereNull('academic_year_id')
+                        ->orWhereHas('academicYear', fn ($y) => $y->publicCatalog());
+                });
             }
             $subjectOptions = $subjectQuery
                 ->get(['id', 'name', 'slug', 'academic_year_id'])
@@ -104,12 +107,29 @@ class InstructorController extends Controller
 
         if ($q !== '') {
             $like = '%'.$q.'%';
-            $query->where(function ($inner) use ($like) {
+            $matchedSearchSubjectIds = collect();
+            if (Schema::hasTable('academic_subjects')) {
+                $matchedSearchSubjectIds = AcademicSubject::query()
+                    ->active()
+                    ->where(function ($s) use ($like, $q) {
+                        $s->where('name', 'like', $like)
+                            ->orWhere('slug', 'like', $like)
+                            ->orWhere('name', $q);
+                    })
+                    ->pluck('id');
+            }
+            $query->where(function ($inner) use ($like, $matchedSearchSubjectIds) {
                 $inner->where('instructor_profiles.headline', 'like', $like)
                     ->orWhere('instructor_profiles.bio', 'like', $like)
                     ->orWhere('instructor_profiles.skills', 'like', $like)
                     ->orWhere('instructor_profiles.experience', 'like', $like)
                     ->orWhereHas('user', fn ($u) => $u->where('name', 'like', $like));
+                if ($matchedSearchSubjectIds->isNotEmpty() && Schema::hasColumn('instructor_profiles', 'teaching_subject_ids')) {
+                    foreach ($matchedSearchSubjectIds as $sid) {
+                        $inner->orWhereJsonContains('instructor_profiles.teaching_subject_ids', (int) $sid)
+                            ->orWhereJsonContains('instructor_profiles.teaching_subject_ids', (string) $sid);
+                    }
+                }
             });
         }
 
@@ -118,9 +138,12 @@ class InstructorController extends Controller
             if (Schema::hasTable('academic_subjects')) {
                 $subjectMatch = AcademicSubject::query()->active();
                 if ($stageYear) {
-                    $subjectMatch->where('academic_year_id', $stageYear->id);
+                    $subjectMatch->forYear((int) $stageYear->id);
                 } else {
-                    $subjectMatch->whereHas('academicYear', fn ($y) => $y->publicCatalog());
+                    $subjectMatch->where(function ($q) {
+                        $q->whereNull('academic_year_id')
+                            ->orWhereHas('academicYear', fn ($y) => $y->publicCatalog());
+                    });
                 }
                 $matchedSubjectIds = $subjectMatch
                     ->where(function ($s) use ($skill) {
@@ -341,6 +364,22 @@ class InstructorController extends Controller
 
         $packagesUrl = route('public.pricing');
 
+        $teachingSubjects = collect();
+        if (Schema::hasTable('academic_subjects') && Schema::hasColumn('instructor_profiles', 'teaching_subject_ids')) {
+            $ids = collect($profile->teaching_subject_ids ?? [])
+                ->map(fn ($id) => (int) $id)
+                ->filter(fn ($id) => $id > 0)
+                ->unique()
+                ->values();
+            if ($ids->isNotEmpty()) {
+                $teachingSubjects = AcademicSubject::query()
+                    ->active()
+                    ->whereIn('id', $ids->all())
+                    ->ordered()
+                    ->get(['id', 'name', 'slug']);
+            }
+        }
+
         $teachingYears = collect();
         if (Schema::hasTable('academic_year_instructors')) {
             $teachingYears = AcademicYear::query()
@@ -382,6 +421,7 @@ class InstructorController extends Controller
             'unitsLeft',
             'bookableSlots',
             'packagesUrl',
+            'teachingSubjects',
             'teachingYears',
             'curriculumTypeLabels'
         ));

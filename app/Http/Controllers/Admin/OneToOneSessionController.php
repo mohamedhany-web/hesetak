@@ -25,7 +25,10 @@ class OneToOneSessionController extends Controller
 
         $query = OneToOneSession::query()
             ->with(['student', 'instructor', 'course', 'classroomMeeting', 'bookedBy', 'entitlement'])
-            ->orderByDesc('created_at');
+            ->orderByRaw("CASE status WHEN 'pending_schedule' THEN 0 WHEN 'scheduled' THEN 1 WHEN 'completed' THEN 2 ELSE 3 END")
+            ->orderBy('scheduled_at')
+            ->orderBy('session_number')
+            ->orderByDesc('id');
 
         if (in_array($status, array_keys(OneToOneSession::statusLabels()), true)) {
             $query->where('status', $status);

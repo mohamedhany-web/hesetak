@@ -700,7 +700,8 @@
             }
           });
           var slotWindows = Object.keys(fromSlots).map(function (k) { return fromSlots[k]; });
-          fillWeeklyFromWindows(slotWindows.length ? slotWindows : (data.weekly_windows || []));
+          // لا نعرض نوافذ أسبوعية خام غير قابلة للحجز — فقط مواعيد مشتقة من slots.
+          fillWeeklyFromWindows(slotWindows);
           if (multiSlotSelect) {
             multiSlotSelect.innerHTML = '';
             slots.forEach(function (s) {

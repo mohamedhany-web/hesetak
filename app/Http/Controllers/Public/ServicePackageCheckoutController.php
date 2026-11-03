@@ -103,6 +103,64 @@ class ServicePackageCheckoutController extends Controller
         ]);
     }
 
+    public function show(ServicePackage $servicePackage): View
+    {
+        abort_unless($servicePackage->is_active && ! $servicePackage->tutoring_group_id, 404);
+
+        $servicePackage->load(['academicYear:id,name', 'academicSubject:id,name']);
+        if (Schema::hasTable('service_package_subjects')) {
+            $servicePackage->load(['subjects:id,name,slug']);
+        }
+
+        $subjects = $servicePackage->relationLoaded('subjects') && $servicePackage->subjects->isNotEmpty()
+            ? $servicePackage->subjects
+            : collect(array_filter([$servicePackage->academicSubject]));
+
+        $subjectIds = $subjects->pluck('id')->map(fn ($id) => (int) $id)->filter()->values();
+        $teachersBySubject = [];
+        if ($subjectIds->isNotEmpty() && Schema::hasTable('instructor_profiles')) {
+            foreach ($subjects as $subject) {
+                $sid = (int) $subject->id;
+                $query = \App\Services\PublicInstructorDirectory::approvedActiveQuery()
+                    ->with(['user:'.implode(',', \App\Services\PublicInstructorDirectory::userSelect())]);
+                if (Schema::hasColumn('instructor_profiles', 'teaching_subject_ids')) {
+                    $query->where(function ($q) use ($sid) {
+                        $q->whereJsonContains('instructor_profiles.teaching_subject_ids', $sid)
+                            ->orWhereJsonContains('instructor_profiles.teaching_subject_ids', (string) $sid);
+                    });
+                }
+                $teachersBySubject[$sid] = $query->limit(8)->get()
+                    ->filter(fn ($p) => \App\Services\PublicInstructorDirectory::isPublishableListing($p))
+                    ->values();
+            }
+        }
+
+        $yearId = request()->filled('year')
+            ? request()->integer('year')
+            : ($servicePackage->academic_year_id ? (int) $servicePackage->academic_year_id : null);
+        $subjectId = request()->filled('subject')
+            ? request()->integer('subject')
+            : ($servicePackage->academic_subject_id ? (int) $servicePackage->academic_subject_id : null);
+
+        $checkoutUrl = route('public.service-packages.checkout', array_filter([
+            'servicePackage' => $servicePackage->id,
+            'year' => $yearId,
+            'subject' => $subjectId,
+            'sessions' => request()->integer('sessions') ?: null,
+        ]));
+
+        return view('public.service-package-show', [
+            'package' => $servicePackage,
+            'subjects' => $subjects,
+            'teachersBySubject' => $teachersBySubject,
+            'checkoutUrl' => $checkoutUrl,
+            'mcActive' => 'pricing',
+            'bodyClass' => 'mc-body--dir',
+            'pageTitle' => $servicePackage->name.' — '.__('landing.nav.brand'),
+            'pageDescription' => \Illuminate\Support\Str::limit(strip_tags((string) ($servicePackage->description ?: $servicePackage->tagline)), 160),
+        ]);
+    }
+
     public function checkout(ServicePackage $servicePackage): View|RedirectResponse
     {
         abort_unless($servicePackage->is_active && ! $servicePackage->tutoring_group_id, 404);

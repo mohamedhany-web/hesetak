@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\FreeTrialBooking;
 use App\Models\Notification;
 use App\Models\OneToOneSession;
 use App\Models\TutoringClassSession;
@@ -35,26 +36,62 @@ class StudentScheduleService
             OneToOneSession::query()
                 ->with(['course:id,title', 'instructor:id,name', 'classroomMeeting'])
                 ->where('student_id', $user->id)
-                ->where('status', OneToOneSession::STATUS_SCHEDULED)
+                ->whereIn('status', [
+                    OneToOneSession::STATUS_SCHEDULED,
+                    OneToOneSession::STATUS_PENDING,
+                ])
                 ->whereBetween('scheduled_at', [$startUtc, $endUtc])
                 ->orderBy('scheduled_at')
                 ->get()
                 ->each(function (OneToOneSession $session) use ($items) {
-                    $dur = max(30, (int) ($session->duration_minutes ?: 50));
+                    $dur = max(15, (int) ($session->duration_minutes ?: 50));
                     $starts = $session->scheduled_at;
+                    $isTrial = (bool) ($session->is_complimentary ?? false);
                     $items->push((object) [
                         'key' => 'private:'.$session->id,
-                        'type' => 'private',
+                        'type' => $isTrial ? 'trial' : 'private',
                         'ref_id' => $session->id,
-                        'title' => $session->course?->title ?: 'حصة خاصة',
-                        'subtitle' => $session->instructor?->name ?: 'معلم خاص',
+                        'title' => $session->course?->title ?: ($isTrial ? 'حصة تجريبية' : 'حصة خاصة'),
+                        'subtitle' => ($isTrial ? 'تجريبية · ' : '').($session->instructor?->name ?: 'معلم خاص'),
                         'starts_at' => $starts,
                         'ends_at' => $starts?->copy()->addMinutes($dur),
                         'join_url' => Route::has('student.schedule.join')
                             ? route('student.schedule.join', ['type' => 'private', 'id' => $session->id])
                             : $session->joinUrl(),
-                        'color' => 'gold',
-                        'icon' => 'fa-chalkboard-teacher',
+                        'color' => $isTrial ? 'blue' : 'gold',
+                        'icon' => $isTrial ? 'fa-gift' : 'fa-chalkboard-teacher',
+                        'is_trial' => $isTrial,
+                    ]);
+                });
+        }
+
+        if (Schema::hasTable('free_trial_bookings')) {
+            FreeTrialBooking::query()
+                ->with(['instructor:id,name'])
+                ->where('user_id', $user->id)
+                ->whereNotNull('starts_at')
+                ->whereBetween('starts_at', [$startUtc, $endUtc])
+                ->whereIn('status', [
+                    FreeTrialBooking::STATUS_PENDING,
+                    FreeTrialBooking::STATUS_CONFIRMED,
+                ])
+                ->orderBy('starts_at')
+                ->get()
+                ->each(function (FreeTrialBooking $booking) use ($items) {
+                    $starts = $booking->starts_at;
+                    $dur = max(15, (int) ($booking->duration_minutes ?: 30));
+                    $items->push((object) [
+                        'key' => 'trial:'.$booking->id,
+                        'type' => 'trial',
+                        'ref_id' => $booking->id,
+                        'title' => $booking->goalLabel() ?: 'حصة تجريبية',
+                        'subtitle' => $booking->instructor?->name ?: 'معلم',
+                        'starts_at' => $starts,
+                        'ends_at' => $booking->ends_at ?: $starts?->copy()->addMinutes($dur),
+                        'join_url' => route('dashboard'),
+                        'color' => 'blue',
+                        'icon' => 'fa-gift',
+                        'is_trial' => true,
                     ]);
                 });
         }

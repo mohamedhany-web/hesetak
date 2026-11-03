@@ -7,6 +7,7 @@ use App\Models\AdvancedExam;
 use App\Models\AdvancedCourse;
 use App\Models\Question;
 use App\Models\ExamAttempt;
+use App\Support\AttachesCourseCurriculumItems;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -135,6 +136,8 @@ class ExamController extends Controller
         $validated['sidebar_position'] = $request->filled('sidebar_position') ? $request->sidebar_position : null;
         
         $exam = AdvancedExam::create($validated);
+
+        AttachesCourseCurriculumItems::attach((int) $exam->advanced_course_id, $exam, 'الاختبارات');
         
         // إضافة الأسئلة إذا تم إرسالها
         if ($request->filled('questions') && is_array($request->questions)) {

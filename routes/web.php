@@ -482,6 +482,7 @@ Route::get('/service-packages/custom/orders/{order}/fawaterak/methods', [\App\Ht
 Route::post('/service-packages/custom/orders/{order}/fawaterak/pay', [\App\Http\Controllers\Public\ServicePackageCheckoutController::class, 'fawaterakPayCustom'])
     ->middleware(['auth', 'throttle:30,1'])
     ->name('public.service-packages.custom.fawaterak.pay');
+Route::get('/service-packages/{servicePackage}', [\App\Http\Controllers\Public\ServicePackageCheckoutController::class, 'show'])->name('public.service-packages.show');
 Route::get('/service-packages/{servicePackage}/checkout', [\App\Http\Controllers\Public\ServicePackageCheckoutController::class, 'checkout'])->name('public.service-packages.checkout');
 Route::post('/service-packages/{servicePackage}/checkout', [\App\Http\Controllers\Public\ServicePackageCheckoutController::class, 'store'])->middleware('auth')->name('public.service-packages.store');
 Route::post('/service-packages/{servicePackage}/checkout/fawaterak/prepare', [\App\Http\Controllers\Public\ServicePackageCheckoutController::class, 'fawaterakPrepare'])

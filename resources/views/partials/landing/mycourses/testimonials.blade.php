@@ -70,7 +70,11 @@
           index = (i + slides.length) % slides.length;
           var slide = slides[index];
           if (!slide) return;
-          track.scrollTo({ left: slide.offsetLeft - track.offsetLeft, behavior: 'smooth' });
+          try {
+            slide.scrollIntoView({ behavior: 'smooth', inline: 'start', block: 'nearest' });
+          } catch (e) {
+            track.scrollLeft = slide.offsetLeft - track.offsetLeft;
+          }
         }
         root.addEventListener('pointerdown', function () { paused = true; });
         root.addEventListener('focusin', function () { paused = true; });

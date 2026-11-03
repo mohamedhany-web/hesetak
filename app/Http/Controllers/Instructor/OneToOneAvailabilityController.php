@@ -45,9 +45,24 @@ class OneToOneAvailabilityController extends Controller
             is_string($data['timezone'] ?? null) ? $data['timezone'] : null
         );
 
+        $slots = $data['slots'] ?? [];
+        $distinctWindows = collect($slots)
+            ->filter(fn ($s) => filled($s['day_of_week'] ?? null) && filled($s['start_time'] ?? null))
+            ->map(fn ($s) => ((int) $s['day_of_week']).'|'.substr((string) $s['start_time'], 0, 5))
+            ->unique()
+            ->count();
+
+        if ($distinctWindows < 4) {
+            return back()
+                ->withInput()
+                ->withErrors([
+                    'slots' => 'يلزم تحديد 4 مواعيد أسبوعية على الأقل (أيام/أوقات مختلفة) لقبول جدولك.',
+                ]);
+        }
+
         OneToOneAvailabilityService::syncRules(
             $request->user()->id,
-            $data['slots'] ?? []
+            $slots
         );
 
         return back()->with('success', __('student.one_to_one_availability_saved'));

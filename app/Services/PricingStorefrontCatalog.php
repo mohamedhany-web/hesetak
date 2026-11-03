@@ -572,6 +572,7 @@ class PricingStorefrontCatalog
             'price_options' => $options,
             'checkout_url' => $row['checkout_url'] ?? route('public.service-packages.checkout', $model),
             'badge' => $row['badge'] ?? null,
+            'package_id' => $model->id,
         ];
     }
 

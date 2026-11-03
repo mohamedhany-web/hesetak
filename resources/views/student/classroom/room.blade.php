@@ -527,7 +527,7 @@
             var timerChip = document.getElementById('meeting-timer-chip');
             var timerChipMobile = document.getElementById('meeting-timer-chip-mobile');
             var mxMeetingId = {{ (int) $meeting->id }};
-            var mxSilentAutoRecording = {{ !empty($canManageMeeting) ? 'true' : 'false' }};
+            var mxSilentAutoRecording = {{ !empty($enableSilentAutoRecording) ? 'true' : 'false' }};
             var mxAutoRecBadge = document.getElementById('mx-auto-rec-badge');
             var mxAutoRecordStarted = false;
             var recordDdWrap = document.getElementById('hstk-record-dd-wrap');

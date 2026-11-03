@@ -193,18 +193,31 @@
         <div class="mc-pric-grid">
           @foreach($cards as $card)
             @php
-              $cardHref = $card['checkout_url'] ?? null;
-              if (! $cardHref && ! empty($card['price_options'][0]['href'])) {
-                  $cardHref = $card['price_options'][0]['href'];
+              $checkoutHref = $card['checkout_url'] ?? null;
+              if (! $checkoutHref && ! empty($card['price_options'][0]['href'])) {
+                  $checkoutHref = $card['price_options'][0]['href'];
               }
-              if ($cardHref && ($selYear || $selSubject)) {
+              $detailsHref = null;
+              if (! empty($card['package_id']) && \Illuminate\Support\Facades\Route::has('public.service-packages.show')) {
+                  $detailsHref = route('public.service-packages.show', (int) $card['package_id']);
                   $cardQuery = array_filter([
                       'year' => $selYear ? (int) $selYear : null,
                       'subject' => $selSubject ? (int) $selSubject : null,
                   ]);
                   if ($cardQuery !== []) {
-                      $join = str_contains($cardHref, '?') ? '&' : '?';
-                      $cardHref .= $join.http_build_query($cardQuery);
+                      $detailsHref .= '?'.http_build_query($cardQuery);
+                  }
+              }
+              $cardHref = $detailsHref ?: $checkoutHref;
+              if ($checkoutHref && ($selYear || $selSubject) && ! $detailsHref) {
+                  $cardQuery = array_filter([
+                      'year' => $selYear ? (int) $selYear : null,
+                      'subject' => $selSubject ? (int) $selSubject : null,
+                  ]);
+                  if ($cardQuery !== []) {
+                      $join = str_contains($checkoutHref, '?') ? '&' : '?';
+                      $checkoutHref .= $join.http_build_query($cardQuery);
+                      $cardHref = $checkoutHref;
                   }
               }
             @endphp

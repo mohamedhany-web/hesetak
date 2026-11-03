@@ -21,10 +21,11 @@
     $viewMode = $viewMode ?? 'week';
     $sortMode = $sortMode ?? 'classes';
     $searchQuery = $searchQuery ?? '';
-    $weekAnchor = ($weekAnchor ?? now())->locale($locale);
     $viewerTz = auth()->user()?->timezoneCode() ?? \App\Support\AppTimezone::academy();
-    $weekAnchor = $weekAnchor->copy()->timezone($viewerTz);
-    $cal = $weekAnchor->copy();
+    $todayInViewerTz = now($viewerTz)->locale($locale);
+    $weekAnchor = ($weekAnchor ?? $todayInViewerTz)->copy()->timezone($viewerTz)->locale($locale);
+    // التقويم الشهري يُثبَّت على «اليوم» في منطقة الطالب ما لم يُمرَّر أسبوع للتنقّل.
+    $cal = request()->filled('week') ? $weekAnchor->copy() : $todayInViewerTz->copy();
     $monthStart = $cal->copy()->startOfMonth()->startOfWeek(\Carbon\Carbon::SATURDAY);
     $monthEnd = $cal->copy()->endOfMonth()->endOfWeek(\Carbon\Carbon::FRIDAY);
     $calendarDays = collect();
@@ -134,7 +135,9 @@
     $firstName = explode(' ', trim((string) (auth()->user()->name ?? '')))[0] ?? '';
     $progress = $progress ?? ['percent' => 0, 'attended' => 0, 'completed_sessions' => 0, 'label' => ''];
     $credits = $credits ?? ['total_left' => 0];
-    $trialUrl = route('home').'?open_trial=1';
+    $trialUrl = Route::has('public.instructors.index')
+        ? route('public.instructors.index', ['trial' => 1])
+        : (Route::has('public.pricing') ? route('public.pricing') : route('dashboard'));
     $exploreUrl = Route::has('public.instructors.index')
         ? route('public.instructors.index')
         : (Route::has('public.pricing') ? route('public.pricing') : route('dashboard'));

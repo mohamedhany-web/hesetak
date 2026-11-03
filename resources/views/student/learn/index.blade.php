@@ -93,7 +93,7 @@
         </div>
         <div class="st-join-hero__actions">
             @if($tab === 'private' && method_exists($teachers, 'isNotEmpty') && $teachers->isNotEmpty())
-                <a href="{{ $teachers->first()['url'] }}" class="st-pill st-pill--solid st-pill--lg">{{ __('student_timeline.learn_pick_teacher') }}</a>
+                <a href="{{ route('public.instructors.index') }}" class="st-pill st-pill--solid st-pill--lg">{{ __('student_timeline.learn_pick_teacher') }}</a>
             @elseif($tab !== 'private')
                 <a href="{{ $tabUrl('private') }}" class="st-pill st-pill--solid st-pill--lg">{{ __('student_timeline.learn_tab_private') }}</a>
             @endif

@@ -58,7 +58,17 @@ class OneToOneSession extends Model
 
     public static function allowedDurations(): array
     {
-        return [(int) config('private_lessons.lesson_duration_minutes', 50)];
+        $configured = config('private_lessons.allowed_durations_minutes');
+        if (is_array($configured) && $configured !== []) {
+            return array_values(array_unique(array_map('intval', $configured)));
+        }
+
+        $default = self::defaultDurationMinutes();
+
+        // مدد مرنة شائعة — لا تقتصر على 60 دقيقة فقط.
+        return array_values(array_unique(array_filter([
+            30, 45, $default, 60, 75, 90, 120,
+        ], fn ($m) => $m >= 15 && $m <= 240)));
     }
 
     public static function defaultDurationMinutes(): int
