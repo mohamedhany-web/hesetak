@@ -14,7 +14,10 @@
       <h1>{{ $package->name }}</h1>
       <p class="mc-lead">{{ $isRtl ? 'اختر معلماً يدرّس المادة، ثم استكشف المواعيد.' : 'Pick a teacher for the subject, then explore slots.' }}</p>
     </div>
-    <a href="{{ route('public.package-cart.index') }}" class="mc-btn mc-btn--md mc-btn--outline">{{ $isRtl ? 'السلة' : 'Cart' }} ({{ (int) ($cartCount ?? 0) }})</a>
+    <div style="display:flex;flex-wrap:wrap;gap:.5rem">
+      <a href="{{ route('public.package-cart.index') }}" class="mc-btn mc-btn--md mc-btn--primary">{{ $isRtl ? 'استكمال الشراء' : 'Continue checkout' }} ({{ (int) ($cartCount ?? 0) }})</a>
+      <a href="{{ route('public.package-cart.index') }}" class="mc-btn mc-btn--md mc-btn--outline">{{ $isRtl ? 'السلة' : 'Cart' }}</a>
+    </div>
   </div>
 </section>
 
@@ -90,7 +93,7 @@
                     @endforeach
                   </div>
                 @endif
-                <a class="mc-btn mc-btn--md mc-btn--primary" style="margin-top:auto" href="{{ route('public.package-booking.slots', array_filter(['servicePackage' => $package->id, 'instructor' => $u->id, 'year' => $yearId, 'subject' => $subjectId, 'weekly' => $weekly, 'weeks' => $weeks])) }}">
+                <a class="mc-btn mc-btn--md mc-btn--primary" style="margin-top:auto" href="{{ route('public.package-booking.slots', array_filter(['servicePackage' => $package->id, 'instructor' => $u, 'year' => $yearId, 'subject' => $subjectId, 'weekly' => $weekly, 'weeks' => $weeks])) }}">
                   {{ $isRtl ? 'استكشاف المواعيد' : 'Explore slots' }}
                 </a>
               </article>

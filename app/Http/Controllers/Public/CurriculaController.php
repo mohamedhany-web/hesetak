@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Public;
 
 use App\Http\Controllers\Controller;
+use App\Models\AcademicSubject;
 use App\Models\AcademicYear;
 use App\Models\InstructorProfile;
 use App\Support\HesetakMatchCatalog;
@@ -17,13 +18,12 @@ class CurriculaController extends Controller
             $years = AcademicYear::query()
                 ->publicCatalog()
                 ->ordered()
-                ->with(['subjects' => fn ($q) => $q->active()->ordered()])
                 ->withCount([
-                    'subjects as subjects_count' => fn ($q) => $q->active(),
                     'instructors as teachers_count',
                 ])
                 ->get()
                 ->values();
+            $this->attachPivotSubjects($years);
         }
 
         $teacherCount = 0;
@@ -61,9 +61,9 @@ class CurriculaController extends Controller
             $years = AcademicYear::query()
                 ->publicCatalog()
                 ->ordered()
-                ->with(['subjects' => fn ($q) => $q->active()->ordered()])
                 ->get()
                 ->values();
+            $this->attachPivotSubjects($years);
         }
 
         return view('public.marketing.request', [
@@ -98,7 +98,9 @@ class CurriculaController extends Controller
 
         $years = collect();
         if (Schema::hasTable('academic_years')) {
-            $years = AcademicYear::query()->publicCatalog()->ordered()->with(['subjects' => fn ($q) => $q->active()->ordered()])->get()
+            $years = AcademicYear::query()->publicCatalog()->ordered()->get();
+            $this->attachPivotSubjects($years);
+            $years = $years
                 ->filter(function ($year) use ($needles, $stage) {
                     $hay = mb_strtolower($year->name.' '.$year->slug.' '.$year->tagline);
                     foreach ($needles[$stage] ?? [] as $needle) {
@@ -130,11 +132,11 @@ class CurriculaController extends Controller
         }
 
         $year->load([
-            'subjects' => fn ($q) => $q->active()->ordered(),
             'instructors' => fn ($q) => $q->where('is_active', true)
                 ->whereIn('role', ['instructor', 'teacher'])
                 ->with(['instructorProfile' => fn ($p) => $p->approved()]),
         ]);
+        $this->attachPivotSubjects(collect([$year]));
 
         $teachers = $year->instructors
             ->filter(fn ($user) => $user->instructorProfile && $user->instructorProfile->status === InstructorProfile::STATUS_APPROVED)
@@ -205,5 +207,21 @@ class CurriculaController extends Controller
             'siblings' => $siblings,
             'curriculumTypes' => HesetakMatchCatalog::curriculumTypes(),
         ]);
+    }
+
+    /**
+     * مواد المرحلة من العمود ومن جدول الربط متعدد المراحل.
+     */
+    protected function attachPivotSubjects($years): void
+    {
+        if (! Schema::hasTable('academic_subjects')) {
+            return;
+        }
+
+        foreach ($years as $year) {
+            $subjects = AcademicSubject::query()->active()->forYear((int) $year->id)->ordered()->get();
+            $year->setRelation('subjects', $subjects);
+            $year->subjects_count = $subjects->count();
+        }
     }
 }

@@ -45,15 +45,9 @@ class PackageBookingController extends Controller
             : collect();
 
         $profiles = $this->teacherProfilesForBooking($yearId, $subjectId, $curriculum);
-        // إن ضيّقت المرحلة/المادة القائمة إلى صفر: وسّع تدريجياً حتى تظهر المعلمون المتاحون
-        if ($profiles->isEmpty() && $yearId) {
+        // المرحلة قد تضيّق القائمة؛ المادة المختارة تبقى شرطاً لظهور المعلم.
+        if ($profiles->isEmpty() && $yearId && $subjectId) {
             $profiles = $this->teacherProfilesForBooking(null, $subjectId, $curriculum);
-        }
-        if ($profiles->isEmpty() && $subjectId) {
-            $profiles = $this->teacherProfilesForBooking(null, null, $curriculum);
-        }
-        if ($profiles->isEmpty() && $curriculum !== '') {
-            $profiles = $this->teacherProfilesForBooking(null, null, '');
         }
 
         $weeklyOptions = CustomServicePackagePricingService::PRIVATE_WEEKLY_OPTIONS;
@@ -64,7 +58,9 @@ class PackageBookingController extends Controller
             $weekly = 2;
         }
         $weeks = max(1, min(16, $weeks));
-        $sessions = $weekly * $weeks;
+        $sessions = $request->filled('sessions')
+            ? max(1, min(200, $request->integer('sessions')))
+            : ($weekly * $weeks);
         $unit = (float) $servicePackage->pricePerUnit();
         $total = round($unit * $sessions, 2);
 

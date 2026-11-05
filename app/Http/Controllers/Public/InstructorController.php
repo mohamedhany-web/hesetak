@@ -41,20 +41,10 @@ class InstructorController extends Controller
             $curriculum = '';
         }
 
-        // ?all=1 = عرض الدليل كاملاً بدون فلاتر افتراضية من ملف الطالب
-        $showAll = $request->boolean('all') || $request->query('all') === '1';
-        if ($showAll) {
+        // دليل المعلمين يفتح بكل المعلمين. الفلاتر تُطبَّق فقط إذا اختارها الزائر في الرابط.
+        if ($request->boolean('all') || $request->query('all') === '1') {
             $stage = '';
             $curriculum = '';
-        } else {
-            // طالب مسجّل → افتراضي فقط إن لم يُمرَّر stage/curriculum في الرابط أصلاً
-            $viewer = \App\Support\StudentLearningProfile::fromAuth();
-            if ($stage === '' && $viewer->hasStage() && ! $request->exists('stage')) {
-                $stage = (string) $viewer->yearId;
-            }
-            if ($curriculum === '' && $viewer->hasCurriculum() && ! $request->exists('curriculum')) {
-                $curriculum = (string) $viewer->curriculumType;
-            }
         }
 
         $stages = collect();

@@ -389,37 +389,34 @@ class PricingStorefrontCatalog
         ?int $yearId = null,
         ?int $subjectId = null,
     ): string {
-        // حصة مستعجلة: صفحة تفاصيل الباقة/الدفع مع وسم urgent — لا تذهب لكتالوج عام
-        if ($kind === 'urgent') {
-            $match = $this->checkoutPackageForSessions(1, $package, $yearId, $subjectId)
-                ?? $package
-                ?? ServicePackage::query()->storefront()->ordered()->first();
-
-            if ($match) {
-                $query = array_filter([
-                    'year' => $yearId,
-                    'subject' => $subjectId,
-                    'urgent' => 1,
-                    'sessions' => 1,
-                ]);
-
-                return route('public.service-packages.checkout', $match).'?'.http_build_query($query);
-            }
-        }
-
-        // نفس مسار الدفع لكل خيار (2 / 8 / …) — لا نوجّه لصفحة منشئ مختلفة
-        $match = $this->checkoutPackageForSessions($sessions, $package, $yearId, $subjectId)
-            ?? $package
-            ?? ServicePackage::query()->storefront()->ordered()->first();
+        // 8 حصص / 2 حصص / مستعجلة → نفس صفحة المعلمين مع العدد المختار، ثم السلة والدفع
+        $match = $package ?? ServicePackage::query()->storefront()->ordered()->first();
 
         if ($match) {
+            if ($kind === 'urgent' || $sessions <= 1) {
+                $weekly = 1;
+                $weeks = 1;
+                $urgent = 1;
+            } elseif ($sessions <= 2) {
+                $weekly = 2;
+                $weeks = 1;
+                $urgent = null;
+            } else {
+                $weekly = 2;
+                $weeks = max(1, (int) ceil($sessions / $weekly));
+                $urgent = null;
+            }
+
             $query = array_filter([
                 'year' => $yearId,
                 'subject' => $subjectId,
+                'weekly' => $weekly,
+                'weeks' => $weeks,
                 'sessions' => $sessions,
+                'urgent' => $urgent,
             ]);
 
-            return route('public.service-packages.checkout', $match).'?'.http_build_query($query);
+            return route('public.package-booking.teachers', $match).'?'.http_build_query($query);
         }
 
         return route('public.service-packages.index', array_filter([
@@ -668,7 +665,7 @@ class PricingStorefrontCatalog
             'checkout_url' => $teachersUrl,
             'badge' => null,
             'package_id' => $fallbackPackage?->id,
-            'cover_image_url' => $fallbackPackage?->coverImageUrl(),
+            'cover_image_url' => null,
         ];
     }
 

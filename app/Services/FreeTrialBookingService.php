@@ -15,7 +15,7 @@ use InvalidArgumentException;
 
 class FreeTrialBookingService
 {
-    public const DURATION_MINUTES = 30;
+    public const DURATION_MINUTES = 20;
 
     /**
      * مواعيد المعلم الفاضية من جدوله الخاص (ليس نوافذ إدارة عامة).
@@ -46,7 +46,7 @@ class FreeTrialBookingService
 
         $from = ($from ?? now())->copy();
         $to = ($to ?? now()->addDays(14))->copy()->endOfDay();
-        $duration = OneToOneSession::defaultDurationMinutes();
+        $duration = self::DURATION_MINUTES;
         $clockTz = AppTimezone::forInstructorId($instructorId);
         $viewerTz = AppTimezone::normalize($viewerTimezone) ?? AppTimezone::forUser(auth()->user());
         $locale = app()->getLocale();
@@ -231,8 +231,8 @@ class FreeTrialBookingService
         $starts = $starts->utc()->startOfMinute();
 
         $duration = isset($data['duration_minutes'])
-            ? max(15, min(180, (int) $data['duration_minutes']))
-            : OneToOneSession::defaultDurationMinutes();
+            ? max(15, min(self::DURATION_MINUTES, (int) $data['duration_minutes']))
+            : self::DURATION_MINUTES;
         $requireAvailability = array_key_exists('require_availability', $data)
             ? (bool) $data['require_availability']
             : true;

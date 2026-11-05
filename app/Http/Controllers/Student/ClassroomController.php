@@ -376,8 +376,8 @@ class ClassroomController extends Controller
 
         $roomExitUrl = $this->classroomRoomExitUrl($meeting, $user, $canManageMeeting);
 
-        // تسجيل تلقائي صامت للأدمن فقط (رقابة) — لا للطالب ولا للمعلم.
-        $enableSilentAutoRecording = $canManageMeeting && $user->isAdmin();
+        // تسجيل الشاشة/الصوت التلقائي ملغى للطالب والمعلم (والأدمن داخل الحصة).
+        $enableSilentAutoRecording = false;
 
         $viewName = ($canManageMeeting || request()->routeIs('instructor.*'))
             ? 'student.classroom.room'
