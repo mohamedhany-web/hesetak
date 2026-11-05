@@ -45,8 +45,8 @@ class PackageBookingController extends Controller
             : collect();
 
         $profiles = $this->teacherProfilesForBooking($yearId, $subjectId, $curriculum);
-        // المرحلة قد تضيّق القائمة؛ المادة المختارة تبقى شرطاً لظهور المعلم.
-        if ($profiles->isEmpty() && $yearId && $subjectId) {
+        // المرحلة (ومنها مرحلة الباقة الافتراضية) قد تفرّغ القائمة. المادة تبقى شرطاً.
+        if ($profiles->isEmpty() && $yearId) {
             $profiles = $this->teacherProfilesForBooking(null, $subjectId, $curriculum);
         }
 
