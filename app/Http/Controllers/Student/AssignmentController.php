@@ -46,7 +46,15 @@ class AssignmentController extends Controller
             $filter = 'all';
         }
 
-        $courseIds = $user->activeCourses()->pluck('advanced_courses.id');
+        $courseIds = $user->courseEnrollments()->pluck('advanced_course_id')
+            ->merge(
+                \App\Models\OneToOneSession::query()
+                    ->where('student_id', $user->id)
+                    ->pluck('advanced_course_id')
+            )
+            ->filter()
+            ->unique()
+            ->values();
         if ($courseIds->isEmpty()) {
             return view('student.assignments.index', [
                 'assignments' => collect(),
@@ -541,9 +549,18 @@ class AssignmentController extends Controller
         if ($assignment->status !== 'published') {
             return false;
         }
-        $courseId = $assignment->advanced_course_id ?? $assignment->course_id;
+        $courseId = (int) ($assignment->advanced_course_id ?? $assignment->course_id);
+        if ($courseId && $user->isEnrolledIn($courseId)) {
+            return true;
+        }
+        if ($courseId && $user->courseEnrollments()->where('advanced_course_id', $courseId)->exists()) {
+            return true;
+        }
 
-        return (bool) ($courseId && $user->isEnrolledIn($courseId));
+        return $courseId && \App\Models\OneToOneSession::query()
+            ->where('student_id', $user->id)
+            ->where('advanced_course_id', $courseId)
+            ->exists();
     }
 
     private function submissionDeadlineOpen(Assignment $assignment): bool

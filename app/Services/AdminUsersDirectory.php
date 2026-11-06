@@ -138,7 +138,10 @@ class AdminUsersDirectory
     {
         $role = (string) $user->role;
 
-        // الأدوار الأربعة المطلوبة أولاً — حتى لو وُسم الحساب كموظف بالخطأ
+        if ($user->is_employee || $role === 'employee') {
+            return 'employee';
+        }
+
         if ($role === 'student') {
             return 'student';
         }
@@ -200,10 +203,14 @@ class AdminUsersDirectory
     protected function applyTypeFilter(Builder $query, string $type): void
     {
         match ($type) {
-            'student' => $query->where('role', 'student'),
+            'student' => $query->where('role', 'student')->where(function (Builder $q) {
+                $q->where('is_employee', false)->orWhereNull('is_employee');
+            }),
             'parent' => $this->parentScope($query),
             'instructor' => $query->whereIn('role', ['instructor', 'teacher']),
-            'employee' => $query->where('is_employee', true),
+            'employee' => $query->where(function (Builder $q) {
+                $q->where('is_employee', true)->orWhere('role', 'employee');
+            }),
             default => null,
         };
     }

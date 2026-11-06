@@ -72,6 +72,10 @@ class DashboardController extends Controller
                 return $this->instructorDashboard();
             case 'student':
                 return $this->studentDashboard();
+            case 'parent':
+                return redirect()->route('student.learning-desk');
+            case 'employee':
+                return redirect()->route('employee.dashboard');
             default:
                 // إذا كان الدور غير معروف، نعيد إلى الصفحة الرئيسية مع رسالة خطأ
                 Auth::logout();

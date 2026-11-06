@@ -217,8 +217,17 @@ class StudentScheduleService
                 ->where('id', $id)
                 ->first();
 
-            if (! $session || ! OneToOneSessionUnlockService::canStudentJoin($session, $user)) {
+            if (! $session) {
                 return null;
+            }
+
+            if (! $session->classroomMeeting && $session->scheduled_at && $session->instructor_id) {
+                \App\Services\OneToOneSessionService::ensureMeeting($session);
+                $session->refresh()->load('classroomMeeting');
+            }
+
+            if (! OneToOneSessionUnlockService::canStudentJoin($session, $user)) {
+                return $session->joinUrl();
             }
 
             return $session->joinUrl();

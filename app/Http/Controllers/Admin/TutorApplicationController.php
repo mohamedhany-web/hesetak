@@ -160,6 +160,26 @@ class TutorApplicationController extends Controller
             ->with('hired_password', $result['password']);
     }
 
+    public function updateProfile(Request $request, TutorApplication $tutorApplication): RedirectResponse
+    {
+        $data = $request->validate([
+            'headline' => ['nullable', 'string', 'max:190'],
+            'bio' => ['nullable', 'string', 'max:5000'],
+            'experience' => ['nullable', 'string', 'max:5000'],
+            'teaching_subject_ids' => ['nullable', 'array'],
+            'teaching_subject_ids.*' => ['integer'],
+        ]);
+
+        $tutorApplication->forceFill([
+            'headline' => $data['headline'] ?? null,
+            'bio' => $data['bio'] ?? null,
+            'experience' => $data['experience'] ?? null,
+            'teaching_subject_ids' => array_values(array_filter(array_map('intval', $data['teaching_subject_ids'] ?? []))),
+        ])->save();
+
+        return back()->with('success', 'تم تحديث نبذة المعلم ومواده.');
+    }
+
     public function show(TutorApplication $tutorApplication): View
     {
         $tutorApplication->load([

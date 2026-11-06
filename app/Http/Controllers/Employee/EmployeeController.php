@@ -27,7 +27,7 @@ class EmployeeController extends Controller
         }
 
         // الموظفون الذين لديهم دور RBAC مخصص → لوحة الأدمن المفلترة
-        if ($user->roles()->exists()) {
+        if ($user->roles()->exists() && $user->userHasAdminAccessCapability()) {
             return redirect()->route('admin.dashboard');
         }
 

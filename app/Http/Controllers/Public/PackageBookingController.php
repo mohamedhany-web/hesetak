@@ -40,9 +40,14 @@ class PackageBookingController extends Controller
         $years = Schema::hasTable('academic_years')
             ? AcademicYear::query()->active()->ordered()->get(['id', 'name', 'slug'])
             : collect();
-        $subjects = Schema::hasTable('academic_subjects')
-            ? AcademicSubject::query()->active()->when($yearId, fn ($q) => $q->forYear($yearId))->ordered()->get(['id', 'name', 'slug'])
-            : collect();
+        $packageSubjects = $servicePackage->relationLoaded('subjects')
+            ? $servicePackage->subjects
+            : (Schema::hasTable('service_package_subjects') ? $servicePackage->subjects()->get(['academic_subjects.id', 'academic_subjects.name', 'academic_subjects.slug']) : collect());
+        $subjects = $packageSubjects->isNotEmpty()
+            ? $packageSubjects
+            : (Schema::hasTable('academic_subjects')
+                ? AcademicSubject::query()->active()->when($yearId, fn ($q) => $q->forYear($yearId))->ordered()->get(['id', 'name', 'slug'])
+                : collect());
 
         $profiles = $this->teacherProfilesForBooking($yearId, $subjectId, $curriculum);
         // المرحلة (ومنها مرحلة الباقة الافتراضية) قد تفرّغ القائمة. المادة تبقى شرطاً.

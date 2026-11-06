@@ -257,7 +257,28 @@ class TutorApplyController extends Controller
             \App\Services\TeacherSpecialtyMatcher::applyToApplication($application, $normalized);
             \App\Services\TeacherSpecialtyMatcher::assertComplete($application->fresh());
 
-            $application->forceFill(['email' => $user->email, 'user_id' => $user->id])->save();
+            $completeDays = 0;
+            foreach ((array) $request->input('availability', []) as $times) {
+                $clean = array_values(array_unique(array_filter(array_map(
+                    fn ($time) => trim((string) $time),
+                    (array) $times
+                ))));
+                if (count($clean) >= 3) {
+                    $completeDays++;
+                }
+            }
+            if ($completeDays < 4) {
+                throw ValidationException::withMessages([
+                    'availability' => 'حدّد 4 أيام على الأقل، وفي كل يوم 3 أوقات مختلفة.',
+                ]);
+            }
+            $answers = (array) ($application->answers ?? []);
+            $answers['weekly_availability'] = $request->input('availability', []);
+            $application->forceFill([
+                'email' => $user->email,
+                'user_id' => $user->id,
+                'answers' => $answers,
+            ])->save();
             HiringFormService::syncUserAndProfile($user, $application->fresh(), $processed['mapped']);
 
             $profile = \App\Models\InstructorProfile::query()->where('user_id', $user->id)->first();

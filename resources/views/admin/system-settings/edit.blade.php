@@ -176,7 +176,11 @@
                         <input type="url" id="how_it_works_video_student" name="how_it_works_video_student"
                                value="{{ old('how_it_works_video_student', $howItWorksStudentVideo ?? '') }}"
                                class="{{ $input }} font-mono" dir="ltr" placeholder="https://www.youtube.com/watch?v=...">
+                        <input type="file" name="how_it_works_video_student_file" accept="video/mp4,video/webm,video/quicktime" class="mt-2 block w-full text-xs">
                         @error('how_it_works_video_student')
+                            <p class="mt-1.5 text-xs font-medium text-danger">{{ $message }}</p>
+                        @enderror
+                        @error('how_it_works_video_student_file')
                             <p class="mt-1.5 text-xs font-medium text-danger">{{ $message }}</p>
                         @enderror
                     </div>
@@ -185,7 +189,11 @@
                         <input type="url" id="how_it_works_video_teacher" name="how_it_works_video_teacher"
                                value="{{ old('how_it_works_video_teacher', $howItWorksTeacherVideo ?? '') }}"
                                class="{{ $input }} font-mono" dir="ltr" placeholder="https://www.youtube.com/watch?v=...">
+                        <input type="file" name="how_it_works_video_teacher_file" accept="video/mp4,video/webm,video/quicktime" class="mt-2 block w-full text-xs">
                         @error('how_it_works_video_teacher')
+                            <p class="mt-1.5 text-xs font-medium text-danger">{{ $message }}</p>
+                        @enderror
+                        @error('how_it_works_video_teacher_file')
                             <p class="mt-1.5 text-xs font-medium text-danger">{{ $message }}</p>
                         @enderror
                     </div>

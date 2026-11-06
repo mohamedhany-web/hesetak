@@ -146,8 +146,21 @@
             @endif
 
             <article class="rounded-2xl border border-line bg-surface p-5 shadow-soft">
-                <h3 class="text-base font-semibold text-ink">النبذة / السيرة</h3>
-                <p class="mt-2 whitespace-pre-line text-sm leading-7 text-muted">{{ $application->bio }}</p>
+                <h3 class="text-base font-semibold text-ink">تعديل النبذة والمواد</h3>
+                <form method="POST" action="{{ route('admin.tutor-applications.profile', $application) }}" class="mt-3 space-y-3">
+                    @csrf
+                    @method('PUT')
+                    <label class="block text-xs text-muted">العنوان
+                        <input name="headline" value="{{ old('headline', $application->headline) }}" class="mt-1 h-11 w-full rounded-xl border border-line px-3 text-sm">
+                    </label>
+                    <label class="block text-xs text-muted">النبذة
+                        <textarea name="bio" rows="4" class="mt-1 w-full rounded-xl border border-line px-3 py-2 text-sm">{{ old('bio', $application->bio) }}</textarea>
+                    </label>
+                    <label class="block text-xs text-muted">الخبرات
+                        <textarea name="experience" rows="3" class="mt-1 w-full rounded-xl border border-line px-3 py-2 text-sm">{{ old('experience', $application->experience) }}</textarea>
+                    </label>
+                    <button type="submit" class="inline-flex h-10 items-center rounded-xl bg-accent px-4 text-sm font-medium text-white">حفظ النبذة</button>
+                </form>
             </article>
 
             <article class="rounded-2xl border border-line bg-surface p-5 shadow-soft">

@@ -22,9 +22,32 @@
         <span class="text-ink">{{ $parent->name }}</span>
     </nav>
 
-    <section>
-        <h2 class="text-2xl font-semibold tracking-tight text-ink">{{ $parent->name }}</h2>
-        <p class="mt-1 text-sm text-muted">{{ $parent->email }} · {{ $parent->phone ?? 'بدون جوال' }}</p>
+    <section class="rounded-2xl border border-line bg-surface p-5 shadow-soft">
+        <h2 class="text-2xl font-semibold tracking-tight text-ink">بيانات ولي الأمر</h2>
+        <form method="POST" action="{{ route('admin.parents.update', $parent) }}" class="mt-4 grid gap-3 sm:grid-cols-2">
+            @csrf
+            @method('PUT')
+            <label class="text-xs text-muted">الاسم
+                <input name="name" value="{{ old('name', $parent->name) }}" required class="{{ $fieldClass }} mt-1">
+            </label>
+            <label class="text-xs text-muted">البريد
+                <input type="email" name="email" value="{{ old('email', $parent->email) }}" required class="{{ $fieldClass }} mt-1" dir="ltr">
+            </label>
+            <label class="text-xs text-muted">الجوال
+                <input name="phone" value="{{ old('phone', $parent->phone) }}" class="{{ $fieldClass }} mt-1" dir="ltr">
+            </label>
+            <label class="text-xs text-muted">كلمة مرور جديدة (اختياري)
+                <input type="password" name="password" class="{{ $fieldClass }} mt-1" autocomplete="new-password">
+            </label>
+            <div class="sm:col-span-2 flex flex-wrap gap-2">
+                <button type="submit" class="btn-press inline-flex h-11 items-center rounded-xl bg-accent px-5 text-sm font-medium text-white">حفظ البيانات</button>
+            </div>
+        </form>
+        <form method="POST" action="{{ route('admin.parents.destroy', $parent) }}" class="mt-3" onsubmit="return confirm('حذف ولي الأمر وفك ارتباط الأبناء؟');">
+            @csrf
+            @method('DELETE')
+            <button type="submit" class="inline-flex h-10 items-center rounded-xl border border-rose-200 bg-rose-50 px-4 text-sm font-semibold text-rose-700">حذف ولي الأمر</button>
+        </form>
     </section>
 
     <div class="grid gap-5 lg:grid-cols-2">

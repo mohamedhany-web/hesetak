@@ -21,7 +21,9 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 use Throwable;
 
@@ -304,10 +306,14 @@ class SystemSettingsController extends Controller
                 'r2_public_url' => $request->input('r2_public_url'),
                 'how_it_works_video_student' => $request->input('how_it_works_video_student'),
                 'how_it_works_video_teacher' => $request->input('how_it_works_video_teacher'),
+                'how_it_works_video_student_file' => $request->file('how_it_works_video_student_file'),
+                'how_it_works_video_teacher_file' => $request->file('how_it_works_video_teacher_file'),
             ]),
             array_merge($footerRules, [
                 'admin_panel_logo' => ['nullable', 'image', 'max:'.config('upload_limits.max_upload_kb'), 'mimes:jpg,jpeg,png,webp,gif'],
                 'remove_admin_panel_logo' => ['nullable', 'boolean'],
+                'how_it_works_video_student_file' => ['nullable', 'file', 'mimes:mp4,webm,mov', 'max:51200'],
+                'how_it_works_video_teacher_file' => ['nullable', 'file', 'mimes:mp4,webm,mov', 'max:51200'],
             ])
         )->validate();
 
@@ -371,12 +377,29 @@ class SystemSettingsController extends Controller
                 return back()->withErrors([$field => 'رابط فيديو غير صالح.'])->withInput();
             }
         }
+        if ($request->hasFile('how_it_works_video_student_file')) {
+            $studentVideo = $this->storeHowItWorksVideo($request->file('how_it_works_video_student_file'));
+        }
+        if ($request->hasFile('how_it_works_video_teacher_file')) {
+            $teacherVideo = $this->storeHowItWorksVideo($request->file('how_it_works_video_teacher_file'));
+        }
         HowItWorksMediaSettings::setStudentUrl($studentVideo !== '' ? $studentVideo : null);
         HowItWorksMediaSettings::setTeacherUrl($teacherVideo !== '' ? $teacherVideo : null);
 
         PublicFooterSettings::forgetCache();
 
         return redirect()->route('admin.system-settings.edit')->with('success', 'تم حفظ إعدادات النظام بنجاح.');
+    }
+
+    private function storeHowItWorksVideo(\Illuminate\Http\UploadedFile $file): string
+    {
+        $ext = strtolower($file->getClientOriginalExtension() ?: 'mp4');
+        if (! in_array($ext, ['mp4', 'webm', 'mov'], true)) {
+            $ext = 'mp4';
+        }
+        $path = $file->storeAs('how-it-works', (string) Str::uuid().'.'.$ext, 'public');
+
+        return Storage::disk('public')->url($path);
     }
 
     /**

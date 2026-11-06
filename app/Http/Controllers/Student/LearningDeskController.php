@@ -39,8 +39,28 @@ class LearningDeskController extends Controller
                 OneToOneSession::STATUS_COMPLETED,
                 OneToOneSession::STATUS_CANCELLED,
             ], true))->sortByDesc(fn (OneToOneSession $session) => $session->scheduled_at?->timestamp ?? 0)->values();
+            $ledger = [
+                'completed' => $sessions->where('status', OneToOneSession::STATUS_COMPLETED)->count(),
+                'missed' => $sessions->filter(function (OneToOneSession $session) {
+                    if ($session->status !== OneToOneSession::STATUS_SCHEDULED || ! $session->scheduled_at) {
+                        return false;
+                    }
+                    $mins = (int) ($session->duration_minutes ?: 50);
 
-            $courseIds = $student->activeCourses()->pluck('advanced_courses.id');
+                    return $session->scheduled_at->copy()->addMinutes($mins + 60)->isPast()
+                        && ! $session->classroomMeeting?->started_at;
+                })->count(),
+                'remaining' => $sessions->filter(fn (OneToOneSession $session) => $session->isOpenPlacement()
+                    && (! $session->scheduled_at || $session->scheduled_at->isFuture() || $session->scheduled_at->isToday()))->count(),
+            ];
+
+            $courseIds = $student->courseEnrollments()->pluck('advanced_course_id')
+                ->merge(
+                    OneToOneSession::query()->where('student_id', $student->id)->pluck('advanced_course_id')
+                )
+                ->filter()
+                ->unique()
+                ->values();
             if ($courseIds->isNotEmpty()) {
                 $assignments = Assignment::query()
                     ->where('status', 'published')
@@ -72,6 +92,7 @@ class LearningDeskController extends Controller
             'upcoming' => $upcoming,
             'past' => $past,
             'assignments' => $assignments,
+            'ledger' => $ledger ?? ['completed' => 0, 'missed' => 0, 'remaining' => 0],
         ]);
     }
 

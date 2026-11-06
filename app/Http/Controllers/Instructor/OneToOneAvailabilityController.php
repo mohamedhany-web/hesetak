@@ -60,11 +60,21 @@ class OneToOneAvailabilityController extends Controller
                 ]);
         }
 
+        $lockKey = 'instructor_availability_locked_until_'.$request->user()->id;
+        $lockedUntil = \App\Models\Setting::getValue($lockKey);
+        if ($lockedUntil && now()->lt(\Carbon\Carbon::parse($lockedUntil))) {
+            return back()->withErrors([
+                'slots' => 'لا يمكن تغيير المواعيد قبل '.$lockedUntil.'. الجدول يُقفل لشهر كامل بعد كل حفظ.',
+            ]);
+        }
+
         OneToOneAvailabilityService::syncRules(
             $request->user()->id,
             $slots
         );
 
-        return back()->with('success', __('student.one_to_one_availability_saved'));
+        \App\Models\Setting::setValue($lockKey, now()->addMonth()->toDateTimeString());
+
+        return back()->with('success', __('student.one_to_one_availability_saved').' — لن يُقبل تعديل جديد قبل '.now()->addMonth()->toDateString().'.');
     }
 }

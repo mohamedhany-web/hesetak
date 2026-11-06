@@ -935,7 +935,7 @@ class AdminController extends Controller
             ],
             'role' => [
                 'required',
-                'in:super_admin,instructor,student',
+                'in:super_admin,instructor,student,employee,parent',
             ],
             'is_active' => ['nullable'],
             'bio' => ['nullable', 'string', 'max:1000'],
@@ -994,14 +994,15 @@ class AdminController extends Controller
 
             // إنشاء المستخدم باستخدام Mass Assignment Protection (fillable)
             // إذا تم اختيار دور RBAC مخصص، نعامِل المستخدم كموظف (لوحة employee)
-            $isEmployee = !empty($sanitizedData['rbac_role']);
+            $isEmployee = ! empty($sanitizedData['rbac_role']) || $sanitizedData['role'] === 'employee';
+            $role = $isEmployee ? 'employee' : $sanitizedData['role'];
 
             $createPayload = [
                 'name' => $sanitizedData['name'],
                 'email' => $sanitizedData['email'],
                 'phone' => $fullPhone,
-                'password' => Hash::make($sanitizedData['password']), // حماية كلمة المرور
-                'role' => $sanitizedData['role'],
+                'password' => Hash::make($sanitizedData['password']),
+                'role' => $role,
                 'is_active' => $sanitizedData['is_active'],
                 'is_employee' => $isEmployee,
                 'bio' => !empty($sanitizedData['bio']) ? $sanitizedData['bio'] : null,
@@ -1206,10 +1207,11 @@ class AdminController extends Controller
                 $updateData['password'] = Hash::make((string) $input['password']);
             }
 
-            if ($input['role'] === 'employee') {
+            $rbacSelected = filled($request->input('rbac_role'));
+            if ($input['role'] === 'employee' || $rbacSelected) {
                 $updateData['is_employee'] = true;
-                $updateData['role'] = 'student';
-            } else {
+                $updateData['role'] = 'employee';
+            } elseif ($input['role'] !== 'employee') {
                 $updateData['is_employee'] = false;
             }
 

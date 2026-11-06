@@ -121,6 +121,8 @@
                                 <option value="super_admin" {{ old('role') == 'super_admin' ? 'selected' : '' }}>إداري كامل (Super Admin)</option>
                                 <option value="instructor" {{ old('role') == 'instructor' ? 'selected' : '' }}>مدرس / معلم</option>
                                 <option value="student" {{ old('role', $fromStudents ? 'student' : '') == 'student' ? 'selected' : '' }}>{{ __('admin.student_role_label') }}</option>
+                                <option value="parent" {{ old('role') == 'parent' ? 'selected' : '' }}>ولي أمر</option>
+                                <option value="employee" {{ old('role') == 'employee' ? 'selected' : '' }}>موظف (مشرف أكاديمي وغيره)</option>
                             </select>
                             @error('role')<p class="mt-1.5 text-xs font-medium text-danger">{{ $message }}</p>@enderror
                         </div>

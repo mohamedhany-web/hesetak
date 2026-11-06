@@ -96,17 +96,44 @@ class LandingController extends Controller
 
         $payload = config('app.debug')
             ? $buildHomePayload()
-            : Cache::remember('landing.home.v21.'.$locale, 180, $buildHomePayload);
+            : Cache::remember('landing.home.v22.'.$locale, 180, $buildHomePayload);
 
-        // متصفح المنهج للرئيسية: منهج → صف → مادة (بدل قسم المعلمين فقط)
+        // متصفح المنهج للرئيسية: منهج → صف → مادة، مع باقات المادة نفسها
         $payload['curriculumBrowserTracks'] = array_values(HesetakMatchCatalog::curriculumTypes());
-        $payload['curriculumBrowserStages'] = Schema::hasTable('academic_years')
-            ? AcademicYear::query()
-                ->publicCatalog()
-                ->ordered()
-                ->with(['subjects' => fn ($q) => $q->active()->ordered()->select(['id', 'name', 'slug', 'academic_year_id'])])
-                ->get(['id', 'name', 'slug'])
+        $stages = Schema::hasTable('academic_years')
+            ? AcademicYear::query()->publicCatalog()->ordered()->get(['id', 'name', 'slug'])
             : collect();
+        if ($stages->isNotEmpty() && Schema::hasTable('academic_subjects')) {
+            foreach ($stages as $year) {
+                $year->setRelation(
+                    'subjects',
+                    AcademicSubject::query()->active()->forYear((int) $year->id)->ordered()->get(['id', 'name', 'slug'])
+                );
+            }
+        }
+        $payload['curriculumBrowserStages'] = $stages;
+        $packagesBySubject = [];
+        if (Schema::hasTable('service_packages')) {
+            $pkgQuery = ServicePackage::query()->storefront()->limit(60);
+            if (Schema::hasTable('service_package_subjects')) {
+                $pkgQuery->with('subjects:id');
+            }
+            $pkgs = $pkgQuery->get(['id', 'name', 'slug', 'academic_subject_id']);
+            foreach ($pkgs as $pkg) {
+                $ids = collect([$pkg->academic_subject_id]);
+                if ($pkg->relationLoaded('subjects')) {
+                    $ids = $ids->merge($pkg->subjects->pluck('id'));
+                }
+                $ids = $ids->filter()->unique();
+                foreach ($ids as $sid) {
+                    $packagesBySubject[(string) $sid][] = [
+                        'name' => $pkg->name,
+                        'href' => route('public.package-booking.teachers', $pkg).'?subject='.$sid,
+                    ];
+                }
+            }
+        }
+        $payload['curriculumBrowserPackages'] = $packagesBySubject;
 
         $catalogService = app(PackageCatalogFilterService::class);
         $packageCatalog = Schema::hasTable('service_packages')

@@ -105,6 +105,10 @@ class OneToOneSessionUnlockService
             return true;
         }
 
+        if ($session->scheduled_at && $session->scheduled_at->between(now()->subHours(3), now()->addHours(12))) {
+            return true;
+        }
+
         $current = self::currentSessionInSeries($session);
 
         return $current !== null && (int) $current->id === (int) $session->id;

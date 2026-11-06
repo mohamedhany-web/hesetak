@@ -259,14 +259,12 @@ class AuthController extends Controller
             ]);
             
             // إرجاع المستخدم للصفحة التي حاول الوصول إليها أو للـ dashboard
-            if ($user->isEmployee()) {
-                if ($user->roles()->exists()) {
+            if ($user->isEmployee() || $user->role === 'employee') {
+                if ($user->roles()->exists() && $user->userHasAdminAccessCapability()) {
                     $adminRoute = RbacAdminRouteAccess::firstPostLoginAdminRouteName($user);
                     if ($adminRoute !== null) {
                         return redirect()->intended(route($adminRoute));
                     }
-
-                    return redirect()->intended(route('employee.dashboard'));
                 }
 
                 return redirect()->intended(route('employee.dashboard'));

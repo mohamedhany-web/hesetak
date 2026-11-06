@@ -618,7 +618,26 @@
       });
   }
 
+  function restrictManualDays(windows) {
+    var days = {};
+    (windows || []).forEach(function (w) {
+      if (!w || !w.day_of_week) return;
+      days[String(w.day_of_week)] = w.day_label || ('يوم ' + w.day_of_week);
+    });
+    var keys = Object.keys(days);
+    if (!keys.length) return;
+    weeklySlotEls.forEach(function (row) {
+      if (!row.day) return;
+      var current = row.day.value;
+      row.day.innerHTML = '<option value="">اليوم</option>' + keys.map(function (k) {
+        return '<option value="' + k + '">' + days[k] + '</option>';
+      }).join('');
+      if (current && days[current]) row.day.value = current;
+    });
+  }
+
   function fillWeeklyFromWindows(windows) {
+    restrictManualDays(windows);
     var opts = (windows || []).map(function (w) {
       return { value: w.day_of_week + '|' + w.start_time, label: w.label || (w.day_label + ' · ' + w.start_time) };
     });

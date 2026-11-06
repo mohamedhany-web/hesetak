@@ -12,7 +12,20 @@
     <div>
       <p class="mc-eyebrow">{{ $isRtl ? 'المسار: الباقة → المعلمون' : 'Flow: package → teachers' }}</p>
       <h1>{{ $package->name }}</h1>
+      @if($package->description)
+        <p class="mc-lead">{{ $package->description }}</p>
+      @endif
       <p class="mc-lead">{{ $isRtl ? 'اختر معلماً يدرّس المادة، ثم استكشف المواعيد.' : 'Pick a teacher for the subject, then explore slots.' }}</p>
+      @if(($subjects ?? collect())->isNotEmpty())
+        <p class="mc-lead">{{ $isRtl ? 'مواد الباقة:' : 'Package subjects:' }} {{ $subjects->pluck('name')->implode(' · ') }}</p>
+      @endif
+      @if($package->featureList())
+        <ul class="mc-lead" style="margin:.5rem 0 0;padding-inline-start:1.1rem">
+          @foreach($package->featureList() as $feature)
+            <li>{{ $feature }}</li>
+          @endforeach
+        </ul>
+      @endif
     </div>
     <div style="display:flex;flex-wrap:wrap;gap:.5rem">
       <a href="{{ route('public.package-cart.index') }}" class="mc-btn mc-btn--md mc-btn--primary">{{ $isRtl ? 'استكمال الشراء' : 'Continue checkout' }} ({{ (int) ($cartCount ?? 0) }})</a>

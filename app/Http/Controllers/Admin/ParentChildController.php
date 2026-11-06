@@ -209,4 +209,36 @@ class ParentChildController extends Controller
 
         return back()->with('success', 'تم فك ارتباط الطالب «'.$student->name.'».');
     }
+
+    public function update(Request $request, User $user): RedirectResponse
+    {
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'email', 'max:190', 'unique:users,email,'.$user->id],
+            'phone' => ['nullable', 'string', 'max:40'],
+            'password' => ['nullable', 'string', 'min:8', 'max:190'],
+        ]);
+
+        $user->name = $data['name'];
+        $user->email = $data['email'];
+        $user->phone = $data['phone'] ?? null;
+        $user->role = 'parent';
+        $user->is_active = true;
+        if (! empty($data['password'])) {
+            $user->password = Hash::make($data['password']);
+        }
+        $user->save();
+
+        return back()->with('success', 'تم تحديث بيانات ولي الأمر. يمكنه الدخول بالبريد وكلمة المرور.');
+    }
+
+    public function destroy(User $user): RedirectResponse
+    {
+        if ($user->children()->exists()) {
+            $user->children()->update(['parent_id' => null]);
+        }
+        $user->delete();
+
+        return redirect()->route('admin.parents.index')->with('success', 'تم حذف ولي الأمر وفك ارتباط الأبناء.');
+    }
 }

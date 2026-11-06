@@ -217,6 +217,19 @@
             </div>
           </div>
 
+          <div class="mc-ta-field is-wide">
+            <label>{{ $isRtl ? 'المواعيد المتاحة: 4 أيام، و3 أوقات مختلفة في كل يوم' : 'Availability: 4 days × 3 different times' }} <span class="mc-ta-req">*</span></label>
+            @foreach([1 => 'الأحد', 2 => 'الاثنين', 3 => 'الثلاثاء', 4 => 'الأربعاء', 5 => 'الخميس', 6 => 'الجمعة', 7 => 'السبت'] as $day => $dayName)
+              <div style="display:grid;grid-template-columns:7rem repeat(3,1fr);gap:.4rem;margin-top:.4rem;align-items:center">
+                <span>{{ $dayName }}</span>
+                @for($slot = 0; $slot < 3; $slot++)
+                  <input type="time" name="availability[{{ $day }}][]" class="mc-input" value="{{ old('availability.'.$day.'.'.$slot) }}">
+                @endfor
+              </div>
+            @endforeach
+            @error('availability')<p class="mc-ta-err">{{ $message }}</p>@enderror
+          </div>
+
           <button type="submit" class="mc-btn mc-btn--lg mc-btn--secondary mc-ta-submit">
             <i class="fas fa-paper-plane" aria-hidden="true"></i>
             {{ $isRtl ? 'إرسال للمراجعة' : 'Submit for review' }}

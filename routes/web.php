@@ -1612,6 +1612,7 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
             ->where('kind', 'photo|id|certificate|video')
             ->name('tutor-applications.file');
         Route::get('/tutor-applications/{tutorApplication}', [\App\Http\Controllers\Admin\TutorApplicationController::class, 'show'])->name('tutor-applications.show');
+        Route::put('/tutor-applications/{tutorApplication}/profile', [\App\Http\Controllers\Admin\TutorApplicationController::class, 'updateProfile'])->name('tutor-applications.profile');
         
         Route::post('/tutor-applications/{tutorApplication}/invite-interview', [\App\Http\Controllers\Admin\TutorApplicationController::class, 'inviteInterview'])->name('tutor-applications.invite-interview');
         Route::post('/tutor-applications/{tutorApplication}/interview-passed', [\App\Http\Controllers\Admin\TutorApplicationController::class, 'markInterviewPassed'])->name('tutor-applications.interview-passed');
@@ -1959,6 +1960,8 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::get('/parents/create', [\App\Http\Controllers\Admin\ParentChildController::class, 'create'])->name('parents.create');
         Route::post('/parents', [\App\Http\Controllers\Admin\ParentChildController::class, 'store'])->name('parents.store');
         Route::get('/parents/{user}', [\App\Http\Controllers\Admin\ParentChildController::class, 'show'])->name('parents.show');
+        Route::put('/parents/{user}', [\App\Http\Controllers\Admin\ParentChildController::class, 'update'])->name('parents.update');
+        Route::delete('/parents/{user}', [\App\Http\Controllers\Admin\ParentChildController::class, 'destroy'])->name('parents.destroy');
         Route::post('/parents/{user}/link', [\App\Http\Controllers\Admin\ParentChildController::class, 'link'])->name('parents.link');
         Route::post('/parents/{user}/unlink', [\App\Http\Controllers\Admin\ParentChildController::class, 'unlink'])->name('parents.unlink');
 

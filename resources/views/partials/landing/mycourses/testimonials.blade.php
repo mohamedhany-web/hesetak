@@ -65,8 +65,15 @@
           will-change: transform;
         }
         [data-mc-quotes-carousel] .mc-quotes-carousel__slide {
-          flex: 0 0 min(100%, 22rem);
-          max-width: min(100%, 22rem);
+          flex: 0 0 100%;
+          max-width: 100%;
+        }
+        [data-mc-quotes-carousel] .mc-quote__media img {
+          width: 100%;
+          height: auto;
+          max-height: 28rem;
+          object-fit: contain;
+          background: #0b1b33;
         }
         [data-mc-quotes-carousel] .mc-quotes-carousel__nav {
           display: flex; gap: .5rem; justify-content: center; margin-top: 1rem;

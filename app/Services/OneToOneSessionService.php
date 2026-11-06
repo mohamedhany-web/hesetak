@@ -24,6 +24,35 @@ class OneToOneSessionService
 
     public const MAX_SESSIONS_PER_BOOKING = 40;
 
+    public static function ensureMeeting(OneToOneSession $session): ?ClassroomMeeting
+    {
+        $existing = $session->classroomMeeting;
+        if ($existing) {
+            return $existing;
+        }
+        if (! $session->scheduled_at || ! $session->instructor_id) {
+            return null;
+        }
+
+        $meeting = ClassroomMeeting::create([
+            'user_id' => $session->instructor_id,
+            'one_to_one_session_id' => $session->id,
+            'code' => ClassroomMeeting::generateCode(),
+            'room_name' => 'one-to-one-'.$session->id.'-'.Str::lower(Str::random(6)),
+            'title' => $session->isComplimentary() ? 'حصة مجانية' : 'حصة فردية',
+            'scheduled_for' => $session->scheduled_at,
+            'planned_duration_minutes' => (int) ($session->duration_minutes ?: 50),
+            'max_participants' => 4,
+            'settings' => [
+                'allow_guest_join' => false,
+                'private_lesson' => true,
+            ],
+        ]);
+        $session->update(['classroom_meeting_id' => $meeting->id]);
+
+        return $meeting;
+    }
+
     /**
      * إنشاء حصص بانتظار الجدولة حسب رصيد الباقة (أو حد أقصى للعرض).
      */

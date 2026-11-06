@@ -37,10 +37,17 @@
         <a href="{{ route('profile') }}" class="st-pill st-pill--solid">{{ $isRtl ? 'الملف الشخصي' : 'Profile' }}</a>
     </section>
 @else
+    @if(session('error'))
+        <div class="st-event-card st-event-card--blue"><p>{{ session('error') }}</p></div>
+    @endif
     <section class="st-msg-intro">
         <div>
             <h2>{{ $isRtl ? 'القادم' : 'Upcoming' }}</h2>
-            <p>{{ $student->name }}</p>
+            <p>{{ $student->name }}
+                · {{ $isRtl ? 'مكتملة' : 'Done' }} {{ (int) ($ledger['completed'] ?? 0) }}
+                · {{ $isRtl ? 'فائتة' : 'Missed' }} {{ (int) ($ledger['missed'] ?? 0) }}
+                · {{ $isRtl ? 'متبقية' : 'Left' }} {{ (int) ($ledger['remaining'] ?? 0) }}
+            </p>
         </div>
     </section>
     <section class="st-lesson-list">
@@ -49,8 +56,8 @@
                 $recording = ($session->classroomMeeting && $session->classroomMeeting->hasBrowserRecording() && Route::has('student.classroom.recording'))
                     ? route('student.classroom.recording', $session->classroomMeeting)
                     : null;
-                $join = ($session->status === \App\Models\OneToOneSession::STATUS_SCHEDULED && $session->classroomMeeting && Route::has('student.classroom.room'))
-                    ? route('student.classroom.room', $session->classroomMeeting)
+                $join = ($session->status === \App\Models\OneToOneSession::STATUS_SCHEDULED && $session->scheduled_at && Route::has('student.schedule.join'))
+                    ? route('student.schedule.join', ['type' => 'private', 'id' => $session->id])
                     : null;
             @endphp
             <article class="st-lesson-card st-lesson-card--blue">
@@ -66,7 +73,10 @@
                     </p>
                 </div>
                 <div class="st-lesson-card__actions">
-                    @if($join)<a class="st-pill st-pill--solid" href="{{ $join }}">{{ $isRtl ? 'دخول' : 'Join' }}</a>@endif
+                    @if($join)<a class="st-pill st-pill--solid" href="{{ $join }}">{{ $isRtl ? 'دخول' : 'Join' }}</a>
+                    @elseif(! $session->scheduled_at && Route::has('student.one-to-one-sessions.show'))
+                        <a class="st-pill st-pill--solid" href="{{ route('student.one-to-one-sessions.show', $session) }}">{{ $isRtl ? 'حدد موعد الحصة' : 'Pick a time' }}</a>
+                    @endif
                     @if($recording)<a class="st-pill st-pill--outline" href="{{ $recording }}">{{ $isRtl ? 'التسجيل' : 'Recording' }}</a>@endif
                     @if(auth()->id() === (int) $session->student_id)
                         <a class="st-pill st-pill--outline" href="{{ route('student.one-to-one-sessions.show', $session) }}">{{ $isRtl ? 'التفاصيل' : 'Details' }}</a>

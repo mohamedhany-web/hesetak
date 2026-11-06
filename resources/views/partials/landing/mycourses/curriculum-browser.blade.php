@@ -16,6 +16,7 @@
         ])->values()->all(),
         'pricingBase' => route('public.pricing'),
         'teachersBase' => route('public.instructors.index'),
+        'packages' => $curriculumBrowserPackages ?? [],
         'labels' => [
             'emptySubjects' => $isRtl ? 'لا توجد مواد لهذه المرحلة بعد.' : 'No subjects for this stage yet.',
             'pickSubject' => $isRtl ? 'اختر مادة من التبويب أعلاه لعرض المحتوى والخطوات التالية.' : 'Pick a subject above to see content and next steps.',
@@ -156,11 +157,15 @@
     if (stage.slug) teachers.searchParams.set('stage', stage.slug);
     if (subject.slug) teachers.searchParams.set('skill', subject.slug);
 
+    var packs = (data.packages && data.packages[subject.id]) || [];
+    var packHtml = packs.map(function (p) {
+      return '<a href="' + p.href + '" class="mc-btn mc-btn--md mc-btn--secondary">' + p.name + '</a>';
+    }).join('');
     panelEl.innerHTML =
       '<p class="mc-curr-browser__summary">' + trackLabel() + ' · ' + stage.name + ' · ' + subject.name + '</p>' +
       '<p class="mc-lead" style="margin:0 0 1rem">' + (labels.body || '') + '</p>' +
       '<div style="display:flex;flex-wrap:wrap;gap:.65rem">' +
-        '<a href="' + pricing.pathname + pricing.search + pricing.hash + '" class="mc-btn mc-btn--md mc-btn--secondary">' + (labels.ctaPackages || '') + '</a>' +
+        (packHtml || ('<a href="' + pricing.pathname + pricing.search + pricing.hash + '" class="mc-btn mc-btn--md mc-btn--secondary">' + (labels.ctaPackages || '') + '</a>')) +
         '<a href="' + teachers.pathname + teachers.search + '" class="mc-btn mc-btn--md mc-btn--outline">' + (labels.ctaTeachers || '') + '</a>' +
       '</div>';
   }

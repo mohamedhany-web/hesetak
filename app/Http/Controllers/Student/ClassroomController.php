@@ -1797,12 +1797,16 @@ class ClassroomController extends Controller
             if ($session) {
                 $reason = OneToOneSessionUnlockService::lockReason($session, $user);
                 if ($reason) {
-                    abort(403, $reason);
+                    throw new \Illuminate\Http\Exceptions\HttpResponseException(
+                        redirect()->route('student.learning-desk')->with('error', $reason)
+                    );
                 }
             }
         }
 
-        abort(403, 'غير مصرح لك بدخول هذه الغرفة. الدخول من حسابك داخل المنصة فقط.');
+        throw new \Illuminate\Http\Exceptions\HttpResponseException(
+            redirect()->route('dashboard')->with('error', 'غير مصرح لك بدخول هذه الغرفة. الدخول من حسابك داخل المنصة فقط.')
+        );
     }
 
     private function normalizeRecordingMime(string $mime): string
