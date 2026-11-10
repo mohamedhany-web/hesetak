@@ -9,6 +9,7 @@ use App\Models\SalesLead;
 use App\Models\User;
 use App\Services\Crm\CrmAccessService;
 use App\Services\Crm\CrmLeadService;
+use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -44,30 +45,71 @@ class CrmLeadController extends Controller
     {
         $this->authorizeLeads($request);
 
-        $query = SalesLead::query()
-            ->with(['marketingOwner:id,name', 'assignedTo:id,name', 'interestedCourse:id,title', 'crmGroup:id,name']);
-
-        if ($request->filled('status')) {
-            $query->where('status', $request->string('status'));
-        }
-        if ($request->filled('search')) {
-            $s = '%'.trim($request->string('search')).'%';
-            $query->where(fn ($q) => $q->where('name', 'like', $s)->orWhere('email', 'like', $s)->orWhere('phone', 'like', $s));
+        $audience = (string) $request->query('audience', 'all');
+        if (! in_array($audience, ['leads', 'registered', 'all'], true)) {
+            $audience = 'all';
         }
 
-        $leads = $query->latest()->paginate(25)->withQueryString();
+        $leads = null;
+        $registeredUsers = null;
+        $recentUnlinkedUsers = collect();
+
+        if ($audience !== 'registered') {
+            $query = SalesLead::query()
+                ->with(['marketingOwner:id,name', 'assignedTo:id,name', 'interestedCourse:id,title', 'crmGroup:id,name']);
+
+            if ($request->filled('status')) {
+                $query->where('status', $request->string('status'));
+            }
+            if ($request->filled('search')) {
+                $s = '%'.trim($request->string('search')).'%';
+                $query->where(fn ($q) => $q->where('name', 'like', $s)->orWhere('email', 'like', $s)->orWhere('phone', 'like', $s));
+            }
+
+            $leads = $query->latest()->paginate(25)->withQueryString();
+        }
+
+        if ($audience === 'registered' || $audience === 'all') {
+            $userQuery = $this->registeredUsersQuery($request);
+            if ($audience === 'registered') {
+                $registeredUsers = $userQuery->latest()->paginate(25)->withQueryString();
+            } else {
+                $linkedIds = SalesLead::query()
+                    ->whereNotNull('linked_user_id')
+                    ->pluck('linked_user_id')
+                    ->map(fn ($id) => (int) $id)
+                    ->all();
+                $recentUnlinkedUsers = (clone $userQuery)
+                    ->when($linkedIds !== [], fn ($q) => $q->whereNotIn('id', $linkedIds))
+                    ->latest()
+                    ->limit(20)
+                    ->get(['id', 'name', 'email', 'phone', 'role', 'created_at']);
+            }
+        }
+
+        $leadLinksByUserId = SalesLead::query()
+            ->whereNotNull('linked_user_id')
+            ->pluck('id', 'linked_user_id');
 
         $stats = [
             'total' => SalesLead::count(),
             'open' => SalesLead::open()->count(),
-            'filtered' => $leads->total(),
+            'filtered' => $audience === 'registered'
+                ? ($registeredUsers?->total() ?? 0)
+                : ($leads?->total() ?? 0),
             'closed_won' => SalesLead::where('status', SalesLead::STATUS_CLOSED_WON)->count(),
+            'registered_total' => User::query()->whereIn('role', ['student', 'parent'])->count(),
         ];
 
         return view('admin.crm.leads.index', [
             'leads' => $leads,
+            'registeredUsers' => $registeredUsers,
+            'recentUnlinkedUsers' => $recentUnlinkedUsers,
+            'leadLinksByUserId' => $leadLinksByUserId,
+            'audience' => $audience,
             'statusLabels' => SalesLead::statusLabels(),
             'stats' => $stats,
+            'recentRegistrationCutoff' => Carbon::now()->subDays(14),
         ]);
     }
 
@@ -218,6 +260,18 @@ class CrmLeadController extends Controller
         CrmLeadService::addNote($salesLead, $data['note'], $request->user());
 
         return back()->with('success', 'تمت إضافة الملاحظة.');
+    }
+
+    private function registeredUsersQuery(Request $request)
+    {
+        $query = User::query()->whereIn('role', ['student', 'parent']);
+
+        if ($request->filled('search')) {
+            $s = '%'.trim($request->string('search')).'%';
+            $query->where(fn ($q) => $q->where('name', 'like', $s)->orWhere('email', 'like', $s)->orWhere('phone', 'like', $s));
+        }
+
+        return $query;
     }
 
     /**

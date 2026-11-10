@@ -17,6 +17,7 @@ class AcademicYear extends Model
         'name',
         'code',
         'slug',
+        'curriculum_type',
         'tagline',
         'level_number',
         'description',
@@ -151,6 +152,19 @@ class AcademicYear extends Model
     public function scopeActive($query)
     {
         return $query->where('is_active', true);
+    }
+
+    /** null curriculum_type = تظهر مع كل أنواع المناهج */
+    public function scopeForCurriculumType($query, ?string $curriculumType)
+    {
+        $track = strtolower(trim((string) $curriculumType));
+        if ($track === '' || ! Schema::hasColumn('academic_years', 'curriculum_type')) {
+            return $query;
+        }
+
+        return $query->where(function ($q) use ($track) {
+            $q->whereNull('curriculum_type')->orWhere('curriculum_type', $track);
+        });
     }
 
     public function scopePublicCatalog($query)

@@ -5,11 +5,17 @@
 
 @section('content')
 @php
-    $stats = $stats ?? ['total' => 0, 'open' => 0, 'filtered' => $leads->total(), 'closed_won' => 0];
+    $audience = $audience ?? 'all';
+    $stats = $stats ?? ['total' => 0, 'open' => 0, 'filtered' => 0, 'closed_won' => 0, 'registered_total' => 0];
+    $leads = $leads ?? null;
+    $registeredUsers = $registeredUsers ?? null;
+    $recentUnlinkedUsers = $recentUnlinkedUsers ?? collect();
+    $leadLinksByUserId = $leadLinksByUserId ?? collect();
+    $recentRegistrationCutoff = $recentRegistrationCutoff ?? now()->subDays(14);
     $kpis = [
-        ['label' => 'الإجمالي', 'value' => $stats['total'], 'icon' => 'fa-users', 'tone' => 'accent', 'note' => 'كل العملاء المحتملين'],
+        ['label' => 'عملاء محتملون', 'value' => $stats['total'], 'icon' => 'fa-users', 'tone' => 'accent', 'note' => 'سجلات CRM'],
         ['label' => 'مفتوحة', 'value' => $stats['open'], 'icon' => 'fa-folder-open', 'tone' => 'accent', 'note' => 'قيد المتابعة'],
-        ['label' => 'نتيجة التصفية', 'value' => $stats['filtered'], 'icon' => 'fa-filter', 'tone' => 'metal', 'note' => 'بعد البحث والحالة'],
+        ['label' => 'مسجّلون', 'value' => $stats['registered_total'] ?? 0, 'icon' => 'fa-user-check', 'tone' => 'metal', 'note' => 'طلاب وأولياء أمور'],
         ['label' => 'مغلقة ناجحة', 'value' => $stats['closed_won'], 'icon' => 'fa-check-circle', 'tone' => 'muted', 'note' => 'صفقات مكتملة'],
     ];
     $toneClass = [
@@ -19,6 +25,8 @@
     ];
     $fieldClass = 'h-11 w-full rounded-xl border border-line bg-surface px-4 text-sm text-ink transition placeholder:text-muted focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20';
     $labelClass = 'mb-1.5 block text-xs font-medium text-muted';
+    $tabClass = fn (string $key) => 'btn-press inline-flex h-9 items-center gap-2 rounded-xl border px-4 text-sm font-medium transition '
+        .($audience === $key ? 'border-accent bg-accent-soft text-accent' : 'border-line bg-surface text-ink-soft hover:border-accent/30');
 @endphp
 
 <div class="space-y-5">
@@ -26,8 +34,8 @@
     <section class="flex flex-wrap items-end justify-between gap-4">
         <div class="min-w-0">
             <p class="text-xs font-medium text-muted">المبيعات · CRM · العملاء المحتملون</p>
-            <h2 class="mt-1 text-2xl font-semibold tracking-tight text-ink md:text-[28px]">العملاء المحتملون</h2>
-            <p class="mt-1 text-sm text-muted">ابحث وصِفِّ حسب الحالة ثم افتح تفاصيل كل عميل</p>
+            <h2 class="mt-1 text-2xl font-semibold tracking-tight text-ink md:text-[28px]">العملاء المحتملون والمسجّلون</h2>
+            <p class="mt-1 text-sm text-muted">تابع العملاء المحتملين واطّلع على المستخدمين المسجّلين حديثاً</p>
         </div>
         <div class="admin-hero-actions flex flex-wrap gap-2">
             <a href="{{ route('admin.crm.leads.create') }}" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl bg-accent px-4 text-sm font-medium text-white">
@@ -68,30 +76,40 @@
     <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
         <div class="border-b border-line px-4 py-4 sm:px-5">
             <h3 class="text-base font-semibold text-ink">البحث والفلترة</h3>
-            <p class="mt-0.5 text-xs text-muted">بالاسم أو البريد أو الهاتف، أو حسب حالة المسار</p>
+            <p class="mt-0.5 text-xs text-muted">بالاسم أو البريد أو الهاتف</p>
+            <div class="mt-3 flex flex-wrap gap-2">
+                <a href="{{ route('admin.crm.leads.index', array_merge(request()->except('page', 'audience'), ['audience' => 'all'])) }}" class="{{ $tabClass('all') }}">الكل</a>
+                <a href="{{ route('admin.crm.leads.index', array_merge(request()->except('page', 'audience'), ['audience' => 'leads'])) }}" class="{{ $tabClass('leads') }}">عملاء محتملون</a>
+                <a href="{{ route('admin.crm.leads.index', array_merge(request()->except('page', 'audience'), ['audience' => 'registered'])) }}" class="{{ $tabClass('registered') }}">مسجّلون بالمنصة</a>
+            </div>
         </div>
         <form method="GET" action="{{ route('admin.crm.leads.index') }}" class="grid grid-cols-1 gap-4 p-4 sm:p-5 md:grid-cols-3 md:items-end">
+            <input type="hidden" name="audience" value="{{ $audience }}">
             <div>
                 <label class="{{ $labelClass }}" for="search">البحث</label>
                 <input id="search" type="search" name="search" value="{{ request('search') }}"
                        placeholder="الاسم، البريد، أو الهاتف..." class="{{ $fieldClass }}">
             </div>
-            <div>
-                <label class="{{ $labelClass }}" for="status">الحالة</label>
-                <select id="status" name="status" class="{{ $fieldClass }}">
-                    <option value="">كل الحالات</option>
-                    @foreach($statusLabels as $val => $label)
-                        <option value="{{ $val }}" @selected(request('status') === $val)>{{ $label }}</option>
-                    @endforeach
-                </select>
-            </div>
+            @if($audience !== 'registered')
+                <div>
+                    <label class="{{ $labelClass }}" for="status">الحالة (عملاء محتملون)</label>
+                    <select id="status" name="status" class="{{ $fieldClass }}">
+                        <option value="">كل الحالات</option>
+                        @foreach($statusLabels as $val => $label)
+                            <option value="{{ $val }}" @selected(request('status') === $val)>{{ $label }}</option>
+                        @endforeach
+                    </select>
+                </div>
+            @else
+                <div></div>
+            @endif
             <div class="flex flex-wrap gap-2">
                 <button type="submit" class="btn-press inline-flex h-11 items-center gap-2 rounded-xl bg-accent px-5 text-sm font-medium text-white">
                     <i class="fas fa-filter text-xs"></i>
                     تصفية
                 </button>
                 @if(request()->anyFilled(['search', 'status']))
-                    <a href="{{ route('admin.crm.leads.index') }}" class="btn-press inline-flex h-11 items-center gap-2 rounded-xl border border-line px-5 text-sm font-medium text-ink hover:bg-canvas">
+                    <a href="{{ route('admin.crm.leads.index', ['audience' => $audience]) }}" class="btn-press inline-flex h-11 items-center gap-2 rounded-xl border border-line px-5 text-sm font-medium text-ink hover:bg-canvas">
                         <i class="fas fa-times text-xs"></i>
                         مسح
                     </a>
@@ -100,83 +118,83 @@
         </form>
     </article>
 
-    <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
-        <div class="flex flex-wrap items-center justify-between gap-3 border-b border-line px-4 py-4 sm:px-5">
-            <div class="min-w-0">
-                <h3 class="text-base font-semibold text-ink">قائمة العملاء</h3>
-                <p class="mt-0.5 text-xs text-muted">{{ number_format($leads->total()) }} نتيجة</p>
+    @if($audience !== 'registered' && $leads)
+        <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
+            <div class="flex flex-wrap items-center justify-between gap-3 border-b border-line px-4 py-4 sm:px-5">
+                <div class="min-w-0">
+                    <h3 class="text-base font-semibold text-ink">عملاء محتملون</h3>
+                    <p class="mt-0.5 text-xs text-muted">{{ number_format($leads->total()) }} نتيجة</p>
+                </div>
             </div>
-            <a href="{{ route('admin.crm.leads.create') }}" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl border border-line px-3 text-xs font-medium text-ink hover:border-accent/30 hover:text-accent">
-                <i class="fas fa-plus"></i>
-                جديد
-            </a>
-        </div>
-        <div class="admin-table-wrap overflow-x-auto">
-            <table class="min-w-full text-sm">
-                <thead class="border-b border-line bg-canvas/60 text-xs text-muted">
-                    <tr>
-                        <th class="px-4 py-3 text-start font-medium">#</th>
-                        <th class="px-4 py-3 text-start font-medium">الاسم</th>
-                        <th class="px-4 py-3 text-start font-medium">مالك التسويق</th>
-                        <th class="px-4 py-3 text-start font-medium">المبيعات</th>
-                        <th class="px-4 py-3 text-start font-medium">الحالة</th>
-                        <th class="px-4 py-3 text-start font-medium">إجراءات</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-line">
-                    @forelse($leads as $lead)
-                        <tr class="hover:bg-canvas/40">
-                            <td class="px-4 py-3 tabular-nums text-muted">{{ $lead->id }}</td>
-                            <td class="px-4 py-3">
-                                <p class="font-semibold text-ink">{{ $lead->name }}</p>
-                                @if($lead->phone || $lead->email)
-                                    <p class="mt-0.5 text-[11px] text-muted">{{ $lead->phone ?: $lead->email }}</p>
-                                @endif
-                            </td>
-                            <td class="px-4 py-3 text-ink-soft">{{ $lead->marketingOwner?->name ?? '—' }}</td>
-                            <td class="px-4 py-3 text-ink-soft">{{ $lead->assignedTo?->name ?? '—' }}</td>
-                            <td class="px-4 py-3">
-                                <span class="inline-flex rounded-lg bg-accent-soft px-2.5 py-1 text-xs font-medium text-accent">{{ $lead->status_label }}</span>
-                            </td>
-                            <td class="px-4 py-3">
-                                <div class="flex flex-wrap gap-1.5">
-                                    <a href="{{ route('admin.crm.leads.show', $lead) }}" class="btn-press inline-flex h-8 items-center rounded-lg border border-line px-3 text-xs font-medium text-ink hover:border-accent/30 hover:text-accent" title="تفاصيل">
-                                        <i class="fas fa-eye"></i>
-                                    </a>
-                                    <a href="{{ route('admin.crm.leads.edit', $lead) }}" class="btn-press inline-flex h-8 items-center rounded-lg border border-line px-3 text-xs font-medium text-ink hover:border-accent/30 hover:text-accent" title="تعديل">
-                                        <i class="fas fa-pen"></i>
-                                    </a>
-                                    <form method="POST" action="{{ route('admin.crm.leads.destroy', $lead) }}" class="inline" onsubmit="return confirm('حذف هذا العميل المحتمل؟');">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn-press inline-flex h-8 items-center rounded-lg border border-line px-3 text-xs font-medium text-rose-600 hover:border-rose-300 hover:bg-rose-50" title="حذف">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                    </form>
-                                </div>
-                            </td>
-                        </tr>
-                    @empty
+            <div class="admin-table-wrap overflow-x-auto">
+                <table class="min-w-full text-sm">
+                    <thead class="border-b border-line bg-canvas/60 text-xs text-muted">
                         <tr>
-                            <td colspan="6" class="px-4 py-16 text-center">
-                                <div class="mx-auto mb-3 inline-flex size-12 items-center justify-center rounded-2xl bg-accent-soft text-accent">
-                                    <i class="fas fa-user-plus"></i>
-                                </div>
-                                <p class="text-sm font-medium text-ink">لا يوجد عملاء محتملون</p>
-                                <p class="mt-1 text-xs text-muted">ابدأ بإضافة أول عميل محتمل.</p>
-                                <a href="{{ route('admin.crm.leads.create') }}" class="btn-press mt-4 inline-flex h-9 items-center gap-2 rounded-xl bg-accent px-4 text-sm font-medium text-white">
-                                    <i class="fas fa-plus text-xs"></i>
-                                    إضافة عميل
-                                </a>
-                            </td>
+                            <th class="px-4 py-3 text-start font-medium">#</th>
+                            <th class="px-4 py-3 text-start font-medium">النوع</th>
+                            <th class="px-4 py-3 text-start font-medium">الاسم</th>
+                            <th class="px-4 py-3 text-start font-medium">مالك التسويق</th>
+                            <th class="px-4 py-3 text-start font-medium">المبيعات</th>
+                            <th class="px-4 py-3 text-start font-medium">الحالة</th>
+                            <th class="px-4 py-3 text-start font-medium">إجراءات</th>
                         </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-        @if($leads->hasPages())
-            <div class="border-t border-line px-4 py-4 sm:px-5">{{ $leads->links() }}</div>
-        @endif
-    </article>
+                    </thead>
+                    <tbody class="divide-y divide-line">
+                        @forelse($leads as $lead)
+                            <tr class="hover:bg-canvas/40">
+                                <td class="px-4 py-3 tabular-nums text-muted">{{ $lead->id }}</td>
+                                <td class="px-4 py-3">
+                                    <span class="inline-flex rounded-lg bg-accent-soft px-2.5 py-1 text-xs font-medium text-accent">عميل محتمل</span>
+                                </td>
+                                <td class="px-4 py-3">
+                                    <p class="font-semibold text-ink">{{ $lead->name }}</p>
+                                    @if($lead->phone || $lead->email)
+                                        <p class="mt-0.5 text-[11px] text-muted">{{ $lead->phone ?: $lead->email }}</p>
+                                    @endif
+                                </td>
+                                <td class="px-4 py-3 text-ink-soft">{{ $lead->marketingOwner?->name ?? '—' }}</td>
+                                <td class="px-4 py-3 text-ink-soft">{{ $lead->assignedTo?->name ?? '—' }}</td>
+                                <td class="px-4 py-3">
+                                    <span class="inline-flex rounded-lg bg-canvas px-2.5 py-1 text-xs font-medium text-ink">{{ $lead->status_label }}</span>
+                                </td>
+                                <td class="px-4 py-3">
+                                    <div class="flex flex-wrap gap-1.5">
+                                        <a href="{{ route('admin.crm.leads.show', $lead) }}" class="btn-press inline-flex h-8 items-center rounded-lg border border-line px-3 text-xs font-medium text-ink hover:border-accent/30 hover:text-accent" title="تفاصيل"><i class="fas fa-eye"></i></a>
+                                        <a href="{{ route('admin.crm.leads.edit', $lead) }}" class="btn-press inline-flex h-8 items-center rounded-lg border border-line px-3 text-xs font-medium text-ink hover:border-accent/30 hover:text-accent" title="تعديل"><i class="fas fa-pen"></i></a>
+                                    </div>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="7" class="px-4 py-12 text-center text-sm text-muted">لا يوجد عملاء محتملون مطابقون للتصفية.</td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+            @if($leads->hasPages())
+                <div class="border-t border-line px-4 py-4 sm:px-5">{{ $leads->links() }}</div>
+            @endif
+        </article>
+    @endif
+
+    @if($audience === 'registered' && $registeredUsers)
+        @include('admin.crm.leads.partials.registered-users-table', [
+            'registeredUsers' => $registeredUsers,
+            'leadLinksByUserId' => $leadLinksByUserId,
+            'recentRegistrationCutoff' => $recentRegistrationCutoff,
+            'title' => 'مسجّلون بالمنصة',
+        ])
+    @endif
+
+    @if($audience === 'all' && $recentUnlinkedUsers->isNotEmpty())
+        @include('admin.crm.leads.partials.registered-users-table', [
+            'registeredUsers' => $recentUnlinkedUsers,
+            'leadLinksByUserId' => $leadLinksByUserId,
+            'recentRegistrationCutoff' => $recentRegistrationCutoff,
+            'title' => 'مسجّلون غير مربوطين بعميل محتمل',
+            'paginated' => false,
+        ])
+    @endif
 </div>
 @endsection

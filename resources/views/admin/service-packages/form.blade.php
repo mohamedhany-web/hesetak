@@ -92,9 +92,10 @@
                     </select>
                     <p class="mt-1 text-[11px] text-muted">للخطط التجارية يُضبط تلقائياً حسب نوع الخطة.</p>
                 </div>
-                <div class="sm:col-span-2 rounded-xl border border-accent/20 bg-accent/5 px-4 py-3 text-xs text-ink-soft leading-relaxed">
-                    <strong class="text-ink">توصيف صفحة الباقات:</strong>
-                    الموقع يعرض بطاقة لكل مادة تحت المرحلة المختارة. اربط الباقة بـ <strong>مرحلة + مادة</strong> ليستخدم الموقع اسم الباقة والوصف والشارة والمزايا على بطاقة تلك المادة. بدون ربط تظهر بطاقة افتراضية باسم المادة. أسعار 2 / 8 / مستعجلة تأتي من <a href="{{ route('admin.service-package-pricing-rules.index') }}" class="text-accent underline">قواعد التسعير</a>.
+                <div class="sm:col-span-2 rounded-xl border border-accent/20 bg-accent/5 px-4 py-3 text-xs text-ink-soft leading-relaxed space-y-2">
+                    <p><strong class="text-ink">باقة المادة الواحدة:</strong> اربطها بـ <strong>مرحلة + مادة أساسية</strong> ليظهر للطالب بطاقة مخصّصة لتلك المادة في صفحة الباقات.</p>
+                    <p><strong class="text-ink">الباقات المتنوعة:</strong> فعّل <strong>مواد متعددة</strong> في القائمة أدناه وحدّد «عدد المواد المسموح للطالب اختيارها». السعر الذي تدخله الإدارة يظهر في الموقع <strong>كما هو</strong> دون معادلة تقريب تلقائي.</p>
+                    <p class="text-muted">خيارات 2 / 8 / مستعجلة للباقات غير المربوطة بسعر ثابت تأتي من <a href="{{ route('admin.service-package-pricing-rules.index') }}" class="text-accent underline">قواعد التسعير</a>.</p>
                 </div>
                 <div>
                     <label class="{{ $labelClass }}" for="academic_year_id">المرحلة (بطاقة المادة في الموقع)</label>
@@ -150,7 +151,12 @@
                             </label>
                         @endforeach
                     </div>
-                    <p class="mt-1 text-[11px] text-muted">فعّل أكثر من مادة إن كانت الباقة تشمل عدة مواد — يظهر للطالب اختيار متعدد في واجهة الباقات.</p>
+                    <p class="mt-1 text-[11px] text-muted">فعّل أكثر من مادة للباقات المتنوعة — يظهر للطالب اختيار متعدد مع معلم لكل مادة.</p>
+                </div>
+                <div>
+                    <label class="{{ $labelClass }}" for="max_subjects">عدد المواد المسموح للطالب اختيارها</label>
+                    <input id="max_subjects" type="number" min="1" max="50" name="max_subjects" value="{{ old('max_subjects', $package->max_subjects) }}" class="{{ $fieldClass }}" placeholder="مثال: 3">
+                    <p class="mt-1 text-[11px] text-muted">للباقات المتنوعة فقط — اتركه فارغاً ليختار الطالب من كل المواد المفعّلة (حد أقصى 50).</p>
                 </div>
                 <div>
                     <label class="{{ $labelClass }}" for="tutoring_group_id">مجموعة مخصصة (اختياري)</label>
@@ -184,7 +190,7 @@
                 <div>
                     <label class="{{ $labelClass }}" for="price">السعر *</label>
                     <input id="price" type="number" step="0.01" min="0" name="price" value="{{ old('price', $package->price) }}" required class="{{ $fieldClass }}" placeholder="0.00">
-                    <p class="mt-1 text-[11px] text-muted">أدخل السعر بنفس عملة الباقة (يفضّل مطابقة عملة فواتيرك).</p>
+                    <p class="mt-1 text-[11px] text-muted">السعر حر كما تكتبه الإدارة (31، 47، …) — يُعرض في الموقع بدون تقريب تلقائي. نفس عملة الباقة.</p>
                 </div>
                 <div>
                     <label class="{{ $labelClass }}" for="original_price">السعر قبل الخصم</label>

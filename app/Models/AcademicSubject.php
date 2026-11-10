@@ -14,6 +14,7 @@ class AcademicSubject extends Model
 
     protected $fillable = [
         'academic_year_id',
+        'curriculum_type',
         'name',
         'code',
         'slug',
@@ -86,6 +87,19 @@ class AcademicSubject extends Model
             if (\Illuminate\Support\Facades\Schema::hasTable('academic_subject_years')) {
                 $q->orWhereHas('years', fn ($yq) => $yq->where('academic_years.id', $yearId));
             }
+        });
+    }
+
+    /** null curriculum_type = تظهر مع كل أنواع المناهج */
+    public function scopeForCurriculumType($query, ?string $curriculumType)
+    {
+        $track = strtolower(trim((string) $curriculumType));
+        if ($track === '' || ! \Illuminate\Support\Facades\Schema::hasColumn('academic_subjects', 'curriculum_type')) {
+            return $query;
+        }
+
+        return $query->where(function ($q) use ($track) {
+            $q->whereNull('curriculum_type')->orWhere('curriculum_type', $track);
         });
     }
 

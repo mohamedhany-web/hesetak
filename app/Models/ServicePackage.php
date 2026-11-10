@@ -45,6 +45,7 @@ class ServicePackage extends Model
         'tutoring_group_id',
         'academic_year_id',
         'academic_subject_id',
+        'max_subjects',
         'curriculum_type',
         'units_count',
         'session_minutes',
@@ -73,6 +74,7 @@ class ServicePackage extends Model
             'includes_community' => 'boolean',
             'includes_libraries' => 'boolean',
             'sort_order' => 'integer',
+            'max_subjects' => 'integer',
             'features' => 'array',
             'gifts' => 'array',
         ];
@@ -345,6 +347,43 @@ class ServicePackage extends Model
         $units = max(1, (int) $this->units_count);
 
         return round((float) $this->price / $units, 2);
+    }
+
+    public function packageSubjectCount(): int
+    {
+        if ($this->relationLoaded('subjects') && $this->subjects->isNotEmpty()) {
+            return $this->subjects->count();
+        }
+
+        if (Schema::hasTable('service_package_subjects')) {
+            $pivotCount = (int) $this->subjects()->count();
+            if ($pivotCount > 0) {
+                return $pivotCount;
+            }
+        }
+
+        return $this->academic_subject_id ? 1 : 0;
+    }
+
+    public function isMixedPackage(): bool
+    {
+        return $this->packageSubjectCount() > 1
+            || ((int) ($this->max_subjects ?? 0)) > 1;
+    }
+
+    public function maxSelectableSubjects(): ?int
+    {
+        $cap = $this->max_subjects !== null ? (int) $this->max_subjects : null;
+        if ($cap !== null && $cap > 0) {
+            return $cap;
+        }
+
+        $count = $this->packageSubjectCount();
+        if ($count > 1) {
+            return $count;
+        }
+
+        return null;
     }
 
     public function formattedPricePerUnit(): string

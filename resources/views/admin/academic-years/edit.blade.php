@@ -103,6 +103,17 @@
                     <label class="{{ $labelClass }}" for="level_number">رقم المستوى</label>
                     <input id="level_number" type="number" name="level_number" min="1" max="20" value="{{ old('level_number', $academicYear->level_number) }}" class="{{ $fieldClass }}">
                 </div>
+                <div>
+                    <label class="{{ $labelClass }}" for="curriculum_type">نوع المنهج</label>
+                    @php $tracks = \App\Support\HesetakMatchCatalog::curriculumTypes(); @endphp
+                    <select id="curriculum_type" name="curriculum_type" class="{{ $fieldClass }}">
+                        <option value="">— مشترك لكل المناهج —</option>
+                        @foreach($tracks as $key => $meta)
+                            <option value="{{ $key }}" @selected((string) old('curriculum_type', $academicYear->curriculum_type) === (string) $key)>{{ is_array($meta) ? ($meta['label'] ?? $key) : $meta }}</option>
+                        @endforeach
+                    </select>
+                    <p class="mt-1 text-[11px] text-muted">اربط المرحلة بمنهج معيّن لتظهر فقط مع هذا المنهج في الواجهة العامة.</p>
+                </div>
                 <div class="sm:col-span-2">
                     <label class="{{ $labelClass }}" for="tagline">شعار مختصر</label>
                     <input id="tagline" type="text" name="tagline" value="{{ old('tagline', $academicYear->tagline) }}" class="{{ $fieldClass }}">

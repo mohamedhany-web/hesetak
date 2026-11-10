@@ -296,6 +296,7 @@ class ServicePackageController extends Controller
         }
 
         $data['curriculum_type'] = ! empty($data['curriculum_type']) ? (string) $data['curriculum_type'] : null;
+        $data['max_subjects'] = ! empty($data['max_subjects']) ? (int) $data['max_subjects'] : null;
 
         if ($data['tutoring_group_id']) {
             $group = TutoringGroup::query()->find($data['tutoring_group_id']);
@@ -400,6 +401,7 @@ class ServicePackageController extends Controller
             'academic_subject_id' => ['nullable', 'exists:academic_subjects,id'],
             'academic_subject_ids' => ['nullable', 'array'],
             'academic_subject_ids.*' => ['integer', 'exists:academic_subjects,id'],
+            'max_subjects' => ['nullable', 'integer', 'min:1', 'max:50'],
             'curriculum_type' => ['nullable', 'string', 'in:'.implode(',', HesetakMatchCatalog::allowedCurriculumTypeKeys() ?: ['__none__'])],
             'units_count' => ['required', 'integer', 'min:1', 'max:500'],
             'session_minutes' => ['nullable', 'integer', 'min:15', 'max:480'],

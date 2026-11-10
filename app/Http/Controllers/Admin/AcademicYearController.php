@@ -55,6 +55,7 @@ class AcademicYearController extends Controller
             'order' => 'nullable|integer|min:0',
             'is_active' => 'boolean',
             'is_public' => 'boolean',
+            'curriculum_type' => ['nullable', 'string', 'max:64', 'in:'.implode(',', array_keys(\App\Support\HesetakMatchCatalog::curriculumTypes() ?: ['__none__']))],
             'grades' => 'nullable|array',
             'grades.*.name' => 'nullable|string|max:255',
             'grades.*.order' => 'nullable|integer|min:0|max:99',
@@ -69,10 +70,11 @@ class AcademicYearController extends Controller
         ]);
 
         $data = $request->only([
-            'name', 'code', 'slug', 'tagline', 'level_number', 'description', 'video_url', 'price', 'icon', 'color', 'order',
+            'name', 'code', 'slug', 'tagline', 'level_number', 'description', 'video_url', 'price', 'icon', 'color', 'order', 'curriculum_type',
         ]);
         $data['is_active'] = $request->boolean('is_active');
         $data['is_public'] = $request->boolean('is_public');
+        $data['curriculum_type'] = filled($data['curriculum_type'] ?? null) ? (string) $data['curriculum_type'] : null;
         $data['order'] = (int) ($data['order'] ?? 0);
         $data['price'] = $request->input('price', 0) ?: 0;
         $data['icon'] = $data['icon'] ?? 'fas fa-graduation-cap';
@@ -152,6 +154,7 @@ class AcademicYearController extends Controller
             'order' => 'nullable|integer|min:0',
             'is_active' => 'boolean',
             'is_public' => 'boolean',
+            'curriculum_type' => ['nullable', 'string', 'max:64', 'in:'.implode(',', array_keys(\App\Support\HesetakMatchCatalog::curriculumTypes() ?: ['__none__']))],
         ], [
             'name.required' => 'اسم المرحلة الدراسية مطلوب',
             'name.unique' => 'اسم المرحلة الدراسية موجود مسبقاً',
@@ -163,10 +166,11 @@ class AcademicYearController extends Controller
         ]);
 
         $data = $request->only([
-            'name', 'code', 'slug', 'tagline', 'level_number', 'description', 'video_url', 'price', 'icon', 'color', 'order',
+            'name', 'code', 'slug', 'tagline', 'level_number', 'description', 'video_url', 'price', 'icon', 'color', 'order', 'curriculum_type',
         ]);
         $data['is_active'] = $request->boolean('is_active');
         $data['is_public'] = $request->boolean('is_public');
+        $data['curriculum_type'] = filled($data['curriculum_type'] ?? null) ? (string) $data['curriculum_type'] : null;
         $data['order'] = $data['order'] ?? 0;
         $data['price'] = $request->input('price', $academicYear->price ?? 0);
         $data['slug'] = ! empty($data['slug'])

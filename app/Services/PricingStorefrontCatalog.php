@@ -132,7 +132,8 @@ class PricingStorefrontCatalog
 
         // مواد المرحلة فقط (لا تخلط مواد عامة/تطوير معلمين غير مربوطة)
         $catalog['subjects'] = $this->subjectsForStage(
-            $catalog['selected_year_id'] ? (int) $catalog['selected_year_id'] : null
+            $catalog['selected_year_id'] ? (int) $catalog['selected_year_id'] : null,
+            $catalog['selected_curriculum_type'] ?? null,
         );
         $validSubjectIds = $catalog['subjects']->pluck('id')->map(fn ($id) => (int) $id)->all();
         $subjectIds = array_values(array_intersect($subjectIds, $validSubjectIds));
@@ -174,17 +175,23 @@ class PricingStorefrontCatalog
         ];
     }
 
-    protected function subjectsForStage(?int $yearId): Collection
+    protected function subjectsForStage(?int $yearId, ?string $curriculumType = null): Collection
     {
         if (! $yearId || ! Schema::hasTable('academic_subjects')) {
             return collect();
         }
 
-        return AcademicSubject::query()
+        $query = AcademicSubject::query()
             ->active()
             ->forYear($yearId)
-            ->ordered()
-            ->get(['id', 'name', 'slug', 'academic_year_id', 'icon']);
+            ->ordered();
+
+        $track = strtolower(trim((string) $curriculumType));
+        if ($track !== '') {
+            $query->forCurriculumType($track);
+        }
+
+        return $query->get(['id', 'name', 'slug', 'academic_year_id', 'icon', 'curriculum_type']);
     }
 
     protected function standardRule(): ?ServicePackagePricingRule
@@ -225,23 +232,14 @@ class PricingStorefrontCatalog
         return $this->niceMoney((float) ($rule?->price_per_session ?? 0));
     }
 
-    /** Round storefront prices to whole, customer-friendly amounts (no 31/47-style fractions). */
+    /** Storefront amounts as entered (max 2 decimal places). */
     protected function niceMoney(float $amount): float
     {
         if ($amount <= 0) {
             return 0.0;
         }
 
-        if ($amount < 20) {
-            return (float) max(1, (int) round($amount));
-        }
-
-        if ($amount < 100) {
-            return (float) (max(10, (int) (round($amount / 5) * 5)));
-        }
-
-        // مبالغ أكبر: تقريب لعشرات مغلقة (50، 60، 100…)
-        return (float) (max(10, (int) (round($amount / 10) * 10)));
+        return round($amount, 2);
     }
 
     /**

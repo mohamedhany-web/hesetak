@@ -3,6 +3,12 @@
     $footerSocial = \App\Services\PublicFooterSettings::payload();
     $socials = $footerSocial['socials'] ?? [];
     $waFooter = trim((string) ($footerSocial['whatsapp_url'] ?? ''));
+    $footerTagline = trim((string) ($footerSocial['brand_tagline'] ?? ''));
+    if ($footerTagline === '') {
+        $footerTagline = __('landing.mc.footer.tagline');
+    }
+    $footerBlurb = trim((string) ($footerSocial['blurb'] ?? ''));
+    $footerBottomTagline = trim((string) ($footerSocial['bottom_tagline'] ?? ''));
 @endphp
 <footer class="mc-footer">
   <div class="mc-container">
@@ -16,7 +22,10 @@
           <img src="{{ $footerLogoUrl }}" alt="" class="mc-brand__mark" width="36" height="36" decoding="async" onerror="this.onerror=null;this.src={{ \Illuminate\Support\Js::from(\App\Services\AdminPanelBranding::inlineFallbackDataUri()) }};">
           {{ __('landing.nav.brand') }}
         </a>
-        <p class="mc-footer__tagline">{{ __('landing.mc.footer.tagline') }}</p>
+        <p class="mc-footer__tagline">{{ $footerTagline }}</p>
+        @if($footerBlurb !== '')
+          <p class="mc-footer__tagline" style="margin-top:.5rem;font-size:.92rem;opacity:.92">{{ $footerBlurb }}</p>
+        @endif
         @if($waFooter !== '' || count($socials) > 0)
           <div class="mc-footer__social" style="display:flex;flex-wrap:wrap;gap:.65rem;margin-top:.85rem" aria-label="{{ $isRtl ? 'حسابات التواصل' : 'Social accounts' }}">
             @if($waFooter !== '')
@@ -83,7 +92,7 @@
       </div>
     </nav>
 
-    <p class="mc-footer__copy">© {{ date('Y') }} {{ __('landing.nav.brand') }}. {{ __('landing.mc.footer.rights') }} {{ __('landing.mc.footer.cr') }}</p>
+    <p class="mc-footer__copy">© {{ date('Y') }} {{ __('landing.nav.brand') }}. {{ __('landing.mc.footer.rights') }} {{ __('landing.mc.footer.cr') }}@if($footerBottomTagline !== '') — {{ $footerBottomTagline }}@endif</p>
   </div>
 </footer>
 <script>

@@ -37,10 +37,6 @@ class PackageCatalogFilterService
         bool $applyViewerDefaults = true,
         bool $featuredOnly = false,
     ): array {
-        $years = Schema::hasTable('academic_years')
-            ? AcademicYear::query()->publicCatalog()->ordered()->get(['id', 'name', 'slug', 'level_number'])
-            : collect();
-
         $tracks = HesetakMatchCatalog::curriculumTypes();
         $viewer = $applyViewerDefaults ? StudentLearningProfile::fromAuth() : new StudentLearningProfile;
         $viewerLocked = $viewer->hasPreferences();
@@ -60,6 +56,16 @@ class PackageCatalogFilterService
             $selectedTrack = null;
         }
 
+        $yearsQuery = Schema::hasTable('academic_years')
+            ? AcademicYear::query()->publicCatalog()->ordered()
+            : null;
+        if ($yearsQuery && $selectedTrack) {
+            $yearsQuery->forCurriculumType($selectedTrack);
+        }
+        $years = $yearsQuery
+            ? $yearsQuery->get(['id', 'name', 'slug', 'level_number', 'curriculum_type'])
+            : collect();
+
         if ($yearId && $years->isNotEmpty() && ! $years->contains('id', $yearId)) {
             $yearId = null;
         }
@@ -67,7 +73,7 @@ class PackageCatalogFilterService
         // الزائر بدون فلتر: لا نفرض أول مرحلة — يظهر كل الباقات.
         // الطالب بمرحلة محفوظة: $yearId يكون مضبوطاً أعلاه.
 
-        $subjects = $this->subjectsForYear($yearId);
+        $subjects = $this->subjectsForYear($yearId, $selectedTrack);
         if ($subjectId && ! $subjects->contains('id', $subjectId)) {
             $subjectId = null;
         }
@@ -173,13 +179,13 @@ class PackageCatalogFilterService
         )['packages'];
     }
 
-    public function subjectsForYear(?int $yearId): Collection
+    public function subjectsForYear(?int $yearId, ?string $curriculumType = null): Collection
     {
         if (! Schema::hasTable('academic_subjects')) {
             return collect();
         }
 
-        return AcademicSubject::query()
+        $query = AcademicSubject::query()
             ->active()
             ->where(function ($q) use ($yearId) {
                 $q->whereNull('academic_year_id');
@@ -188,9 +194,18 @@ class PackageCatalogFilterService
                         $inner->forYear($yearId);
                     });
                 }
-            })
+            });
+
+        $track = $curriculumType !== null && trim((string) $curriculumType) !== ''
+            ? $this->rates->normalizeCurriculumType($curriculumType)
+            : null;
+        if ($track) {
+            $query->forCurriculumType($track);
+        }
+
+        return $query
             ->orderBy('order')
             ->orderBy('name')
-            ->get(['id', 'name', 'slug', 'academic_year_id']);
+            ->get(['id', 'name', 'slug', 'academic_year_id', 'curriculum_type']);
     }
 }

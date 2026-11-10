@@ -15,6 +15,8 @@ if (! function_exists('student_ui')) {
             'show_assignments',
             'show_exams',
             'show_certificates',
+            // بث الكورس يظهر للطالب عند وجود تسجيل نشط (محاضرات مسجّلة + جلسات حية إن وُجدت)
+            'show_live_broadcast',
         ];
 
         if (in_array($key, $courseKeys, true) && auth()->check()) {

@@ -1,5 +1,6 @@
 @php
     $isRtl = $isRtl ?? (app()->getLocale() === 'ar');
+    $packageCartCount = (int) \App\Services\PackageCart::count();
     $langSwitch = $langSwitch ?? fn (string $lang) => request()->fullUrlWithQuery(array_merge(request()->query(), ['lang' => $lang]));
     $mcActive = $mcActive ?? ($laslesNavActive ?? '');
     $navInstructors = $mcActive === 'instructors' || request()->routeIs('public.instructors*');
@@ -25,6 +26,12 @@
     </nav>
 
     <div class="mc-nav__actions">
+      <a href="{{ route('public.package-cart.index') }}" class="mc-nav__cart" aria-label="{{ $isRtl ? 'سلة الباقات' : 'Package cart' }}" title="{{ $isRtl ? 'سلة' : 'Cart' }}" style="position:relative;display:inline-flex;align-items:center;justify-content:center;width:2.35rem;height:2.35rem;border-radius:999px;color:inherit;text-decoration:none">
+        <i class="fas fa-shopping-cart" aria-hidden="true"></i>
+        @if($packageCartCount > 0)
+          <span class="mc-nav__cart-badge" style="position:absolute;top:-2px;inset-inline-end:-2px;min-width:1.1rem;height:1.1rem;padding:0 .25rem;border-radius:999px;background:var(--mc-gold,#C9952A);color:#fff;font-size:.65rem;font-weight:700;line-height:1.1rem;text-align:center">{{ $packageCartCount > 99 ? '99+' : $packageCartCount }}</span>
+        @endif
+      </a>
       @auth
         @include('partials.landing.mycourses.user-menu')
       @else
@@ -58,6 +65,11 @@
       <a href="{{ route('public.courses') }}" class="{{ $navCourses ? 'is-active' : '' }}">{{ __('landing.mc.nav.courses') }}</a>
       <a href="{{ route('public.pricing') }}" class="{{ $navPricing ? 'is-active' : '' }}">{{ __('landing.mc.nav.pricing') }}</a>
       <a href="{{ route('public.search') }}" class="{{ request()->routeIs('public.search') ? 'is-active' : '' }}">{{ $isRtl ? 'بحث' : 'Search' }}</a>
+      <a href="{{ route('public.package-cart.index') }}" class="{{ request()->routeIs('public.package-cart.*') ? 'is-active' : '' }}">
+        <i class="fas fa-shopping-cart" aria-hidden="true"></i>
+        {{ $isRtl ? 'السلة' : 'Cart' }}
+        @if($packageCartCount > 0) ({{ $packageCartCount > 99 ? '99+' : $packageCartCount }}) @endif
+      </a>
       @if(! auth()->check() || (! auth()->user()?->isStudent() && ! auth()->user()?->isParent()))
         <a href="{{ route('public.for-teachers') }}" class="{{ $navTeachers ? 'is-active' : '' }}">{{ __('landing.mc.nav.for_teachers') }}</a>
       @endif

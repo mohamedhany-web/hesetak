@@ -96,18 +96,36 @@ class LandingController extends Controller
 
         $payload = config('app.debug')
             ? $buildHomePayload()
-            : Cache::remember('landing.home.v22.'.$locale, 180, $buildHomePayload);
+            : Cache::remember('landing.home.v23.'.$locale, 180, $buildHomePayload);
 
         // متصفح المنهج للرئيسية: منهج → صف → مادة، مع باقات المادة نفسها
         $payload['curriculumBrowserTracks'] = array_values(HesetakMatchCatalog::curriculumTypes());
+        $selectedCurriculumType = trim((string) $request->query('curriculum_type', ''));
+        $yearCols = ['id', 'name', 'slug'];
+        if (Schema::hasColumn('academic_years', 'curriculum_type')) {
+            $yearCols[] = 'curriculum_type';
+        }
         $stages = Schema::hasTable('academic_years')
-            ? AcademicYear::query()->publicCatalog()->ordered()->get(['id', 'name', 'slug'])
+            ? AcademicYear::query()
+                ->publicCatalog()
+                ->forCurriculumType($selectedCurriculumType !== '' ? $selectedCurriculumType : null)
+                ->ordered()
+                ->get($yearCols)
             : collect();
         if ($stages->isNotEmpty() && Schema::hasTable('academic_subjects')) {
+            $subjectCols = ['id', 'name', 'slug'];
+            if (Schema::hasColumn('academic_subjects', 'curriculum_type')) {
+                $subjectCols[] = 'curriculum_type';
+            }
             foreach ($stages as $year) {
                 $year->setRelation(
                     'subjects',
-                    AcademicSubject::query()->active()->forYear((int) $year->id)->ordered()->get(['id', 'name', 'slug'])
+                    AcademicSubject::query()
+                        ->active()
+                        ->forYear((int) $year->id)
+                        ->forCurriculumType($selectedCurriculumType !== '' ? $selectedCurriculumType : null)
+                        ->ordered()
+                        ->get($subjectCols)
                 );
             }
         }

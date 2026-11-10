@@ -83,6 +83,17 @@
                             <p class="mt-1.5 text-xs text-muted">يُستخدم في /school/{slug}. يُولَّد تلقائياً إن تُرك فارغاً.</p>
                         </div>
                         <div class="sm:col-span-1">
+                            <label class="{{ $labelClass }}" for="curriculum_type">نوع المنهج</label>
+                            @php $tracks = \App\Support\HesetakMatchCatalog::curriculumTypes(); @endphp
+                            <select id="curriculum_type" name="curriculum_type" class="{{ $fieldClass }}">
+                                <option value="">— مشترك لكل المناهج —</option>
+                                @foreach($tracks as $key => $meta)
+                                    <option value="{{ $key }}" @selected((string) old('curriculum_type') === (string) $key)>{{ is_array($meta) ? ($meta['label'] ?? $key) : $meta }}</option>
+                                @endforeach
+                            </select>
+                            <p class="mt-1 text-[11px] text-muted">اربط المرحلة بمنهج معيّن أو اتركها مشتركة لكل المناهج.</p>
+                        </div>
+                        <div>
                             <label class="{{ $labelClass }}" for="level_number">رقم المستوى</label>
                             <input id="level_number" type="number" name="level_number" value="{{ old('level_number') }}" min="1" max="20"
                                    class="{{ $fieldClass }}" placeholder="1–20">

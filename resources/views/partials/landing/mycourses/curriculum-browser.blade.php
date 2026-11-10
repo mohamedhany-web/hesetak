@@ -8,10 +8,12 @@
             'id' => (string) $y->id,
             'name' => $y->name,
             'slug' => $y->slug,
+            'curriculum_type' => $y->curriculum_type ?? null,
             'subjects' => $y->subjects->map(fn ($s) => [
                 'id' => (string) $s->id,
                 'name' => $s->name,
                 'slug' => $s->slug,
+                'curriculum_type' => $s->curriculum_type ?? null,
             ])->values()->all(),
         ])->values()->all(),
         'pricingBase' => route('public.pricing'),
@@ -87,13 +89,22 @@
   var panelEl = root.querySelector('[data-role="panel"]');
   var hintEl = root.querySelector('[data-role="hint"]');
 
+  function matchesTrack(row) {
+    if (!state.track) return true;
+    var ct = row && row.curriculum_type;
+    return !ct || ct === state.track;
+  }
+  function visibleStages() {
+    return stages.filter(matchesTrack);
+  }
   function currentStage() {
-    return stages.find(function (s) { return s.id === state.stageId; }) || stages[0] || null;
+    var list = visibleStages();
+    return list.find(function (s) { return s.id === state.stageId; }) || list[0] || null;
   }
   function currentSubject() {
     var stage = currentStage();
     if (!stage) return null;
-    return (stage.subjects || []).find(function (s) { return s.id === state.subjectId; }) || null;
+    return (stage.subjects || []).filter(matchesTrack).find(function (s) { return s.id === state.subjectId; }) || null;
   }
   function trackLabel() {
     var t = tracks.find(function (x) { return x.key === state.track; });
@@ -120,7 +131,12 @@
   }
   function renderStages() {
     stagesEl.innerHTML = '';
-    stages.forEach(function (s) {
+    var list = visibleStages();
+    if (list.length && !list.some(function (s) { return s.id === state.stageId; })) {
+      state.stageId = list[0].id;
+      state.subjectId = '';
+    }
+    list.forEach(function (s) {
       stagesEl.appendChild(makeTab(s.name, state.stageId === s.id, function () {
         state.stageId = s.id;
         state.subjectId = '';
@@ -131,7 +147,7 @@
   function renderSubjects() {
     subjectsEl.innerHTML = '';
     var stage = currentStage();
-    var list = stage ? (stage.subjects || []) : [];
+    var list = (stage ? (stage.subjects || []) : []).filter(matchesTrack);
     if (!list.length) {
       var p = document.createElement('p');
       p.className = 'mc-curr-browser__empty';

@@ -94,6 +94,20 @@
         <h3>{{ __('student_timeline.courses_overview') }}</h3>
         <p class="st-learn-note">{{ $course->description ?: __('student_timeline.courses_no_desc') }}</p>
         <div class="st-learn-chips" style="margin-top:12px">
+            @php
+                $track = (string) ($course->product_track ?? 'recorded');
+                $delivery = (string) ($course->delivery_type ?? 'group');
+            @endphp
+            <span><i class="fas fa-video" aria-hidden="true"></i> {{ $locale === 'ar' ? 'محاضرات مسجّلة' : 'Recorded lectures' }}</span>
+            @if(student_ui('show_live_broadcast'))
+                <span><i class="fas fa-broadcast-tower" aria-hidden="true"></i> {{ $locale === 'ar' ? 'جلسات حية (إن وُجدت)' : 'Live sessions (if scheduled)' }}</span>
+            @endif
+            @if(student_ui('show_assignments'))
+                <span><i class="fas fa-tasks" aria-hidden="true"></i> {{ $locale === 'ar' ? 'واجبات' : 'Assignments' }}</span>
+            @endif
+            @if(student_ui('show_exams'))
+                <span><i class="fas fa-clipboard-check" aria-hidden="true"></i> {{ $locale === 'ar' ? 'امتحانات + بنك أسئلة' : 'Exams + question bank' }}</span>
+            @endif
             @if($course->level)
                 <span>{{ __('student_timeline.courses_level') }}: {{ $course->level }}</span>
             @endif
@@ -105,6 +119,29 @@
             @endif
             @if($year)
                 <span>{{ $year }}</span>
+            @endif
+            @if($track !== '')
+                <span>{{ $locale === 'ar' ? ('المسار: '.($track === 'book' ? 'كتاب' : 'كورس مسجّل')) : ('Track: '.$track) }}</span>
+            @endif
+            @if($delivery !== '')
+                <span>{{ $locale === 'ar' ? ('التقديم: '.($delivery === 'one_to_one' ? 'فردي' : 'جماعي')) : ('Delivery: '.$delivery) }}</span>
+            @endif
+        </div>
+        <p class="st-learn-note" style="margin-top:12px">
+            {{ $locale === 'ar'
+                ? 'مسار التعلّم: افتح المنهج ← شاهد المحاضرات المسجّلة ← سلّم الواجبات ← أدِ الامتحانات. الجلسات الحية تظهر من قائمة البث إن جدوّلها المعلم.'
+                : 'Learning path: open the curriculum → watch recorded lectures → submit assignments → take exams. Live sessions appear under broadcast when scheduled by the teacher.' }}
+        </p>
+        <div class="st-learn-chips" style="margin-top:10px">
+            <a class="st-pill st-pill--outline" href="{{ route('my-courses.learn', $course) }}"><i class="fas fa-play" aria-hidden="true"></i> {{ $locale === 'ar' ? 'بدء التعلّم' : 'Start learning' }}</a>
+            @if(student_ui('show_assignments'))
+                <a class="st-pill st-pill--outline" href="{{ route('student.assignments.index') }}"><i class="fas fa-tasks" aria-hidden="true"></i> {{ $locale === 'ar' ? 'واجباتي' : 'My assignments' }}</a>
+            @endif
+            @if(student_ui('show_exams'))
+                <a class="st-pill st-pill--outline" href="{{ route('student.exams.index') }}"><i class="fas fa-clipboard-check" aria-hidden="true"></i> {{ $locale === 'ar' ? 'امتحاناتي' : 'My exams' }}</a>
+            @endif
+            @if(student_ui('show_live_broadcast') && \Illuminate\Support\Facades\Route::has('live-sessions.index'))
+                <a class="st-pill st-pill--outline" href="{{ route('live-sessions.index') }}"><i class="fas fa-broadcast-tower" aria-hidden="true"></i> {{ $locale === 'ar' ? 'الجلسات الحية' : 'Live sessions' }}</a>
             @endif
         </div>
     </div>
@@ -139,7 +176,7 @@
                             $label = $item->title ?? __('student.course_fallback');
                             $kind = class_basename($item);
                             $kindLabel = match ($kind) {
-                                'Lecture' => __('student_timeline.courses_kind_lecture'),
+                                'Lecture' => $locale === 'ar' ? 'محاضرة مسجّلة' : 'Recorded lecture',
                                 'CourseLesson' => __('student_timeline.courses_kind_lesson'),
                                 'Assignment' => __('student_timeline.courses_kind_assignment'),
                                 'AdvancedExam', 'Exam' => __('student_timeline.courses_kind_exam'),
