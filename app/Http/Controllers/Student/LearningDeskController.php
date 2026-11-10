@@ -15,17 +15,22 @@ class LearningDeskController extends Controller
     public function index(Request $request): View
     {
         $actor = $request->user();
-        $children = $actor->role === 'parent'
+        $children = $actor->isParent()
             ? $actor->children()->orderBy('name')->get(['id', 'name', 'email', 'academic_year_id'])
             : collect();
 
         $student = $this->resolveStudent($actor, (int) $request->query('child', 0), $children);
+        if ($student && $actor->isParent()) {
+            $request->session()->put('active_child_id', $student->id);
+        }
 
         $upcoming = collect();
         $past = collect();
         $assignments = collect();
 
         if ($student) {
+            \App\Services\OneToOneSessionService::settleOverdueForStudent((int) $student->id);
+
             $sessions = OneToOneSession::query()
                 ->where('student_id', $student->id)
                 ->with(['course:id,title', 'instructor:id,name', 'classroomMeeting'])
@@ -34,22 +39,20 @@ class LearningDeskController extends Controller
                 ->limit(40)
                 ->get();
 
-            $upcoming = $sessions->filter(fn (OneToOneSession $session) => $session->isOpenPlacement())->values();
+            $upcoming = $sessions->filter(fn (OneToOneSession $session) => $session->isOpenPlacement()
+                && (! $session->scheduled_at || $session->scheduled_at->isFuture() || $session->scheduled_at->isToday())
+            )->values();
             $past = $sessions->filter(fn (OneToOneSession $session) => in_array($session->status, [
                 OneToOneSession::STATUS_COMPLETED,
                 OneToOneSession::STATUS_CANCELLED,
-            ], true))->sortByDesc(fn (OneToOneSession $session) => $session->scheduled_at?->timestamp ?? 0)->values();
+            ], true) || (
+                $session->status === OneToOneSession::STATUS_SCHEDULED
+                && $session->scheduled_at
+                && $session->scheduled_at->copy()->addMinutes((int) ($session->duration_minutes ?: 50))->isPast()
+            ))->sortByDesc(fn (OneToOneSession $session) => $session->scheduled_at?->timestamp ?? 0)->values();
             $ledger = [
                 'completed' => $sessions->where('status', OneToOneSession::STATUS_COMPLETED)->count(),
-                'missed' => $sessions->filter(function (OneToOneSession $session) {
-                    if ($session->status !== OneToOneSession::STATUS_SCHEDULED || ! $session->scheduled_at) {
-                        return false;
-                    }
-                    $mins = (int) ($session->duration_minutes ?: 50);
-
-                    return $session->scheduled_at->copy()->addMinutes($mins + 60)->isPast()
-                        && ! $session->classroomMeeting?->started_at;
-                })->count(),
+                'missed' => 0,
                 'remaining' => $sessions->filter(fn (OneToOneSession $session) => $session->isOpenPlacement()
                     && (! $session->scheduled_at || $session->scheduled_at->isFuture() || $session->scheduled_at->isToday()))->count(),
             ];
@@ -101,7 +104,7 @@ class LearningDeskController extends Controller
      */
     private function resolveStudent(User $actor, int $childId, $children): ?User
     {
-        if ($actor->role !== 'parent') {
+        if (! $actor->isParent()) {
             return $actor;
         }
 

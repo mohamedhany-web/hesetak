@@ -130,7 +130,6 @@ return [
      */
     'post_login_admin_routes' => [
         ['permission' => 'admin.access', 'route' => 'admin.dashboard'],
-        ['permission' => 'view.dashboard', 'route' => 'admin.dashboard'],
         ['permission' => 'manage.courses', 'route' => 'admin.advanced-courses.index'],
         ['permission' => 'manage.users', 'route' => 'admin.users.index'],
         ['permission' => 'manage.students-accounts', 'route' => 'admin.students-accounts.index'],

@@ -21,9 +21,10 @@ class CalendarController extends Controller
      */
     public function index()
     {
-        $user = Auth::user();
+        $actor = Auth::user();
+        $user = \App\Support\ActiveChildContext::resolve($actor) ?? $actor;
 
-        // جلب جميع الأحداث للطالب
+        // جلب جميع الأحداث للطالب (أو الابن لولي الأمر)
         $events = $this->getStudentEvents($user);
 
         // إحصائيات
@@ -75,7 +76,8 @@ class CalendarController extends Controller
      */
     public function getEvents(Request $request)
     {
-        $user = Auth::user();
+        $actor = Auth::user();
+        $user = \App\Support\ActiveChildContext::resolve($actor, $request) ?? $actor;
         $start = $request->get('start');
         $end = $request->get('end');
 

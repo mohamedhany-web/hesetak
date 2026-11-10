@@ -107,14 +107,30 @@
             @else
               <div class="mc-gift-packs" role="radiogroup" aria-label="{{ __('public.gift_choose_pack') }}">
                 @foreach($packages as $row)
-                  @php $isOn = $pkg && (int) $pkg->id === (int) $row['id']; @endphp
+                  @php
+                    $isOn = $pkg && (int) $pkg->id === (int) $row['id'];
+                    $rowName = trim(preg_replace('/\s+/u', ' ', (string) ($row['name'] ?? '')) ?? '');
+                    if (preg_match('/^(\d+)\s*أشهر?\s*-?\s*(.+)$/u', $rowName, $nm)) {
+                      $rowName = $nm[1].' أشهر · '.trim($nm[2]);
+                    } else {
+                      $rowName = str_replace(' - ', ' · ', $rowName);
+                    }
+                    $teachersUrl = $row['teachers_url'] ?? (Route::has('public.package-booking.teachers')
+                      ? route('public.package-booking.teachers', (int) $row['id'])
+                      : null);
+                  @endphp
                   <label class="mc-gift-pack {{ $isOn ? 'is-on' : '' }}">
                     <input type="radio" name="service_package_id" value="{{ $row['id'] }}" @checked($isOn) required>
                     <span class="mc-gift-pack__copy">
                       @if(!empty($row['badge']))
                         <span class="mc-gift-pack__badge">{{ $row['badge'] }}</span>
                       @endif
-                      <strong>{{ $row['name'] }}</strong>
+                      <strong>{{ $rowName }}</strong>
+                      @if($teachersUrl)
+                        <a href="{{ $teachersUrl }}" class="mc-btn mc-btn--sm mc-btn--outline" style="margin:.35rem 0" onclick="event.stopPropagation()">
+                          {{ $isRtl ? 'استكشاف المواعيد والمعلمين' : 'Explore teachers & slots' }}
+                        </a>
+                      @endif
                       <em>
                         {{ (int) $row['units_count'] }} {{ __('public.gift_sessions') }}
                         @if(!empty($row['tagline']))

@@ -22,11 +22,17 @@
       <form method="post" action="{{ route('public.package-booking.add-cart', $package) }}" style="display:grid;gap:1rem;margin-top:1rem">
         @csrf
         <input type="hidden" name="instructor_id" value="{{ $instructor->id }}">
-        <input type="hidden" name="year_id" value="{{ $yearId }}">
-        <input type="hidden" name="subject_id" value="{{ $subjectId }}">
-        <input type="hidden" name="weekly_sessions" value="{{ $weekly }}">
-        <input type="hidden" name="weeks" value="{{ $weeks }}">
-        <input type="hidden" name="sessions" value="{{ $sessions }}">
+        @if($yearId)<input type="hidden" name="year_id" value="{{ (int) $yearId }}">@endif
+        @if($subjectId)<input type="hidden" name="subject_id" value="{{ (int) $subjectId }}">@endif
+        <input type="hidden" name="weekly_sessions" value="{{ (int) $weekly }}">
+        <input type="hidden" name="weeks" value="{{ (int) $weeks }}">
+        <input type="hidden" name="sessions" value="{{ (int) $sessions }}">
+        @if(session('error'))
+          <p class="mc-lead" style="color:#b91c1c">{{ session('error') }}</p>
+        @endif
+        @if($errors->any())
+          <p class="mc-lead" style="color:#b91c1c">{{ $errors->first() }}</p>
+        @endif
 
         @if($slots->isEmpty())
           <p class="mc-lead">{{ $isRtl ? 'لا مواعيد منشورة حالياً — اقترح موعداً أدناه.' : 'No published slots — suggest a time below.' }}</p>

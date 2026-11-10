@@ -93,7 +93,7 @@ class GiftPackageController extends Controller
         return [
             'id' => $package->id,
             'slug' => $package->slug,
-            'name' => $package->name,
+            'name' => self::tidyPackageTitle((string) $package->name, $package->tagline),
             'tagline' => $package->tagline,
             'badge' => $package->badge,
             'description' => $package->description,
@@ -104,8 +104,25 @@ class GiftPackageController extends Controller
             'display_price' => $quote['total'],
             'display_unit' => $quote['unit'],
             'currency' => $quote['currency'],
+            'teachers_url' => route('public.package-booking.teachers', $package),
             'model' => $package,
         ];
+    }
+
+    private static function tidyPackageTitle(string $name, ?string $tagline = null): string
+    {
+        $clean = trim(preg_replace('/\s+/u', ' ', str_replace(['–', '—'], '-', $name)) ?? $name);
+        if (preg_match('/^(\d+)\s*أشهر?\s*-?\s*(.+)$/u', $clean, $m)) {
+            return $m[1].' أشهر · '.trim($m[2]);
+        }
+        if (preg_match('/^(\d+)\s*months?\s*-?\s*(.+)$/iu', $clean, $m)) {
+            return $m[1].' months · '.trim($m[2]);
+        }
+        if ($tagline && ! str_contains($clean, '·') && ! str_contains($clean, '-')) {
+            return $clean.' · '.trim($tagline);
+        }
+
+        return str_replace(' - ', ' · ', $clean);
     }
 
     public function store(Request $request, PackageGiftService $gifts): RedirectResponse

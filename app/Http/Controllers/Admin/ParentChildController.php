@@ -187,9 +187,13 @@ class ParentChildController extends Controller
             return back()->with('error', 'لا يمكن ربط المستخدم بنفسه.');
         }
 
+        if ((string) $user->role !== 'parent') {
+            $user->forceFill(['role' => 'parent', 'is_active' => true])->save();
+        }
+
         $student->update(['parent_id' => $user->id]);
 
-        return back()->with('success', 'تم ربط الطالب «'.$student->name.'» بولي الأمر.');
+        return back()->with('success', 'تم ربط الطالب «'.$student->name.'» بولي الأمر. يمكنه متابعة التقدم من «تتبع التطور».');
     }
 
     public function unlink(Request $request, User $user): RedirectResponse

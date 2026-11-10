@@ -63,7 +63,7 @@ class PackageCart
             'weekly_sessions' => isset($item['weekly_sessions']) ? (int) $item['weekly_sessions'] ?: null : null,
             'sessions' => $sessions,
             'schedule_notes' => isset($item['schedule_notes']) ? trim((string) $item['schedule_notes']) ?: null : null,
-            'label' => (string) $package->name,
+            'label' => (string) ($item['label'] ?? $package->name),
             'unit_price' => round((float) $unit, 2),
             'total' => $total,
         ];

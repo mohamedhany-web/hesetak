@@ -69,8 +69,23 @@ class PackageBookingController extends Controller
         $unit = (float) $servicePackage->pricePerUnit();
         $total = round($unit * $sessions, 2);
 
+        $subjectName = $subjectId
+            ? (string) (AcademicSubject::query()->whereKey($subjectId)->value('name') ?? '')
+            : '';
+        $displayName = $subjectName !== ''
+            ? ((app()->getLocale() === 'ar' ? 'باقة ' : '').$subjectName.(app()->getLocale() === 'ar' ? '' : ' package'))
+            : $servicePackage->name;
+        $scheduleCopy = app()->getLocale() === 'ar'
+            ? ($sessions > 8
+                ? sprintf('%d حصص أسبوعياً لمدة %d أسابيع (إجمالي %d حصة)', $weekly, $weeks, $sessions)
+                : sprintf('%d حصة · %d أسبوعياً × %d أسابيع', $sessions, $weekly, $weeks))
+            : sprintf('%d sessions · %d / week × %d weeks', $sessions, $weekly, $weeks);
+
         return view('public.package-booking-teachers', [
             'package' => $servicePackage,
+            'displayName' => $displayName,
+            'scheduleCopy' => $scheduleCopy,
+            'lockSubject' => (bool) $subjectId,
             'years' => $years,
             'subjects' => $subjects,
             'yearId' => $yearId,
@@ -87,7 +102,7 @@ class PackageBookingController extends Controller
             'cartCount' => PackageCart::count(),
             'mcActive' => 'pricing',
             'bodyClass' => 'mc-body--dir',
-            'pageTitle' => ($servicePackage->name).' — '.__('landing.nav.brand'),
+            'pageTitle' => $displayName.' — '.__('landing.nav.brand'),
         ]);
     }
 
@@ -100,7 +115,9 @@ class PackageBookingController extends Controller
         $subjectId = $request->integer('subject') ?: null;
         $weekly = max(1, min(6, $request->integer('weekly') ?: 2));
         $weeks = max(1, min(16, $request->integer('weeks') ?: 4));
-        $sessions = $weekly * $weeks;
+        $sessions = $request->filled('sessions')
+            ? max(1, min(200, $request->integer('sessions')))
+            : ($weekly * $weeks);
         $unit = (float) $servicePackage->pricePerUnit();
         $total = round($unit * $sessions, 2);
 
@@ -149,6 +166,17 @@ class PackageBookingController extends Controller
 
     public function addToCart(Request $request, ServicePackage $servicePackage): RedirectResponse
     {
+        $request->merge([
+            'year_id' => $request->filled('year_id') ? $request->input('year_id') : null,
+            'subject_id' => $request->filled('subject_id') ? $request->input('subject_id') : null,
+            'instructor_id' => $request->filled('instructor_id') ? $request->input('instructor_id') : null,
+            'weekly_sessions' => $request->filled('weekly_sessions') ? $request->input('weekly_sessions') : null,
+            'weeks' => $request->filled('weeks') ? $request->input('weeks') : null,
+            'sessions' => $request->filled('sessions') ? $request->input('sessions') : null,
+            'propose_date' => $request->filled('propose_date') ? $request->input('propose_date') : null,
+            'propose_hour' => $request->filled('propose_hour') ? $request->input('propose_hour') : null,
+        ]);
+
         $data = $request->validate([
             'year_id' => ['nullable', 'integer'],
             'subject_id' => ['nullable', 'integer'],
@@ -184,18 +212,28 @@ class PackageBookingController extends Controller
             ));
         }
 
+        $subjectId = isset($data['subject_id']) ? (int) $data['subject_id'] : null;
+        $label = $servicePackage->name;
+        if ($subjectId) {
+            $subjectName = AcademicSubject::query()->whereKey($subjectId)->value('name');
+            if ($subjectName) {
+                $label = 'باقة '.$subjectName;
+            }
+        }
+
         try {
             PackageCart::add([
                 'package_id' => (int) $servicePackage->id,
-                'year_id' => $data['year_id'] ?? null,
-                'subject_id' => $data['subject_id'] ?? null,
-                'instructor_id' => $data['instructor_id'] ?? null,
+                'year_id' => isset($data['year_id']) ? (int) $data['year_id'] : null,
+                'subject_id' => $subjectId,
+                'instructor_id' => isset($data['instructor_id']) ? (int) $data['instructor_id'] : null,
                 'weekly_sessions' => $weekly,
                 'sessions' => $sessions,
                 'schedule_notes' => $notes !== '' ? $notes : null,
+                'label' => $label,
             ]);
         } catch (\InvalidArgumentException $e) {
-            return back()->with('error', $e->getMessage());
+            return back()->withInput()->with('error', $e->getMessage());
         }
 
         return redirect()

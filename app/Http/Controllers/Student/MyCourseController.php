@@ -24,9 +24,10 @@ class MyCourseController extends Controller
      */
     public function index()
     {
-        $user = Auth::user();
+        $actor = Auth::user();
+        $user = \App\Support\ActiveChildContext::resolve($actor) ?? $actor;
 
-        // الكورسات المفعلة للطالب
+        // الكورسات المفعلة للطالب (أو الابن لولي الأمر)
         $activeCourses = $user->activeCourses()
             ->with(['academicYear', 'academicSubject', 'teacher', 'lessons'])
             ->paginate(12);

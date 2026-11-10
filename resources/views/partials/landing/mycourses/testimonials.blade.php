@@ -65,15 +65,21 @@
           will-change: transform;
         }
         [data-mc-quotes-carousel] .mc-quotes-carousel__slide {
-          flex: 0 0 100%;
-          max-width: 100%;
+          flex: 0 0 min(100%, 22rem);
+          max-width: min(100%, 22rem);
+        }
+        [data-mc-quotes-carousel] .mc-quote__media {
+          aspect-ratio: 1 / 1;
+          width: 100%;
+          overflow: hidden;
+          background: var(--mc-navy-soft, #eef2f8);
         }
         [data-mc-quotes-carousel] .mc-quote__media img {
           width: 100%;
-          height: auto;
-          max-height: 28rem;
-          object-fit: contain;
-          background: #0b1b33;
+          height: 100%;
+          object-fit: cover;
+          object-position: center;
+          display: block;
         }
         [data-mc-quotes-carousel] .mc-quotes-carousel__nav {
           display: flex; gap: .5rem; justify-content: center; margin-top: 1rem;

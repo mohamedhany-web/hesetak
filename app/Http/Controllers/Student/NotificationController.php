@@ -14,7 +14,8 @@ class NotificationController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Auth::user()->customNotifications()->with(['sender'])
+        $viewer = \App\Support\ActiveChildContext::resolve(Auth::user()) ?? Auth::user();
+        $query = $viewer->customNotifications()->with(['sender'])
             ->where(function ($q) {
                 $q->whereNull('audience')->orWhere('audience', 'student');
             });
@@ -58,8 +59,8 @@ class NotificationController extends Controller
             ->paginate(20)
             ->withQueryString();
 
-        // إحصائيات (إشعارات الطالب فقط: audience null أو student)
-        $baseStudentNotifications = Auth::user()->customNotifications()
+        // إحصائيات (إشعارات الطالب فقط: audience null أو student) — لولي الأمر: إشعارات الابن
+        $baseStudentNotifications = $viewer->customNotifications()
             ->where(function ($q) {
                 $q->whereNull('audience')->orWhere('audience', 'student');
             })

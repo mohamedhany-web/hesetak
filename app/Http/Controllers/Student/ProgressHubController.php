@@ -16,8 +16,11 @@ class ProgressHubController extends Controller
         StudentProgressAnalyticsService $analytics,
         AdaptiveLearningService $adaptive,
     ): View {
-        $user = $request->user();
-        abort_unless($user && $user->isStudent(), 403);
+        $actor = $request->user();
+        abort_unless($actor && ($actor->isStudent() || $actor->isParent()), 403);
+
+        $user = \App\Support\ActiveChildContext::resolve($actor, $request);
+        abort_unless($user, 404, 'لا يوجد طالب مرتبط بهذا الحساب.');
 
         $comparison = $analytics->comparePeriods($user);
         $suggestions = $adaptive->activeFor($user);
@@ -27,13 +30,16 @@ class ProgressHubController extends Controller
             'comparison' => $comparison,
             'suggestions' => $suggestions,
             'shareUrl' => $user->progressShareUrl(),
+            'children' => $actor->isParent() ? $actor->children()->orderBy('name')->get(['id', 'name']) : collect(),
         ]);
     }
 
     public function refreshAdaptive(Request $request, AdaptiveLearningService $adaptive)
     {
-        $user = $request->user();
-        abort_unless($user && $user->isStudent(), 403);
+        $actor = $request->user();
+        abort_unless($actor && ($actor->isStudent() || $actor->isParent()), 403);
+        $user = \App\Support\ActiveChildContext::resolve($actor, $request);
+        abort_unless($user, 404);
 
         $adaptive->refreshSuggestionsFor($user);
 
@@ -44,8 +50,10 @@ class ProgressHubController extends Controller
 
     public function sendFamilyPreview(Request $request, FamilyProgressReportService $family)
     {
-        $user = $request->user();
-        abort_unless($user && $user->isStudent(), 403);
+        $actor = $request->user();
+        abort_unless($actor && ($actor->isStudent() || $actor->isParent()), 403);
+        $user = \App\Support\ActiveChildContext::resolve($actor, $request);
+        abort_unless($user, 404);
 
         $report = $family->sendForStudent($user, 'email');
 

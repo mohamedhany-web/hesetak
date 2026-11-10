@@ -1192,7 +1192,7 @@ class User extends Authenticatable
      */
     public function isEmployee(): bool
     {
-        return $this->is_employee === true;
+        return $this->is_employee === true || (string) $this->role === 'employee';
     }
 
     /**

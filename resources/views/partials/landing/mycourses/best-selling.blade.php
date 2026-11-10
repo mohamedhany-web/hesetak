@@ -60,7 +60,15 @@
                 <img src="{{ $coverUrl }}" alt="{{ $name }}" style="display:block;width:100%;height:100%;object-fit:cover">
               </a>
             @endif
-            <h3>{{ $name }}</h3>
+            @php
+              $tidyName = trim(preg_replace('/\s+/u', ' ', (string) $name) ?? (string) $name);
+              if (preg_match('/^(\d+)\s*أشهر?\s*-?\s*(.+)$/u', $tidyName, $m)) {
+                $tidyName = $m[1].' أشهر · '.trim($m[2]);
+              } else {
+                $tidyName = str_replace(' - ', ' · ', $tidyName);
+              }
+            @endphp
+            <h3>{{ $tidyName }}</h3>
             @if($hoursLabel !== '')
               <p class="mc-package__hours">{{ $hoursLabel }}</p>
             @endif

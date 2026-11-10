@@ -66,11 +66,20 @@
   var tracks = data.tracks || [];
   var stages = data.stages || [];
   var labels = data.labels || {};
+  var params = new URLSearchParams(window.location.search);
   var state = {
-    track: tracks[0] ? tracks[0].key : '',
-    stageId: stages[0] ? stages[0].id : '',
-    subjectId: ''
+    track: params.get('curriculum_type') || (tracks[0] ? tracks[0].key : ''),
+    stageId: params.get('year') || (stages[0] ? stages[0].id : ''),
+    subjectId: params.get('subject') || ''
   };
+  function reloadWithState() {
+    var url = new URL(window.location.href);
+    if (state.track) url.searchParams.set('curriculum_type', state.track); else url.searchParams.delete('curriculum_type');
+    if (state.stageId) url.searchParams.set('year', state.stageId); else url.searchParams.delete('year');
+    if (state.subjectId) url.searchParams.set('subject', state.subjectId); else url.searchParams.delete('subject');
+    url.hash = 'curriculum-browser';
+    window.location.assign(url.toString());
+  }
 
   var tracksEl = root.querySelector('[data-role="tracks"]');
   var stagesEl = root.querySelector('[data-role="stages"]');
@@ -105,7 +114,7 @@
       tracksEl.appendChild(makeTab(t.label, state.track === t.key, function () {
         state.track = t.key;
         state.subjectId = '';
-        render();
+        reloadWithState();
       }));
     });
   }
@@ -115,7 +124,7 @@
       stagesEl.appendChild(makeTab(s.name, state.stageId === s.id, function () {
         state.stageId = s.id;
         state.subjectId = '';
-        render();
+        reloadWithState();
       }));
     });
   }
@@ -133,7 +142,7 @@
     list.forEach(function (sub) {
       subjectsEl.appendChild(makeTab(sub.name, state.subjectId === sub.id, function () {
         state.subjectId = sub.id;
-        render();
+        reloadWithState();
       }));
     });
   }

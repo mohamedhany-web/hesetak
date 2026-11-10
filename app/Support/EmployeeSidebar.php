@@ -144,8 +144,9 @@ final class EmployeeSidebar
             }
         }
 
-        // روابط إضافية من صلاحيات الدور فقط لغير أقسام المبيعات (لتجنب تضخيم القائمة)
-        if ($user->is_employee && $user->roles()->exists() && ! $user->isSalesDepartmentEmployee()) {
+        // روابط RBAC الإضافية فقط إن لم تكن قائمة الوظيفة محددة، وإلا تبقى صلاحيات الوظيفة هي المصدر
+        $hasJobMenu = is_array($jobMenus) && $jobMenus !== [];
+        if (! $hasJobMenu && $user->is_employee && $user->roles()->exists() && ! $user->isSalesDepartmentEmployee()) {
             $rbacExtra = self::rbacPermissionSidebarSections($user, $seenLinkKeys);
             if ($rbacExtra !== []) {
                 $out = array_merge($out, $rbacExtra);

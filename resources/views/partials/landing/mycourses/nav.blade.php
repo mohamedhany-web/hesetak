@@ -19,7 +19,7 @@
       <a href="{{ route('public.courses') }}" class="{{ $navCourses ? 'is-active' : '' }}">{{ __('landing.mc.nav.courses') }}</a>
       <a href="{{ route('public.pricing') }}" class="{{ $navPricing ? 'is-active' : '' }}">{{ __('landing.mc.nav.pricing') }}</a>
       <a href="{{ route('public.search') }}" class="{{ request()->routeIs('public.search') ? 'is-active' : '' }}" aria-label="{{ $isRtl ? 'بحث' : 'Search' }}"><i class="fas fa-search" aria-hidden="true"></i> {{ $isRtl ? 'بحث' : 'Search' }}</a>
-      @if(! auth()->check() || ! auth()->user()?->isStudent())
+      @if(! auth()->check() || (! auth()->user()?->isStudent() && ! auth()->user()?->isParent()))
         <a href="{{ route('public.for-teachers') }}" class="{{ $navTeachers ? 'is-active' : '' }}">{{ __('landing.mc.nav.for_teachers') }}</a>
       @endif
     </nav>
@@ -58,7 +58,7 @@
       <a href="{{ route('public.courses') }}" class="{{ $navCourses ? 'is-active' : '' }}">{{ __('landing.mc.nav.courses') }}</a>
       <a href="{{ route('public.pricing') }}" class="{{ $navPricing ? 'is-active' : '' }}">{{ __('landing.mc.nav.pricing') }}</a>
       <a href="{{ route('public.search') }}" class="{{ request()->routeIs('public.search') ? 'is-active' : '' }}">{{ $isRtl ? 'بحث' : 'Search' }}</a>
-      @if(! auth()->check() || ! auth()->user()?->isStudent())
+      @if(! auth()->check() || (! auth()->user()?->isStudent() && ! auth()->user()?->isParent()))
         <a href="{{ route('public.for-teachers') }}" class="{{ $navTeachers ? 'is-active' : '' }}">{{ __('landing.mc.nav.for_teachers') }}</a>
       @endif
       <a href="{{ route('public.for-students') }}">{{ __('landing.mc.nav.for_students') }}</a>

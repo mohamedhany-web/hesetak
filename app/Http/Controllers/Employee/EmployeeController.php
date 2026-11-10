@@ -22,23 +22,24 @@ class EmployeeController extends Controller
     {
         $user = Auth::user();
 
-        if (!$user->isEmployee()) {
+        if (! $user->isEmployee() && $user->role !== 'employee') {
             abort(403, 'غير مصرح لك بالوصول إلى هذه الصفحة');
-        }
-
-        // الموظفون الذين لديهم دور RBAC مخصص → لوحة الأدمن المفلترة
-        if ($user->roles()->exists() && $user->userHasAdminAccessCapability()) {
-            return redirect()->route('admin.dashboard');
-        }
-
-        if (!$user->employeeCan('dashboard')) {
-            abort(403, 'لوحة التحكم غير متاحة لوظيفتك الحالية.');
         }
 
         $user->load('employeeJob');
 
+        // المشرف الأكاديمي ووظائف لوحة الموظف يبقون هنا — لا تحويل إلى أدمن يسبب 403
         if ($user->employeeJob?->code === 'academic_supervisor') {
             return $this->academicSupervisorDashboard($user);
+        }
+
+        if ($user->roles()->exists() && $user->userHasAdminAccessCapability()
+            && $user->hasPermission('admin.access')) {
+            return redirect()->route('admin.dashboard');
+        }
+
+        if (! $user->employeeCan('dashboard')) {
+            abort(403, 'لوحة التحكم غير متاحة لوظيفتك الحالية.');
         }
 
         $tasks = $user->employeeTasks()

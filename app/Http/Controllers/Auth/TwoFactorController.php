@@ -210,9 +210,13 @@ class TwoFactorController extends Controller
     protected function getDashboardRoute(User $user): string
     {
         if ($user->isEmployee() || $user->role === 'employee') {
-            if ($user->roles()->exists() && $user->userHasAdminAccessCapability()) {
+            $user->loadMissing('employeeJob');
+            if ($user->employeeJob?->code === 'academic_supervisor') {
+                return 'employee.dashboard';
+            }
+            if ($user->roles()->exists() && $user->hasPermission('admin.access')) {
                 $adminRoute = RbacAdminRouteAccess::firstPostLoginAdminRouteName($user);
-                if ($adminRoute !== null) {
+                if ($adminRoute !== null && RbacAdminRouteAccess::userMayAccessAdminRoute($user, $adminRoute)) {
                     return $adminRoute;
                 }
             }

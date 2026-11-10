@@ -11,12 +11,18 @@
   <div class="mc-container" style="display:flex;flex-wrap:wrap;gap:1rem;justify-content:space-between;align-items:flex-end">
     <div>
       <p class="mc-eyebrow">{{ $isRtl ? 'المسار: الباقة → المعلمون' : 'Flow: package → teachers' }}</p>
-      <h1>{{ $package->name }}</h1>
+      <h1>{{ $displayName ?? $package->name }}</h1>
+      @if(!empty($scheduleCopy))
+        <p class="mc-lead"><strong>{{ $scheduleCopy }}</strong></p>
+      @endif
       @if($package->description)
         <p class="mc-lead">{{ $package->description }}</p>
       @endif
       <p class="mc-lead">{{ $isRtl ? 'اختر معلماً يدرّس المادة، ثم استكشف المواعيد.' : 'Pick a teacher for the subject, then explore slots.' }}</p>
-      @if(($subjects ?? collect())->isNotEmpty())
+      @if(!empty($lockSubject) && $subjectId)
+        @php $lockedSubject = ($subjects ?? collect())->firstWhere('id', $subjectId); @endphp
+        <p class="mc-lead">{{ $isRtl ? 'المادة المختارة:' : 'Selected subject:' }} <strong>{{ $lockedSubject->name ?? ($displayName ?? '') }}</strong></p>
+      @elseif(($subjects ?? collect())->isNotEmpty())
         <p class="mc-lead">{{ $isRtl ? 'مواد الباقة:' : 'Package subjects:' }} {{ $subjects->pluck('name')->implode(' · ') }}</p>
       @endif
       @if($package->featureList())
@@ -56,13 +62,21 @@
           </select>
         </label>
         <label class="mc-field">{{ $isRtl ? 'المادة' : 'Subject' }}
-          <select name="subject" class="mc-input" onchange="this.form.submit()">
-            <option value="">{{ $isRtl ? 'الكل' : 'All' }}</option>
-            @foreach($subjects as $subject)
-              <option value="{{ $subject->id }}" @selected((string)$subjectId === (string)$subject->id)>{{ $subject->name }}</option>
-            @endforeach
-          </select>
+          @if(!empty($lockSubject) && $subjectId)
+            <input type="hidden" name="subject" value="{{ (int) $subjectId }}">
+            <input type="text" class="mc-input" value="{{ ($subjects ?? collect())->firstWhere('id', $subjectId)?->name ?? ($displayName ?? '') }}" readonly>
+          @else
+            <select name="subject" class="mc-input" onchange="this.form.submit()">
+              <option value="">{{ $isRtl ? 'الكل' : 'All' }}</option>
+              @foreach($subjects as $subject)
+                <option value="{{ $subject->id }}" @selected((string)$subjectId === (string)$subject->id)>{{ $subject->name }}</option>
+              @endforeach
+            </select>
+          @endif
         </label>
+        @if(request()->filled('sessions'))
+          <input type="hidden" name="sessions" value="{{ (int) request('sessions') }}">
+        @endif
         <div class="mc-field">
           <label>{{ $isRtl ? 'حصص / أسبوع' : 'Lessons / week' }}</label>
           <div class="mc-filters">
@@ -106,7 +120,7 @@
                     @endforeach
                   </div>
                 @endif
-                <a class="mc-btn mc-btn--md mc-btn--primary" style="margin-top:auto" href="{{ route('public.package-booking.slots', array_filter(['servicePackage' => $package->id, 'instructor' => $u, 'year' => $yearId, 'subject' => $subjectId, 'weekly' => $weekly, 'weeks' => $weeks])) }}">
+                <a class="mc-btn mc-btn--md mc-btn--primary" style="margin-top:auto" href="{{ route('public.package-booking.slots', array_filter(['servicePackage' => $package->id, 'instructor' => $u, 'year' => $yearId, 'subject' => $subjectId, 'weekly' => $weekly, 'weeks' => $weeks, 'sessions' => $sessions])) }}">
                   {{ $isRtl ? 'استكشاف المواعيد' : 'Explore slots' }}
                 </a>
               </article>

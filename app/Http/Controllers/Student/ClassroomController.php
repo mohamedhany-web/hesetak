@@ -361,7 +361,17 @@ class ClassroomController extends Controller
             $user,
             $canManageMeeting
         );
-        $meetingEndsAt = $meeting->started_at ? $meeting->started_at->copy()->addMinutes($effectiveDurationMinutes) : null;
+        // العدّ التنازلي يعمل عند الدخول: من بدء الاجتماع، أو من موعد الحصة، أو من لحظة الدخول
+        if ($meeting->started_at) {
+            $meetingEndsAt = $meeting->started_at->copy()->addMinutes($effectiveDurationMinutes);
+        } elseif ($meeting->scheduled_for) {
+            $meetingEndsAt = $meeting->scheduled_for->copy()->addMinutes($effectiveDurationMinutes);
+            if ($meetingEndsAt->isPast()) {
+                $meetingEndsAt = now()->addMinutes($effectiveDurationMinutes);
+            }
+        } else {
+            $meetingEndsAt = now()->addMinutes($effectiveDurationMinutes);
+        }
         $useInstructorRoutes = request()->routeIs('instructor.*') || $canManageMeeting;
         $subscriptionFeatureMenuItems = [];
         $subscriptionPackageLabel = null;

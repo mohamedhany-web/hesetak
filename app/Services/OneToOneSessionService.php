@@ -853,6 +853,36 @@ class OneToOneSessionService
         });
     }
 
+    /**
+     * حصص موعدها فاتت ولم تُغلق: تُعلَّم مكتملة وتُخصم من الرصيد عند فتح المكتب الدراسي.
+     */
+    public static function settleOverdueForStudent(int $studentId): int
+    {
+        $sessions = OneToOneSession::query()
+            ->where('student_id', $studentId)
+            ->where('status', OneToOneSession::STATUS_SCHEDULED)
+            ->whereNotNull('scheduled_at')
+            ->with('classroomMeeting')
+            ->get();
+
+        $settled = 0;
+        foreach ($sessions as $session) {
+            $mins = (int) ($session->duration_minutes ?: 50);
+            $deadline = $session->scheduled_at->copy()->addMinutes($mins + 30);
+            if ($deadline->isFuture()) {
+                continue;
+            }
+            try {
+                self::markCompleted($session, false);
+                $settled++;
+            } catch (\Throwable) {
+                // تجاهل حصة واحدة فاشلة ولا توقف الباقي
+            }
+        }
+
+        return $settled;
+    }
+
     public static function markCompleted(OneToOneSession $session, bool $requireLiveAttendance = true): void
     {
         DB::transaction(function () use ($session, $requireLiveAttendance) {
