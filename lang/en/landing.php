@@ -694,9 +694,9 @@ return array (
     ),
     'hero' => 
     array (
-      'eyebrow' => 'Accredited teachers, 1:1 online lessons',
+      'eyebrow' => 'Trusted teachers, private online lessons',
       'title_html' => 'The right teacher for your child’s curriculum,<br>and progress you can follow',
-      'lead' => 'High-quality online private lessons at fair prices, with flexible scheduling and the freedom to change teachers anytime.',
+      'lead' => 'Remote online private lessons with high quality and competitive prices. Flexible hours and the freedom to change teachers anytime.',
       'cta_primary' => 'Find My Teacher',
       'cta_request' => 'Set your request',
       'cta_secondary' => 'Browse Curricula',
@@ -947,7 +947,7 @@ return array (
     array (
       'eyebrow' => 'Parent testimonials',
       'title' => 'What parents and students say',
-      'lead' => 'Real stories about booking, teachers, and progress.',
+      'lead' => 'Real reviews that reflect the experiences of our students and parents.',
       'items' => 
       array (
         0 => array (
@@ -988,7 +988,7 @@ return array (
     ),
     'footer' => 
     array (
-      'tagline' => 'Live 1:1 tutoring, official curricula, and independent courses for students and parents.',
+      'tagline' => 'Online 1:1 lessons, accredited school curricula, and independent courses for students and parents.',
       'explore' => 'Explore',
       'company' => 'Platform',
       'legal' => 'Legal',

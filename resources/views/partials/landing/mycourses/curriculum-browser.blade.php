@@ -34,10 +34,10 @@
     <div class="mc-section-head">
       <div>
         <p class="mc-eyebrow">{{ $isRtl ? 'تصفّح المنهج' : 'Browse curriculum' }}</p>
-        <h2 class="mc-title" id="mc-curr-browser-title">{{ $isRtl ? 'اختر المنهج ثم الصف ثم المادة' : 'Pick curriculum, then grade, then subject' }}</h2>
-        <p class="mc-lead">{{ $isRtl ? 'ثلاث خطوات واضحة لعرض المحتوى الدراسي المناسب لطلبك.' : 'Three clear steps to see the right school content for your request.' }}</p>
+        <h2 class="mc-title" id="mc-curr-browser-title">{{ $isRtl ? 'حددوا المنهج ثم الصف ثم المادة' : 'Pick curriculum, then grade, then subject' }}</h2>
+        <p class="mc-lead">{{ $isRtl ? 'خطوات يجب اتباعها لحين توصلون للمحتوى الدراسي المناسب لولدكم.' : 'Follow these steps to reach the right school content for your child.' }}</p>
       </div>
-      <a class="mc-link-more" href="{{ route('public.curricula') }}">{{ $isRtl ? 'صفحة المناهج' : 'Curricula page' }} →</a>
+      <a class="mc-link-more" href="{{ route('public.curricula') }}">{{ $isRtl ? 'محتوى المناهج' : 'Curriculum content' }} →</a>
     </div>
 
     <div class="mc-curr-browser" data-mc-curr-browser='@json($browserPayload)'>

@@ -3,23 +3,29 @@
     $items = [
         [
             'featured' => true,
-            'title' => $isRtl ? 'حصص فردية 1:1' : 'Private 1:1 lessons',
-            'body' => $isRtl ? 'معلم معتمد + مواعيد مرنة. ادفع بباقة حصص (رصيد ساعات) ثم احجز.' : 'Accredited teacher + flexible timing. Pay with a lesson package (hour credits), then book.',
-            'cta' => $isRtl ? 'ابحث عن معلم' : 'Find a teacher',
+            'title' => $isRtl ? 'اختر معلم يناسب ولدكم' : 'Choose a teacher for your child',
+            'body' => $isRtl
+                ? 'تعلموا مع معلمين معتمدين + اختاروا المواعيد اللي تناسبكم + احجزوا حصصكم بكل سهولة.'
+                : 'Learn with accredited teachers, pick times that fit you, and book lessons easily.',
+            'cta' => $isRtl ? 'اختاروا المعلم المناسب' : 'Choose the right teacher',
             'href' => route('public.instructors.index'),
         ],
         [
             'featured' => false,
-            'title' => $isRtl ? 'متابعة المناهج الرسمية' : 'Follow the official curriculum',
-            'body' => $isRtl ? 'مرحلة + مادة + نوع منهج، ثم معلم مطابق لمقرر المدرسة.' : 'Grade + subject + curriculum type, then a teacher matched to the school syllabus.',
-            'cta' => $isRtl ? 'استكشف المناهج' : 'Explore curricula',
+            'title' => $isRtl ? 'المناهج الدراسية الرسمية' : 'Official school curricula',
+            'body' => $isRtl
+                ? 'نوع المنهج + مرحلة + مادة ثم المعلم المناسب لمقرر ولدكم الدراسي.'
+                : 'Curriculum type + grade + subject, then the right teacher for your child’s syllabus.',
+            'cta' => $isRtl ? 'اكتشفوا المناهج' : 'Discover curricula',
             'href' => route('public.curricula'),
         ],
         [
             'featured' => false,
-            'title' => $isRtl ? 'كورسات مستقلة' : 'Independent courses',
-            'body' => $isRtl ? 'محتوى جاهز خارج المنهج المدرسي (قدرات، لغات، مهارات). هذا غير باقات الحصص.' : 'Ready-made content outside school (aptitude, languages, skills). This is not a lesson package.',
-            'cta' => $isRtl ? 'تصفّح الكورسات' : 'Browse courses',
+            'title' => $isRtl ? 'كورسات أونلاين مستقلة' : 'Independent online courses',
+            'body' => $isRtl
+                ? 'محتوى تعليمي متنوع (قرآن، قدرات، لغات، مهارات) منفصل عن المنهج الدراسي يناسب تطوير اهتماماتكم وأهدافكم.'
+                : 'Diverse learning content (Qur’an, aptitude, languages, skills) separate from school curricula.',
+            'cta' => $isRtl ? 'تصفحوا الكورسات' : 'Browse courses',
             'href' => route('public.courses'),
         ],
     ];
@@ -29,8 +35,8 @@
     <div class="mc-section-head mc-section-head--tight" style="margin-bottom:1rem">
       <div>
         <p class="mc-eyebrow">{{ $isRtl ? 'ابدأ من هنا' : 'Start here' }}</p>
-        <h2 class="mc-title" id="dp-mosaic-title">{{ $isRtl ? 'اختر مساراً واحداً بوضوح' : 'Pick one clear learning path' }}</h2>
-        <p class="mc-lead">{{ $isRtl ? 'باقات الحصص = رصيد لحصص 1:1. الكورسات المستقلة = محتوى منفصل باشتراك.' : 'Lesson packages = credits for 1:1. Independent courses = separate subscribed content.' }}</p>
+        <h2 class="mc-title" id="dp-mosaic-title">{{ $isRtl ? 'جميع المسارات الدراسية' : 'All learning paths' }}</h2>
+        <p class="mc-lead">{{ $isRtl ? 'باقات الحصص بالساعات: رصيد لحصص فردية (1:1). الكورسات التدريبية: محتوى تعليمي خارج المنهج الدراسي.' : 'Hour packages: credits for 1:1 lessons. Training courses: learning content beyond the school curriculum.' }}</p>
       </div>
     </div>
     <div class="dp-mosaic__grid">
@@ -44,10 +50,10 @@
     </div>
     <div style="margin-top:1.25rem;display:flex;flex-wrap:wrap;gap:.75rem;align-items:center">
       <a href="{{ route('public.pricing') }}" class="mc-btn mc-btn--md mc-btn--secondary">
-        {{ $isRtl ? 'جاهز تشتري رصيد حصص؟ افتح باقات الحصص' : 'Ready to buy hour credits? Open lesson packages' }}
+        {{ $isRtl ? 'اكتشفوا باقات الحصص، وابدؤوا التعلم' : 'Discover lesson packages and start learning' }}
       </a>
       <a href="{{ route('public.courses') }}" class="mc-btn mc-btn--md mc-btn--outline">
-        {{ $isRtl ? 'عرض باقات الكورسات' : 'Browse course packages' }}
+        {{ $isRtl ? 'اختاروا كورساتكم الحين' : 'Choose your courses now' }}
       </a>
     </div>
   </div>

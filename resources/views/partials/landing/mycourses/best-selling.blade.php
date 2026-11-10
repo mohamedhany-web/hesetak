@@ -5,8 +5,8 @@
     <div class="mc-section-head">
       <div>
         <p class="mc-eyebrow">{{ app()->getLocale() === 'ar' ? 'الأكثر طلبًا' : 'Best selling' }}</p>
-        <h2 class="mc-title">{{ app()->getLocale() === 'ar' ? 'باقات الحصص الفردية' : 'Private lesson packages' }}</h2>
-        <p class="mc-lead">{{ app()->getLocale() === 'ar' ? 'رصيد ساعات واضح، جاهز للحجز مع أي معلم معتمد.' : 'Clear hour credits, ready to book with any approved teacher.' }}</p>
+        <h2 class="mc-title">{{ app()->getLocale() === 'ar' ? 'الباقات المميزة للحصص الفردية' : 'Featured private lesson packages' }}</h2>
+        <p class="mc-lead">{{ app()->getLocale() === 'ar' ? 'رصيد ساعات مرن واحجزوا منه مع أي معلم معتمد.' : 'Flexible hour credits — book with any accredited teacher.' }}</p>
       </div>
       <div style="display:flex;flex-wrap:wrap;gap:.5rem;align-items:center">
         <a class="mc-btn mc-btn--sm mc-btn--outline" href="{{ route('public.gift-package.show') }}">
