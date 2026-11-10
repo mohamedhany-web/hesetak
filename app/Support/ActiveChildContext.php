@@ -21,9 +21,11 @@ final class ActiveChildContext
         }
 
         $request ??= request();
-        $childId = (int) ($request->query('child')
-            ?: $request->session()->get('active_child_id')
-            ?: 0);
+        $sessionChildId = 0;
+        if ($request->hasSession()) {
+            $sessionChildId = (int) $request->session()->get('active_child_id', 0);
+        }
+        $childId = (int) ($request->query('child') ?: $sessionChildId ?: 0);
 
         $children = $actor->children()->orderBy('name')->get();
         if ($children->isEmpty()) {
@@ -34,7 +36,7 @@ final class ActiveChildContext
             ? $children->firstWhere('id', $childId)
             : $children->first();
 
-        if ($child) {
+        if ($child && $request->hasSession()) {
             $request->session()->put('active_child_id', $child->id);
         }
 
