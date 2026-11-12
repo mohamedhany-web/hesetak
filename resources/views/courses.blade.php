@@ -56,7 +56,7 @@
           <p class="mc-catalog-head__lead">{{ $p['lead'] }}</p>
           <p style="margin-top:1rem">
             <a href="{{ route('public.pricing') }}#mc-pricing-storefront" class="mc-btn mc-btn--lg mc-btn--primary">
-              {{ $isRtl ? 'باقات الحصص الفردية' : 'Private lesson packages' }}
+              {{ $p['cta_choose_package'] }}
             </a>
           </p>
         </div>
@@ -240,8 +240,8 @@
           <p>{{ $p['parent_cta_desc'] }}</p>
         </div>
         <div class="mc-cta__actions">
-          <a href="{{ route('public.courses') }}" class="mc-btn mc-btn--lg mc-btn--secondary">{{ $isRtl ? 'تصفّح كل الكورسات المستقلة' : 'Browse all independent courses' }}</a>
-          <a href="{{ route('public.pricing') }}" class="mc-btn mc-btn--lg mc-btn--ghost-on-dark">{{ $isRtl ? 'باقات الحصص 1:1 (رصيد ساعات)' : '1:1 lesson packages (hour credits)' }}</a>
+          <a href="{{ route('public.courses') }}" class="mc-btn mc-btn--lg mc-btn--secondary">{{ $p['cta_discover_courses'] }}</a>
+          <a href="{{ route('public.pricing') }}" class="mc-btn mc-btn--lg mc-btn--ghost-on-dark">{{ $p['cta_packages'] }}</a>
         </div>
       </div>
     </div>
