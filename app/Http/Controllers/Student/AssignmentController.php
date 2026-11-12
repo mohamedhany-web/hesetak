@@ -126,6 +126,13 @@ class AssignmentController extends Controller
             ? ActiveChildContext::resolve($actor, request())
             : $actor;
 
+        $status = strtolower(trim((string) ($assignment->status ?? '')));
+        if (in_array($status, ['draft', 'archived', 'unpublished'], true)) {
+            return redirect()
+                ->route('student.assignments.index')
+                ->with('error', 'هذا الواجب غير منشور بعد. اطلب من الإدارة نشره أولاً.');
+        }
+
         if (! $this->assignmentAllowsStudentAccess($assignment, $user)) {
             abort(403, 'غير مصرح لك بالوصول لهذا الواجب');
         }

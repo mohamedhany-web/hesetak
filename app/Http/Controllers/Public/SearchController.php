@@ -188,8 +188,18 @@ class SearchController extends Controller
             $years = AcademicYear::query()->publicCatalog()->ordered()->get(['id', 'name', 'slug']);
             foreach ($years as $year) {
                 $name = mb_strtolower((string) $year->name);
+                $nameStem = $this->arabicTokenStem($name);
                 foreach ($tokens as $token) {
-                    if (mb_strlen($token) >= 3 && str_contains($name, $token)) {
+                    if (mb_strlen($token) < 3) {
+                        continue;
+                    }
+                    $tokenStem = $this->arabicTokenStem($token);
+                    if (
+                        str_contains($name, $token)
+                        || str_contains($name, $tokenStem)
+                        || ($tokenStem !== '' && str_contains($nameStem, $tokenStem))
+                        || ($tokenStem !== '' && str_contains($tokenStem, $nameStem) && mb_strlen($nameStem) >= 4)
+                    ) {
                         $yearId = (int) $year->id;
                         break 2;
                     }
@@ -264,5 +274,19 @@ class SearchController extends Controller
                 });
             }
         });
+    }
+
+    /** تطبيع خفيف: ابتدائية ↔ الابتدائي، إعدادية ↔ الاعدادي */
+    private function arabicTokenStem(string $value): string
+    {
+        $value = trim(mb_strtolower($value));
+        $value = preg_replace('/^ال/u', '', $value) ?: $value;
+        $value = preg_replace('/[ًٌٍَُِّْ]/u', '', $value) ?: $value;
+        // جمع/تأنيث شائع في أسماء المراحل
+        $value = preg_replace('/ة$/u', '', $value) ?: $value;
+        $value = preg_replace('/يات$/u', 'ي', $value) ?: $value;
+        $value = preg_replace('/ية$/u', 'ي', $value) ?: $value;
+
+        return $value;
     }
 }
