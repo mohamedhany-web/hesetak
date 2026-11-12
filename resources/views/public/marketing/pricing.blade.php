@@ -19,6 +19,8 @@
         ->all();
     $selCurriculum = $catalog['selected_curriculum_type'] ?? null;
     $customUrl = $customBuilderUrl ?? route('public.service-packages.index', ['catalog' => 1]).'#private-builder';
+    // باقات متنوعة — مسار العميل المعتمد لباقة متعددة المواد
+    $diverseTeachersUrl = route('public.package-booking.teachers', 12);
     $curriculumTypes = \App\Support\HesetakMatchCatalog::curriculumTypes();
 
     $stageUrl = static function (?int $yearId, ?array $subjectIds = null, ?string $curriculum = null) use ($catalog): string {
@@ -81,10 +83,10 @@
 
 <section class="mc-pric-storefront" id="mc-pricing-storefront">
   <div class="mc-container">
-    <p class="mc-pric-path-tip">
-      {{ __('public.pricing_path_tip') }}
-      <a href="{{ route('public.courses') }}" class="mc-btn mc-btn--sm mc-btn--secondary">{{ __('public.pricing_path_tip_courses') }}</a>
-    </p>
+    <div class="mc-pric-path-tip" style="display:grid;gap:.35rem">
+      <strong>{{ __('public.pricing_storefront_intro') }}</strong>
+      <span>{{ __('public.pricing_storefront_intro_lead') }}</span>
+    </div>
 
     @if($selectedCurriculumMeta)
       <div class="mc-pric-context" role="status">
@@ -107,7 +109,9 @@
     @if(!empty($curriculumTypes))
       <div class="mc-pric-filter" aria-labelledby="mc-pric-track-label">
         <h2 id="mc-pric-track-label" class="mc-pric-filter__label">1. {{ __('public.pricing_filter_track') }}</h2>
-        <p class="mc-pric-filter__hint">{{ __('public.pricing_filter_track_hint') }}</p>
+        @if(filled(__('public.pricing_filter_track_hint')))
+          <p class="mc-pric-filter__hint">{{ __('public.pricing_filter_track_hint') }}</p>
+        @endif
         <div class="mc-pric-subjects" role="list">
           @foreach($curriculumTypes as $key => $meta)
             @php $on = (string) $selCurriculum === (string) $key; @endphp
@@ -154,7 +158,7 @@
               <span class="mc-pric-stage is-on"><i class="fas fa-graduation-cap" aria-hidden="true"></i><span>{{ __('public.pricing_filter_all_stages') }}</span></span>
             @endforelse
           </div>
-          <a href="{{ $customUrl }}" class="mc-pric-diverse">
+          <a href="{{ $diverseTeachersUrl }}" class="mc-pric-diverse">
             <i class="fas fa-layer-group" aria-hidden="true"></i>
             <span>{{ __('public.pricing_diverse_cta') }}</span>
           </a>
@@ -164,7 +168,7 @@
 
     <div class="mc-pric-filter" aria-labelledby="mc-pric-subject-label" id="mc-pric-subject-block">
       <h2 id="mc-pric-subject-label" class="mc-pric-filter__label">3. {{ __('public.pricing_filter_subject') }}</h2>
-      <p class="mc-pric-filter__hint">{{ $isRtl ? 'يمكنك اختيار أكثر من مادة — اضغط لإضافة/إزالة الاختيار.' : 'You can select multiple subjects — tap to add/remove.' }}</p>
+      <p class="mc-pric-filter__hint">{{ __('public.pricing_filter_subject_hint') }}</p>
       @if($subjects->isNotEmpty())
         <div class="mc-pric-subjects" role="list">
           @foreach($subjects as $subject)
@@ -313,8 +317,8 @@
         <p>{{ __('public.pricing_footer_cta_sub') }}</p>
       </div>
       <div class="mc-cta__actions">
-        <a href="{{ route('public.instructors.index') }}" class="mc-btn mc-btn--lg mc-btn--secondary">{{ __('landing.mc.hero.cta_primary') }}</a>
-        <a href="{{ $customUrl }}" class="mc-btn mc-btn--lg mc-btn--ghost-on-dark">{{ __('public.pricing_diverse_cta') }}</a>
+        <a href="{{ route('public.instructors.index') }}" class="mc-btn mc-btn--lg mc-btn--secondary">{{ __('public.pricing_find_teacher_cta') }}</a>
+        <a href="{{ $diverseTeachersUrl }}" class="mc-btn mc-btn--lg mc-btn--ghost-on-dark">{{ __('public.pricing_diverse_cta') }}</a>
       </div>
     </div>
   </div>
