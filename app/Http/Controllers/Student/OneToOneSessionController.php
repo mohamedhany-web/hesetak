@@ -93,7 +93,7 @@ class OneToOneSessionController extends Controller
         try {
             OneToOneSessionService::scheduleSession(
                 $oneToOneSession,
-                AppTimezone::parseAppointmentInput((string) $data['scheduled_at']) ?? Carbon::parse($data['scheduled_at']),
+                AppTimezone::parseAppointmentInput((string) $data['scheduled_at'], AppTimezone::forUser($request->user())) ?? Carbon::parse($data['scheduled_at']),
                 (int) ($oneToOneSession->duration_minutes ?? \App\Models\OneToOneSession::defaultDurationMinutes()),
                 $request->user(),
                 requireAvailability: true
@@ -169,7 +169,7 @@ class OneToOneSessionController extends Controller
             $session = OneToOneSessionService::bookStandaloneWithInstructor(
                 $request->user(),
                 $instructor,
-                AppTimezone::parseAppointmentInput((string) $data['scheduled_at']) ?? Carbon::parse($data['scheduled_at'])
+                AppTimezone::parseAppointmentInput((string) $data['scheduled_at'], AppTimezone::forUser($request->user())) ?? Carbon::parse($data['scheduled_at'])
             );
         } catch (\InvalidArgumentException $e) {
             return back()->withInput()->withErrors(['scheduled_at' => $e->getMessage()]);

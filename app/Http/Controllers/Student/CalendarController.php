@@ -82,8 +82,9 @@ class CalendarController extends Controller
         $end = $request->get('end');
 
         $events = $this->getStudentEvents($user, $start, $end);
+        $viewerTz = \App\Support\AppTimezone::forUser($user);
 
-        $calendarEvents = collect(TeachingCalendarService::toFullCalendar($events))->map(function (array $row) {
+        $calendarEvents = collect(TeachingCalendarService::toFullCalendar($events, $viewerTz))->map(function (array $row) {
             $type = $row['type'] ?? null;
 
             return [

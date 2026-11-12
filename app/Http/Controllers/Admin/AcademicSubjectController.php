@@ -46,10 +46,11 @@ class AcademicSubjectController extends Controller
 
     public function create(Request $request): View
     {
-        $academicYears = AcademicYear::orderBy('order')->orderBy('name')->get();
+        $academicYears = AcademicYear::orderBy('order')->orderBy('name')->get(['id', 'name', 'order', 'curriculum_type']);
         $selectedTrack = $request->query('track');
+        $curriculumTypes = \App\Support\HesetakMatchCatalog::curriculumTypes();
 
-        return view('admin.academic-subjects.create', compact('academicYears', 'selectedTrack'));
+        return view('admin.academic-subjects.create', compact('academicYears', 'selectedTrack', 'curriculumTypes'));
     }
 
     public function store(Request $request): RedirectResponse
@@ -71,6 +72,7 @@ class AcademicSubjectController extends Controller
             'color' => 'nullable|string|max:7',
             'order' => 'nullable|integer|min:0',
             'is_active' => 'boolean',
+            'curriculum_type' => ['nullable', 'string', 'max:64', 'in:'.implode(',', array_keys(\App\Support\HesetakMatchCatalog::curriculumTypes() ?: ['__none__']))],
         ], [
             'name.required' => 'اسم المادة مطلوب',
             'code.required' => 'رمز المادة مطلوب',
@@ -86,8 +88,14 @@ class AcademicSubjectController extends Controller
             $yearId = null;
         }
 
+        $curriculumType = filled($validated['curriculum_type'] ?? null) ? (string) $validated['curriculum_type'] : null;
+        if ($curriculumType === null && $yearId) {
+            $curriculumType = AcademicYear::query()->whereKey($yearId)->value('curriculum_type');
+        }
+
         $subject = AcademicSubject::create([
             'academic_year_id' => $yearId,
+            'curriculum_type' => $curriculumType,
             'name' => $validated['name'],
             'code' => $validated['code'],
             'slug' => ! empty($validated['slug'])
@@ -137,10 +145,11 @@ class AcademicSubjectController extends Controller
 
     public function edit(AcademicSubject $academicSubject): View
     {
-        $academicYears = AcademicYear::orderBy('order')->orderBy('name')->get();
+        $academicYears = AcademicYear::orderBy('order')->orderBy('name')->get(['id', 'name', 'order', 'curriculum_type']);
         $academicSubject->load('years:id');
+        $curriculumTypes = \App\Support\HesetakMatchCatalog::curriculumTypes();
 
-        return view('admin.academic-subjects.edit', compact('academicSubject', 'academicYears'));
+        return view('admin.academic-subjects.edit', compact('academicSubject', 'academicYears', 'curriculumTypes'));
     }
 
     public function update(Request $request, AcademicSubject $academicSubject): RedirectResponse
@@ -168,6 +177,7 @@ class AcademicSubjectController extends Controller
             'color' => 'nullable|string|max:7',
             'order' => 'nullable|integer|min:0',
             'is_active' => 'boolean',
+            'curriculum_type' => ['nullable', 'string', 'max:64', 'in:'.implode(',', array_keys(\App\Support\HesetakMatchCatalog::curriculumTypes() ?: ['__none__']))],
         ], [
             'name.required' => 'اسم المادة مطلوب',
             'code.required' => 'رمز المادة مطلوب',
@@ -183,8 +193,14 @@ class AcademicSubjectController extends Controller
             $yearId = null;
         }
 
+        $curriculumType = filled($validated['curriculum_type'] ?? null) ? (string) $validated['curriculum_type'] : null;
+        if ($curriculumType === null && $yearId) {
+            $curriculumType = AcademicYear::query()->whereKey($yearId)->value('curriculum_type');
+        }
+
         $academicSubject->update([
             'academic_year_id' => $yearId,
+            'curriculum_type' => $curriculumType,
             'name' => $validated['name'],
             'code' => $validated['code'],
             'slug' => ! empty($validated['slug'])

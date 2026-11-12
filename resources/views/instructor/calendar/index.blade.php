@@ -158,7 +158,7 @@ document.addEventListener('DOMContentLoaded', function () {
     var calendar = new FullCalendar.Calendar(calendarEl, {
         locale: @json($fcLocale),
         direction: isRtl ? 'rtl' : 'ltr',
-        timeZone: @json($viewerTz),
+        // الأحداث من API بـ ISO+offset لتوقيت المعلم — بدون timeZone مسمّى (لا يحتاج Luxon)
         initialView: isMobile ? 'listWeek' : 'timeGridWeek',
         headerToolbar: isRtl
             ? { right: 'prev,next today', center: 'title', left: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek' }

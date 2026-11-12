@@ -70,18 +70,24 @@ class TeachingCalendarService
      * @param  Collection<int, object>  $events
      * @return list<array<string, mixed>>
      */
-    public static function toFullCalendar(Collection $events): array
+    public static function toFullCalendar(Collection $events, ?string $displayTimezone = null): array
     {
-        return $events->map(function ($event) {
+        // مع $displayTimezone: ISO بـ offset (FullCalendar بدون Luxon). بدونها: UTC+Z للتوافق مع الاختبارات القديمة.
+        $tz = \App\Support\AppTimezone::normalize($displayTimezone);
+
+        return $events->map(function ($event) use ($tz) {
             $start = self::eventStart($event);
             $end = self::eventEnd($event);
 
             return [
                 'id' => $event->calendar_id ?? $event->id ?? null,
                 'title' => $event->title ?? '',
-                // صيغة UTC صريحة حتى لا يفسّر FullCalendar الوقت كتوقيت محلي مزدوج
-                'start' => $start?->copy()->utc()->format('Y-m-d\TH:i:s\Z'),
-                'end' => $end?->copy()->utc()->format('Y-m-d\TH:i:s\Z'),
+                'start' => $tz
+                    ? $start?->copy()->timezone($tz)->toIso8601String()
+                    : $start?->copy()->utc()->format('Y-m-d\TH:i:s\Z'),
+                'end' => $tz
+                    ? $end?->copy()->timezone($tz)->toIso8601String()
+                    : $end?->copy()->utc()->format('Y-m-d\TH:i:s\Z'),
                 'allDay' => (bool) ($event->is_all_day ?? false),
                 'color' => $event->color ?? '#0B3D91',
                 'type' => $event->type ?? 'lesson',

@@ -59,6 +59,6 @@ class CalendarController extends Controller
         }
         $events = TeachingCalendarService::forInstructor($user, $start, $end);
 
-        return response()->json(TeachingCalendarService::toFullCalendar($events));
+        return response()->json(TeachingCalendarService::toFullCalendar($events, $viewerTz));
     }
 }

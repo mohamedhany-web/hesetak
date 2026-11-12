@@ -143,7 +143,7 @@ document.addEventListener('DOMContentLoaded', function () {
     var calendar = new FullCalendar.Calendar(el, {
         locale: isRtl ? 'ar' : 'en',
         direction: isRtl ? 'rtl' : 'ltr',
-        timeZone: @json($viewerTz ?? auth()->user()?->timezoneCode() ?? \App\Support\AppTimezone::academy()),
+        // بدون timeZone مسمّى: الأحداث تصل بـ ISO مع offset من السيرفر (لا يحتاج Luxon)
         initialView: 'dayGridMonth',
         headerToolbar: {
             start: 'title',

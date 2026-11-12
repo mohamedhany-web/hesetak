@@ -164,12 +164,30 @@ class StudentProgressAnalyticsService
         if (Schema::hasTable('one_to_one_sessions')) {
             $sessionsCompleted += OneToOneSession::query()
                 ->where('student_id', $userId)
-                ->whereIn('status', [
-                    OneToOneSession::STATUS_COMPLETED,
-                    'done',
-                    'finished',
-                ])
-                ->whereBetween('scheduled_at', [$from, $to])
+                ->where(function ($q) {
+                    $q->whereIn('status', [
+                        OneToOneSession::STATUS_COMPLETED,
+                        'done',
+                        'finished',
+                        'complete',
+                    ]);
+                    if (Schema::hasColumn('one_to_one_sessions', 'ended_at')) {
+                        $q->orWhereNotNull('ended_at');
+                    }
+                    if (Schema::hasColumn('one_to_one_sessions', 'completed_at')) {
+                        $q->orWhereNotNull('completed_at');
+                    }
+                })
+                ->where(function ($q) use ($from, $to) {
+                    $q->whereBetween('scheduled_at', [$from, $to])
+                        ->orWhereBetween('updated_at', [$from, $to]);
+                    if (Schema::hasColumn('one_to_one_sessions', 'ended_at')) {
+                        $q->orWhereBetween('ended_at', [$from, $to]);
+                    }
+                    if (Schema::hasColumn('one_to_one_sessions', 'completed_at')) {
+                        $q->orWhereBetween('completed_at', [$from, $to]);
+                    }
+                })
                 ->count();
         }
 

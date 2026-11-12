@@ -117,16 +117,12 @@ class InstructorAgreementController extends Controller
 
         $isCoursePercentage = $request->type === 'course_percentage';
         $isConsultation = $request->type === 'consultation_session';
-        $agreement = InstructorAgreement::create([
+
+        $payload = [
             'instructor_id' => $request->instructor_id,
             // عمود type في DB: course_price|hourly_rate|monthly_salary — الاستشارات عبر billing_type.
             'type' => ($isCoursePercentage || $isConsultation) ? 'course_price' : $request->type,
             'rate' => $isCoursePercentage ? 0 : (float) ($request->rate ?? 0),
-            'billing_type' => $isCoursePercentage
-                ? InstructorAgreement::BILLING_COURSE_PERCENTAGE
-                : ($isConsultation ? InstructorAgreement::BILLING_CONSULTATION : null),
-            'advanced_course_id' => $isCoursePercentage ? $request->advanced_course_id : null,
-            'course_percentage' => $isCoursePercentage ? (float) $request->course_percentage : null,
             'agreement_number' => InstructorAgreement::generateAgreementNumber(),
             'title' => $request->title,
             'description' => $request->description,
@@ -136,7 +132,31 @@ class InstructorAgreementController extends Controller
             'terms' => $request->terms,
             'notes' => $request->notes,
             'created_by' => auth()->id(),
-        ]);
+        ];
+
+        if (\Illuminate\Support\Facades\Schema::hasColumn('instructor_agreements', 'billing_type')) {
+            $payload['billing_type'] = $isCoursePercentage
+                ? InstructorAgreement::BILLING_COURSE_PERCENTAGE
+                : ($isConsultation
+                    ? InstructorAgreement::BILLING_CONSULTATION
+                    : InstructorAgreement::BILLING_PER_SESSION);
+        }
+        if (\Illuminate\Support\Facades\Schema::hasColumn('instructor_agreements', 'advanced_course_id')) {
+            $payload['advanced_course_id'] = $isCoursePercentage ? $request->advanced_course_id : null;
+        }
+        if (\Illuminate\Support\Facades\Schema::hasColumn('instructor_agreements', 'course_percentage')) {
+            $payload['course_percentage'] = $isCoursePercentage ? (float) $request->course_percentage : null;
+        }
+
+        try {
+            $agreement = InstructorAgreement::create($payload);
+        } catch (\Throwable $e) {
+            Log::error('Error creating instructor agreement: '.$e->getMessage(), ['trace' => $e->getTraceAsString()]);
+
+            return back()
+                ->withInput()
+                ->withErrors(['title' => 'تعذّر حفظ الاتفاقية: تأكد من اكتمال الحقول وتشغيل ترحيلات قاعدة البيانات.']);
+        }
 
         return redirect()->route('admin.agreements.show', $agreement)
             ->with('success', 'تم إنشاء الاتفاقية بنجاح');
@@ -195,15 +215,11 @@ class InstructorAgreementController extends Controller
 
         $isCoursePercentage = $request->type === 'course_percentage';
         $isConsultation = $request->type === 'consultation_session';
-        $agreement->update([
+
+        $payload = [
             'instructor_id' => $request->instructor_id,
             'type' => ($isCoursePercentage || $isConsultation) ? 'course_price' : $request->type,
             'rate' => $isCoursePercentage ? 0 : (float) ($request->rate ?? 0),
-            'billing_type' => $isCoursePercentage
-                ? InstructorAgreement::BILLING_COURSE_PERCENTAGE
-                : ($isConsultation ? InstructorAgreement::BILLING_CONSULTATION : null),
-            'advanced_course_id' => $isCoursePercentage ? $request->advanced_course_id : null,
-            'course_percentage' => $isCoursePercentage ? (float) $request->course_percentage : null,
             'title' => $request->title,
             'description' => $request->description,
             'start_date' => $request->start_date,
@@ -211,7 +227,31 @@ class InstructorAgreementController extends Controller
             'status' => $request->status,
             'terms' => $request->terms,
             'notes' => $request->notes,
-        ]);
+        ];
+
+        if (\Illuminate\Support\Facades\Schema::hasColumn('instructor_agreements', 'billing_type')) {
+            $payload['billing_type'] = $isCoursePercentage
+                ? InstructorAgreement::BILLING_COURSE_PERCENTAGE
+                : ($isConsultation
+                    ? InstructorAgreement::BILLING_CONSULTATION
+                    : InstructorAgreement::BILLING_PER_SESSION);
+        }
+        if (\Illuminate\Support\Facades\Schema::hasColumn('instructor_agreements', 'advanced_course_id')) {
+            $payload['advanced_course_id'] = $isCoursePercentage ? $request->advanced_course_id : null;
+        }
+        if (\Illuminate\Support\Facades\Schema::hasColumn('instructor_agreements', 'course_percentage')) {
+            $payload['course_percentage'] = $isCoursePercentage ? (float) $request->course_percentage : null;
+        }
+
+        try {
+            $agreement->update($payload);
+        } catch (\Throwable $e) {
+            Log::error('Error updating instructor agreement: '.$e->getMessage(), ['trace' => $e->getTraceAsString()]);
+
+            return back()
+                ->withInput()
+                ->withErrors(['title' => 'تعذّر تحديث الاتفاقية: تأكد من اكتمال الحقول وتشغيل ترحيلات قاعدة البيانات.']);
+        }
 
         return redirect()->route('admin.agreements.show', $agreement)
             ->with('success', 'تم تحديث الاتفاقية بنجاح');

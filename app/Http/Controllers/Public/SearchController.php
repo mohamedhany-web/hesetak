@@ -9,6 +9,7 @@ use App\Models\AdvancedCourse;
 use App\Models\InstructorProfile;
 use App\Models\ServicePackage;
 use App\Services\PublicInstructorDirectory;
+use App\Support\HesetakMatchCatalog;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
@@ -22,6 +23,7 @@ class SearchController extends Controller
         $locale = app()->getLocale();
         $isRtl = $locale === 'ar';
         $tokens = $this->tokens($q);
+        $parsed = $this->parseCatalogIntent($tokens);
 
         $instructors = collect();
         $packages = collect();
@@ -49,8 +51,18 @@ class SearchController extends Controller
             if (Schema::hasTable('service_packages')) {
                 $packages = ServicePackage::query()
                     ->storefront()
-                    ->where(function (Builder $query) use ($tokens) {
-                        $this->requireAllTokens($query, $tokens, ['name', 'tagline']);
+                    ->when($parsed['curriculum_type'], fn ($q) => $q->where(function ($inner) use ($parsed) {
+                        $inner->whereNull('curriculum_type')->orWhere('curriculum_type', $parsed['curriculum_type']);
+                    }))
+                    ->when($parsed['year_id'], fn ($q) => $q->where('academic_year_id', $parsed['year_id']))
+                    ->where(function (Builder $query) use ($parsed) {
+                        $content = $parsed['content_tokens'];
+                        if ($content === []) {
+                            $query->whereRaw('1=1');
+
+                            return;
+                        }
+                        $this->requireAnyToken($query, $content, ['name', 'tagline']);
                     })
                     ->orderByDesc('units_count')
                     ->limit(8)
@@ -70,23 +82,33 @@ class SearchController extends Controller
             if (Schema::hasTable('academic_subjects')) {
                 $subjects = AcademicSubject::query()
                     ->active()
-                    ->where(function (Builder $query) use ($tokens) {
-                        $this->requireAllTokens($query, $tokens, ['name']);
+                    ->when($parsed['curriculum_type'], fn ($q) => $q->forCurriculumType($parsed['curriculum_type']))
+                    ->when($parsed['year_id'], fn ($q) => $q->forYear($parsed['year_id']))
+                    ->where(function (Builder $query) use ($parsed) {
+                        $content = $parsed['content_tokens'];
+                        if ($content === []) {
+                            $query->whereRaw('1=1');
+
+                            return;
+                        }
+                        $this->requireAnyToken($query, $content, ['name']);
                     })
                     ->with('academicYear:id,name')
-                    ->limit(8)
-                    ->get(['id', 'name', 'academic_year_id']);
+                    ->limit(12)
+                    ->get(['id', 'name', 'academic_year_id', 'curriculum_type']);
             }
 
             if (Schema::hasTable('academic_years')) {
                 $years = AcademicYear::query()
                     ->publicCatalog()
-                    ->where(function (Builder $query) use ($tokens) {
-                        $this->requireAllTokens($query, $tokens, ['name', 'tagline']);
+                    ->when($parsed['curriculum_type'], fn ($q) => $q->forCurriculumType($parsed['curriculum_type']))
+                    ->where(function (Builder $query) use ($parsed, $tokens) {
+                        $content = $parsed['content_tokens'] !== [] ? $parsed['content_tokens'] : $tokens;
+                        $this->requireAnyToken($query, $content, ['name', 'tagline']);
                     })
                     ->ordered()
-                    ->limit(6)
-                    ->get(['id', 'name', 'slug', 'tagline']);
+                    ->limit(8)
+                    ->get(['id', 'name', 'slug', 'tagline', 'curriculum_type']);
             }
         }
 
@@ -104,6 +126,8 @@ class SearchController extends Controller
             'subjects' => $subjects,
             'years' => $years,
             'hasQuery' => mb_strlen($q) >= 2,
+            'resolvedCurriculum' => $parsed['curriculum_type'],
+            'resolvedYearId' => $parsed['year_id'],
         ]);
     }
 
@@ -118,8 +142,89 @@ class SearchController extends Controller
     }
 
     /**
-     * كل كلمة بحث يجب أن تظهر في أحد الحقول (AND بين الكلمات، OR بين الحقول).
-     *
+     * @param  list<string>  $tokens
+     * @return array{curriculum_type:?string,year_id:?int,content_tokens:list<string>}
+     */
+    private function parseCatalogIntent(array $tokens): array
+    {
+        $stop = [
+            'منهج', 'مادة', 'مرحلة', 'صف', 'دراسي', 'دراسية', 'في', 'على', 'مع',
+            'curriculum', 'subject', 'stage', 'grade', 'for', 'the', 'and',
+        ];
+        $curriculumType = null;
+        $yearId = null;
+        $remaining = [];
+
+        $types = HesetakMatchCatalog::curriculumTypes();
+        $haystack = implode(' ', $tokens);
+
+        foreach ($types as $key => $meta) {
+            $label = mb_strtolower((string) (is_array($meta) ? ($meta['label'] ?? $key) : $meta));
+            $extraAliases = is_array($meta) ? array_map('strval', $meta['aliases'] ?? []) : [];
+            $aliases = array_filter(array_merge(
+                [$key, $label, str_replace('منهج ', '', $label), str_replace('منهج', '', $label)],
+                $extraAliases
+            ));
+            foreach ($aliases as $alias) {
+                $alias = trim(mb_strtolower((string) $alias));
+                if ($alias === '') {
+                    continue;
+                }
+                if (str_contains($haystack, $alias) || in_array($alias, $tokens, true)) {
+                    $curriculumType = (string) $key;
+                    break 2;
+                }
+                // تطابق جزئي للكلمات الطويلة مثل "سعودي" داخل "منهج سعودي"
+                foreach ($tokens as $token) {
+                    if (mb_strlen($token) >= 3 && (str_contains($alias, $token) || str_contains($token, $alias))) {
+                        $curriculumType = (string) $key;
+                        break 3;
+                    }
+                }
+            }
+        }
+
+        if (Schema::hasTable('academic_years')) {
+            $years = AcademicYear::query()->publicCatalog()->ordered()->get(['id', 'name', 'slug']);
+            foreach ($years as $year) {
+                $name = mb_strtolower((string) $year->name);
+                foreach ($tokens as $token) {
+                    if (mb_strlen($token) >= 3 && str_contains($name, $token)) {
+                        $yearId = (int) $year->id;
+                        break 2;
+                    }
+                }
+            }
+        }
+
+        foreach ($tokens as $token) {
+            if (in_array($token, $stop, true)) {
+                continue;
+            }
+            $isCurriculumAlias = false;
+            if ($curriculumType) {
+                foreach ($types as $key => $meta) {
+                    $label = mb_strtolower((string) (is_array($meta) ? ($meta['label'] ?? $key) : $meta));
+                    if ($token === mb_strtolower((string) $key) || str_contains($label, $token)) {
+                        $isCurriculumAlias = true;
+                        break;
+                    }
+                }
+            }
+            if ($isCurriculumAlias) {
+                continue;
+            }
+            $remaining[] = $token;
+        }
+
+        return [
+            'curriculum_type' => $curriculumType,
+            'year_id' => $yearId,
+            'content_tokens' => array_values(array_unique($remaining)),
+        ];
+    }
+
+    /**
      * @param  list<string>  $tokens
      * @param  list<string>  $columns
      */
@@ -137,5 +242,27 @@ class SearchController extends Controller
                 }
             });
         }
+    }
+
+    /**
+     * @param  list<string>  $tokens
+     * @param  list<string>  $columns
+     */
+    private function requireAnyToken(Builder $query, array $tokens, array $columns): void
+    {
+        $query->where(function (Builder $outer) use ($tokens, $columns) {
+            foreach ($tokens as $ti => $token) {
+                $like = '%'.$token.'%';
+                $outer->orWhere(function (Builder $inner) use ($like, $columns) {
+                    foreach ($columns as $i => $column) {
+                        if ($i === 0) {
+                            $inner->where($column, 'like', $like);
+                        } else {
+                            $inner->orWhere($column, 'like', $like);
+                        }
+                    }
+                });
+            }
+        });
     }
 }

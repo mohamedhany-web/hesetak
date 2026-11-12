@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Student;
 use App\Http\Controllers\Controller;
 use App\Models\Assignment;
 use App\Models\AssignmentSubmission;
+use App\Support\ActiveChildContext;
 use App\Services\AssignmentFileStorage;
 use Illuminate\Filesystem\AwsS3V3Adapter;
 use Illuminate\Http\Request;
@@ -120,7 +121,10 @@ class AssignmentController extends Controller
      */
     public function show(Assignment $assignment)
     {
-        $user = Auth::user();
+        $actor = Auth::user();
+        $user = class_exists(ActiveChildContext::class)
+            ? ActiveChildContext::resolve($actor, request())
+            : $actor;
 
         if (! $this->assignmentAllowsStudentAccess($assignment, $user)) {
             abort(403, 'غير مصرح لك بالوصول لهذا الواجب');
@@ -546,21 +550,57 @@ class AssignmentController extends Controller
 
     private function assignmentAllowsStudentAccess(Assignment $assignment, $user): bool
     {
-        if ($assignment->status !== 'published') {
+        $status = strtolower(trim((string) ($assignment->status ?? '')));
+        if ($status !== '' && ! in_array($status, ['published', 'active', 'open'], true)) {
             return false;
         }
-        $courseId = (int) ($assignment->advanced_course_id ?? $assignment->course_id);
-        if ($courseId && $user->isEnrolledIn($courseId)) {
-            return true;
+
+        $courseId = (int) ($assignment->advanced_course_id ?? $assignment->course_id ?? 0);
+
+        if ($courseId > 0) {
+            if (method_exists($user, 'isEnrolledIn') && $user->isEnrolledIn($courseId)) {
+                return true;
+            }
+            if (method_exists($user, 'courseEnrollments')
+                && $user->courseEnrollments()->where('advanced_course_id', $courseId)->exists()) {
+                return true;
+            }
+            if (\App\Models\OneToOneSession::query()
+                ->where('student_id', $user->id)
+                ->where('advanced_course_id', $courseId)
+                ->exists()) {
+                return true;
+            }
         }
-        if ($courseId && $user->courseEnrollments()->where('advanced_course_id', $courseId)->exists()) {
+
+        $teacherId = (int) ($assignment->teacher_id ?? $assignment->instructor_id ?? 0);
+        if ($teacherId > 0 && \App\Models\OneToOneSession::query()
+            ->where('student_id', $user->id)
+            ->where('instructor_id', $teacherId)
+            ->exists()) {
             return true;
         }
 
-        return $courseId && \App\Models\OneToOneSession::query()
+        // تسليم سابق أو واجب عام منشور بدون ربط كورس صارم
+        if (AssignmentSubmission::query()
+            ->where('assignment_id', $assignment->id)
             ->where('student_id', $user->id)
-            ->where('advanced_course_id', $courseId)
-            ->exists();
+            ->exists()) {
+            return true;
+        }
+
+        // واجب منشور من الإدارة للطالب عبر أي كورس/مسار نشط — لا نمنع العرض إن كان الحالة منشورة
+        if (in_array($status, ['published', 'active', 'open'], true) && $courseId > 0) {
+            if (\Illuminate\Support\Facades\Schema::hasTable('student_course_enrollments')
+                && \App\Models\StudentCourseEnrollment::query()
+                    ->where('user_id', $user->id)
+                    ->where('advanced_course_id', $courseId)
+                    ->exists()) {
+                return true;
+            }
+        }
+
+        return $courseId === 0 && in_array($status, ['published', 'active', 'open', ''], true);
     }
 
     private function submissionDeadlineOpen(Assignment $assignment): bool

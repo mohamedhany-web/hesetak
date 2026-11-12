@@ -197,9 +197,9 @@
                 var end = new Date(meetingEndsAt).getTime();
                 var diff = end - Date.now();
                 if (diff <= 0) {
-                    if (timerChip) timerChip.textContent = 'انتهت المدة المسموح بها';
-                    if (timerChipMobile) timerChipMobile.textContent = 'انتهت';
-                    showSessionEndedAndRedirect();
+                    if (timerChip) timerChip.textContent = 'انتهت المدة المخططة — بانتظار إنهاء المضيف';
+                    if (timerChipMobile) timerChipMobile.textContent = 'انتهت المدة';
+                    // لا نطرد الطالب تلقائياً من العدّاد فقط — الإغلاق الرسمي عبر roomStatus.ended
                     return;
                 }
                 var mins = Math.floor(diff / 60000);

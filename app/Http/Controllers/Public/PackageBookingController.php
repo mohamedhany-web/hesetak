@@ -29,9 +29,20 @@ class PackageBookingController extends Controller
     {
         abort_unless($servicePackage->is_active && ! $servicePackage->tutoring_group_id, 404);
 
-        $servicePackage->load(['academicSubject:id,name,slug']);
+        $servicePackage->load(['academicSubject:id,name,slug,academic_year_id,curriculum_type']);
         if (Schema::hasTable('service_package_subjects')) {
-            $servicePackage->load(['subjects:id,name,slug']);
+            $servicePackage->load(['subjects' => function ($q) {
+                $q->select(
+                    'academic_subjects.id',
+                    'academic_subjects.name',
+                    'academic_subjects.slug',
+                    'academic_subjects.academic_year_id',
+                    'academic_subjects.curriculum_type'
+                );
+                if (method_exists(AcademicSubject::class, 'years')) {
+                    $q->with(['years:id']);
+                }
+            }]);
         }
 
         $isMixed = $servicePackage->isMixedPackage();
@@ -46,16 +57,47 @@ class PackageBookingController extends Controller
         $curriculum = trim((string) $request->query('curriculum', $servicePackage->curriculum_type ?? ''));
 
         $years = Schema::hasTable('academic_years')
-            ? AcademicYear::query()->active()->ordered()->get(['id', 'name', 'slug'])
+            ? AcademicYear::query()
+                ->publicCatalog()
+                ->when($curriculum !== '', fn ($q) => $q->forCurriculumType($curriculum))
+                ->ordered()
+                ->get(['id', 'name', 'slug', 'curriculum_type'])
             : collect();
         $packageSubjects = $servicePackage->relationLoaded('subjects') && $servicePackage->subjects->isNotEmpty()
             ? $servicePackage->subjects
             : collect(array_filter([$servicePackage->academicSubject]));
-        $subjects = $packageSubjects->isNotEmpty()
-            ? $packageSubjects
-            : (Schema::hasTable('academic_subjects')
-                ? AcademicSubject::query()->active()->when($yearId, fn ($q) => $q->forYear($yearId))->ordered()->get(['id', 'name', 'slug'])
-                : collect());
+        if ($packageSubjects->isNotEmpty()) {
+            $subjects = $packageSubjects;
+            if ($yearId) {
+                $subjects = $subjects->filter(function ($subject) use ($yearId) {
+                    if ((int) ($subject->academic_year_id ?? 0) === (int) $yearId) {
+                        return true;
+                    }
+                    if ($subject->relationLoaded('years')) {
+                        return $subject->years->contains('id', (int) $yearId);
+                    }
+
+                    return method_exists($subject, 'years')
+                        && $subject->years()->where('academic_years.id', $yearId)->exists();
+                })->values();
+            }
+            if ($curriculum !== '') {
+                $subjects = $subjects->filter(function ($subject) use ($curriculum) {
+                    $type = trim((string) ($subject->curriculum_type ?? ''));
+
+                    return $type === '' || $type === $curriculum;
+                })->values();
+            }
+        } else {
+            $subjects = Schema::hasTable('academic_subjects')
+                ? AcademicSubject::query()
+                    ->active()
+                    ->when($yearId, fn ($q) => $q->forYear($yearId))
+                    ->when($curriculum !== '', fn ($q) => $q->forCurriculumType($curriculum))
+                    ->ordered()
+                    ->get(['id', 'name', 'slug', 'academic_year_id', 'curriculum_type'])
+                : collect();
+        }
 
         $teachersBySubject = $isMixed
             ? $this->buildTeachersBySubject($subjects, $yearId, $curriculum)

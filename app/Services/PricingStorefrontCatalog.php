@@ -597,7 +597,10 @@ class PricingStorefrontCatalog
         $options = $this->buildPriceOptions($unit, $standard, $urgent, $linkedPackage, $yearId, (int) $subject->id);
 
         if ($linkedPackage) {
-            $title = $isRtl ? 'باقة '.$subject->name : $subject->name.' package';
+            $pkgName = trim((string) ($linkedPackage->name ?? ''));
+            $title = $pkgName !== ''
+                ? $pkgName
+                : ($isRtl ? 'باقة '.$subject->name : $subject->name.' package');
             $desc = trim((string) ($linkedPackage->tagline ?: $linkedPackage->description ?: ''));
             if ($desc === '') {
                 $desc = $isRtl

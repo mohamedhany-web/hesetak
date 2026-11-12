@@ -361,13 +361,29 @@ class ClassroomController extends Controller
             $user,
             $canManageMeeting
         );
-        // العدّ التنازلي يعمل عند الدخول: من بدء الاجتماع، أو من موعد الحصة، أو من لحظة الدخول
-        if ($meeting->started_at) {
-            $meetingEndsAt = $meeting->started_at->copy()->addMinutes($effectiveDurationMinutes);
+        // العدّ التنازلي:
+        // - المضيف: من started_at (دخول المعلم)
+        // - الطالب: من scheduled_for + المدة حتى لا يُطرد إذا دخل المعلم مبكراً و«أحرق» العدّاد
+        if ($canManageMeeting) {
+            if ($meeting->started_at) {
+                $meetingEndsAt = $meeting->started_at->copy()->addMinutes($effectiveDurationMinutes);
+            } elseif ($meeting->scheduled_for) {
+                $meetingEndsAt = $meeting->scheduled_for->copy()->addMinutes($effectiveDurationMinutes);
+                if ($meetingEndsAt->isPast()) {
+                    $meetingEndsAt = now()->addMinutes($effectiveDurationMinutes);
+                }
+            } else {
+                $meetingEndsAt = now()->addMinutes($effectiveDurationMinutes);
+            }
         } elseif ($meeting->scheduled_for) {
             $meetingEndsAt = $meeting->scheduled_for->copy()->addMinutes($effectiveDurationMinutes);
+            if ($meetingEndsAt->lte(now())) {
+                $meetingEndsAt = now()->addMinutes(max(5, $effectiveDurationMinutes));
+            }
+        } elseif ($meeting->started_at) {
+            $meetingEndsAt = $meeting->started_at->copy()->addMinutes($effectiveDurationMinutes);
             if ($meetingEndsAt->isPast()) {
-                $meetingEndsAt = now()->addMinutes($effectiveDurationMinutes);
+                $meetingEndsAt = now()->addMinutes(max(5, $effectiveDurationMinutes));
             }
         } else {
             $meetingEndsAt = now()->addMinutes($effectiveDurationMinutes);
