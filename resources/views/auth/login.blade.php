@@ -2,10 +2,9 @@
 
 @section('title', __('auth.login'))
 
-@section('body_attrs', 'x-data="{ showPassword: false }"')
-
 @section('content')
 @php $isRtl = app()->getLocale() === 'ar'; @endphp
+<div x-data="{ showPassword: false }">
   <p class="lasles-auth-eyebrow">{{ __('auth.login_eyebrow') }}</p>
   <h1 class="lasles-auth-title">{!! __('auth.login_title_html') !!}</h1>
   <p class="lasles-auth-lead">{{ __('auth.login_lead') }}</p>
@@ -52,17 +51,24 @@
       <div class="lasles-auth-input-wrap">
         <span class="lasles-auth-icon" aria-hidden="true"><i class="fas fa-lock"></i></span>
         <input
-          :type="showPassword ? 'text' : 'password'"
+          type="password"
+          x-bind:type="showPassword ? 'text' : 'password'"
           name="password"
           id="password"
           required
           autocomplete="current-password"
           placeholder="{{ __('auth.password_placeholder') }}"
-          class="lasles-auth-input has-icon @error('password') has-error @enderror"
-          style="padding-inline-end:3rem"
+          class="lasles-auth-input has-icon has-pw-toggle @error('password') has-error @enderror"
         >
-        <button type="button" class="lasles-auth-pw-btn" @click="showPassword = !showPassword" aria-label="{{ __('auth.show') }}">
-          <span x-text="showPassword ? '{{ __('auth.hide') }}' : '{{ __('auth.show') }}'"></span>
+        <button
+          type="button"
+          class="lasles-auth-pw-btn"
+          @click="showPassword = !showPassword"
+          :aria-pressed="showPassword.toString()"
+          :aria-label="showPassword ? @js(__('auth.hide')) : @js(__('auth.show'))"
+          title="{{ __('auth.show') }}"
+        >
+          <i class="fas" :class="showPassword ? 'fa-eye-slash' : 'fa-eye'" aria-hidden="true"></i>
         </button>
       </div>
       @error('password')<p class="lasles-auth-error">{{ $message }}</p>@enderror
@@ -94,4 +100,5 @@
     <p class="lasles-auth-foot__q">{{ __('auth.no_account_question') }}</p>
     <a href="{{ route('register') }}" class="mc-btn mc-btn--md mc-btn--soft lasles-auth-register-cta">{{ __('auth.no_account_register_now') }}</a>
   </div>
+</div>
 @endsection

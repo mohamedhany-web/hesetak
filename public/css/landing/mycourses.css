@@ -2180,6 +2180,10 @@ body.mc-drawer-open {
 .lasles-auth-input.has-icon {
   padding-inline-start: 2.65rem;
 }
+.lasles-auth-input-wrap input.has-pw-toggle,
+.lasles-auth-input.has-pw-toggle {
+  padding-inline-end: 2.85rem;
+}
 .lasles-auth-input-wrap input:focus,
 .lasles-auth-field input:focus,
 .lasles-auth-field select:focus,
@@ -2205,16 +2209,30 @@ body.mc-drawer-open {
 }
 .lasles-auth-pw-btn {
   position: absolute;
-  inset-inline-end: .55rem;
+  inset-inline-end: .4rem;
   top: 50%;
   transform: translateY(-50%);
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.2rem;
+  height: 2.2rem;
   border: 0;
+  border-radius: .55rem;
   background: transparent;
   color: var(--mc-navy);
-  font-size: .78rem;
-  font-weight: 700;
+  font-size: 1rem;
   cursor: pointer;
-  padding: .35rem .45rem;
+  padding: 0;
+}
+.lasles-auth-pw-btn:hover,
+.lasles-auth-pw-btn:focus-visible {
+  background: rgba(30, 78, 140, 0.08);
+  outline: none;
+}
+.lasles-auth-pw-btn[aria-pressed="true"] {
+  color: var(--mc-gold, #c9a227);
 }
 .lasles-auth-error { margin: .35rem 0 0; color: #d64545; font-size: .8rem; }
 .lasles-auth-alert {
