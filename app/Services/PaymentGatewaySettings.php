@@ -34,6 +34,11 @@ class PaymentGatewaySettings
         return StripeSettings::isEnabled();
     }
 
+    public static function isNeoleapEnabled(): bool
+    {
+        return NeoLeapSettings::isEnabled();
+    }
+
     public static function allowsManualWithGateways(): bool
     {
         return Setting::getValue(self::ALLOW_MANUAL_WITH_GATEWAYS_KEY) === '1';
@@ -59,15 +64,17 @@ class PaymentGatewaySettings
         return self::isFawaterakEnabled()
             || PayPalSettings::isEnabled()
             || KashierSettings::isEnabled()
-            || StripeSettings::isEnabled();
+            || StripeSettings::isEnabled()
+            || NeoLeapSettings::isEnabled();
     }
 
-    /** عدد البوابات المعروضة في المركز (فواتيرك · Stripe · كاشير) — PayPal مؤرشف. */
+    /** عدد البوابات المعروضة في المركز (فواتيرك · Stripe · كاشير · NeoLeap) — PayPal مؤرشف. */
     public static function hubEnabledCount(): int
     {
         return (int) self::isFawaterakEnabled()
             + (int) StripeSettings::isEnabled()
-            + (int) KashierSettings::isEnabled();
+            + (int) KashierSettings::isEnabled()
+            + (int) NeoLeapSettings::isEnabled();
     }
 
     /**

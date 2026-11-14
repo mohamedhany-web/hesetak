@@ -103,6 +103,8 @@ class CheckoutController extends Controller
         $kashierMisconfigured = KashierSettings::isMisconfigured();
         $stripeUseGateway = \App\Services\StripeSettings::isReady();
         $stripeMisconfigured = \App\Services\StripeSettings::isMisconfigured();
+        $neoleapUseGateway = \App\Services\NeoLeapSettings::isReady();
+        $neoleapMisconfigured = \App\Services\NeoLeapSettings::isMisconfigured();
         $manualCheckoutAllowed = ! PaymentGatewaySettings::blocksManualCheckout();
         $platformLogoUrl = AdminPanelBranding::logoPublicUrl();
 
@@ -121,6 +123,8 @@ class CheckoutController extends Controller
             'kashierMisconfigured',
             'stripeUseGateway',
             'stripeMisconfigured',
+            'neoleapUseGateway',
+            'neoleapMisconfigured',
             'manualCheckoutAllowed',
             'platformLogoUrl',
             'studentWalletBalance'

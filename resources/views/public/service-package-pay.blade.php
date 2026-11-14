@@ -11,6 +11,8 @@
   $paypalMis = !empty($paypalMisconfigured);
   $stripeActive = !empty($stripeUseGateway);
   $stripeMis = !empty($stripeMisconfigured);
+  $neoleapActive = !empty($neoleapUseGateway);
+  $neoleapMis = !empty($neoleapMisconfigured);
 @endphp
 
 @section('content')
@@ -54,14 +56,21 @@
         </form>
       @endif
 
+      @if($neoleapActive)
+        <form method="POST" action="{{ $neoleapRoute ?? route('public.service-packages.custom.neoleap', $order) }}" style="margin-top:1rem">
+          @csrf
+          <button type="submit" class="mc-btn mc-btn--lg mc-btn--primary" style="width:100%"><i class="fas fa-credit-card"></i> {{ $isRtl ? 'الدفع عبر NeoLeap' : 'Pay with NeoLeap' }}</button>
+        </form>
+      @endif
+
       @if($paypalActive)
         <form method="POST" action="{{ $paypalRoute ?? route('public.service-packages.custom.paypal', $order) }}" style="margin-top:1rem">
           @csrf
           <button type="submit" class="mc-btn mc-btn--lg mc-btn--outline" style="width:100%"><i class="fab fa-paypal"></i> {{ $isRtl ? 'الدفع عبر PayPal' : 'Pay with PayPal' }}</button>
         </form>
-      @elseif(!$fawaterakActive && !$stripeActive && $paypalMis)
+      @elseif(!$fawaterakActive && !$stripeActive && !$neoleapActive && $paypalMis)
         <div class="mc-empty" style="color:#991b1b">{{ $isRtl ? 'تم تفعيل PayPal لكن بيانات الاتصال ناقصة.' : 'PayPal credentials are incomplete.' }}</div>
-      @elseif(!$fawaterakActive && !$stripeActive && !$fawaterakMis && !$stripeMis)
+      @elseif(!$fawaterakActive && !$stripeActive && !$neoleapActive && !$fawaterakMis && !$stripeMis && !$neoleapMis)
         <div class="mc-empty">{{ $isRtl ? 'بوابة الدفع غير مفعلة حالياً.' : 'Payment gateway is unavailable.' }}</div>
       @endif
 

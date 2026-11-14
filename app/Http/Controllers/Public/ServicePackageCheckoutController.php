@@ -85,6 +85,7 @@ class ServicePackageCheckoutController extends Controller
         [$fawaterakUseGateway, $fawaterakMisconfigured, $fawaterakIntegration] = $this->fawaterakFlags();
         [$paypalUseGateway, $paypalMisconfigured] = $this->paypalFlags();
         [$stripeUseGateway, $stripeMisconfigured] = $this->stripeFlags();
+        [$neoleapUseGateway, $neoleapMisconfigured] = $this->neoleapFlags();
 
         return view('public.service-packages', [
             'planMatrix' => $planMatrix,
@@ -105,6 +106,8 @@ class ServicePackageCheckoutController extends Controller
             'paypalMisconfigured' => $paypalMisconfigured,
             'stripeUseGateway' => $stripeUseGateway,
             'stripeMisconfigured' => $stripeMisconfigured,
+            'neoleapUseGateway' => $neoleapUseGateway,
+            'neoleapMisconfigured' => $neoleapMisconfigured,
         ]);
     }
 
@@ -200,6 +203,7 @@ class ServicePackageCheckoutController extends Controller
         [$fawaterakUseGateway, $fawaterakMisconfigured, $fawaterakIntegration] = $this->fawaterakFlags();
         [$paypalUseGateway, $paypalMisconfigured] = $this->paypalFlags();
         [$stripeUseGateway, $stripeMisconfigured] = $this->stripeFlags();
+        [$neoleapUseGateway, $neoleapMisconfigured] = $this->neoleapFlags();
 
         $yearId = request()->filled('year')
             ? request()->integer('year')
@@ -297,6 +301,8 @@ class ServicePackageCheckoutController extends Controller
             'paypalMisconfigured' => $paypalMisconfigured,
             'stripeUseGateway' => $stripeUseGateway,
             'stripeMisconfigured' => $stripeMisconfigured,
+            'neoleapUseGateway' => $neoleapUseGateway,
+            'neoleapMisconfigured' => $neoleapMisconfigured,
             'relatedPackages' => $relatedPackages,
             'manualCheckoutAllowed' => $manualCheckoutAllowed,
             'wallets' => $wallets,
@@ -480,6 +486,7 @@ class ServicePackageCheckoutController extends Controller
         [$fawaterakUseGateway, $fawaterakMisconfigured, $fawaterakIntegration] = $this->fawaterakFlags();
         [$paypalUseGateway, $paypalMisconfigured] = $this->paypalFlags();
         [$stripeUseGateway, $stripeMisconfigured] = $this->stripeFlags();
+        [$neoleapUseGateway, $neoleapMisconfigured] = $this->neoleapFlags();
         $request->session()->put('fawaterak_order_id', $order->id);
 
         $isRtl = app()->getLocale() === 'ar';
@@ -494,11 +501,14 @@ class ServicePackageCheckoutController extends Controller
             'paypalMisconfigured' => $paypalMisconfigured,
             'stripeUseGateway' => $stripeUseGateway,
             'stripeMisconfigured' => $stripeMisconfigured,
+            'neoleapUseGateway' => $neoleapUseGateway,
+            'neoleapMisconfigured' => $neoleapMisconfigured,
             'prepareRoute' => route('public.service-packages.custom.fawaterak.prepare', $order),
             'methodsRoute' => route('public.service-packages.custom.fawaterak.methods', $order),
             'payRoute' => route('public.service-packages.custom.fawaterak.pay', $order),
             'paypalRoute' => route('public.service-packages.custom.paypal', $order),
             'stripeRoute' => route('public.service-packages.custom.stripe', $order),
+            'neoleapRoute' => route('public.service-packages.custom.neoleap', $order),
         ]);
     }
 
@@ -726,6 +736,17 @@ class ServicePackageCheckoutController extends Controller
         return [
             \App\Services\StripeSettings::isReady(),
             \App\Services\StripeSettings::isMisconfigured(),
+        ];
+    }
+
+    /**
+     * @return array{0: bool, 1: bool}
+     */
+    private function neoleapFlags(): array
+    {
+        return [
+            \App\Services\NeoLeapSettings::isReady(),
+            \App\Services\NeoLeapSettings::isMisconfigured(),
         ];
     }
 

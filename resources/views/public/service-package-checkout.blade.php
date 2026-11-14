@@ -14,7 +14,9 @@
   $paypalMis = ! empty($paypalMisconfigured);
   $stripeActive = ! empty($stripeUseGateway);
   $stripeMis = ! empty($stripeMisconfigured);
-  $canPayOnline = ($fawaterakActive && ! $fawaterakMis) || $paypalActive || $stripeActive;
+  $neoleapActive = ! empty($neoleapUseGateway);
+  $neoleapMis = ! empty($neoleapMisconfigured);
+  $canPayOnline = ($fawaterakActive && ! $fawaterakMis) || $paypalActive || $stripeActive || $neoleapActive;
   $manualCheckoutAllowed = ! empty($manualCheckoutAllowed);
   $wallets = $wallets ?? collect();
   $mcCss = public_path('css/landing/mycourses.css');
@@ -306,6 +308,33 @@
                   {{ $isRtl ? 'الدفع عبر Stripe' : 'Pay with Stripe' }} · {{ $package->formattedPrice() }}
                 </button>
               </form>
+            @endif
+
+            @if($neoleapActive)
+              @if($fawaterakActive || $stripeActive)
+                <p class="mc-co-or">{{ $isRtl ? 'أو' : 'or' }}</p>
+              @endif
+              <form method="POST" action="{{ route('public.service-packages.neoleap', $package) }}">
+                @csrf
+                @if(request('academic_year_id') || request('year'))
+                  <input type="hidden" name="academic_year_id" value="{{ request('academic_year_id', request('year')) }}">
+                @endif
+                @if(request('academic_subject_id') || request('subject'))
+                  <input type="hidden" name="academic_subject_id" value="{{ request('academic_subject_id', request('subject')) }}">
+                @endif
+                @if(request('curriculum_type'))
+                  <input type="hidden" name="curriculum_type" value="{{ request('curriculum_type') }}">
+                @endif
+                <button type="submit" class="mc-btn mc-btn--lg mc-btn--primary mc-co-pay-btn">
+                  <i class="fas fa-credit-card" aria-hidden="true"></i>
+                  {{ $isRtl ? 'الدفع عبر NeoLeap (مدى / بطاقة)' : 'Pay with NeoLeap' }} · {{ $package->formattedPrice() }}
+                </button>
+              </form>
+            @elseif($neoleapMis && ! $canPayOnline)
+              <div class="mc-co-alert is-err">
+                <strong>{{ $isRtl ? 'إعدادات NeoLeap غير مكتملة' : 'NeoLeap settings incomplete' }}</strong>
+                <p>{{ $isRtl ? 'تم تفعيل NeoLeap لكن بيانات الاتصال ناقصة في الأدمن.' : 'NeoLeap is enabled but credentials are missing.' }}</p>
+              </div>
             @endif
 
             @if($paypalActive)

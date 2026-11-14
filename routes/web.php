@@ -35,6 +35,16 @@ Route::post('/webhooks/stripe', [\App\Http\Controllers\Webhooks\StripeWebhookCon
     ->middleware('throttle:120,1')
     ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class]);
 
+/** NeoLeap hosted callbacks (bank POST/GET trandata — no CSRF) */
+Route::match(['get', 'post'], '/checkout/neoleap/return', [\App\Http\Controllers\Public\NeoLeapCheckoutController::class, 'returnFromNeoLeap'])
+    ->name('public.checkout.neoleap.return')
+    ->middleware('throttle:60,1')
+    ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class]);
+Route::match(['get', 'post'], '/checkout/neoleap/error', [\App\Http\Controllers\Public\NeoLeapCheckoutController::class, 'errorFromNeoLeap'])
+    ->name('public.checkout.neoleap.error')
+    ->middleware('throttle:60,1')
+    ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class]);
+
 Route::match(['get', 'post'], '/ops/cron', [\App\Http\Controllers\Ops\CronHeartbeatController::class, 'run'])
     ->name('ops.cron')
     ->middleware('throttle:30,1')
@@ -512,6 +522,12 @@ Route::post('/service-packages/{servicePackage}/checkout/stripe', [\App\Http\Con
 Route::post('/service-packages/custom/orders/{order}/stripe', [\App\Http\Controllers\Public\StripeCheckoutController::class, 'startExistingOrder'])
     ->middleware(['auth', 'throttle:20,1'])
     ->name('public.service-packages.custom.stripe');
+Route::post('/service-packages/{servicePackage}/checkout/neoleap', [\App\Http\Controllers\Public\NeoLeapCheckoutController::class, 'startPackage'])
+    ->middleware(['auth', 'throttle:20,1'])
+    ->name('public.service-packages.neoleap');
+Route::post('/service-packages/custom/orders/{order}/neoleap', [\App\Http\Controllers\Public\NeoLeapCheckoutController::class, 'startExistingOrder'])
+    ->middleware(['auth', 'throttle:20,1'])
+    ->name('public.service-packages.custom.neoleap');
 Route::redirect('/teachers', '/instructors', 301);
 Route::get('/teachers/{instructor}', function (string $instructor) {
     $resolved = \App\Services\PublicInstructorDirectory::resolvePublicShow($instructor);
@@ -607,6 +623,10 @@ Route::post('/course/{courseId}/checkout/paypal', [\App\Http\Controllers\Public\
 Route::post('/course/{courseId}/checkout/stripe', [\App\Http\Controllers\Public\StripeCheckoutController::class, 'startCourse'])
     ->middleware(['auth', 'throttle:20,1'])
     ->name('public.course.checkout.stripe');
+
+Route::post('/course/{courseId}/checkout/neoleap', [\App\Http\Controllers\Public\NeoLeapCheckoutController::class, 'startCourse'])
+    ->middleware(['auth', 'throttle:20,1'])
+    ->name('public.course.checkout.neoleap');
 
 // تسجيل مجاني للكورسات المجانية
 Route::post('/course/{courseId}/enroll-free', [\App\Http\Controllers\Public\CheckoutController::class, 'enrollFree'])
@@ -1677,6 +1697,9 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::post('/payment-gateways/stripe/test', [\App\Http\Controllers\Admin\PaymentGatewaysController::class, 'testStripe'])
             ->middleware('throttle:8,1')
             ->name('payment-gateways.stripe.test');
+        Route::post('/payment-gateways/neoleap/test', [\App\Http\Controllers\Admin\PaymentGatewaysController::class, 'testNeoleap'])
+            ->middleware('throttle:8,1')
+            ->name('payment-gateways.neoleap.test');
         Route::post('/system-settings/paypal/test', [\App\Http\Controllers\Admin\PaymentGatewaysController::class, 'testPaypal'])
             ->middleware('throttle:8,1')
             ->name('system-settings.paypal.test');
