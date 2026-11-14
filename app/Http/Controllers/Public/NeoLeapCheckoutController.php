@@ -429,7 +429,7 @@ class NeoLeapCheckoutController extends Controller
                 lang: app()->getLocale() === 'en' ? 'EN' : 'AR',
                 udf: [
                     'udf1' => (string) $order->id,
-                    'udf2' => Str::limit($itemTitle, 50, ''),
+                    'udf2' => Str::limit($this->safeUdfText($itemTitle), 50, ''),
                     'udf3' => (string) ($order->user_id ?? ''),
                 ],
             );
@@ -475,6 +475,21 @@ class NeoLeapCheckoutController extends Controller
             ])
             ->header('Cache-Control', 'no-store, no-cache, must-revalidate')
             ->header('Pragma', 'no-cache');
+    }
+
+    private function safeUdfText(mixed $value): string
+    {
+        if (is_string($value)) {
+            return trim($value);
+        }
+        if (is_array($value)) {
+            $locale = app()->getLocale();
+            $picked = $value[$locale] ?? $value['ar'] ?? $value['en'] ?? reset($value);
+
+            return is_string($picked) ? trim($picked) : 'order';
+        }
+
+        return trim((string) $value);
     }
 
     private function guardReady(): ?RedirectResponse
