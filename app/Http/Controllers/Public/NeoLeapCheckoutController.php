@@ -13,6 +13,7 @@ use App\Services\NeoLeapSettings;
 use App\Services\StudentEntitlementService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -23,7 +24,7 @@ use Throwable;
 
 class NeoLeapCheckoutController extends Controller
 {
-    public function startCourse(Request $request, int $courseId): RedirectResponse
+    public function startCourse(Request $request, int $courseId): RedirectResponse|Response
     {
         $gate = $this->guardReady();
         if ($gate instanceof RedirectResponse) {
@@ -98,7 +99,7 @@ class NeoLeapCheckoutController extends Controller
         return $this->sendToNeoLeap($request, $order, (string) ($course->title ?? 'كورس'));
     }
 
-    public function startPackage(Request $request, ServicePackage $servicePackage): RedirectResponse
+    public function startPackage(Request $request, ServicePackage $servicePackage): RedirectResponse|Response
     {
         $gate = $this->guardReady();
         if ($gate instanceof RedirectResponse) {
@@ -173,7 +174,7 @@ class NeoLeapCheckoutController extends Controller
         return $this->sendToNeoLeap($request, $order, (string) ($servicePackage->name ?? 'باقة'));
     }
 
-    public function startExistingOrder(Request $request, Order $order): RedirectResponse
+    public function startExistingOrder(Request $request, Order $order): RedirectResponse|Response
     {
         $gate = $this->guardReady();
         if ($gate instanceof RedirectResponse) {
@@ -409,14 +410,14 @@ class NeoLeapCheckoutController extends Controller
         return null;
     }
 
-    private function sendToNeoLeap(Request $request, Order $order, string $itemTitle): RedirectResponse
+    private function sendToNeoLeap(Request $request, Order $order, string $itemTitle): RedirectResponse|Response
     {
         $currency = $this->chargeCurrencyForOrder($order);
         $amount = (float) $order->amount;
         $trackId = 'HST-'.$order->id.'-'.Str::upper(Str::random(8));
 
-        $responseUrl = route('public.checkout.neoleap.return');
-        $errorUrl = route('public.checkout.neoleap.error');
+        $responseUrl = route('public.checkout.neoleap.return', absolute: true);
+        $errorUrl = route('public.checkout.neoleap.error', absolute: true);
 
         try {
             $created = app(NeoLeapService::class)->initiateHostedPayment(
@@ -454,7 +455,26 @@ class NeoLeapCheckoutController extends Controller
 
         $request->session()->put('neoleap_order_id', $order->id);
 
-        return redirect()->away($created['redirect_url']);
+        $redirectUrl = (string) $created['redirect_url'];
+        $paymentId = (string) $created['payment_id'];
+        $parts = parse_url($redirectUrl) ?: [];
+        $paymentPageUrl = (($parts['scheme'] ?? 'https').'://'.($parts['host'] ?? 'digitalpayments.neoleap.com.sa')).($parts['path'] ?? '/pg/paymentpage.htm');
+
+        Log::info('NeoLeap redirect prepared', [
+            'order_id' => $order->id,
+            'payment_id' => $paymentId,
+            'redirect_url' => $redirectUrl,
+        ]);
+
+        // صفحة وسيطة: أوضح للمستخدم + إرسال PaymentID بشكل موثوق (GET form)
+        return response()
+            ->view('public.neoleap-redirect', [
+                'redirectUrl' => $redirectUrl,
+                'paymentPageUrl' => $paymentPageUrl,
+                'paymentId' => $paymentId,
+            ])
+            ->header('Cache-Control', 'no-store, no-cache, must-revalidate')
+            ->header('Pragma', 'no-cache');
     }
 
     private function guardReady(): ?RedirectResponse
