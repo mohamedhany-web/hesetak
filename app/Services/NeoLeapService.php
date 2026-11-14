@@ -88,12 +88,42 @@ class NeoLeapService
             throw new RuntimeException('استجابة NeoLeap لا تحتوي رابط دفع صالح.');
         }
 
+        // NeoLeap غالباً يرجع paymentpage.htm بلا PaymentID → صفحة فارغة / IPAY0100037
+        $redirectUrl = $this->ensurePaymentIdOnRedirectUrl($redirectUrl, $paymentId);
+
         return [
             'payment_id' => $paymentId,
             'redirect_url' => $redirectUrl,
             'track_id' => $trackId,
             'raw' => $raw,
         ];
+    }
+
+    private function ensurePaymentIdOnRedirectUrl(string $redirectUrl, string $paymentId): string
+    {
+        $parts = parse_url($redirectUrl);
+        if ($parts === false) {
+            return $redirectUrl;
+        }
+
+        parse_str($parts['query'] ?? '', $query);
+        $existing = (string) ($query['PaymentID'] ?? $query['paymentId'] ?? $query['paymentid'] ?? '');
+        if ($existing !== '') {
+            return $redirectUrl;
+        }
+
+        $query['PaymentID'] = $paymentId;
+        $rebuilt = ($parts['scheme'] ?? 'https').'://'.($parts['host'] ?? '');
+        if (! empty($parts['port'])) {
+            $rebuilt .= ':'.$parts['port'];
+        }
+        $rebuilt .= $parts['path'] ?? '';
+        $rebuilt .= '?'.http_build_query($query);
+        if (! empty($parts['fragment'])) {
+            $rebuilt .= '#'.$parts['fragment'];
+        }
+
+        return $rebuilt;
     }
 
     /**
