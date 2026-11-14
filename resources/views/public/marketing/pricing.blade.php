@@ -19,8 +19,12 @@
         ->all();
     $selCurriculum = $catalog['selected_curriculum_type'] ?? null;
     $customUrl = $customBuilderUrl ?? route('public.service-packages.index', ['catalog' => 1]).'#private-builder';
-    // باقات متنوعة — مسار العميل المعتمد لباقة متعددة المواد
-    $diverseTeachersUrl = route('public.package-booking.teachers', 12);
+    // باقات متنوعة — أول باقة نشطة في الاستورفرونت (تجنب ID ثابت لو الباقة موقوفة)
+    $diversePackage = \App\Models\ServicePackage::query()->storefront()->ordered()->first()
+        ?? \App\Models\ServicePackage::query()->storefront()->first();
+    $diverseTeachersUrl = $diversePackage
+        ? route('public.package-booking.teachers', $diversePackage)
+        : route('public.service-packages.index', ['catalog' => 1]).'#private-builder';
     $curriculumTypes = \App\Support\HesetakMatchCatalog::curriculumTypes();
 
     $stageUrl = static function (?int $yearId, ?array $subjectIds = null, ?string $curriculum = null) use ($catalog): string {
