@@ -70,13 +70,10 @@ class PaymentGatewaysController extends Controller
             'neoleapEnabled' => NeoLeapSettings::isEnabled(),
             'neoleapConfigured' => NeoLeapSettings::isConfigured(),
             'neoleapMode' => NeoLeapSettings::mode(),
-            'neoleapTranportalId' => NeoLeapSettings::tranportalId(),
-            'neoleapHasPassword' => NeoLeapSettings::hasStoredPassword() || NeoLeapSettings::password() !== '',
-            'neoleapHasEncryptionKey' => NeoLeapSettings::hasStoredEncryptionKey() || NeoLeapSettings::encryptionKey() !== '',
-            'neoleapHasEncryptionIv' => NeoLeapSettings::hasStoredEncryptionIv() || NeoLeapSettings::encryptionIv() !== '',
+            'neoleapCurrency' => NeoLeapSettings::currency(),
             'neoleapHostedUrl' => NeoLeapSettings::hostedUrl(),
             'neoleapTranportalUrl' => NeoLeapSettings::tranportalUrl(),
-            'neoleapCurrency' => NeoLeapSettings::currency(),
+            'neoleapEnvSecrets' => NeoLeapSettings::envSecretsPresent(),
             'neoleapReturnUrl' => url()->route('public.checkout.neoleap.return'),
             'neoleapErrorUrl' => url()->route('public.checkout.neoleap.error'),
             'paypalWebhookUrl' => url('/webhooks/paypal'),
@@ -171,34 +168,13 @@ class PaymentGatewaysController extends Controller
         ]);
 
         $neoleapEnabled = $request->boolean('neoleap_gateway_enabled');
-        $neoleapId = trim((string) $request->input('neoleap_tranportal_id', ''));
-        $neoleapPassword = trim((string) $request->input('neoleap_password', ''));
-        $neoleapKey = trim((string) $request->input('neoleap_encryption_key', ''));
-        $neoleapIv = trim((string) $request->input('neoleap_encryption_iv', ''));
-        if ($neoleapEnabled && $neoleapId === '') {
-            return back()->withErrors(['neoleap_tranportal_id' => 'Tranportal ID مطلوب لتفعيل NeoLeap.'])->withInput();
-        }
-        if ($neoleapEnabled && $neoleapPassword === '' && ! NeoLeapSettings::isConfigured()) {
-            return back()->withErrors(['neoleap_password' => 'Password مطلوب لتفعيل NeoLeap في أول ربط.'])->withInput();
-        }
-        if ($neoleapEnabled && $neoleapKey === '' && NeoLeapSettings::encryptionKey() === '') {
-            return back()->withErrors(['neoleap_encryption_key' => 'Encryption Key مطلوب لتفعيل NeoLeap.'])->withInput();
-        }
-        if ($neoleapEnabled && $neoleapIv === '' && NeoLeapSettings::encryptionIv() === '') {
-            return back()->withErrors(['neoleap_encryption_iv' => 'Encryption IV مطلوب لتفعيل NeoLeap.'])->withInput();
+        if ($neoleapEnabled && ! NeoLeapSettings::isConfigured()) {
+            return back()->withErrors([
+                'neoleap_gateway_enabled' => 'لا يمكن تفعيل NeoLeap قبل ضبط الأسرار في ملف .env على السيرفر (NEOLEAP_TRANPORTAL_ID / PASSWORD / ENCRYPTION_KEY / ENCRYPTION_IV).',
+            ])->withInput();
         }
 
-        NeoLeapSettings::save([
-            'enabled' => $neoleapEnabled,
-            'mode' => (string) $request->input('neoleap_mode', 'test'),
-            'tranportal_id' => $neoleapId,
-            'password' => $neoleapPassword !== '' ? $neoleapPassword : null,
-            'encryption_key' => $neoleapKey !== '' ? $neoleapKey : null,
-            'encryption_iv' => $neoleapIv !== '' ? $neoleapIv : null,
-            'hosted_url' => trim((string) $request->input('neoleap_hosted_url', '')),
-            'tranportal_url' => trim((string) $request->input('neoleap_tranportal_url', '')),
-            'currency' => (string) $request->input('neoleap_currency', 'SAR'),
-        ]);
+        NeoLeapSettings::save(['enabled' => $neoleapEnabled]);
 
         return redirect()->route('admin.payment-gateways.index')
             ->with('success', 'تم حفظ تفعيل بوابات الدفع وبيانات الاتصال.');
@@ -248,7 +224,7 @@ class PaymentGatewaysController extends Controller
     {
         if (! NeoLeapSettings::isConfigured()) {
             return redirect()->route('admin.payment-gateways.index')
-                ->withErrors(['neoleap_tranportal_id' => 'احفظ Tranportal ID + Password + Key + IV أولاً ثم اختبر.']);
+                ->withErrors(['neoleap_gateway_enabled' => 'أضف أسرار NeoLeap في .env على السيرفر ثم أعد تحميل إعدادات PHP (config:clear) واختبر.']);
         }
 
         try {
@@ -260,7 +236,7 @@ class PaymentGatewaysController extends Controller
             report($e);
 
             return redirect()->route('admin.payment-gateways.index')
-                ->withErrors(['neoleap_password' => $e->getMessage()]);
+                ->withErrors(['neoleap_gateway_enabled' => $e->getMessage()]);
         }
     }
 }

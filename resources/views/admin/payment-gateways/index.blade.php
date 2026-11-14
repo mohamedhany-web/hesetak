@@ -357,18 +357,19 @@
             </div>
         </article>
 
-        {{-- NeoLeap --}}
+        {{-- NeoLeap — أسرار .env فقط؛ الأدمن للتفعيل --}}
+        @php $nlEnv = $neoleapEnvSecrets ?? []; @endphp
         <article class="{{ $panel }}">
             <div class="{{ $sectionHead }}">
                 <span class="inline-flex size-9 items-center justify-center rounded-xl bg-accent-soft text-accent"><i class="fas fa-credit-card text-sm"></i></span>
                 <div class="min-w-0 flex-1">
                     <h3 class="text-base font-semibold text-ink">NeoLeap (الراجحي)</h3>
-                    <p class="mt-0.5 text-xs leading-6 text-muted">Hosted Checkout + استعلام/استرداد/إلغاء عبر Tranportal — مدى / فيزا / ماستركارد.</p>
+                    <p class="mt-0.5 text-xs leading-6 text-muted">الأسرار من ملف <span dir="ltr">.env</span> على السيرفر فقط — الأدمن يشغّل أو يوقف الظهور للطالب.</p>
                 </div>
                 @if($neoleapEnabled && $neoleapConfigured)
                     <span class="inline-flex items-center gap-1.5 rounded-lg bg-accent-soft px-2.5 py-1 text-xs font-semibold text-accent">يعمل</span>
                 @elseif($neoleapEnabled)
-                    <span class="inline-flex items-center gap-1.5 rounded-lg border border-metal/30 bg-canvas px-2.5 py-1 text-xs font-medium text-metal">مفعّل بدون مفاتيح</span>
+                    <span class="inline-flex items-center gap-1.5 rounded-lg border border-metal/30 bg-canvas px-2.5 py-1 text-xs font-medium text-metal">مفعّل — .env ناقص</span>
                 @else
                     <span class="inline-flex items-center gap-1.5 rounded-lg border border-line bg-canvas px-2.5 py-1 text-xs font-medium text-muted">موقوف</span>
                 @endif
@@ -377,90 +378,63 @@
                 <input type="hidden" name="neoleap_gateway_enabled" value="0">
                 <label class="flex cursor-pointer items-start gap-3">
                     <input type="checkbox" name="neoleap_gateway_enabled" value="1" class="mt-1 rounded border-line text-accent focus:ring-accent"
-                           @checked((string) old('neoleap_gateway_enabled', $neoleapEnabled ? '1' : '0') === '1')>
+                           @checked((string) old('neoleap_gateway_enabled', $neoleapEnabled ? '1' : '0') === '1')
+                           @disabled(! $neoleapConfigured && ! $neoleapEnabled)>
                     <span class="text-sm leading-7 text-muted">
-                        <span class="mb-0.5 block font-semibold text-ink">تشغيل NeoLeap</span>
-                        يظهر زر الدفع عبر NeoLeap في إتمام طلب الكورس والباقات.
+                        <span class="mb-0.5 block font-semibold text-ink">تشغيل NeoLeap للطالب</span>
+                        يظهر زر الدفع (مدى / بطاقة) في الكورسات والباقات بعد اكتمال متغيرات البيئة.
                     </span>
                 </label>
+                @error('neoleap_gateway_enabled')
+                    <p class="text-xs font-medium text-danger">{{ $message }}</p>
+                @enderror
 
                 <div class="rounded-xl border border-line bg-canvas px-4 py-3 text-xs leading-7 text-muted">
-                    من بوابة تاجر NeoLeap انسخ <strong class="text-ink">Tranportal ID</strong> و<strong class="text-ink">Password</strong>
-                    و<strong class="text-ink">AES Key (32 بايت أو 64 hex)</strong> و<strong class="text-ink">IV (16 بايت أو 32 hex)</strong>.
-                    روابط العودة المسجّلة عند NeoLeap يجب أن تطابق:
-                    <br>نجاح: <code class="rounded bg-surface px-1 text-[11px]" dir="ltr">{{ $neoleapReturnUrl }}</code>
-                    <br>خطأ: <code class="rounded bg-surface px-1 text-[11px]" dir="ltr">{{ $neoleapErrorUrl }}</code>
+                    <p class="font-semibold text-ink">ضع في <span dir="ltr">.env</span> على السيرفر ثم نفّذ <span dir="ltr">php artisan config:clear</span>:</p>
+                    <pre class="mt-2 overflow-x-auto rounded-lg bg-surface p-3 text-[11px] text-ink" dir="ltr">NEOLEAP_MODE=live
+NEOLEAP_TRANPORTAL_ID=...
+NEOLEAP_PASSWORD=...
+NEOLEAP_ENCRYPTION_KEY=...
+NEOLEAP_ENCRYPTION_IV=...
+NEOLEAP_CURRENCY=SAR
+NEOLEAP_HOSTED_URL=https://digitalpayments.neoleap.com.sa/pg/payment/hosted.htm
+NEOLEAP_TRANPORTAL_URL=https://digitalpayments.neoleap.com.sa/pg/payment/tranportal.htm</pre>
+                    <p class="mt-2">روابط العودة عند NeoLeap:</p>
+                    <p>نجاح: <code class="rounded bg-surface px-1 text-[11px]" dir="ltr">{{ $neoleapReturnUrl }}</code></p>
+                    <p>خطأ: <code class="rounded bg-surface px-1 text-[11px]" dir="ltr">{{ $neoleapErrorUrl }}</code></p>
                 </div>
 
-                <div class="grid gap-4 sm:grid-cols-2">
-                    <div>
-                        <label class="{{ $label }}" for="neoleap_mode">البيئة</label>
-                        <select name="neoleap_mode" id="neoleap_mode" class="{{ $input }}">
-                            <option value="test" @selected(old('neoleap_mode', $neoleapMode ?? 'test') === 'test')>Test (تجربة)</option>
-                            <option value="live" @selected(old('neoleap_mode', $neoleapMode ?? 'test') === 'live')>Live (إنتاج)</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="{{ $label }}" for="neoleap_currency">العملة</label>
-                        <select name="neoleap_currency" id="neoleap_currency" class="{{ $input }}">
-                            @foreach(['SAR' => 'SAR — ريال سعودي', 'USD' => 'USD', 'EUR' => 'EUR', 'AED' => 'AED', 'EGP' => 'EGP', 'GBP' => 'GBP'] as $code => $labelText)
-                                <option value="{{ $code }}" @selected(old('neoleap_currency', $neoleapCurrency ?? 'SAR') === $code)>{{ $labelText }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div class="sm:col-span-2">
-                        <label class="{{ $label }}" for="neoleap_tranportal_id">Tranportal ID</label>
-                        <input type="text" name="neoleap_tranportal_id" id="neoleap_tranportal_id" dir="ltr" autocomplete="off"
-                               value="{{ old('neoleap_tranportal_id', $neoleapTranportalId ?? '') }}"
-                               class="{{ $input }} font-mono" placeholder="من لوحة التاجر">
-                        @error('neoleap_tranportal_id')
-                            <p class="mt-1.5 text-xs font-medium text-danger">{{ $message }}</p>
-                        @enderror
-                    </div>
-                    <div class="sm:col-span-2">
-                        <label class="{{ $label }}" for="neoleap_password">Password</label>
-                        <input type="password" name="neoleap_password" id="neoleap_password" dir="ltr" autocomplete="new-password"
-                               value="" class="{{ $input }} font-mono" placeholder="{{ !empty($neoleapHasPassword) ? 'محفوظ — اتركه فارغاً للإبقاء' : 'Password' }}">
-                        @error('neoleap_password')
-                            <p class="mt-1.5 text-xs font-medium text-danger">{{ $message }}</p>
-                        @enderror
-                    </div>
-                    <div class="sm:col-span-2">
-                        <label class="{{ $label }}" for="neoleap_encryption_key">Encryption Key</label>
-                        <input type="password" name="neoleap_encryption_key" id="neoleap_encryption_key" dir="ltr" autocomplete="new-password"
-                               value="" class="{{ $input }} font-mono" placeholder="{{ !empty($neoleapHasEncryptionKey) ? 'محفوظ — اتركه فارغاً للإبقاء' : '32 بايت أو 64 hex' }}">
-                        @error('neoleap_encryption_key')
-                            <p class="mt-1.5 text-xs font-medium text-danger">{{ $message }}</p>
-                        @enderror
-                    </div>
-                    <div class="sm:col-span-2">
-                        <label class="{{ $label }}" for="neoleap_encryption_iv">Encryption IV</label>
-                        <input type="password" name="neoleap_encryption_iv" id="neoleap_encryption_iv" dir="ltr" autocomplete="new-password"
-                               value="" class="{{ $input }} font-mono" placeholder="{{ !empty($neoleapHasEncryptionIv) ? 'محفوظ — اتركه فارغاً للإبقاء' : '16 بايت أو 32 hex' }}">
-                        @error('neoleap_encryption_iv')
-                            <p class="mt-1.5 text-xs font-medium text-danger">{{ $message }}</p>
-                        @enderror
-                    </div>
-                    <div class="sm:col-span-2">
-                        <label class="{{ $label }}" for="neoleap_hosted_url">Hosted URL (Purchase)</label>
-                        <input type="url" name="neoleap_hosted_url" id="neoleap_hosted_url" dir="ltr"
-                               value="{{ old('neoleap_hosted_url', $neoleapHostedUrl ?? 'https://digitalpayments.neoleap.com.sa/pg/payment/hosted.htm') }}"
-                               class="{{ $input }} font-mono">
-                    </div>
-                    <div class="sm:col-span-2">
-                        <label class="{{ $label }}" for="neoleap_tranportal_url">Tranportal URL (Refund/Void/Inquiry)</label>
-                        <input type="url" name="neoleap_tranportal_url" id="neoleap_tranportal_url" dir="ltr"
-                               value="{{ old('neoleap_tranportal_url', $neoleapTranportalUrl ?? 'https://digitalpayments.neoleap.com.sa/pg/payment/tranportal.htm') }}"
-                               class="{{ $input }} font-mono">
-                    </div>
+                <div class="grid gap-2 sm:grid-cols-2">
+                    @foreach([
+                        'tranportal_id' => 'NEOLEAP_TRANPORTAL_ID',
+                        'password' => 'NEOLEAP_PASSWORD',
+                        'encryption_key' => 'NEOLEAP_ENCRYPTION_KEY',
+                        'encryption_iv' => 'NEOLEAP_ENCRYPTION_IV',
+                    ] as $k => $envName)
+                        <div class="flex items-center justify-between rounded-xl border border-line px-3 py-2 text-xs">
+                            <span class="font-mono text-ink" dir="ltr">{{ $envName }}</span>
+                            @if(!empty($nlEnv[$k]))
+                                <span class="font-semibold text-accent">مضبوط</span>
+                            @else
+                                <span class="font-semibold text-danger">ناقص</span>
+                            @endif
+                        </div>
+                    @endforeach
                 </div>
+
+                <dl class="grid gap-2 text-xs text-muted sm:grid-cols-2">
+                    <div><dt class="text-muted">البيئة (.env)</dt><dd class="font-semibold text-ink">{{ ($neoleapMode ?? 'test') === 'live' ? 'Live' : 'Test' }}</dd></div>
+                    <div><dt class="text-muted">العملة</dt><dd class="font-semibold text-ink" dir="ltr">{{ $neoleapCurrency ?? 'SAR' }}</dd></div>
+                    <div class="sm:col-span-2"><dt class="text-muted">Hosted</dt><dd class="break-all font-mono text-[11px] text-ink" dir="ltr">{{ $neoleapHostedUrl }}</dd></div>
+                    <div class="sm:col-span-2"><dt class="text-muted">Tranportal</dt><dd class="break-all font-mono text-[11px] text-ink" dir="ltr">{{ $neoleapTranportalUrl }}</dd></div>
+                </dl>
 
                 <div class="flex flex-wrap items-center gap-3 border-t border-line pt-4">
-                    <button type="submit" form="neoleapTestForm" class="btn-press inline-flex h-10 items-center gap-2 rounded-xl border border-line bg-canvas px-4 text-sm font-medium text-ink-soft transition hover:border-accent/30 hover:text-accent">
+                    <button type="submit" form="neoleapTestForm" class="btn-press inline-flex h-10 items-center gap-2 rounded-xl border border-line bg-canvas px-4 text-sm font-medium text-ink-soft transition hover:border-accent/30 hover:text-accent" @disabled(! $neoleapConfigured)>
                         <i class="fas fa-plug"></i>
                         اختبار وصول NeoLeap
                     </button>
-                    <p class="text-xs text-muted">احفظ المفاتيح أولاً، ثم اختبر الاتصال بـ hosted.htm.</p>
+                    <p class="text-xs text-muted">لا تُدخل الأسرار من المتصفح — SSH / لوحة الاستضافة فقط.</p>
                 </div>
             </div>
         </article>
