@@ -198,7 +198,28 @@ class NeoLeapCheckoutController extends Controller
 
     public function errorFromNeoLeap(Request $request): RedirectResponse
     {
-        return $this->handleCallback($request, expectSuccess: false);
+        // errorURL لا تعتمد لتفعيل الطلب — حتى لو وصلت trandata ناجحة بالخطأ
+        $trandata = (string) ($request->input('trandata') ?: $request->query('trandata', ''));
+        $order = null;
+        if ($trandata !== '') {
+            try {
+                $parsed = app(NeoLeapService::class)->parseCallbackTrandata($trandata);
+                $order = $this->resolveOrderFromCallback($parsed, $request);
+                if ($order && ($parsed['success'] ?? false) && $order->status === Order::STATUS_PENDING) {
+                    Log::warning('NeoLeap success payload posted to errorURL — not auto-approving', [
+                        'order_id' => $order->id,
+                        'track_id' => $parsed['track_id'] ?? null,
+                    ]);
+                }
+            } catch (Throwable) {
+                // تجاهل فك التشفير في مسار الخطأ
+            }
+        }
+
+        $target = $order ? $this->retryUrl($order) : route('orders.index');
+
+        return redirect()->to($target)
+            ->with('error', 'أُلغيت أو فشلت عملية الدفع عبر NeoLeap. إن خُصمت البطاقة، تواصل مع الدعم مع رقم الطلب.');
     }
 
     public function captureAndApprove(Order $order, array $parsed): void
@@ -213,8 +234,19 @@ class NeoLeapCheckoutController extends Controller
 
             $track = (string) ($parsed['track_id'] ?? '');
             $storedTrack = (string) ($locked->neoleap_track_id ?? '');
-            if ($track !== '' && $storedTrack !== '' && ! hash_equals($storedTrack, $track)) {
+            if ($track === '' || $storedTrack === '' || ! hash_equals($storedTrack, $track)) {
                 throw new RuntimeException('رقم التتبع لا يطابق طلب NeoLeap.');
+            }
+
+            $callbackPaymentId = trim((string) ($parsed['payment_id'] ?? ''));
+            $storedPaymentId = trim((string) ($locked->neoleap_payment_id ?? ''));
+            if ($callbackPaymentId !== '' && $storedPaymentId !== '' && ! hash_equals($storedPaymentId, $callbackPaymentId)) {
+                throw new RuntimeException('معرّف الدفع لا يطابق جلسة NeoLeap.');
+            }
+
+            $rawUdf1 = trim((string) data_get($parsed, 'raw.udf1', ''));
+            if ($rawUdf1 !== '' && $rawUdf1 !== (string) $locked->id) {
+                throw new RuntimeException('بيانات الطلب لا تطابق رد NeoLeap.');
             }
 
             $currency = $this->chargeCurrencyForOrder($locked);
@@ -225,11 +257,18 @@ class NeoLeapCheckoutController extends Controller
                 $parsed['currency'] ?? $currency
             );
 
+            $this->assertInquiryStillCaptured(
+                $neoleap,
+                $track,
+                $callbackPaymentId !== '' ? $callbackPaymentId : ($storedPaymentId !== '' ? $storedPaymentId : null),
+                isset($parsed['ref']) ? (string) $parsed['ref'] : null,
+            );
+
             $txn = (string) ($parsed['ref'] ?? $parsed['payment_id'] ?? $track ?: ('neoleap-'.$locked->id));
 
             $updates = [];
-            if (Schema::hasColumn('orders', 'neoleap_payment_id') && ! empty($parsed['payment_id'])) {
-                $updates['neoleap_payment_id'] = (string) $parsed['payment_id'];
+            if (Schema::hasColumn('orders', 'neoleap_payment_id') && $callbackPaymentId !== '') {
+                $updates['neoleap_payment_id'] = $callbackPaymentId;
             }
             if (Schema::hasColumn('orders', 'neoleap_tran_id') && ! empty($parsed['ref'])) {
                 $updates['neoleap_tran_id'] = (string) $parsed['ref'];
@@ -250,6 +289,10 @@ class NeoLeapCheckoutController extends Controller
 
     private function handleCallback(Request $request, bool $expectSuccess): RedirectResponse
     {
+        if (! $expectSuccess) {
+            return $this->errorFromNeoLeap($request);
+        }
+
         $trandata = (string) ($request->input('trandata') ?: $request->query('trandata', ''));
         if ($trandata === '') {
             return redirect()->route('orders.index')
@@ -262,7 +305,7 @@ class NeoLeapCheckoutController extends Controller
             Log::warning('NeoLeap callback decrypt failed', ['error' => $e->getMessage()]);
 
             return redirect()->route('orders.index')
-                ->with('error', 'تعذّر قراءة رد NeoLeap: '.$e->getMessage());
+                ->with('error', 'تعذّر قراءة رد NeoLeap.');
         }
 
         $order = $this->resolveOrderFromCallback($parsed, $request);
@@ -279,11 +322,6 @@ class NeoLeapCheckoutController extends Controller
         if (! ($parsed['success'] ?? false)) {
             return redirect()->to($this->retryUrl($order))
                 ->with('error', 'فشل الدفع عبر NeoLeap: '.($parsed['result'] ?: 'رفضت البوابة العملية'));
-        }
-
-        if (! $expectSuccess && ! ($parsed['success'] ?? false)) {
-            return redirect()->to($this->retryUrl($order))
-                ->with('error', 'أُلغيت أو فشلت عملية الدفع.');
         }
 
         try {
@@ -303,6 +341,42 @@ class NeoLeapCheckoutController extends Controller
     }
 
     /**
+     * تأكيد إضافي من tranportal (إن أمكن). لا نرفض عند فشل الشبكة إذا كان callback CAPTURED.
+     */
+    private function assertInquiryStillCaptured(
+        NeoLeapService $neoleap,
+        string $trackId,
+        ?string $paymentId,
+        ?string $transId,
+    ): void {
+        try {
+            $inquiry = $neoleap->inquire($trackId, $paymentId, $transId);
+        } catch (Throwable $e) {
+            Log::warning('NeoLeap inquire skipped after network/parse error', [
+                'track_id' => $trackId,
+                'error' => $e->getMessage(),
+            ]);
+
+            return;
+        }
+
+        $result = strtoupper(trim((string) (
+            $inquiry['result']
+            ?? $inquiry['Result']
+            ?? data_get($inquiry, '0.result')
+            ?? ''
+        )));
+
+        if ($result === '') {
+            return;
+        }
+
+        if (! in_array($result, ['CAPTURED', 'SUCCESS', 'APPROVED'], true)) {
+            throw new RuntimeException('استعلام NeoLeap لم يؤكد نجاح الدفع ('.$result.').');
+        }
+    }
+
+    /**
      * @param  array<string, mixed>  $parsed
      */
     private function resolveOrderFromCallback(array $parsed, Request $request): ?Order
@@ -315,11 +389,14 @@ class NeoLeapCheckoutController extends Controller
             }
         }
 
-        // trackId format: HST-{orderId}-{random}
+        // trackId format: HST-{orderId}-{random} — فقط مع تطابق track المخزّن
         if (preg_match('/^HST-(\d+)-/', $track, $m)) {
             $byId = Order::query()->find((int) $m[1]);
-            if ($byId) {
-                return $byId;
+            if ($byId && Schema::hasColumn('orders', 'neoleap_track_id')) {
+                $stored = (string) ($byId->neoleap_track_id ?? '');
+                if ($stored !== '' && hash_equals($stored, $track)) {
+                    return $byId;
+                }
             }
         }
 
@@ -328,11 +405,7 @@ class NeoLeapCheckoutController extends Controller
             return Order::query()->where('neoleap_payment_id', $paymentId)->first();
         }
 
-        $sessionOrderId = (int) $request->session()->get('neoleap_order_id', 0);
-        if ($sessionOrderId > 0) {
-            return Order::query()->find($sessionOrderId);
-        }
-
+        // لا نعتمد session لتفعيل الدفع — يمنع ربط جلسة متصفح بطلب خاطئ
         return null;
     }
 

@@ -60,7 +60,8 @@ class NeoLeapService
             udf: $udf,
         );
 
-        $trandata = $this->encrypt(json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+        // مواصفات ARB/NeoLeap: trandata = تشفير JSON array فيه عنصر واحد [{...}]
+        $trandata = $this->encrypt(json_encode([$payload], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
 
         $body = [[
             'id' => NeoLeapSettings::tranportalId(),
@@ -227,29 +228,42 @@ class NeoLeapService
      *
      * @return array{ok: bool, mode: string, hosted_status: int|null, message: string}
      */
+    /**
+     * اختبار حقيقي: يبدأ جلسة دفع Hosted بمبلغ 1.00 ر.س (بدون خصم — يحتاج إتمام البطاقة).
+     *
+     * @return array{ok: bool, mode: string, payment_id: string, redirect_url: string, track_id: string, message: string}
+     */
     public function ping(): array
     {
         $this->assertConfigured();
 
-        try {
-            $response = Http::timeout((int) config('neoleap.http_timeout', 45))
-                ->withHeaders(['Accept' => 'application/json', 'Content-Type' => 'application/json'])
-                ->post(NeoLeapSettings::hostedUrl(), [[
-                    'id' => NeoLeapSettings::tranportalId(),
-                    'trandata' => 'ping',
-                    'responseURL' => url('/'),
-                    'errorURL' => url('/'),
-                ]]);
+        $trackId = 'HTK-PING-'.date('YmdHis').'-'.random_int(1000, 9999);
+        $responseUrl = url('/checkout/neoleap/return');
+        $errorUrl = url('/checkout/neoleap/error');
 
-            return [
-                'ok' => $response->status() > 0,
-                'mode' => NeoLeapSettings::mode(),
-                'hosted_status' => $response->status(),
-                'message' => 'تم الوصول لـ hosted.htm (HTTP '.$response->status().'). ضع بيانات التاجر الصحيحة ثم جرّب دفعة تجريبية.',
-            ];
-        } catch (Throwable $e) {
-            throw new RuntimeException('تعذّر الاتصال بـ NeoLeap: '.$e->getMessage(), 0, $e);
+        // إن لم يكن APP_URL عام، نستخدم دومين الإنتاج المعروف
+        if (! str_starts_with($responseUrl, 'https://')) {
+            $responseUrl = 'https://hissatak.online/checkout/neoleap/return';
+            $errorUrl = 'https://hissatak.online/checkout/neoleap/error';
         }
+
+        $result = $this->initiateHostedPayment(
+            amount: 1.00,
+            trackId: $trackId,
+            responseUrl: $responseUrl,
+            errorUrl: $errorUrl,
+            currency: NeoLeapSettings::currency(),
+            lang: 'AR',
+        );
+
+        return [
+            'ok' => true,
+            'mode' => NeoLeapSettings::mode(),
+            'payment_id' => $result['payment_id'],
+            'redirect_url' => $result['redirect_url'],
+            'track_id' => $result['track_id'],
+            'message' => 'تم إنشاء جلسة دفع حقيقية (PaymentID '.$result['payment_id'].'). البوابة متصلة وبيانات التاجر صحيحة.',
+        ];
     }
 
     public function assertMatchesOrder(float $orderAmount, string $orderCurrency, ?float $paidAmount, ?string $paidCurrency): void
@@ -343,7 +357,7 @@ class NeoLeapService
      */
     private function postEncryptedTranportal(array $payload): array
     {
-        $trandata = $this->encrypt(json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+        $trandata = $this->encrypt(json_encode([$payload], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
         $body = [[
             'id' => NeoLeapSettings::tranportalId(),
             'trandata' => $trandata,
@@ -414,7 +428,8 @@ class NeoLeapService
 
     private function formatAmount(float $amount): string
     {
-        return number_format(round($amount, 3), 3, '.', '');
+        // الراجحي/NeoLeap: منزلتان عشريتان (1.00) — غير ذلك → IPAY0100013
+        return number_format(round($amount, 2), 2, '.', '');
     }
 
     private function currencyCode(string $currency): string

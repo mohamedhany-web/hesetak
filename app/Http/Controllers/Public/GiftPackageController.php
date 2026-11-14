@@ -177,6 +177,8 @@ class GiftPackageController extends Controller
         $gatewayOn = PaymentGatewaySettings::isFawaterakEnabled();
         $useGateway = $gatewayOn && $api->isConfigured();
         $misconfigured = $gatewayOn && ! $api->isConfigured();
+        $neoleapReady = \App\Services\NeoLeapSettings::isReady();
+        $neoleapMis = \App\Services\NeoLeapSettings::isMisconfigured();
 
         return view('public.service-package-pay', [
             'mcActive' => 'pricing',
@@ -189,6 +191,11 @@ class GiftPackageController extends Controller
             'fawaterakIntegration' => $api->integrationMode(),
             'paypalUseGateway' => false,
             'paypalMisconfigured' => false,
+            'stripeUseGateway' => false,
+            'stripeMisconfigured' => false,
+            'neoleapUseGateway' => $neoleapReady,
+            'neoleapMisconfigured' => $neoleapMis,
+            'neoleapRoute' => route('public.service-packages.custom.neoleap', $order),
             'prepareRoute' => route('public.gift-package.fawaterak.prepare', $order),
             'methodsRoute' => null,
             'payRoute' => null,

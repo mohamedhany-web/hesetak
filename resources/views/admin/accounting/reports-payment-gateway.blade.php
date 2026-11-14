@@ -129,7 +129,7 @@
         <div class="flex flex-wrap items-center justify-between gap-3 border-b border-line px-4 py-4 sm:px-5">
             <div>
                 <h3 class="text-base font-semibold text-ink">تفاصيل المدفوعات</h3>
-                <p class="mt-0.5 text-xs text-muted">فواتيرك تظهر كـ <code class="rounded bg-canvas-muted px-1 py-0.5 text-[11px] text-ink">other</code>، كاشير كـ <code class="rounded bg-canvas-muted px-1 py-0.5 text-[11px] text-ink">kashier</code></p>
+                <p class="mt-0.5 text-xs text-muted">فواتيرك تظهر كـ <code class="rounded bg-canvas-muted px-1 py-0.5 text-[11px] text-ink">other</code>، كاشير كـ <code class="rounded bg-canvas-muted px-1 py-0.5 text-[11px] text-ink">kashier</code>، NeoLeap/الراجحي كـ <code class="rounded bg-canvas-muted px-1 py-0.5 text-[11px] text-ink">neoleap</code></p>
             </div>
             <span class="inline-flex rounded-lg bg-accent-soft px-2.5 py-1 text-xs font-medium text-accent">{{ number_format($items->total()) }} دفعة</span>
         </div>

@@ -54,7 +54,7 @@
 
 @if($privateRule)
 @php
-  $onlineGatewayReady = !empty($fawaterakUseGateway) || !empty($paypalUseGateway) || !empty($stripeUseGateway);
+  $onlineGatewayReady = !empty($fawaterakUseGateway) || !empty($paypalUseGateway) || !empty($stripeUseGateway) || !empty($neoleapUseGateway);
   $unitHint = number_format((float) $privateRule->price_per_session, 2).' '.currency_symbol();
 @endphp
 <section class="mc-section mc-section--muted" id="private-builder">

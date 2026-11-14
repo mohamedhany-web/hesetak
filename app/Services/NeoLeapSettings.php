@@ -7,6 +7,10 @@ use App\Models\Setting;
 /**
  * NeoLeap: الأسرار من .env / config فقط.
  * الأدمن يتحكم فقط في التفعيل (neoleap_gateway_enabled).
+ *
+ * بيانات التشفير (أحد الخيارين):
+ * 1) NEOLEAP_RESOURCE_KEY وحده (شائع من الراجحي) → Key كامل + IV = أول 16 حرف
+ * 2) NEOLEAP_ENCRYPTION_KEY + NEOLEAP_ENCRYPTION_IV منفصلين
  */
 class NeoLeapSettings
 {
@@ -27,6 +31,9 @@ class NeoLeapSettings
     public const MODES = ['test', 'live'];
 
     public const CURRENCIES = ['SAR', 'USD', 'EUR', 'AED', 'EGP', 'GBP'];
+
+    /** IV الرسمي لبوابة الراجحي/NeoLeap عند استخدام Resource Key. */
+    public const DEFAULT_RESOURCE_IV = 'PGKEYENCDECIVSPC';
 
     public static function isEnabled(): bool
     {
@@ -73,14 +80,34 @@ class NeoLeapSettings
         return trim((string) config('neoleap.password', ''));
     }
 
+    public static function resourceKey(): string
+    {
+        return trim((string) config('neoleap.resource_key', ''));
+    }
+
     public static function encryptionKey(): string
     {
-        return trim((string) config('neoleap.encryption_key', ''));
+        $explicit = trim((string) config('neoleap.encryption_key', ''));
+        if ($explicit !== '') {
+            return $explicit;
+        }
+
+        return self::resourceKey();
     }
 
     public static function encryptionIv(): string
     {
-        return trim((string) config('neoleap.encryption_iv', ''));
+        $explicit = trim((string) config('neoleap.encryption_iv', ''));
+        if ($explicit !== '') {
+            return $explicit;
+        }
+
+        // مع Resource Key: IV الثابت من مواصفات ARB (PGKEYENCDECIVSPC)
+        if (self::resourceKey() !== '') {
+            return self::DEFAULT_RESOURCE_IV;
+        }
+
+        return '';
     }
 
     public static function hostedUrl(): string
@@ -111,11 +138,13 @@ class NeoLeapSettings
     /** هل الأسرار موجودة في البيئة (بدون كشف قيمها). */
     public static function envSecretsPresent(): array
     {
+        $hasCrypto = self::encryptionKey() !== '' && self::encryptionIv() !== '';
+
         return [
             'tranportal_id' => self::tranportalId() !== '',
             'password' => self::password() !== '',
-            'encryption_key' => self::encryptionKey() !== '',
-            'encryption_iv' => self::encryptionIv() !== '',
+            'resource_key' => self::resourceKey() !== '',
+            'encryption_pair' => $hasCrypto,
         ];
     }
 

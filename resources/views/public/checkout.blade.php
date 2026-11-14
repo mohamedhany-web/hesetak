@@ -509,5 +509,23 @@
 })();
 </script>
 @endif
+@if(!empty($neoleapUseGateway))
+<script>
+(function(){
+    var form = document.getElementById('neoleap-checkout-form');
+    if (!form) return;
+    form.addEventListener('submit', function(){
+        var c = document.getElementById('checkout_coupon_code');
+        var w = document.getElementById('checkout_wallet_credit');
+        var nc = document.getElementById('neoleap_coupon_code');
+        var nw = document.getElementById('neoleap_wallet_credit');
+        var ncur = document.getElementById('neoleap_currency');
+        if (nc) nc.value = c ? (c.value || '').trim() : '';
+        if (nw) nw.value = w && w.value !== '' ? w.value : '0';
+        if (ncur) ncur.value = @json(platform_currency());
+    });
+})();
+</script>
+@endif
 </body>
 </html>

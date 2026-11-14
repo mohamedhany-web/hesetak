@@ -394,11 +394,9 @@
                     <pre class="mt-2 overflow-x-auto rounded-lg bg-surface p-3 text-[11px] text-ink" dir="ltr">NEOLEAP_MODE=live
 NEOLEAP_TRANPORTAL_ID=...
 NEOLEAP_PASSWORD=...
-NEOLEAP_ENCRYPTION_KEY=...
-NEOLEAP_ENCRYPTION_IV=...
-NEOLEAP_CURRENCY=SAR
-NEOLEAP_HOSTED_URL=https://digitalpayments.neoleap.com.sa/pg/payment/hosted.htm
-NEOLEAP_TRANPORTAL_URL=https://digitalpayments.neoleap.com.sa/pg/payment/tranportal.htm</pre>
+NEOLEAP_RESOURCE_KEY=...   # اطلبه من دعم NeoLeap باسم Resource Key
+NEOLEAP_CURRENCY=SAR</pre>
+                    <p class="mt-2">ID + Password وحدهم من لوحة التاجر <strong class="text-ink">غير كافيين</strong> للدفع أونلاين — لازم <strong class="text-ink">Resource Key</strong> من دعم التكامل (Bank Hosted / eCommerce)، مش من شاشة تسجيل الدخول فقط.</p>
                     <p class="mt-2">روابط العودة عند NeoLeap:</p>
                     <p>نجاح: <code class="rounded bg-surface px-1 text-[11px]" dir="ltr">{{ $neoleapReturnUrl }}</code></p>
                     <p>خطأ: <code class="rounded bg-surface px-1 text-[11px]" dir="ltr">{{ $neoleapErrorUrl }}</code></p>
@@ -408,8 +406,8 @@ NEOLEAP_TRANPORTAL_URL=https://digitalpayments.neoleap.com.sa/pg/payment/tranpor
                     @foreach([
                         'tranportal_id' => 'NEOLEAP_TRANPORTAL_ID',
                         'password' => 'NEOLEAP_PASSWORD',
-                        'encryption_key' => 'NEOLEAP_ENCRYPTION_KEY',
-                        'encryption_iv' => 'NEOLEAP_ENCRYPTION_IV',
+                        'resource_key' => 'NEOLEAP_RESOURCE_KEY',
+                        'encryption_pair' => 'تشفير AES جاهز',
                     ] as $k => $envName)
                         <div class="flex items-center justify-between rounded-xl border border-line px-3 py-2 text-xs">
                             <span class="font-mono text-ink" dir="ltr">{{ $envName }}</span>

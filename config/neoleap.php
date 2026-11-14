@@ -14,9 +14,14 @@ return [
     'tranportal_id' => env('NEOLEAP_TRANPORTAL_ID', ''),
     'password' => env('NEOLEAP_PASSWORD', ''),
 
-    /** 32-byte key (raw) or 64-char hex */
+    /**
+     * Resource Key من NeoLeap/الراجحي (مطلوب مع Tranportal ID + Password).
+     * يُستخدم كمفتاح AES؛ الـ IV الافتراضي = PGKEYENCDECIVSPC (مواصفات ARB).
+     */
+    'resource_key' => env('NEOLEAP_RESOURCE_KEY', ''),
+
+    /** اختياري إن أرسلت الشركة Key و IV منفصلين بدل Resource Key */
     'encryption_key' => env('NEOLEAP_ENCRYPTION_KEY', ''),
-    /** 16-byte IV (raw) or 32-char hex */
     'encryption_iv' => env('NEOLEAP_ENCRYPTION_IV', ''),
 
     'hosted_url' => env(
