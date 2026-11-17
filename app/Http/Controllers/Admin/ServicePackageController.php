@@ -74,6 +74,9 @@ class ServicePackageController extends Controller
         $data['currency'] = $this->normalizeCurrency($data['currency'] ?? null);
         $data['slug'] = $data['slug'] ?: ServicePackage::uniqueSlug($data['name']);
         $data['is_active'] = $request->boolean('is_active', true);
+        if (\Illuminate\Support\Facades\Schema::hasColumn('service_packages', 'show_in_storefront')) {
+            $data['show_in_storefront'] = $request->boolean('show_in_storefront', true);
+        }
         $data['is_featured'] = $request->boolean('is_featured');
 
         unset($data['cover_image'], $data['remove_cover_image']);
@@ -116,6 +119,9 @@ class ServicePackageController extends Controller
             ? ServicePackage::uniqueSlug($data['slug'], $servicePackage->id)
             : ServicePackage::uniqueSlug($data['name'], $servicePackage->id);
         $data['is_active'] = $request->boolean('is_active');
+        if (\Illuminate\Support\Facades\Schema::hasColumn('service_packages', 'show_in_storefront')) {
+            $data['show_in_storefront'] = $request->boolean('show_in_storefront');
+        }
         $data['is_featured'] = $request->boolean('is_featured');
         unset($data['cover_image'], $data['remove_cover_image']);
 

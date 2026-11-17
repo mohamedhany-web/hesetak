@@ -6,8 +6,10 @@
   <meta name="robots" content="noindex,nofollow">
   <title>{{ app()->getLocale() === 'ar' ? 'جاري التحويل للدفع…' : 'Redirecting to payment…' }} — {{ __('landing.nav.brand') }}</title>
   <style>
-    body{margin:0;min-height:100vh;display:grid;place-items:center;font-family:"IBM Plex Sans Arabic",Tahoma,sans-serif;background:#f4f7fb;color:#16365f}
+    body{margin:0;min-height:100vh;display:grid;place-items:center;font-family:"IBM Plex Sans Arabic",Tahoma,sans-serif;background:radial-gradient(120% 80% at 50% 0%,#eef4fb 0%,#f7f4ea 55%,#f4f7fb 100%);color:#16365f}
     .box{text-align:center;padding:2rem 1.25rem;max-width:26rem}
+    .brand{font-size:1.35rem;font-weight:800;letter-spacing:.02em;color:#1E4E8C;margin:0 0 .75rem}
+    .brand span{color:#C9952A}
     .spin{width:2.25rem;height:2.25rem;border:3px solid #d7e2f0;border-top-color:#1E4E8C;border-radius:50%;margin:0 auto 1rem;animation:s .8s linear infinite}
     @keyframes s{to{transform:rotate(360deg)}}
     p{margin:.35rem 0;line-height:1.6}
@@ -17,6 +19,7 @@
 </head>
 <body>
   <div class="box">
+    <p class="brand">{{ __('landing.nav.brand') }} <span>·</span> Hesetak</p>
     <div class="spin" aria-hidden="true"></div>
     <p><strong>{{ app()->getLocale() === 'ar' ? 'جاري فتح صفحة الدفع الآمنة…' : 'Opening the secure payment page…' }}</strong></p>
     <p>{{ app()->getLocale() === 'ar' ? 'إذا لم يتم التحويل تلقائياً، اضغط الرابط بالأسفل.' : 'If you are not redirected, use the link below.' }}</p>

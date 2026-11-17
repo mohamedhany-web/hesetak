@@ -327,6 +327,7 @@
     </div>
   </div>
 </section>
+@include('partials.popup-ad', ['ad' => $activePopupAd ?? null])
 @endsection
 
 @push('scripts')

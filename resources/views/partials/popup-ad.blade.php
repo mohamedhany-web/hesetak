@@ -25,7 +25,7 @@
 @endphp
 @if($ad)
 {{-- CSS مستقل: الصفحة الرئيسية (mc-*) لا تحمّل Tailwind، لذلك لا نعتمد على fixed/inset utilities --}}
-<div id="popup-ad-overlay" class="mc-popup-ad" role="dialog" aria-modal="true" aria-labelledby="popup-ad-title" data-popup-ad-id="{{ $ad->id }}">
+<div id="popup-ad-overlay" class="mc-popup-ad" role="dialog" aria-modal="true" aria-labelledby="popup-ad-title" data-popup-ad-id="{{ $ad->id }}" data-popup-delay="{{ max(0, (int) ($ad->delay_seconds ?? 30)) }}" style="display:none;opacity:0;pointer-events:none">
     <div class="mc-popup-ad__backdrop" data-popup-ad-dismiss aria-hidden="true"></div>
     <div id="popup-ad-box" class="mc-popup-ad__card">
         <div class="mc-popup-ad__accent" aria-hidden="true"></div>
@@ -205,10 +205,12 @@
     var overlay = document.getElementById('popup-ad-overlay');
     if (!overlay) return;
     var adId = overlay.getAttribute('data-popup-ad-id') || '';
+    var delayMs = Math.max(0, parseInt(overlay.getAttribute('data-popup-delay') || '30', 10) || 0) * 1000;
     if (overlay.parentElement !== document.body) {
         document.body.appendChild(overlay);
     }
     var closeBtn = document.getElementById('popup-ad-close');
+    var shown = false;
     function markSeen() {
         if (!adId) return;
         var maxAge = 60 * 60 * 24;
@@ -224,8 +226,15 @@
             document.body.style.removeProperty('overflow');
         }, 280);
     }
-    document.documentElement.style.overflow = 'hidden';
-    document.body.style.overflow = 'hidden';
+    function show() {
+        if (shown) return;
+        shown = true;
+        overlay.style.display = 'flex';
+        overlay.style.opacity = '1';
+        overlay.style.pointerEvents = 'auto';
+        document.documentElement.style.overflow = 'hidden';
+        document.body.style.overflow = 'hidden';
+    }
     if (closeBtn) closeBtn.addEventListener('click', hide);
     overlay.querySelectorAll('[data-popup-ad-dismiss]').forEach(function (el) {
         el.addEventListener('click', hide);
@@ -247,6 +256,7 @@
     document.addEventListener('keydown', function (e) {
         if (e.key === 'Escape') hide();
     });
+    setTimeout(show, delayMs);
 })();
 </script>
 @endif

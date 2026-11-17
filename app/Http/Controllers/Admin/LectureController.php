@@ -75,6 +75,7 @@ class LectureController extends Controller
             'has_evaluation' => 'boolean',
             'material_files' => 'nullable|array',
             'material_files.*' => 'nullable|file|max:'.config('upload_limits.max_upload_kb'),
+            'recording_file' => ['nullable', 'file', 'mimetypes:video/mp4,video/webm,video/quicktime,application/octet-stream', 'max:512000'],
         ]);
 
         if (!empty($validated['recording_url'])) {
@@ -89,10 +90,21 @@ class LectureController extends Controller
         $validated = AppTimezone::shiftRequestDateTime($request, $validated, 'scheduled_at');
         unset($validated['timezone']);
 
-        unset($validated['material_files']);
+        unset($validated['material_files'], $validated['recording_file']);
 
         $lecture = Lecture::create($validated);
         AttachesCourseCurriculumItems::attach((int) $lecture->course_id, $lecture, 'المحاضرات');
+
+        if ($request->hasFile('recording_file')) {
+            $lecture->recording_file_path = LectureMaterialStorage::storeLectureRecording(
+                $request->file('recording_file'),
+                (int) $lecture->id
+            );
+            if (! $lecture->video_platform) {
+                $lecture->video_platform = 'direct';
+            }
+            $lecture->save();
+        }
 
         $materialFiles = $request->file('material_files');
         if (is_array($materialFiles)) {

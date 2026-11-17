@@ -229,4 +229,5 @@ window.__hesetakCapSubjects = function (el) {
 };
 </script>
 @endif
+@include('partials.popup-ad', ['ad' => $activePopupAd ?? null])
 @endsection

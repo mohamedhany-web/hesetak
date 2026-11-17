@@ -39,21 +39,25 @@ class LearningDeskController extends Controller
                 ->limit(40)
                 ->get();
 
+            $meetingEnded = static fn (OneToOneSession $session): bool => filled($session->classroomMeeting?->ended_at);
+
             $upcoming = $sessions->filter(fn (OneToOneSession $session) => $session->isOpenPlacement()
+                && ! $meetingEnded($session)
                 && (! $session->scheduled_at || $session->scheduled_at->isFuture() || $session->scheduled_at->isToday())
             )->values();
             $past = $sessions->filter(fn (OneToOneSession $session) => in_array($session->status, [
                 OneToOneSession::STATUS_COMPLETED,
                 OneToOneSession::STATUS_CANCELLED,
-            ], true) || (
+            ], true) || $meetingEnded($session) || (
                 $session->status === OneToOneSession::STATUS_SCHEDULED
                 && $session->scheduled_at
                 && $session->scheduled_at->copy()->addMinutes((int) ($session->duration_minutes ?: 50))->isPast()
             ))->sortByDesc(fn (OneToOneSession $session) => $session->scheduled_at?->timestamp ?? 0)->values();
             $ledger = [
-                'completed' => $sessions->where('status', OneToOneSession::STATUS_COMPLETED)->count(),
+                'completed' => $sessions->filter(fn (OneToOneSession $session) => $session->status === OneToOneSession::STATUS_COMPLETED || $meetingEnded($session))->count(),
                 'missed' => 0,
                 'remaining' => $sessions->filter(fn (OneToOneSession $session) => $session->isOpenPlacement()
+                    && ! $meetingEnded($session)
                     && (! $session->scheduled_at || $session->scheduled_at->isFuture() || $session->scheduled_at->isToday()))->count(),
             ];
 

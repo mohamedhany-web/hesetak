@@ -115,6 +115,17 @@
                 </div>
 
                 <div>
+                    <label class="{{ $labelClass }}" for="recording_file">رفع فيديو من الجهاز (MP4 / WebM)</label>
+                    <input type="file" name="recording_file" id="recording_file"
+                           class="{{ $fieldClass }}"
+                           accept="video/mp4,video/webm,video/quicktime,.mp4,.webm,.mov">
+                    <p class="mt-1 text-xs text-muted">بديل عن رابط Bunny — يُشغَّل مباشرة للطالب داخل المنصة.</p>
+                    @error('recording_file')
+                        <p class="mt-1 text-xs text-rose-600">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <div>
                     <label class="{{ $labelClass }}" for="material_files">مرفقات المحاضرة (اختياري)</label>
                     <input type="file" name="material_files[]" id="material_files" multiple
                            class="{{ $fieldClass }}"

@@ -261,9 +261,8 @@ class ClassroomController extends Controller
         if ($meeting->ended_at) {
             return back()->with('error', 'لا يمكن بدء اجتماع منتهي.');
         }
-        if (! $meeting->started_at) {
-            $meeting->update(['started_at' => now()]);
-        }
+        // لا نضبط started_at هنا — يبدأ العدّ عند دخول الغرفة فعلياً (room)
+        // حتى لا يُحرق العداد أثناء «بدء الآن» قبل انضمام الطالب
 
         return redirect()->to($this->classroomRoomUrl($meeting));
     }
@@ -361,12 +360,24 @@ class ClassroomController extends Controller
             $user,
             $canManageMeeting
         );
-        // العدّ التنازلي:
-        // - المضيف: من started_at (دخول المعلم)
-        // - الطالب: من scheduled_for + المدة حتى لا يُطرد إذا دخل المعلم مبكراً و«أحرق» العدّاد
-        if ($canManageMeeting) {
+        // العدّ التنازلي: لا نطرد أحداً لأن started_at أُحرق بدخول مبكر.
+        // للحصص 1:1 نفضّل scheduled_for كنقطة أساس عند وجودها.
+        $isLinkedOneToOne = filled($meeting->one_to_one_session_id);
+        if ($isLinkedOneToOne && $meeting->scheduled_for) {
+            $anchor = $meeting->scheduled_for->copy();
+            if ($meeting->started_at && $meeting->started_at->gt($anchor)) {
+                $anchor = $meeting->started_at->copy();
+            }
+            $meetingEndsAt = $anchor->addMinutes($effectiveDurationMinutes);
+            if ($meetingEndsAt->lte(now())) {
+                $meetingEndsAt = now()->addMinutes(max(5, $effectiveDurationMinutes));
+            }
+        } elseif ($canManageMeeting) {
             if ($meeting->started_at) {
                 $meetingEndsAt = $meeting->started_at->copy()->addMinutes($effectiveDurationMinutes);
+                if ($meetingEndsAt->lte(now())) {
+                    $meetingEndsAt = now()->addMinutes(max(5, $effectiveDurationMinutes));
+                }
             } elseif ($meeting->scheduled_for) {
                 $meetingEndsAt = $meeting->scheduled_for->copy()->addMinutes($effectiveDurationMinutes);
                 if ($meetingEndsAt->isPast()) {
@@ -918,7 +929,7 @@ class ClassroomController extends Controller
                 ->where('classroom_meeting_id', $meeting->id)
                 ->value('id');
         }
-        if (! $sessionId || ! $meeting->started_at) {
+        if (! $sessionId) {
             return false;
         }
 
@@ -927,8 +938,11 @@ class ClassroomController extends Controller
             return false;
         }
 
+        // إن أُغلق الاجتماع دون started_at نحاول الإكمال بدون شرط الحضور الحي
+        $requireLive = (bool) $meeting->started_at;
+
         try {
-            OneToOneSessionService::markCompleted($session, true);
+            OneToOneSessionService::markCompleted($session, $requireLive);
 
             return true;
         } catch (\InvalidArgumentException $e) {

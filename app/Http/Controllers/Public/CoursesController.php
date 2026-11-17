@@ -87,6 +87,7 @@ class CoursesController extends Controller
             ],
             'activeCategory' => $activeCategory,
             'mcActive' => 'courses',
+            'activePopupAd' => \App\Services\PopupAdResolver::forPage($request, \App\Models\PopupAd::PAGE_COURSES),
         ]);
     }
 }

@@ -1737,6 +1737,14 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::post('/service-packages/{servicePackage}/toggle-featured', [\App\Http\Controllers\Admin\ServicePackageController::class, 'toggleFeatured'])->name('service-packages.toggle-featured');
         Route::resource('service-package-pricing-rules', \App\Http\Controllers\Admin\ServicePackagePricingRuleController::class)
             ->only(['index', 'store', 'update', 'destroy']);
+        Route::get('/pricing-storefront', [\App\Http\Controllers\Admin\PricingStorefrontController::class, 'index'])
+            ->name('pricing-storefront.index');
+        Route::get('/pricing-storefront/{subject}/edit', [\App\Http\Controllers\Admin\PricingStorefrontController::class, 'edit'])
+            ->whereNumber('subject')
+            ->name('pricing-storefront.edit');
+        Route::put('/pricing-storefront/{subject}', [\App\Http\Controllers\Admin\PricingStorefrontController::class, 'update'])
+            ->whereNumber('subject')
+            ->name('pricing-storefront.update');
         Route::get('/service-session-rates', [\App\Http\Controllers\Admin\ServiceSessionRateController::class, 'index'])
             ->name('service-session-rates.index');
         Route::post('/service-session-rates', [\App\Http\Controllers\Admin\ServiceSessionRateController::class, 'save'])

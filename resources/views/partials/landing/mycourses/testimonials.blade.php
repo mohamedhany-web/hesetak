@@ -63,6 +63,7 @@
           gap: 1rem;
           transition: transform .45s ease;
           will-change: transform;
+          direction: ltr; /* ثبات حساب الإزاحة بغض النظر عن dir الصفحة */
         }
         [data-mc-quotes-carousel] .mc-quotes-carousel__slide {
           flex: 0 0 min(100%, 22rem);
@@ -113,9 +114,8 @@
         function goTo(i) {
           index = (i + slides.length) % slides.length;
           var delta = slideStep() * index;
-          // في RTL نحرّك للاتجاه المعاكس حتى تظهر الشريحة التالية
-          var x = isRtl ? delta : -delta;
-          track.style.transform = 'translate3d(' + x + 'px,0,0)';
+          // المسار LTR دائماً — الإزاحة سالبة تكشف الشرائح التالية بشكل موثوق
+          track.style.transform = 'translate3d(' + (-delta) + 'px,0,0)';
         }
 
         function pauseBriefly() {

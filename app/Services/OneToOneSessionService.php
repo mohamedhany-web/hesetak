@@ -936,8 +936,62 @@ class OneToOneSessionService
                 $meeting->update(['ended_at' => now()]);
             }
 
+            self::accrueInstructorSessionEarning($session);
+
             OneToOneSessionRatingService::notifyStudentToRate($session->fresh());
         });
+    }
+
+    /**
+     * تسجيل مستحق المعلم من الاتفاقية النشطة عند إكمال حصة 1:1.
+     */
+    private static function accrueInstructorSessionEarning(OneToOneSession $session): void
+    {
+        if (! $session->instructor_id || ! \Illuminate\Support\Facades\Schema::hasTable('agreement_payments')) {
+            return;
+        }
+
+        $agreement = \App\Models\InstructorAgreement::query()
+            ->where('instructor_id', $session->instructor_id)
+            ->where('status', \App\Models\InstructorAgreement::STATUS_ACTIVE)
+            ->where(function ($q) {
+                $q->where('billing_type', \App\Models\InstructorAgreement::BILLING_PER_SESSION)
+                    ->orWhere('type', \App\Models\InstructorAgreement::BILLING_PER_SESSION);
+            })
+            ->latest('start_date')
+            ->latest('id')
+            ->first();
+
+        if (! $agreement) {
+            return;
+        }
+
+        $amount = (float) ($agreement->salary_per_session ?: $agreement->rate ?: 0);
+        if ($amount <= 0) {
+            return;
+        }
+
+        $marker = 'حصة 1:1 #'.$session->id;
+        $exists = \App\Models\AgreementPayment::query()
+            ->where('agreement_id', $agreement->id)
+            ->where('instructor_id', $session->instructor_id)
+            ->where('type', \App\Models\AgreementPayment::TYPE_HOURLY_TEACHING)
+            ->where('description', 'like', '%'.$marker.'%')
+            ->exists();
+        if ($exists) {
+            return;
+        }
+
+        \App\Models\AgreementPayment::create([
+            'agreement_id' => $agreement->id,
+            'instructor_id' => $session->instructor_id,
+            'type' => \App\Models\AgreementPayment::TYPE_HOURLY_TEACHING,
+            'amount' => $amount,
+            'status' => \App\Models\AgreementPayment::STATUS_APPROVED,
+            'description' => 'مستحق '.$marker.' حسب الاتفاقية',
+            'payment_date' => now(),
+            'created_by' => auth()->id(),
+        ]);
     }
 
     /**

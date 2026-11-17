@@ -64,7 +64,6 @@
                         <tr>
                             <td>
                                 <strong>{{ $b->name }}</strong>
-                                <div class="muted" dir="ltr" style="margin-top:2px;font-size:12px">{{ $b->phone ?: ($b->email ?: '—') }}</div>
                             </td>
                             <td class="tabular-nums">
                                 <x-app-datetime :at="$b->starts_at" :timezone="$b->timezone" pattern="Y-m-d · g:i A" />

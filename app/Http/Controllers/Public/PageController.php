@@ -171,6 +171,7 @@ class PageController extends Controller
             'pricingStages' => $storefront['stages'],
             'pricingSubjects' => $storefront['subjects'],
             'customBuilderUrl' => $storefront['custom_builder_url'],
+            'activePopupAd' => \App\Services\PopupAdResolver::forPage($request, \App\Models\PopupAd::PAGE_PRICING),
         ]);
     }
 

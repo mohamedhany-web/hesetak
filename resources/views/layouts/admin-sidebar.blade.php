@@ -672,7 +672,7 @@
             @if($isFull || $u->hasPermission('manage.packages') || $u->hasPermission('manage.tutoring-groups'))
             <li class="sidebar-section-label">مدفوع</li>
             @php
-                $paidPackagesOpen = request()->routeIs('admin.packages.*') || request()->routeIs('admin.service-packages.*') || request()->routeIs('admin.service-package-pricing-rules.*') || request()->routeIs('admin.service-session-rates.*');
+                $paidPackagesOpen = request()->routeIs('admin.packages.*') || request()->routeIs('admin.service-packages.*') || request()->routeIs('admin.service-package-pricing-rules.*') || request()->routeIs('admin.service-session-rates.*') || request()->routeIs('admin.pricing-storefront.*');
             @endphp
             <li x-data="{ open: {{ $paidPackagesOpen ? 'true' : 'false' }} }">
                 <button type="button" @click="open = !open" class="sidebar-group-btn">
@@ -681,6 +681,7 @@
                 </button>
                 <ul x-show="open" x-cloak class="mt-1 mr-3 space-y-0.5 border-r border-white/10 pr-3">
                     @if($isFull || $u->hasPermission('manage.packages'))
+                    <li><a href="{{ route('admin.pricing-storefront.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.pricing-storefront.*') ? 'active' : '' }}"><i class="fas fa-store"></i><span>كتالوج /pricing</span></a></li>
                     <li><a href="{{ route('admin.packages.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.packages.*') ? 'active' : '' }}"><i class="fas fa-tags"></i><span>{{ __('admin.pricing_packages') }}</span></a></li>
                     <li><a href="{{ route('admin.service-packages.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.service-packages.index') || request()->routeIs('admin.service-packages.create') || request()->routeIs('admin.service-packages.edit') || request()->routeIs('admin.service-packages.show') ? 'active' : '' }}"><i class="fas fa-box-open"></i><span>باقات الحصص</span></a></li>
                     <li><a href="{{ route('admin.service-packages.grant') }}" class="sidebar-sub-link {{ request()->routeIs('admin.service-packages.grant*') ? 'active' : '' }}"><i class="fas fa-user-plus"></i><span>منح باقة يدوياً</span></a></li>

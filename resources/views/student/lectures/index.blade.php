@@ -117,8 +117,8 @@
             @forelse($courseLectures as $i => $lecture)
                 @php
                     $tone = $tones[$i % count($tones)];
-                    $openUrl = $lecture->course_id
-                        ? route('my-courses.lectures.show', [$lecture->course_id, $lecture->id])
+                    $openUrl = $lecture->course_id && Route::has('my-courses.learn')
+                        ? route('my-courses.learn', $lecture->course_id).'?lecture='.$lecture->id
                         : null;
                     $hasRecording = filled($lecture->recording_url) || filled($lecture->recording_file_path);
                 @endphp

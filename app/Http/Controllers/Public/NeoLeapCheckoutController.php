@@ -316,6 +316,11 @@ class NeoLeapCheckoutController extends Controller
         }
 
         if ($order->status === Order::STATUS_APPROVED) {
+            if (! Auth::check() && $order->user_id) {
+                Auth::loginUsingId((int) $order->user_id);
+                $request->session()->regenerate();
+            }
+
             return redirect()->to($this->successUrl($order))
                 ->with('success', 'تم الدفع مسبقاً وتم تفعيل الطلب.');
         }
@@ -335,6 +340,12 @@ class NeoLeapCheckoutController extends Controller
 
             return redirect()->to($this->retryUrl($order))
                 ->with('error', 'تعذّر تأكيد الدفع: '.$e->getMessage());
+        }
+
+        // استعادة الجلسة بعد رجوع بوابة الدفع (POST عبر نطاق مختلف قد يُسقط الكوكي)
+        if (! Auth::check() && $order->user_id) {
+            Auth::loginUsingId((int) $order->user_id);
+            $request->session()->regenerate();
         }
 
         return redirect()->to($this->successUrl($order->fresh()))
@@ -532,8 +543,14 @@ class NeoLeapCheckoutController extends Controller
         if ($order->advanced_course_id && \Illuminate\Support\Facades\Route::has('public.course.show')) {
             return route('public.course.show', $order->advanced_course_id);
         }
+        if ($order->service_package_id && \Illuminate\Support\Facades\Route::has('student.service-entitlements.index')) {
+            return route('student.service-entitlements.index');
+        }
         if ($order->service_package_id && \Illuminate\Support\Facades\Route::has('public.service-packages.checkout')) {
             return route('public.service-packages.checkout', $order->service_package_id);
+        }
+        if (\Illuminate\Support\Facades\Route::has('dashboard')) {
+            return route('dashboard');
         }
 
         return route('orders.index');

@@ -24,7 +24,8 @@
     $neoleapMis = ! empty($neoleapMisconfigured);
     $anyOnlineGateway = $fawaterakActive || $paypalActive || $kashierActive || $stripeActive || $neoleapActive;
     $canPayOnline = $anyOnlineGateway;
-    $showManualCheckout = ! empty($manualCheckoutAllowed) && ! $fawaterakMis && ! $paypalMis && ! $kashierMis && ! $stripeMis && ! $neoleapMis;
+    // الدفع اليدوي ملغى من صفحة الكورس عند توفر بوابة أونلاين (NeoLeap وغيرها)
+    $showManualCheckout = false;
     $footer = \App\Services\PublicFooterSettings::payload();
     $waUrl = $footer['whatsapp_url'] ?? '#';
     $mcCss = public_path('css/landing/mycourses.css');

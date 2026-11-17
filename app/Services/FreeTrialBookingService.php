@@ -90,6 +90,12 @@ class FreeTrialBookingService
             if ($student) {
                 FreeTrialCreditSettings::assertStudentMayBook($student);
             }
+        } else {
+            FreeTrialCreditSettings::assertGuestMayBook(
+                $data['email'] ?? null,
+                $data['phone'] ?? null,
+                $data['country_code'] ?? null
+            );
         }
 
         $viewerTz = AppTimezone::normalize($data['timezone'] ?? null)

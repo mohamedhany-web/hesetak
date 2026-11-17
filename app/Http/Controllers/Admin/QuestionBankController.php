@@ -68,7 +68,14 @@ class QuestionBankController extends Controller
      */
     public function create(Request $request)
     {
-        $categories = QuestionCategory::active()->orderBy('name')->get();
+        $categories = QuestionCategory::query()->orderBy('name')->get();
+        if ($categories->isEmpty()) {
+            $categories = QuestionCategory::active()->orderBy('name')->get();
+        }
+        // إن وُجدت تصنيفات غير نشطة فقط، أظهرها حتى لا يُقفل إنشاء السؤال
+        if ($categories->where('is_active', true)->isNotEmpty()) {
+            $categories = $categories->where('is_active', true)->values();
+        }
         $questionTypes = Question::getQuestionTypes();
         $difficultyLevels = Question::getDifficultyLevels();
         

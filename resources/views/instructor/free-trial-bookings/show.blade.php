@@ -54,14 +54,11 @@
             </span>
         </article>
         <article class="id-kpi" style="cursor:default">
-            <span class="id-kpi__icon id-kpi__icon--gold" aria-hidden="true"><i class="fas fa-phone"></i></span>
+            <span class="id-kpi__icon id-kpi__icon--gold" aria-hidden="true"><i class="fas fa-user"></i></span>
             <span class="id-kpi__body">
-                <span class="id-kpi__label">التواصل</span>
-                <span style="font-size:14px;font-weight:800;color:#152A4A;margin-top:4px;word-break:break-all">{{ $booking->email ?: '—' }}</span>
-                <span class="id-field__hint" style="margin-top:4px" dir="ltr">{{ $booking->phone ?: '—' }}</span>
-                @if($booking->whatsappUrl())
-                    <a href="{{ $booking->whatsappUrl() }}" target="_blank" rel="noopener" class="id-link" style="margin-top:6px">واتساب</a>
-                @endif
+                <span class="id-kpi__label">الطالب</span>
+                <span style="font-size:14px;font-weight:800;color:#152A4A;margin-top:4px">{{ $booking->name }}</span>
+                <span class="id-field__hint" style="margin-top:4px">بيانات التواصل مخفية — للإدارة فقط</span>
             </span>
         </article>
         <article class="id-kpi" style="cursor:default">

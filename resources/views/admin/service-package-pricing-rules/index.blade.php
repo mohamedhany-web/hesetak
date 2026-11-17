@@ -81,7 +81,7 @@
                         </select>
                     </div>
                     <div>
-                        <label class="{{ $label }}" for="price_per_session">سعر الحصة بالريال *</label>
+                        <label class="{{ $label }}" for="price_per_session">سعر الحصة بالريال * <span class="font-normal text-muted">(للقاعدة العادية = سعر الحصة داخل باقة 8/2 — للمستعجلة = السعر اليدوي مباشرة)</span></label>
                         <div class="relative">
                             <span class="absolute inset-y-0 left-3 flex items-center font-semibold text-muted">{{ currency_symbol() }}</span>
                             <input id="price_per_session" type="number" step="0.01" min="0.01" name="price_per_session" required value="{{ old('price_per_session', $editRule->price_per_session) }}" class="{{ $field }} pl-8" dir="ltr">

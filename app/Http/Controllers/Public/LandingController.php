@@ -188,18 +188,7 @@ class LandingController extends Controller
             }
         }
 
-        $payload['activePopupAd'] = null;
-        if (Schema::hasTable('popup_ads')) {
-            $cookieKey = 'popup_ad_seen';
-            $seenId = (int) $request->cookie($cookieKey, 0);
-            $ad = PopupAd::query()->activeNow()->first();
-            if ($ad && \App\Support\PublicDemoContent::recordLooksLikeDemo([$ad->title, $ad->body, $ad->cta_text])) {
-                $ad = null;
-            }
-            if ($ad && (int) $ad->id !== $seenId) {
-                $payload['activePopupAd'] = $ad;
-            }
-        }
+        $payload['activePopupAd'] = \App\Services\PopupAdResolver::forPage($request, \App\Models\PopupAd::PAGE_HOME);
 
         return view('welcome', $payload);
     }

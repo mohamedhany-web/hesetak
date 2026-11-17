@@ -17,7 +17,7 @@
   $neoleapActive = ! empty($neoleapUseGateway);
   $neoleapMis = ! empty($neoleapMisconfigured);
   $canPayOnline = ($fawaterakActive && ! $fawaterakMis) || $paypalActive || $stripeActive || $neoleapActive;
-  $manualCheckoutAllowed = ! empty($manualCheckoutAllowed);
+  $manualCheckoutAllowed = false; // الدفع اليدوي ملغى — الاعتماد على البوابات الأونلاين
   $wallets = $wallets ?? collect();
   $mcCss = public_path('css/landing/mycourses.css');
   $mcVer = is_file($mcCss) ? (string) filemtime($mcCss) : (string) time();

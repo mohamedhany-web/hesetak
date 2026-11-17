@@ -54,6 +54,7 @@ class ServicePackage extends Model
         'original_price',
         'currency',
         'is_active',
+        'show_in_storefront',
         'is_featured',
         'sort_order',
     ];
@@ -70,6 +71,7 @@ class ServicePackage extends Model
             'price' => 'decimal:2',
             'original_price' => 'decimal:2',
             'is_active' => 'boolean',
+            'show_in_storefront' => 'boolean',
             'is_featured' => 'boolean',
             'includes_community' => 'boolean',
             'includes_libraries' => 'boolean',
@@ -145,6 +147,10 @@ class ServicePackage extends Model
     public function scopeStorefront(Builder $query): Builder
     {
         return $query->publicCatalog()
+            ->when(
+                Schema::hasColumn('service_packages', 'show_in_storefront'),
+                fn (Builder $q) => $q->where('show_in_storefront', true)
+            )
             ->where(function (Builder $q) {
                 $q->whereNull('plan_type')
                     ->orWhere('plan_type', '!=', self::PLAN_SCHOOL);
@@ -367,8 +373,18 @@ class ServicePackage extends Model
 
     public function isMixedPackage(): bool
     {
-        return $this->packageSubjectCount() > 1
-            || ((int) ($this->max_subjects ?? 0)) > 1;
+        // المتنوعة فقط عند max_subjects > 1 أو مواد متعددة صراحةً —
+        // لا تُخلط باقات الحصص الفردية بسبب pivot مواد بالخطأ.
+        if ((int) ($this->max_subjects ?? 0) > 1) {
+            return true;
+        }
+
+        if ($this->plan_type === self::PLAN_PRIVATE
+            || in_array($this->scope, [self::SCOPE_PRIVATE_LESSONS, self::SCOPE_TUTORING_INDIVIDUAL], true)) {
+            return false;
+        }
+
+        return $this->packageSubjectCount() > 1;
     }
 
     public function maxSelectableSubjects(): ?int

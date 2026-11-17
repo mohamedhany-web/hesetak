@@ -39,6 +39,7 @@
     @yield('content')
 </main>
 @include('partials.landing.mycourses.footer')
+@include('partials.landing.mycourses.whatsapp-float')
 @stack('scripts')
 </body>
 </html>

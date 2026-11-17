@@ -249,5 +249,7 @@
 </main>
 
 @include('partials.landing.mycourses.footer')
+@include('partials.landing.mycourses.whatsapp-float')
+@include('partials.popup-ad', ['ad' => $activePopupAd ?? null])
 </body>
 </html>

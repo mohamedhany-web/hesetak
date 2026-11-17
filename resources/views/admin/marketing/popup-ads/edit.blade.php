@@ -104,6 +104,21 @@
                            class="{{ $fieldClass }}" dir="ltr">
                     @error('max_views_per_visitor')<p class="mt-1 text-xs font-medium text-danger">{{ $message }}</p>@enderror
                 </div>
+                <div>
+                    <label class="{{ $labelClass }}">الصفحة المستهدفة</label>
+                    <select name="page_key" class="{{ $fieldClass }}">
+                        @php $pk = old('page_key', $popupAd->page_key ?? 'home'); @endphp
+                        <option value="home" @selected($pk === 'home')>الرئيسية</option>
+                        <option value="pricing" @selected($pk === 'pricing')>الأسعار /pricing</option>
+                        <option value="courses" @selected($pk === 'courses')>الكورسات /courses</option>
+                        <option value="package_teachers" @selected($pk === 'package_teachers')>صفحة معلمي الباقة</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="{{ $labelClass }}">تأخير الظهور (ثوانٍ)</label>
+                    <input type="number" name="delay_seconds" value="{{ old('delay_seconds', $popupAd->delay_seconds ?? 30) }}" min="0" max="600"
+                           class="{{ $fieldClass }}" dir="ltr">
+                </div>
                 <div class="flex items-center gap-2 sm:pt-6">
                     <input type="checkbox" name="is_active" id="is_active" value="1" {{ old('is_active', $popupAd->is_active) ? 'checked' : '' }}
                            class="size-4 rounded border-line text-accent focus:ring-accent/20">

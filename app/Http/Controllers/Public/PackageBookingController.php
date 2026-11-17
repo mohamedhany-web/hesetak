@@ -186,6 +186,7 @@ class PackageBookingController extends Controller
             'mcActive' => 'pricing',
             'bodyClass' => 'mc-body--dir',
             'pageTitle' => $displayName.' — '.__('landing.nav.brand'),
+            'activePopupAd' => \App\Services\PopupAdResolver::forPage($request, \App\Models\PopupAd::PAGE_PACKAGE_TEACHERS),
         ]);
     }
 

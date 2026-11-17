@@ -59,7 +59,7 @@
             <p class="mt-0.5 text-xs text-muted">عدّل تفاصيل الواجب وحفظ التغييرات.</p>
         </div>
 
-        <form action="{{ route('admin.assignments.update', $assignment) }}" method="POST" class="p-5 sm:p-6">
+        <form action="{{ route('admin.assignments.update', $assignment) }}" method="POST" enctype="multipart/form-data" class="p-5 sm:p-6">
             @csrf
             @method('PUT')
 
@@ -155,6 +155,16 @@
                     @error('status')
                         <p class="mt-1 text-xs text-rose-600">{{ $message }}</p>
                     @enderror
+                </div>
+
+                <div>
+                    <label class="{{ $labelClass }}" for="resource_files">ملفات الواجب للطالب (إضافة)</label>
+                    <input type="file" name="resource_files[]" id="resource_files" multiple
+                           class="{{ $fieldClass }}"
+                           accept=".pdf,.doc,.docx,.zip,.rar,.jpg,.jpeg,.png,.gif,.webp,.ppt,.pptx,.txt">
+                    <p class="mt-1 text-xs text-muted">تُضاف إلى الملفات الحالية وتظهر للطالب كمادة الواجب.</p>
+                    @error('resource_files')<p class="mt-1 text-xs text-rose-600">{{ $message }}</p>@enderror
+                    @error('resource_files.*')<p class="mt-1 text-xs text-rose-600">{{ $message }}</p>@enderror
                 </div>
             </div>
 

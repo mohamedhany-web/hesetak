@@ -195,10 +195,18 @@
                             <label for="category_id" class="{{ $labelClass }}">التصنيف <span class="text-rose-500">*</span></label>
                             <select name="category_id" id="category_id" required class="{{ $fieldClass }}">
                                 <option value="">اختر التصنيف</option>
-                                @foreach($categories as $category)
-                                    <option value="{{ $category->id }}" {{ (old('category_id', $selectedCategory) == $category->id) ? 'selected' : '' }}>{{ $category->full_path }}</option>
-                                @endforeach
+                                @forelse($categories as $category)
+                                    <option value="{{ $category->id }}" {{ (old('category_id', $selectedCategory) == $category->id) ? 'selected' : '' }}>{{ $category->full_path }}{{ empty($category->is_active) ? ' (غير نشط)' : '' }}</option>
+                                @empty
+                                    <option value="" disabled>لا توجد تصنيفات — أنشئ تصنيفاً أولاً</option>
+                                @endforelse
                             </select>
+                            @if($categories->isEmpty() && Route::has('admin.question-categories.create'))
+                                <p class="mt-1 text-xs text-amber-700">
+                                    <a href="{{ route('admin.question-categories.create') }}" class="underline">إضافة تصنيف جديد</a>
+                                    ثم ارجع لهذه الصفحة.
+                                </p>
+                            @endif
                             @error('category_id')<p class="mt-1 text-xs text-rose-600">{{ $message }}</p>@enderror
                         </div>
                         <div>

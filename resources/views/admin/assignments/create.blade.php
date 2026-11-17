@@ -62,7 +62,7 @@
             <p class="mt-0.5 text-xs text-muted">املأ تفاصيل الواجب وحدّد البرنامج والدرس.</p>
         </div>
 
-        <form action="{{ route('admin.assignments.store') }}" method="POST" class="p-5 sm:p-6">
+        <form action="{{ route('admin.assignments.store') }}" method="POST" enctype="multipart/form-data" class="p-5 sm:p-6">
             @csrf
 
             <div class="space-y-5">
@@ -155,6 +155,16 @@
                     @error('status')
                         <p class="mt-1 text-xs text-rose-600">{{ $message }}</p>
                     @enderror
+                </div>
+
+                <div>
+                    <label class="{{ $labelClass }}" for="resource_files">ملفات الواجب للطالب (PDF / صور / …)</label>
+                    <input type="file" name="resource_files[]" id="resource_files" multiple
+                           class="{{ $fieldClass }}"
+                           accept=".pdf,.doc,.docx,.zip,.rar,.jpg,.jpeg,.png,.gif,.webp,.ppt,.pptx,.txt">
+                    <p class="mt-1 text-xs text-muted">تظهر للطالب كمادة الواجب نفسه — ليست تعليمات التسليم فقط.</p>
+                    @error('resource_files')<p class="mt-1 text-xs text-rose-600">{{ $message }}</p>@enderror
+                    @error('resource_files.*')<p class="mt-1 text-xs text-rose-600">{{ $message }}</p>@enderror
                 </div>
             </div>
 

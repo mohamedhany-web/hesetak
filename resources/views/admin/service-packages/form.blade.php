@@ -233,7 +233,8 @@
                 </div>
                 <label class="inline-flex items-center gap-2 text-sm"><input type="checkbox" name="includes_community" value="1" @checked(old('includes_community', $package->includes_community))> يشمل المجتمع الطلابي</label>
                 <label class="inline-flex items-center gap-2 text-sm"><input type="checkbox" name="includes_libraries" value="1" @checked(old('includes_libraries', $package->includes_libraries ?? true))> يشمل المكتبات التعليمية</label>
-                <label class="inline-flex items-center gap-2 text-sm sm:col-span-2"><input type="checkbox" name="is_active" value="1" @checked(old('is_active', $package->is_active ?? true))> نشطة في صفحة الباقات والكتالوج</label>
+                <label class="inline-flex items-center gap-2 text-sm sm:col-span-2"><input type="checkbox" name="is_active" value="1" @checked(old('is_active', $package->is_active ?? true))> الباقة مفعّلة (للشراء والاستحقاق)</label>
+                <label class="inline-flex items-center gap-2 text-sm sm:col-span-2"><input type="checkbox" name="show_in_storefront" value="1" @checked(old('show_in_storefront', $package->show_in_storefront ?? true))> ظاهرة في صفحة الباقات والكتالوج</label>
                 <label class="inline-flex items-center gap-2 text-sm sm:col-span-2"><input type="checkbox" name="is_featured" value="1" @checked(old('is_featured', $package->is_featured))> الأكثر مبيعًا — تظهر في الرئيسية</label>
             </div>
         </article>

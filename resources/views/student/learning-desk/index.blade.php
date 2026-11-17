@@ -56,7 +56,11 @@
                 $recording = ($session->classroomMeeting && $session->classroomMeeting->hasBrowserRecording() && Route::has('student.classroom.recording'))
                     ? route('student.classroom.recording', $session->classroomMeeting)
                     : null;
-                $join = ($session->status === \App\Models\OneToOneSession::STATUS_SCHEDULED && $session->scheduled_at && Route::has('student.schedule.join'))
+                $meetingStillOpen = ! filled($session->classroomMeeting?->ended_at);
+                $join = ($session->status === \App\Models\OneToOneSession::STATUS_SCHEDULED
+                    && $session->scheduled_at
+                    && $meetingStillOpen
+                    && Route::has('student.schedule.join'))
                     ? route('student.schedule.join', ['type' => 'private', 'id' => $session->id])
                     : null;
             @endphp

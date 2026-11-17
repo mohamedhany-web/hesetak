@@ -105,6 +105,21 @@
                            class="{{ $fieldClass }}" dir="ltr">
                     @error('max_views_per_visitor')<p class="mt-1 text-xs font-medium text-danger">{{ $message }}</p>@enderror
                 </div>
+                <div>
+                    <label class="{{ $labelClass }}">الصفحة المستهدفة</label>
+                    <select name="page_key" class="{{ $fieldClass }}">
+                        <option value="home" @selected(old('page_key', 'home') === 'home')>الرئيسية</option>
+                        <option value="pricing" @selected(old('page_key') === 'pricing')>الأسعار /pricing</option>
+                        <option value="courses" @selected(old('page_key') === 'courses')>الكورسات /courses</option>
+                        <option value="package_teachers" @selected(old('page_key') === 'package_teachers')>صفحة معلمي الباقة</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="{{ $labelClass }}">تأخير الظهور (ثوانٍ)</label>
+                    <input type="number" name="delay_seconds" value="{{ old('delay_seconds', 30) }}" min="0" max="600"
+                           class="{{ $fieldClass }}" dir="ltr">
+                    <p class="mt-1 text-xs text-muted">افتراضي 30 ثانية بعد بقاء الزائر في الصفحة.</p>
+                </div>
                 <div class="flex items-center gap-2 sm:pt-6">
                     <input type="checkbox" name="is_active" id="is_active" value="1" {{ old('is_active', true) ? 'checked' : '' }}
                            class="size-4 rounded border-line text-accent focus:ring-accent/20">

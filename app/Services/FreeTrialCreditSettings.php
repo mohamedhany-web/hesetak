@@ -141,6 +141,48 @@ class FreeTrialCreditSettings
     }
 
     /**
+     * حد الضيوف بنفس الحد الافتراضي — يُحسب عبر البريد أو الهاتف.
+     */
+    public static function assertGuestMayBook(?string $email, ?string $phone, ?string $countryCode = null): void
+    {
+        $limit = self::defaultLimit();
+        if ($limit <= 0) {
+            throw new \InvalidArgumentException('الحجز التجريبي غير متاح حالياً.');
+        }
+        if (! Schema::hasTable('free_trial_bookings')) {
+            return;
+        }
+
+        $email = $email ? strtolower(trim($email)) : null;
+        $phoneDigits = $phone ? preg_replace('/\D+/', '', (string) $phone) : null;
+        if (! $email && ! $phoneDigits) {
+            return;
+        }
+
+        $used = FreeTrialBooking::query()
+            ->whereIn('status', [
+                FreeTrialBooking::STATUS_PENDING,
+                FreeTrialBooking::STATUS_CONFIRMED,
+                FreeTrialBooking::STATUS_COMPLETED,
+            ])
+            ->where(function ($q) use ($email, $phoneDigits) {
+                if ($email) {
+                    $q->orWhereRaw('LOWER(email) = ?', [$email]);
+                }
+                if ($phoneDigits) {
+                    $q->orWhere('phone', 'like', '%'.$phoneDigits.'%');
+                }
+            })
+            ->count();
+
+        if ($used >= $limit) {
+            throw new \InvalidArgumentException(
+                'تم استهلاك رصيد الحصص التجريبية المسموح. سجّل الدخول أو تواصل مع الدعم.'
+            );
+        }
+    }
+
+    /**
      * @return list<array{id:int,name:string,limit:?int}>
      */
     public static function packageLimitRows(): array

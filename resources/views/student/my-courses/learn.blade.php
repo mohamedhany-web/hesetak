@@ -242,12 +242,71 @@
                     </div>
                 @endif
 
+                @php
+                    $linkedLectureIds = collect();
+                    if (isset($sections)) {
+                        foreach ($sections as $sec) {
+                            foreach (($sec->activeItems ?? $sec->items ?? collect()) as $ci) {
+                                if (($ci->item_type ?? '') === \App\Models\Lecture::class || ($ci->item_type ?? '') === 'lecture') {
+                                    $linkedLectureIds->push((int) ($ci->item_id ?? 0));
+                                }
+                                if ($ci->item && $ci->item instanceof \App\Models\Lecture) {
+                                    $linkedLectureIds->push((int) $ci->item->id);
+                                }
+                            }
+                        }
+                    }
+                    $orphanLectures = ($course->lectures ?? collect())->filter(
+                        fn ($lec) => ! $linkedLectureIds->contains((int) $lec->id)
+                    )->values();
+                @endphp
+
+                @if($orphanLectures->isNotEmpty())
+                    <div class="mb-3">
+                        <div class="curriculum-section-header"
+                             :class="{ 'collapsed': isSectionCollapsed('orphan-lectures') }"
+                             @click="toggleSection('orphan-lectures')"
+                             role="button"
+                             tabindex="0"
+                             @keydown.enter.prevent="toggleSection('orphan-lectures')"
+                             @keydown.space.prevent="toggleSection('orphan-lectures')">
+                            <span class="flex items-center gap-1.5">
+                                <i class="fas fa-video text-[#2A6BB5]/90 text-[10px]"></i>
+                                <span>{{ $locale === 'ar' ? 'المحاضرات' : 'Lectures' }}</span>
+                                <span class="text-gray-500 text-[10px]">({{ $orphanLectures->count() }})</span>
+                            </span>
+                            <i class="fas fa-chevron-down curriculum-section-chevron"></i>
+                        </div>
+                        <div x-show="!isSectionCollapsed('orphan-lectures')" x-cloak x-transition>
+                            @foreach($orphanLectures as $lec)
+                                <div class="curriculum-item"
+                                     @click="loadLecture({{ $lec->id }})"
+                                     x-show="!searchQuery || '{{ strtolower(addslashes($lec->title)) }}'.includes(searchQuery.toLowerCase())">
+                                    <div class="flex items-start gap-2">
+                                        <div class="flex-shrink-0 mt-0.5">
+                                            <div class="w-6 h-6 bg-sky-500 rounded-md flex items-center justify-center">
+                                                <i class="fas fa-play text-white text-[10px]"></i>
+                                            </div>
+                                        </div>
+                                        <div class="flex-1 min-w-0">
+                                            <div class="curriculum-item-title">{{ $lec->title }}</div>
+                                            <div class="curriculum-item-meta">
+                                                <span><i class="fas fa-clock text-[10px] ml-0.5"></i> {{ (int) ($lec->duration_minutes ?? 60) }} د</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
+
                 @if(isset($sections) && $sections->count() > 0)
                     <script type="application/json" id="learn-section-descriptions">@json($sectionDescriptions ?? [])</script>
                     @foreach($sections as $section)
                         @include('student.my-courses.partials.learn-sidebar-section', ['section' => $section, 'depth' => 0])
                     @endforeach
-                @else
+                @elseif($orphanLectures->isEmpty())
                     <div class="st-course-learn__empty" style="min-height:180px;padding:28px 12px">
                         <p>{{ __('student_timeline.courses_learn_empty_curriculum') }}</p>
                         <p>{{ __('student_timeline.courses_learn_empty_curriculum_hint') }}</p>

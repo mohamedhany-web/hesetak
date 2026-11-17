@@ -8,6 +8,7 @@ use App\Models\AssignmentSubmission;
 use App\Models\AdvancedCourse;
 use App\Models\CourseLesson;
 use App\Models\User;
+use App\Services\AssignmentFileStorage;
 use App\Support\AttachesCourseCurriculumItems;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -59,7 +60,7 @@ class AssignmentController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
-        $validated = $request->validate([
+        $validated = $request->validate(array_merge([
             'advanced_course_id' => 'required|exists:advanced_courses,id',
             'lesson_id' => 'nullable|exists:course_lessons,id',
             'title' => 'required|string|max:255',
@@ -69,7 +70,7 @@ class AssignmentController extends Controller
             'max_score' => 'required|integer|min:1|max:1000',
             'allow_late_submission' => 'boolean',
             'status' => 'nullable|in:draft,published,archived',
-        ], [
+        ], $this->resourceFileValidationRules()), [
             'advanced_course_id.required' => 'يجب اختيار الكورس',
             'title.required' => 'عنوان الواجب مطلوب',
         ]);
@@ -82,12 +83,17 @@ class AssignmentController extends Controller
 
         $course = AdvancedCourse::find($validated['advanced_course_id']);
         $validated['teacher_id'] = $course->instructor_id ?? null;
-        // course_id كان يشير لجدول courses القديم — لا نكتب معرف advanced_courses فيه
+        // course_id كان يشير لجدول courses القديمة — لا نكتب معرف advanced_courses فيه
         $validated['course_id'] = null;
         $validated['allow_late_submission'] = $request->has('allow_late_submission');
         $validated['status'] = $validated['status'] ?? 'published';
+        unset($validated['resource_files']);
 
         $assignment = Assignment::create($validated);
+        $uploaded = $this->storeResourceFilesFromRequest($request);
+        if ($uploaded !== []) {
+            $assignment->update(['resource_attachments' => $uploaded]);
+        }
         $courseId = $validated['advanced_course_id'];
         AttachesCourseCurriculumItems::attach((int) $courseId, $assignment, 'الواجبات');
 
@@ -136,7 +142,7 @@ class AssignmentController extends Controller
      */
     public function update(Request $request, Assignment $assignment): RedirectResponse
     {
-        $validated = $request->validate([
+        $validated = $request->validate(array_merge([
             'advanced_course_id' => 'required|exists:advanced_courses,id',
             'lesson_id' => 'nullable|exists:course_lessons,id',
             'title' => 'required|string|max:255',
@@ -146,7 +152,7 @@ class AssignmentController extends Controller
             'max_score' => 'required|integer|min:1|max:1000',
             'allow_late_submission' => 'boolean',
             'status' => 'required|in:draft,published,archived',
-        ]);
+        ], $this->resourceFileValidationRules()));
 
         if (!empty($validated['lesson_id'])) {
             CourseLesson::where('id', $validated['lesson_id'])
@@ -158,8 +164,14 @@ class AssignmentController extends Controller
         $validated['allow_late_submission'] = $request->has('allow_late_submission');
         $course = AdvancedCourse::find($validated['advanced_course_id']);
         $validated['teacher_id'] = $course->instructor_id ?? $assignment->teacher_id;
+        unset($validated['resource_files']);
 
         $assignment->update($validated);
+        $uploaded = $this->storeResourceFilesFromRequest($request);
+        if ($uploaded !== []) {
+            $current = is_array($assignment->resource_attachments) ? $assignment->resource_attachments : [];
+            $assignment->update(['resource_attachments' => array_values(array_merge($current, $uploaded))]);
+        }
         $courseId = (int) $validated['advanced_course_id'];
 
         return redirect()->route('admin.assignments.by-course', $courseId)
@@ -221,6 +233,38 @@ class AssignmentController extends Controller
         $submission->update($validated);
 
         return back()->with('success', 'تم تقييم التسليم بنجاح');
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function resourceFileValidationRules(): array
+    {
+        return [
+            'resource_files' => 'nullable|array|max:20',
+            'resource_files.*' => 'file|max:40960|mimes:pdf,doc,docx,zip,rar,jpg,jpeg,png,gif,webp,ppt,pptx,txt',
+        ];
+    }
+
+    /**
+     * @return list<array{path: string, original_name: string, mime: string|null}>
+     */
+    private function storeResourceFilesFromRequest(Request $request): array
+    {
+        $meta = [];
+        foreach ($request->file('resource_files', []) as $file) {
+            if (! $file || ! $file->isValid()) {
+                continue;
+            }
+            $path = AssignmentFileStorage::storeResource($file);
+            $meta[] = [
+                'path' => $path,
+                'original_name' => $file->getClientOriginalName(),
+                'mime' => $file->getClientMimeType(),
+            ];
+        }
+
+        return $meta;
     }
 
 }

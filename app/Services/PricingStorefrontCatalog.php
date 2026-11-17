@@ -285,11 +285,8 @@ class PricingStorefrontCatalog
         );
 
         if ($urgent) {
+            // سعر المستعجلة كما أدخله الأدمن في قواعد التسعير — بدون أرضية تلقائية.
             $urgentUnit = $this->niceMoney((float) $urgent->price_per_session);
-            $premiumFloor = $this->niceMoney(max($unit, 1) * 1.2);
-            if ($urgentUnit < $premiumFloor) {
-                $urgentUnit = $premiumFloor;
-            }
             $options[] = $this->optionRow(
                 kind: 'urgent',
                 sessions: 1,

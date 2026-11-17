@@ -37,32 +37,70 @@
         @if($slots->isEmpty())
           <p class="mc-lead">{{ $isRtl ? 'لا مواعيد منشورة حالياً — اقترح موعداً أدناه.' : 'No published slots — suggest a time below.' }}</p>
         @else
-          <div class="mc-tp-slots">
-            @foreach($slots as $slot)
-              <label class="mc-tp-slot">
-                <input type="checkbox" name="suggested_slots[]" value="{{ $slot['starts_at'] }}">
-                <span>{{ $slot['label'] }}</span>
-              </label>
-            @endforeach
-          </div>
+          @php
+            $amSlots = $slots->where('period', 'AM')->values();
+            $pmSlots = $slots->where('period', 'PM')->values();
+          @endphp
+          @foreach([
+            ['key' => 'AM', 'label' => $isRtl ? 'صباحاً (AM)' : 'Morning (AM)', 'rows' => $amSlots],
+            ['key' => 'PM', 'label' => $isRtl ? 'مساءً (PM)' : 'Afternoon/Evening (PM)', 'rows' => $pmSlots],
+          ] as $group)
+            @if($group['rows']->isNotEmpty())
+              <div style="display:grid;gap:.55rem">
+                <strong style="font-size:.92rem">{{ $group['label'] }}</strong>
+                <div class="mc-tp-slots">
+                  @foreach($group['rows'] as $slot)
+                    <label class="mc-tp-slot">
+                      <input type="checkbox" name="suggested_slots[]" value="{{ $slot['starts_at'] }}">
+                      <span>{{ $slot['label'] }}</span>
+                    </label>
+                  @endforeach
+                </div>
+              </div>
+            @endif
+          @endforeach
         @endif
 
-        <div style="border-top:1px solid color-mix(in srgb, var(--mc-ink,#0b1b33) 12%, transparent);padding-top:1rem;display:grid;gap:.65rem">
-          <strong>{{ $isRtl ? 'اقتراح موعد إضافي (AM/PM)' : 'Suggest another time (AM/PM)' }}</strong>
-          <label>{{ $isRtl ? 'التاريخ' : 'Date' }}<input type="date" name="propose_date" min="{{ now()->toDateString() }}" class="mc-input"></label>
-          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.65rem">
-            <label>{{ $isRtl ? 'ساعة' : 'Hour' }}
-              <select name="propose_hour" class="mc-input">@for($h=1;$h<=12;$h++)<option value="{{ $h }}">{{ $h }}</option>@endfor</select>
-            </label>
-            <label>{{ $isRtl ? 'دقيقة' : 'Min' }}
-              <select name="propose_minute" class="mc-input"><option>00</option><option>15</option><option>30</option><option>45</option></select>
-            </label>
-            <label>{{ $isRtl ? 'فترة' : 'Period' }}
-              <select name="propose_period" class="mc-input"><option value="AM">AM {{ $isRtl ? 'صباحاً' : '' }}</option><option value="PM">PM {{ $isRtl ? 'مساءً' : '' }}</option></select>
-            </label>
+        <div style="border-top:1px solid color-mix(in srgb, var(--mc-ink,#0b1b33) 12%, transparent);padding-top:1rem;display:grid;gap:.65rem" data-propose-times>
+          <strong>{{ $isRtl ? 'اقتراح مواعيد إضافية (AM / PM)' : 'Suggest extra times (AM / PM)' }}</strong>
+          <div data-propose-row style="display:grid;gap:.65rem;padding:.75rem;border:1px dashed color-mix(in srgb, var(--mc-ink,#0b1b33) 16%, transparent);border-radius:.75rem">
+            <label>{{ $isRtl ? 'التاريخ' : 'Date' }}<input type="date" name="propose_date" min="{{ now()->toDateString() }}" class="mc-input"></label>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.65rem">
+              <label>{{ $isRtl ? 'ساعة' : 'Hour' }}
+                <select name="propose_hour" class="mc-input">@for($h=1;$h<=12;$h++)<option value="{{ $h }}">{{ $h }}</option>@endfor</select>
+              </label>
+              <label>{{ $isRtl ? 'دقيقة' : 'Min' }}
+                <select name="propose_minute" class="mc-input"><option>00</option><option>15</option><option>30</option><option>45</option></select>
+              </label>
+              <label>{{ $isRtl ? 'فترة' : 'Period' }}
+                <select name="propose_period" class="mc-input"><option value="AM">AM {{ $isRtl ? 'صباحاً' : '' }}</option><option value="PM">PM {{ $isRtl ? 'مساءً' : '' }}</option></select>
+              </label>
+            </div>
           </div>
-          <label>{{ $isRtl ? 'ملاحظات' : 'Notes' }}<textarea name="schedule_notes" rows="2" class="mc-input"></textarea></label>
+          <button type="button" class="mc-btn mc-btn--md mc-btn--outline" data-add-propose-time>{{ $isRtl ? 'إضافة موعد' : 'Add time' }}</button>
+          <label>{{ $isRtl ? 'ملاحظات للمعلم' : 'Notes for teacher' }}<textarea name="schedule_notes" rows="2" class="mc-input" placeholder="{{ $isRtl ? 'يُرسل كمقترح للمعلم' : 'Sent as a proposal to the teacher' }}"></textarea></label>
         </div>
+        <script>
+        (function () {
+          var root = document.querySelector('[data-propose-times]');
+          if (!root) return;
+          var btn = root.querySelector('[data-add-propose-time]');
+          var first = root.querySelector('[data-propose-row]');
+          if (!btn || !first) return;
+          var extra = 0;
+          btn.addEventListener('click', function () {
+            extra += 1;
+            var clone = first.cloneNode(true);
+            clone.querySelectorAll('input,select').forEach(function (el) {
+              var n = el.getAttribute('name') || '';
+              if (!n) return;
+              el.setAttribute('name', n.replace(/^(propose_)/, 'propose_extra_' + extra + '_'));
+              if (el.tagName === 'INPUT') el.value = '';
+            });
+            first.parentNode.insertBefore(clone, btn);
+          });
+        })();
+        </script>
 
         <div style="display:flex;flex-wrap:wrap;gap:.65rem">
           <button type="submit" class="mc-btn mc-btn--lg mc-btn--primary">{{ $isRtl ? 'أضف للسلة وتابع' : 'Add to cart & continue' }}</button>
