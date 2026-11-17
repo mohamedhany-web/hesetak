@@ -106,6 +106,16 @@
                                 @endif
                             </td>
                             <td class="px-4 py-3">
+                                @php
+                                    $unitHint = collect($row['options'] ?? [])
+                                        ->first(fn ($o) => ($o['kind'] ?? '') !== 'urgent');
+                                    $unitShown = (float) ($unitHint['unit_price'] ?? 0);
+                                @endphp
+                                @if($unitShown > 0)
+                                    <div class="mb-1.5 text-xs font-semibold text-ink">
+                                        سعر الحصة: {{ number_format($unitShown, 2) }} {{ currency_symbol() }}
+                                    </div>
+                                @endif
                                 <div class="flex flex-wrap gap-1.5">
                                     @foreach(($row['options'] ?? []) as $opt)
                                         <span class="rounded-lg border border-line px-2 py-1 text-[11px] text-ink-soft">

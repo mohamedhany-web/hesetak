@@ -80,19 +80,33 @@
             </div>
         </article>
 
+        @php
+            $unitsVal = (int) old('units_count', $pkg->units_count ?? 8);
+            $priceVal = (float) old('price', $pkg->price ?? 0);
+            $unitVal = (float) old('unit_price', $unitsVal > 0 && $priceVal > 0 ? round($priceVal / $unitsVal, 2) : 0);
+        @endphp
         <article class="rounded-2xl border border-line bg-surface p-5 shadow-soft space-y-5">
-            <h3 class="text-sm font-semibold text-ink">السعر والحصص</h3>
-            <p class="text-xs text-muted">سعر الباقة الأساسي يُستخدم لحساب سعر الحصة على البطاقة. خيارات 2/8/مستعجلة تُكمَّل من قواعد التسعير العامة إن وُجدت.</p>
-            <div class="grid gap-5 md:grid-cols-4">
+            <h3 class="text-sm font-semibold text-ink">السعر والحصص لهذه الباقة فقط</h3>
+            <p class="text-xs text-muted">
+                كل بطاقة لها سعر حصة مستقل. عدّل <strong>سعر الحصة</strong> هنا — مش من صفحة قواعد التسعير العامة.
+                إجمالي الباقة = سعر الحصة × عدد الحصص. خيارات 2 / 8 تُحسب من سعر هذه الباقة.
+            </p>
+            <div class="grid gap-5 md:grid-cols-2 lg:grid-cols-5">
                 <div>
-                    <label class="{{ $label }}" for="price">سعر الباقة *</label>
-                    <input id="price" type="number" step="0.01" min="0" name="price" required class="{{ $field }}"
-                           value="{{ old('price', $pkg->price ?? 0) }}">
+                    <label class="{{ $label }}" for="unit_price">سعر الحصة * <span class="text-accent">(لهذه الباقة)</span></label>
+                    <input id="unit_price" type="number" step="0.01" min="0" name="unit_price" required class="{{ $field }}"
+                           value="{{ $unitVal }}" data-pricing-unit>
                 </div>
                 <div>
                     <label class="{{ $label }}" for="units_count">عدد الحصص *</label>
                     <input id="units_count" type="number" min="1" name="units_count" required class="{{ $field }}"
-                           value="{{ old('units_count', $pkg->units_count ?? 8) }}">
+                           value="{{ $unitsVal }}" data-pricing-units>
+                </div>
+                <div>
+                    <label class="{{ $label }}" for="price">إجمالي الباقة *</label>
+                    <input id="price" type="number" step="0.01" min="0" name="price" required class="{{ $field }}"
+                           value="{{ $priceVal }}" data-pricing-total>
+                    <p class="mt-1 text-[11px] text-muted">يُحدَّث تلقائياً من سعر الحصة × العدد.</p>
                 </div>
                 <div>
                     <label class="{{ $label }}" for="session_minutes">مدة الحصة (دقيقة) *</label>
@@ -106,6 +120,23 @@
                 </div>
             </div>
         </article>
+        <script>
+            (function () {
+                var unit = document.querySelector('[data-pricing-unit]');
+                var units = document.querySelector('[data-pricing-units]');
+                var total = document.querySelector('[data-pricing-total]');
+                if (!unit || !units || !total) return;
+                function syncTotal() {
+                    var u = parseFloat(unit.value || '0');
+                    var n = parseInt(units.value || '1', 10);
+                    if (!isFinite(u) || u < 0) u = 0;
+                    if (!isFinite(n) || n < 1) n = 1;
+                    total.value = (Math.round(u * n * 100) / 100).toFixed(2);
+                }
+                unit.addEventListener('input', syncTotal);
+                units.addEventListener('input', syncTotal);
+            })();
+        </script>
 
         <article class="rounded-2xl border border-line bg-surface p-5 shadow-soft space-y-3">
             <h3 class="text-sm font-semibold text-ink">الظهور</h3>

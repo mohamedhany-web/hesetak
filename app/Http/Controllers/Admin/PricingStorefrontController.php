@@ -126,7 +126,8 @@ class PricingStorefrontController extends Controller
             'description' => ['nullable', 'string', 'max:5000'],
             'badge' => ['nullable', 'string', 'max:80'],
             'features_text' => ['nullable', 'string', 'max:5000'],
-            'price' => ['required', 'numeric', 'min:0'],
+            'unit_price' => ['required', 'numeric', 'min:0'],
+            'price' => ['nullable', 'numeric', 'min:0'],
             'units_count' => ['required', 'integer', 'min:1', 'max:500'],
             'session_minutes' => ['required', 'integer', 'min:15', 'max:240'],
             'duration_days' => ['nullable', 'integer', 'min:1', 'max:730'],
@@ -147,14 +148,22 @@ class PricingStorefrontController extends Controller
 
         $package = app(PricingStorefrontCatalog::class)->storefrontPackageForSubject((int) $subjectModel->id, $yearId);
 
+        $unitsCount = (int) $data['units_count'];
+        $unitPrice = round((float) $data['unit_price'], 2);
+        // السعر مختلف لكل باقة: الإجمالي = سعر الحصة × عدد الحصص
+        $packagePrice = round($unitPrice * $unitsCount, 2);
+        if (isset($data['price']) && is_numeric($data['price']) && (float) $data['price'] > 0 && $unitPrice <= 0) {
+            $packagePrice = round((float) $data['price'], 2);
+        }
+
         $payload = [
             'name' => $data['name'],
             'tagline' => $data['tagline'] ?? null,
             'description' => $data['description'] ?? null,
             'badge' => $data['badge'] ?? null,
             'features' => $features !== [] ? $features : null,
-            'price' => round((float) $data['price'], 2),
-            'units_count' => (int) $data['units_count'],
+            'price' => $packagePrice,
+            'units_count' => $unitsCount,
             'session_minutes' => (int) $data['session_minutes'],
             'duration_days' => (int) ($data['duration_days'] ?? 60),
             'scope' => ServicePackage::SCOPE_PRIVATE_LESSONS,

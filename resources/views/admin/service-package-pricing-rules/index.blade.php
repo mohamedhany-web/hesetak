@@ -27,11 +27,21 @@
         <div>
             <p class="text-xs font-medium text-muted">الباقات والأسعار · بالريال السعودي</p>
             <h2 class="mt-1 text-2xl font-semibold text-ink">{{ __('admin.custom_package_pricing_heading') }}</h2>
-            <p class="mt-1 text-sm text-muted">قاعدة الحصص الخاصة تُستخدم في مخصص الطالب: مدة شهر أو 3 أشهر × عدد حصص أسبوعي ثابت. الإجمالي = الحصص الأسبوعية × 4 × عدد الشهور.</p>
+            <p class="mt-1 max-w-3xl text-sm text-muted">
+                دي قواعد عامة (خصم الكمية / المستعجلة / منشئ الباقة المخصصة) —
+                <strong class="text-ink">مش سعر كل باقة على حدة</strong>.
+                لو سعر الحصة مختلف من باقة لباقة عدّلها من
+                <a href="{{ route('admin.pricing-storefront.index') }}" class="text-accent underline">كتالوج /pricing</a>.
+            </p>
         </div>
-        <a href="{{ route('public.service-packages.index') }}" target="_blank" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl border border-line bg-surface px-4 text-sm">
-            <i class="fas fa-arrow-up-right-from-square text-xs"></i> معاينة الصفحة
-        </a>
+        <div class="flex flex-wrap gap-2">
+            <a href="{{ route('admin.pricing-storefront.index') }}" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl bg-accent px-4 text-sm font-medium text-white">
+                <i class="fas fa-store text-xs"></i> كتالوج الباقات (سعر لكل باقة)
+            </a>
+            <a href="{{ route('public.service-packages.index') }}" target="_blank" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl border border-line bg-surface px-4 text-sm">
+                <i class="fas fa-arrow-up-right-from-square text-xs"></i> معاينة الصفحة
+            </a>
+        </div>
     </section>
 
     @if(session('success'))
