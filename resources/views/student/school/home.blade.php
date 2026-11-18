@@ -78,6 +78,10 @@
         <h1 class="st-top__title">{{ __('student_timeline.timeline') }}</h1>
 
         <div class="st-top__actions">
+            <a href="{{ route('home') }}" class="st-chip" title="{{ __('student_timeline.nav_site_home') }}">
+                <i class="fas fa-house" aria-hidden="true"></i>
+                {{ __('student_timeline.nav_site_home') }}
+            </a>
             <div class="st-lang" role="group" aria-label="Language">
                 <a href="{{ request()->fullUrlWithQuery(['lang' => 'ar']) }}" class="{{ $locale === 'ar' ? 'is-active' : '' }}">{{ __('student_timeline.lang_ar') }}</a>
                 <a href="{{ request()->fullUrlWithQuery(['lang' => 'en']) }}" class="{{ $locale === 'en' ? 'is-active' : '' }}">{{ __('student_timeline.lang_en') }}</a>

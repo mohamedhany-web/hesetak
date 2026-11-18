@@ -54,6 +54,7 @@ return [
     'lang_ar' => 'عربي',
     'lang_en' => 'English',
     'nav_home' => 'Home',
+    'nav_site_home' => 'Website home',
     'nav_feed' => 'Class feed',
     'nav_classes' => 'My classes',
     'nav_messages' => 'Notifications',

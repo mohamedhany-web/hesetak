@@ -283,6 +283,18 @@
           <h3>{{ __('public.instructor_availability_title') }}</h3>
           <p class="mc-package__why">{{ $isRtl ? 'اشترك في باقة ثم احجز حصة تجريبية مجانية أو ثبّت جدولك من الرصيد.' : 'Subscribe to a package, then book a free trial or lock sessions from your credits.' }}</p>
 
+          @unless($hasActivePackage)
+            <div class="mc-tp-alert mc-tp-alert--notice" role="note" style="display:flex;gap:.6rem;align-items:flex-start;border:1px solid var(--mc-gold, #C9A227);background:rgba(201,162,39,.12);">
+              <i class="fas fa-circle-info" aria-hidden="true" style="margin-top:.25rem"></i>
+              <span>
+                <strong>{{ $isRtl ? 'تنبيه:' : 'Note:' }}</strong>
+                {{ $isRtl
+                    ? 'لظهور مواعيد المعلم المتاحة للحجز يجب أولاً تسجيل الدخول ثم شراء باقة.'
+                    : 'To see this teacher’s available booking slots, you must first log in and purchase a package.' }}
+              </span>
+            </div>
+          @endunless
+
           @if(!empty($weeklyCalendar))
             <div class="mc-tp-cal">
               @foreach($weeklyCalendar as $col)

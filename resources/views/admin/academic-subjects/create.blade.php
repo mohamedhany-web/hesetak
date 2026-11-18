@@ -55,17 +55,7 @@
                 <p class="mt-0.5 text-xs text-muted">السنة والاسم والرمز</p>
             </div>
             <div class="grid grid-cols-1 gap-4 p-4 sm:grid-cols-2 sm:p-5">
-                <div>
-                    <label class="{{ $labelClass }}" for="curriculum_type">نوع المنهج</label>
-                    @php $tracks = $curriculumTypes ?? \App\Support\HesetakMatchCatalog::curriculumTypes(); @endphp
-                    <select id="curriculum_type" name="curriculum_type" class="{{ $fieldClass }}">
-                        <option value="">— مشترك لكل المناهج —</option>
-                        @foreach($tracks as $key => $meta)
-                            <option value="{{ $key }}" @selected((string) old('curriculum_type') === (string) $key)>{{ is_array($meta) ? ($meta['label'] ?? $key) : $meta }}</option>
-                        @endforeach
-                    </select>
-                    <p class="mt-1 text-xs text-muted">اربط المادة بمنهج معيّن لتظهر فقط مع مراحله.</p>
-                </div>
+                @include('admin.academic-subjects._curriculum-picker')
                 <div class="sm:col-span-2">
                     <label class="{{ $labelClass }}">المراحل الدراسية (يمكن اختيار أكثر من مرحلة)</label>
                     @php $oldYears = array_map('strval', old('academic_year_ids', $selectedTrack ? [(string) $selectedTrack] : [])); @endphp
@@ -138,27 +128,4 @@
         </article>
     </form>
 </div>
-@push('scripts')
-<script>
-(function () {
-  var select = document.getElementById('curriculum_type');
-  var list = document.getElementById('subject-year-list');
-  if (!select || !list) return;
-  function filterYears() {
-    var track = (select.value || '').trim();
-    list.querySelectorAll('[data-curriculum-type]').forEach(function (row) {
-      var rowTrack = (row.getAttribute('data-curriculum-type') || '').trim();
-      var show = !track || !rowTrack || rowTrack === track;
-      row.style.display = show ? '' : 'none';
-      if (!show) {
-        var input = row.querySelector('input[type="checkbox"]');
-        if (input) input.checked = false;
-      }
-    });
-  }
-  select.addEventListener('change', filterYears);
-  filterYears();
-})();
-</script>
-@endpush
 @endsection

@@ -64,6 +64,11 @@
           transition: transform .45s ease;
           will-change: transform;
           direction: ltr; /* ثبات حساب الإزاحة بغض النظر عن dir الصفحة */
+          /* المسار يُزاح بالـ transform داخل الحاوية المقصوصة؛ لا نقصّه هو نفسه
+             وإلا تختفي الشرائح عند تصغير الشاشة ويبقى صورتان فقط. */
+          overflow: visible;
+          scroll-snap-type: none;
+          scroll-behavior: auto;
         }
         [data-mc-quotes-carousel] .mc-quotes-carousel__slide {
           flex: 0 0 min(100%, 22rem);
@@ -111,12 +116,38 @@
           return first.getBoundingClientRect().width + gap;
         }
 
+        function maxIndex() {
+          var step = slideStep();
+          if (!step) return 0;
+          var gap = parseFloat(getComputedStyle(track).gap || '0') || 0;
+          var visible = Math.max(1, Math.floor((root.clientWidth + gap) / step));
+          return Math.max(0, slides.length - visible);
+        }
+
         function goTo(i) {
-          index = (i + slides.length) % slides.length;
+          var max = maxIndex();
+          if (i > max) i = 0;
+          if (i < 0) i = max;
+          index = i;
           var delta = slideStep() * index;
           // المسار LTR دائماً — الإزاحة سالبة تكشف الشرائح التالية بشكل موثوق
           track.style.transform = 'translate3d(' + (-delta) + 'px,0,0)';
         }
+
+        var touchStartX = null;
+        root.addEventListener('touchstart', function (e) {
+          touchStartX = e.touches && e.touches[0] ? e.touches[0].clientX : null;
+        }, { passive: true });
+        root.addEventListener('touchend', function (e) {
+          if (touchStartX === null) return;
+          var endX = e.changedTouches && e.changedTouches[0] ? e.changedTouches[0].clientX : touchStartX;
+          var diff = endX - touchStartX;
+          touchStartX = null;
+          if (Math.abs(diff) < 40) return;
+          pauseBriefly();
+          // المسار LTR: السحب لليسار = الشريحة التالية
+          goTo(diff < 0 ? index + 1 : index - 1);
+        }, { passive: true });
 
         function pauseBriefly() {
           paused = true;

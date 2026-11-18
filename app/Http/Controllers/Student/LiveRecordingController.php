@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Student;
 use App\Helpers\VideoHelper;
 use App\Http\Controllers\Controller;
 use App\Models\LiveRecording;
+use App\Models\LiveSession;
 use App\Services\LibraryFolderAccessService;
 use Illuminate\Http\Request;
 
@@ -15,7 +16,34 @@ class LiveRecordingController extends Controller
      */
     public function index(Request $request)
     {
-        return redirect()->route('student.library.videos');
+        $user = $request->user();
+
+        $sessionIds = LiveSession::query()
+            ->where('status', 'ended')
+            ->whereHas('recordings', fn ($q) => $q->where('status', 'ready')->where('is_published', true))
+            ->with('course')
+            ->get()
+            ->filter(fn (LiveSession $session) => $session->canUserJoin($user))
+            ->pluck('id');
+
+        $recordings = LiveRecording::query()
+            ->with(['session.course', 'session.instructor', 'folder'])
+            ->whereIn('session_id', $sessionIds)
+            ->where('status', 'ready')
+            ->where('is_published', true)
+            ->latest()
+            ->paginate(12)
+            ->withQueryString();
+
+        // نفس شرط صفحة المشاهدة: مجلد المكتبة المرتبط يتطلب اشتراكاً.
+        $recordings->setCollection(
+            $recordings->getCollection()->filter(
+                fn (LiveRecording $recording) => ! $recording->folder
+                    || LibraryFolderAccessService::canAccessFolder($user, $recording->folder)
+            )->values()
+        );
+
+        return view('student.live-recordings.index', compact('recordings'));
     }
 
     /**

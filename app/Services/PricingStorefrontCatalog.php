@@ -510,9 +510,10 @@ class PricingStorefrontCatalog
 
         // طريقة معلمي: بطاقة لكل مادة تحت المرحلة المختارة (مع دعم اختيار متعدد)
         if ($subjects->isNotEmpty()) {
+            // الترتيب كما ضبطه الأدمن في «ترتيب العرض» للمادة ($subjects مرتّبة بـ order ثم الاسم).
             $subjectList = $selSubjects->isNotEmpty()
                 ? $subjects->whereIn('id', $selSubjects->all())->values()
-                : $subjects->sortBy(fn ($s) => mb_strtolower((string) $s->name), SORT_NATURAL)->values();
+                : $subjects->values();
 
             foreach ($subjectList as $subject) {
                 $cards[] = $this->cardFromSubject($subject, $yearId, $track, $standard, $urgent, $isRtl);

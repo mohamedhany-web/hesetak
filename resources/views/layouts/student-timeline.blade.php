@@ -9,6 +9,7 @@
 
     $navItems = [
         ['route' => 'dashboard', 'match' => ['dashboard'], 'label' => __('student_timeline.nav_home'), 'icon' => 'home.svg'],
+        ['route' => 'home', 'match' => ['home'], 'label' => __('student_timeline.nav_site_home'), 'fa' => 'fas fa-globe'],
         ['route' => 'student.learning-desk', 'match' => ['student.learning-desk'], 'label' => app()->getLocale() === 'ar' ? 'حصصي' : 'My lessons', 'fa' => 'fas fa-calendar-check'],
         ['route' => 'consultations.index', 'match' => ['consultations.*'], 'label' => app()->getLocale() === 'ar' ? 'الاستشارات' : 'Consultations', 'fa' => 'fas fa-comments-dollar', 'ui' => 'show_consultations'],
         ['route' => 'student.learn.index', 'match' => ['student.learn.*'], 'label' => __('student_timeline.nav_learn'), 'icon' => 'lessons.svg', 'ui' => 'show_private_lessons'],

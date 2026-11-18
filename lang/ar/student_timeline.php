@@ -54,6 +54,7 @@ return [
     'lang_ar' => 'عربي',
     'lang_en' => 'English',
     'nav_home' => 'الرئيسية',
+    'nav_site_home' => 'الصفحة الرئيسية للموقع',
     'nav_feed' => 'مجتمع الفصل',
     'nav_classes' => 'فصولي',
     'nav_messages' => 'الإشعارات',

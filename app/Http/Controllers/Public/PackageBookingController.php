@@ -37,7 +37,8 @@ class PackageBookingController extends Controller
                     'academic_subjects.name',
                     'academic_subjects.slug',
                     'academic_subjects.academic_year_id',
-                    'academic_subjects.curriculum_type'
+                    'academic_subjects.curriculum_type',
+                    'academic_subjects.order'
                 );
                 if (method_exists(AcademicSubject::class, 'years')) {
                     $q->with(['years:id']);
@@ -64,7 +65,7 @@ class PackageBookingController extends Controller
                 ->get(['id', 'name', 'slug', 'curriculum_type'])
             : collect();
         $packageSubjects = $servicePackage->relationLoaded('subjects') && $servicePackage->subjects->isNotEmpty()
-            ? $servicePackage->subjects
+            ? $servicePackage->subjects->sortBy([['order', 'asc'], ['name', 'asc']])->values()
             : collect(array_filter([$servicePackage->academicSubject]));
         if ($packageSubjects->isNotEmpty()) {
             $subjects = $packageSubjects;
@@ -82,11 +83,9 @@ class PackageBookingController extends Controller
                 })->values();
             }
             if ($curriculum !== '') {
-                $subjects = $subjects->filter(function ($subject) use ($curriculum) {
-                    $type = trim((string) ($subject->curriculum_type ?? ''));
-
-                    return $type === '' || $type === $curriculum;
-                })->values();
+                $subjects = $subjects->filter(
+                    fn ($subject) => $subject->matchesCurriculumType($curriculum)
+                )->values();
             }
         } else {
             $subjects = Schema::hasTable('academic_subjects')

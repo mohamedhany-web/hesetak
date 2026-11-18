@@ -27,7 +27,8 @@ class AcademicSubjectController extends Controller
                     ->limit(4);
             }])
             ->when($trackId, fn ($q) => $q->forYear((int) $trackId))
-            ->orderBy('academic_year_id')
+            // داخل مرحلة واحدة: نفس ترتيب كروت /pricing (order ثم الاسم) دون تجميع بالسنة الأساسية.
+            ->when(! $trackId, fn ($q) => $q->orderBy('academic_year_id'))
             ->orderBy('order')
             ->orderBy('name')
             ->get();
@@ -72,6 +73,8 @@ class AcademicSubjectController extends Controller
             'color' => 'nullable|string|max:7',
             'order' => 'nullable|integer|min:0',
             'is_active' => 'boolean',
+            'curriculum_types' => ['nullable', 'array'],
+            'curriculum_types.*' => ['string', 'max:64', 'in:'.implode(',', array_keys(\App\Support\HesetakMatchCatalog::curriculumTypes() ?: ['__none__']))],
             'curriculum_type' => ['nullable', 'string', 'max:64', 'in:'.implode(',', array_keys(\App\Support\HesetakMatchCatalog::curriculumTypes() ?: ['__none__']))],
         ], [
             'name.required' => 'اسم المادة مطلوب',
@@ -88,10 +91,8 @@ class AcademicSubjectController extends Controller
             $yearId = null;
         }
 
-        $curriculumType = filled($validated['curriculum_type'] ?? null) ? (string) $validated['curriculum_type'] : null;
-        if ($curriculumType === null && $yearId) {
-            $curriculumType = AcademicYear::query()->whereKey($yearId)->value('curriculum_type');
-        }
+        $curriculumTypes = $this->resolveCurriculumTypes($request, $validated, $yearIds);
+        $curriculumType = $curriculumTypes[0] ?? null;
 
         $subject = AcademicSubject::create([
             'academic_year_id' => $yearId,
@@ -113,6 +114,8 @@ class AcademicSubjectController extends Controller
         } elseif ($yearId) {
             $subject->years()->sync([$yearId]);
         }
+
+        $subject->syncCurriculumTypes($curriculumTypes);
 
         return redirect()
             ->route('admin.academic-subjects.index', array_filter(['track' => $yearId]))
@@ -177,6 +180,8 @@ class AcademicSubjectController extends Controller
             'color' => 'nullable|string|max:7',
             'order' => 'nullable|integer|min:0',
             'is_active' => 'boolean',
+            'curriculum_types' => ['nullable', 'array'],
+            'curriculum_types.*' => ['string', 'max:64', 'in:'.implode(',', array_keys(\App\Support\HesetakMatchCatalog::curriculumTypes() ?: ['__none__']))],
             'curriculum_type' => ['nullable', 'string', 'max:64', 'in:'.implode(',', array_keys(\App\Support\HesetakMatchCatalog::curriculumTypes() ?: ['__none__']))],
         ], [
             'name.required' => 'اسم المادة مطلوب',
@@ -193,10 +198,8 @@ class AcademicSubjectController extends Controller
             $yearId = null;
         }
 
-        $curriculumType = filled($validated['curriculum_type'] ?? null) ? (string) $validated['curriculum_type'] : null;
-        if ($curriculumType === null && $yearId) {
-            $curriculumType = AcademicYear::query()->whereKey($yearId)->value('curriculum_type');
-        }
+        $curriculumTypes = $this->resolveCurriculumTypes($request, $validated, $yearIds);
+        $curriculumType = $curriculumTypes[0] ?? null;
 
         $academicSubject->update([
             'academic_year_id' => $yearId,
@@ -220,6 +223,8 @@ class AcademicSubjectController extends Controller
         } else {
             $academicSubject->years()->detach();
         }
+
+        $academicSubject->syncCurriculumTypes($curriculumTypes);
 
         return redirect()
             ->route('admin.academic-subjects.show', $academicSubject)
@@ -280,6 +285,41 @@ class AcademicSubjectController extends Controller
         $course->update(['academic_subject_id' => null]);
 
         return back()->with('success', 'تم فك ربط الكورس من المادة.');
+    }
+
+    /**
+     * المناهج المختارة (متعددة). إن لم يُحدَّد شيء: المنهج القديم المفرد، ثم مناهج المراحل المختارة.
+     *
+     * @param  array<string, mixed>  $validated
+     * @param  list<int>  $yearIds
+     * @return list<string>
+     */
+    private function resolveCurriculumTypes(Request $request, array $validated, array $yearIds): array
+    {
+        $selected = collect($validated['curriculum_types'] ?? [])
+            ->map(fn ($k) => strtolower(trim((string) $k)))
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+
+        if ($selected === [] && filled($validated['curriculum_type'] ?? null)) {
+            $selected = [strtolower(trim((string) $validated['curriculum_type']))];
+        }
+
+        if ($selected === [] && $yearIds !== []) {
+            $selected = AcademicYear::query()
+                ->whereIn('id', $yearIds)
+                ->whereNotNull('curriculum_type')
+                ->pluck('curriculum_type')
+                ->map(fn ($k) => strtolower(trim((string) $k)))
+                ->filter()
+                ->unique()
+                ->values()
+                ->all();
+        }
+
+        return $selected;
     }
 
     public function reorder(Request $request)

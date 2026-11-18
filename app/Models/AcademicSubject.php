@@ -6,11 +6,15 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 
 class AcademicSubject extends Model
 {
     use HasFactory;
+
+    public const CURRICULA_TABLE = 'academic_subject_curricula';
 
     protected $fillable = [
         'academic_year_id',
@@ -90,17 +94,94 @@ class AcademicSubject extends Model
         });
     }
 
-    /** null curriculum_type = تظهر مع كل أنواع المناهج */
+    /**
+     * المادة تظهر مع المنهج إذا: لا منهج محدد (مشتركة) أو العمود الأساسي يطابق أو أحد المناهج المربوطة يطابق.
+     */
     public function scopeForCurriculumType($query, ?string $curriculumType)
     {
         $track = strtolower(trim((string) $curriculumType));
-        if ($track === '' || ! \Illuminate\Support\Facades\Schema::hasColumn('academic_subjects', 'curriculum_type')) {
+        if ($track === '' || ! Schema::hasColumn('academic_subjects', 'curriculum_type')) {
             return $query;
         }
 
-        return $query->where(function ($q) use ($track) {
-            $q->whereNull('curriculum_type')->orWhere('curriculum_type', $track);
+        $hasPivot = Schema::hasTable(self::CURRICULA_TABLE);
+
+        return $query->where(function ($q) use ($track, $hasPivot) {
+            $q->whereNull('academic_subjects.curriculum_type')
+                ->orWhere('academic_subjects.curriculum_type', $track);
+
+            if ($hasPivot) {
+                $q->orWhereExists(function ($sub) use ($track) {
+                    $sub->select(DB::raw(1))
+                        ->from(self::CURRICULA_TABLE)
+                        ->whereColumn(self::CURRICULA_TABLE.'.academic_subject_id', 'academic_subjects.id')
+                        ->where(self::CURRICULA_TABLE.'.curriculum_type', $track);
+                });
+            }
         });
+    }
+
+    /**
+     * كل مفاتيح المناهج المربوطة بالمادة (فارغ = مشتركة لكل المناهج).
+     *
+     * @return list<string>
+     */
+    public function curriculumTypeKeys(): array
+    {
+        $keys = [];
+        if (Schema::hasTable(self::CURRICULA_TABLE)) {
+            $keys = DB::table(self::CURRICULA_TABLE)
+                ->where('academic_subject_id', $this->id)
+                ->pluck('curriculum_type')
+                ->map(fn ($k) => strtolower(trim((string) $k)))
+                ->all();
+        }
+        $primary = strtolower(trim((string) $this->curriculum_type));
+        if ($primary !== '') {
+            $keys[] = $primary;
+        }
+
+        return array_values(array_unique(array_filter($keys)));
+    }
+
+    public function matchesCurriculumType(?string $curriculumType): bool
+    {
+        $track = strtolower(trim((string) $curriculumType));
+        if ($track === '') {
+            return true;
+        }
+        $keys = $this->curriculumTypeKeys();
+
+        return $keys === [] || in_array($track, $keys, true);
+    }
+
+    /**
+     * يحفظ المناهج المتعددة؛ العمود curriculum_type يحمل أول منهج للتوافق مع الكود القديم.
+     *
+     * @param  list<string>  $keys
+     */
+    public function syncCurriculumTypes(array $keys): void
+    {
+        $keys = array_values(array_unique(array_filter(array_map(
+            fn ($k) => strtolower(trim((string) $k)),
+            $keys
+        ))));
+
+        if (Schema::hasColumn('academic_subjects', 'curriculum_type')) {
+            $this->forceFill(['curriculum_type' => $keys[0] ?? null])->save();
+        }
+
+        if (! Schema::hasTable(self::CURRICULA_TABLE)) {
+            return;
+        }
+
+        DB::table(self::CURRICULA_TABLE)->where('academic_subject_id', $this->id)->delete();
+        foreach ($keys as $key) {
+            DB::table(self::CURRICULA_TABLE)->insert([
+                'academic_subject_id' => $this->id,
+                'curriculum_type' => $key,
+            ]);
+        }
     }
 
     public function faIcon(): string

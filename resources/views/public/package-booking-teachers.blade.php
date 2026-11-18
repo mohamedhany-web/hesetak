@@ -36,7 +36,20 @@
         @php $lockedSubject = $subjects->firstWhere('id', $subjectId); @endphp
         <p class="mc-lead">{{ $isRtl ? 'المادة المختارة:' : 'Selected subject:' }} <strong>{{ $lockedSubject->name ?? ($displayName ?? '') }}</strong></p>
       @elseif($subjects->isNotEmpty())
-        <p class="mc-lead">{{ $isRtl ? 'مواد الباقة:' : 'Package subjects:' }} {{ $subjects->pluck('name')->implode(' · ') }}</p>
+        <div class="pbt-subjects" aria-label="{{ $isRtl ? 'مواد الباقة' : 'Package subjects' }}">
+          <p class="pbt-subjects__label">{{ $isRtl ? 'مواد الباقة' : 'Package subjects' }} <span>({{ $subjects->count() }})</span></p>
+          <ol class="pbt-subjects__list">
+            @foreach($subjects as $subject)
+              <li class="pbt-subjects__item">
+                @if($isMixed)
+                  <a href="#pbt-subject-{{ (int) $subject->id }}">{{ $subject->name }}</a>
+                @else
+                  <span>{{ $subject->name }}</span>
+                @endif
+              </li>
+            @endforeach
+          </ol>
+        </div>
       @endif
       @if($package->featureList())
         <ul class="mc-lead" style="margin:.5rem 0 0;padding-inline-start:1.1rem">
@@ -77,10 +90,13 @@
 
         @if($isMixed)
           <div class="mc-field">
-            <span>{{ $isRtl ? 'اختر المواد' : 'Choose subjects' }}@if($maxSubjects) (≤ {{ (int) $maxSubjects }})@endif</span>
-            <div style="display:grid;gap:.4rem;margin-top:.4rem;max-height:220px;overflow:auto">
+            <span class="pbt-pick__title">
+              {{ $isRtl ? 'اختر المواد' : 'Choose subjects' }}
+              <small data-pbt-count>{{ count($selectedSubjectIds) }}@if($maxSubjects) / {{ (int) $maxSubjects }}@endif</small>
+            </span>
+            <div class="pbt-pick">
               @foreach($subjects as $subject)
-                <label class="mc-chip" style="justify-content:flex-start">
+                <label class="pbt-pick__item">
                   <input
                     type="checkbox"
                     name="subjects[]"
@@ -89,7 +105,7 @@
                     data-subject-cap="{{ (int) $subjectCap }}"
                     onchange="window.__hesetakCapSubjects && window.__hesetakCapSubjects(this)"
                   >
-                  {{ $subject->name }}
+                  <span>{{ $subject->name }}</span>
                 </label>
               @endforeach
             </div>
@@ -140,10 +156,14 @@
             ? $subjects->whereIn('id', $selectedSubjectIds)
             : $subjects;
         @endphp
-        @forelse($visibleSubjects as $subject)
+        @forelse($visibleSubjects->values() as $subjectIndex => $subject)
           @php $subjectTeachers = $teachersBySubject[(int) $subject->id] ?? collect(); @endphp
-          <section class="mc-card" style="padding:1rem;margin-bottom:1rem">
-            <h2 class="mc-title" style="font-size:1.05rem;margin-bottom:.75rem">{{ $subject->name }}</h2>
+          <section class="mc-card pbt-section" id="pbt-subject-{{ (int) $subject->id }}">
+            <header class="pbt-section__head">
+              <span class="pbt-section__num" aria-hidden="true">{{ $subjectIndex + 1 }}</span>
+              <h2 class="pbt-section__title">{{ $subject->name }}</h2>
+              <span class="pbt-section__count">{{ $isRtl ? $subjectTeachers->count().' معلم' : $subjectTeachers->count().' teachers' }}</span>
+            </header>
             @if($subjectTeachers->isEmpty())
               <div class="mc-empty">{{ $isRtl ? 'لا يوجد معلمون لهذه المادة حالياً.' : 'No teachers for this subject yet.' }}</div>
             @else
@@ -213,6 +233,71 @@
     </div>
   </div>
 </section>
+<style>
+  .pbt-subjects { margin: .75rem 0 0; }
+  .pbt-subjects__label { margin: 0 0 .5rem; font-weight: 800; }
+  .pbt-subjects__label span { font-weight: 600; opacity: .7; }
+  .pbt-subjects__list { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: .5rem; counter-reset: pbt; }
+  .pbt-subjects__item { counter-increment: pbt; }
+  .pbt-subjects__item a, .pbt-subjects__item span {
+    display: inline-flex; align-items: center; gap: .45rem; padding: .35rem .8rem .35rem .6rem;
+    border: 1px solid var(--mc-line, #dfe5ee); border-radius: 999px; background: #fff;
+    font-weight: 700; font-size: .88rem; color: var(--mc-ink, #0b1b33); text-decoration: none;
+  }
+  .pbt-subjects__item a::before, .pbt-subjects__item span::before {
+    content: counter(pbt); display: inline-grid; place-items: center; width: 1.45rem; height: 1.45rem;
+    border-radius: 50%; background: var(--mc-navy, #0b1b33); color: #fff; font-size: .75rem; font-weight: 800;
+  }
+  .pbt-subjects__item a:hover { border-color: var(--mc-primary-70, #1e4e8c); }
+  .pbt-pick__title { display: flex; justify-content: space-between; align-items: center; font-weight: 800; }
+  .pbt-pick__title small { font-weight: 700; padding: .1rem .55rem; border-radius: 999px; background: rgba(30,78,140,.1); }
+  .pbt-pick { display: grid; gap: .4rem; margin-top: .5rem; max-height: 260px; overflow: auto; padding-inline-end: .15rem; }
+  .pbt-pick__item {
+    display: flex; align-items: center; gap: .55rem; padding: .5rem .7rem; cursor: pointer;
+    border: 1px solid var(--mc-line, #dfe5ee); border-radius: .75rem; background: #fff; font-size: .9rem; font-weight: 600;
+  }
+  .pbt-pick__item:has(input:checked) { border-color: var(--mc-primary-70, #1e4e8c); background: rgba(30,78,140,.07); }
+  .pbt-section { padding: 1rem; margin-bottom: 1rem; scroll-margin-top: 5rem; }
+  .pbt-section__head {
+    display: flex; align-items: center; gap: .65rem; margin-bottom: .85rem; padding-bottom: .7rem;
+    border-bottom: 1px solid var(--mc-line, #dfe5ee);
+  }
+  .pbt-section__num {
+    display: inline-grid; place-items: center; width: 2rem; height: 2rem; flex: none; border-radius: 50%;
+    background: var(--mc-navy, #0b1b33); color: #fff; font-weight: 800;
+  }
+  .pbt-section__title { margin: 0; font-size: 1.1rem; font-weight: 800; flex: 1; min-width: 0; }
+  .pbt-section__count { font-size: .8rem; font-weight: 700; padding: .2rem .65rem; border-radius: 999px; background: rgba(201,162,39,.16); }
+  @media (max-width: 860px) {
+    .mc-section > .mc-container[style*="grid-template-columns"] { grid-template-columns: 1fr !important; }
+  }
+</style>
+<script>
+// الحفاظ على موضع التمرير عند تغيير أي فلتر (الصفحة تُعاد بطلب GET).
+(function () {
+  var KEY = 'pbt-scroll:' + location.pathname;
+  try {
+    var saved = sessionStorage.getItem(KEY);
+    if (saved !== null) {
+      sessionStorage.removeItem(KEY);
+      if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+      var y = parseInt(saved, 10) || 0;
+      window.scrollTo(0, y);
+      window.addEventListener('load', function () { window.scrollTo(0, y); });
+    }
+  } catch (e) {}
+  var form = document.getElementById('pkg-booking-filters');
+  if (!form) return;
+  function remember() {
+    try { sessionStorage.setItem(KEY, String(window.scrollY || window.pageYOffset || 0)); } catch (e) {}
+  }
+  // capture: يعمل قبل onchange="this.form.submit()" المضمّن في الحقول
+  form.addEventListener('change', remember, true);
+  form.addEventListener('submit', remember);
+  var origSubmit = form.submit;
+  form.submit = function () { remember(); return origSubmit.call(form); };
+})();
+</script>
 @if($isMixed)
 <script>
 window.__hesetakCapSubjects = function (el) {
@@ -222,6 +307,8 @@ window.__hesetakCapSubjects = function (el) {
   if (!form) return;
   var boxes = Array.prototype.slice.call(form.querySelectorAll('input[name=\"subjects[]\"]'));
   var checked = boxes.filter(function (b) { return b.checked; });
+  var counter = form.querySelector('[data-pbt-count]');
+  if (counter) counter.textContent = Math.min(checked.length, cap) + ' / ' + cap;
   if (checked.length > cap) {
     el.checked = false;
     alert({{ \Illuminate\Support\Js::from($isRtl ? 'تجاوزت الحد الأقصى لعدد المواد.' : 'Subject limit exceeded.') }});
