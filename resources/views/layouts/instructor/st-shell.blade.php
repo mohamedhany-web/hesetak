@@ -23,6 +23,7 @@
         ['route' => 'instructor.one-to-one-sessions.index', 'match' => ['instructor.one-to-one-sessions.*'], 'label' => __('instructor.private_lessons'), 'fa' => 'fas fa-chalkboard-teacher'],
         ['route' => 'instructor.one-to-one-availability.index', 'match' => ['instructor.one-to-one-availability.*'], 'label' => __('student.one_to_one_availability_title'), 'fa' => 'fas fa-calendar-week'],
         ['route' => 'instructor.free-trial-bookings.index', 'match' => ['instructor.free-trial-bookings.*'], 'label' => app()->getLocale() === 'ar' ? 'حصص مجانية' : 'Free sessions', 'fa' => 'fas fa-gift'],
+        ['route' => 'instructor.package-slot-proposals.index', 'match' => ['instructor.package-slot-proposals.*'], 'label' => app()->getLocale() === 'ar' ? 'مواعيد مقترحة' : 'Proposed times', 'fa' => 'fas fa-calendar-plus'],
         ['route' => 'instructor.calendar', 'match' => ['instructor.calendar', 'instructor.calendar.events'], 'label' => __('instructor.my_calendar'), 'fa' => 'fas fa-calendar-alt'],
         ['route' => 'instructor.live-sessions.index', 'match' => ['instructor.live-sessions.*'], 'label' => __('instructor.live_broadcast'), 'fa' => 'fas fa-broadcast-tower', 'when' => instructor_ui('show_live_broadcast', true)],
         ['route' => 'instructor.private-messages.index', 'match' => ['instructor.private-messages.*'], 'label' => __('instructor.student_messages'), 'fa' => 'fas fa-comments'],

@@ -15,6 +15,8 @@ class ServiceSessionRateService
 
     public const SOURCE_PACKAGE = 'package_fallback';
 
+    public const SOURCE_SELECTION = 'storefront_selection';
+
     /**
      * @return array{unit: float, total: float, currency: string, source: string, curriculum_type: string, academic_year_id: int|null}|null
      */
@@ -22,7 +24,14 @@ class ServiceSessionRateService
         ServicePackage $package,
         ?int $academicYearId = null,
         ?string $curriculumType = null,
+        ?int $selectedSessions = null,
+        bool $urgent = false,
     ): array {
+        $selectionQuote = $this->quoteSelection($package, $academicYearId, $curriculumType, $selectedSessions, $urgent);
+        if ($selectionQuote !== null) {
+            return $selectionQuote;
+        }
+
         $units = max(1, (int) $package->units_count);
         $currency = strtoupper((string) ($package->currencyCode() ?: config('currency.code', 'SAR')));
         if (! in_array($currency, ['SAR', 'EGP', 'USD'], true)) {
@@ -35,7 +44,7 @@ class ServiceSessionRateService
 
         $yearId = $academicYearId ?: ($package->academic_year_id ? (int) $package->academic_year_id : null);
 
-        $rate = $this->rateFor($yearId, $track, $currency);
+        $rate = $package->hasOwnStorefrontPrice() ? null : $this->rateFor($yearId, $track, $currency);
         if ($rate !== null) {
             $unit = round((float) $rate['price_per_session'], 2);
             $source = $rate['source'];
@@ -62,6 +71,50 @@ class ServiceSessionRateService
             'curriculum_type' => $track,
             'academic_year_id' => $yearId,
             'units' => $units,
+        ];
+    }
+
+    /**
+     * سعر خيار الشراء المختار (2 / 8 / مستعجلة / عدد حصص) — نفس المصدر الذي تعرضه صفحة الباقات والدفع.
+     *
+     * @return array{unit: float, total: float, currency: string, source: string, curriculum_type: string, academic_year_id: int|null, units: int}|null
+     */
+    protected function quoteSelection(
+        ServicePackage $package,
+        ?int $academicYearId,
+        ?string $curriculumType,
+        ?int $selectedSessions,
+        bool $urgent,
+    ): ?array {
+        if (! $urgent && ($selectedSessions === null || $selectedSessions < 1)) {
+            return null;
+        }
+
+        $yearId = $academicYearId ?: ($package->academic_year_id ? (int) $package->academic_year_id : null);
+        $quote = app(PricingStorefrontCatalog::class)->quoteForCheckout(
+            $package,
+            $yearId,
+            null,
+            $urgent,
+            $selectedSessions,
+        );
+        if ($quote === null || (float) $quote['total'] <= 0) {
+            return null;
+        }
+
+        $currency = strtoupper((string) ($quote['currency'] ?? ''));
+        if (! in_array($currency, ['SAR', 'EGP', 'USD'], true)) {
+            $currency = strtoupper((string) config('currency.code', 'SAR')) ?: 'SAR';
+        }
+
+        return [
+            'unit' => (float) $quote['unit'],
+            'total' => (float) $quote['total'],
+            'currency' => $currency,
+            'source' => self::SOURCE_SELECTION,
+            'curriculum_type' => $this->normalizeCurriculumType($curriculumType ?: (string) ($package->curriculum_type ?? '')) ?: 'saudi',
+            'academic_year_id' => $yearId,
+            'units' => (int) $quote['sessions'],
         ];
     }
 

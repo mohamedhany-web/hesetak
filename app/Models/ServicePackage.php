@@ -51,6 +51,9 @@ class ServicePackage extends Model
         'session_minutes',
         'duration_days',
         'price',
+        'unit_price_small',
+        'unit_price_bulk',
+        'unit_price_urgent',
         'original_price',
         'currency',
         'is_active',
@@ -70,6 +73,9 @@ class ServicePackage extends Model
             'weekly_private_sessions' => 'integer',
             'price' => 'decimal:2',
             'original_price' => 'decimal:2',
+            'unit_price_small' => 'decimal:2',
+            'unit_price_bulk' => 'decimal:2',
+            'unit_price_urgent' => 'decimal:2',
             'is_active' => 'boolean',
             'show_in_storefront' => 'boolean',
             'is_featured' => 'boolean',
@@ -353,6 +359,52 @@ class ServicePackage extends Model
         $units = max(1, (int) $this->units_count);
 
         return round((float) $this->price / $units, 2);
+    }
+
+    /**
+     * باقة مادة أنشأتها/عدّلتها الإدارة من «أسعار الواجهة» — سعرها الخاص هو المرجع
+     * (وليس مصفوفة تسعير الحصة الموحّد) حتى لا يتضارب المعروض مع المحصَّل.
+     */
+    public function hasOwnStorefrontPrice(): bool
+    {
+        return (int) $this->academic_subject_id > 0
+            && (float) $this->price > 0
+            && (int) $this->units_count > 0;
+    }
+
+    /**
+     * سعر الحصة المحدد صراحةً من الإدارة لخيار شراء: small (2 حصص) / bulk (8 حصص) / urgent (مستعجلة).
+     * null = لا يوجد سعر خاص → يُستخدم سعر الحصة العادي للباقة.
+     */
+    public function tierUnitPrice(string $kind): ?float
+    {
+        $column = match ($kind) {
+            'small' => 'unit_price_small',
+            'bulk' => 'unit_price_bulk',
+            'urgent' => 'unit_price_urgent',
+            default => null,
+        };
+        if ($column === null || ! array_key_exists($column, $this->getAttributes())) {
+            return null;
+        }
+
+        $value = $this->getAttribute($column);
+        if ($value === null || (float) $value <= 0) {
+            return null;
+        }
+
+        return round((float) $value, 2);
+    }
+
+    /** نفس tierUnitPrice لكن من عدد الحصص المختار (2 أو 8) أو الحصة المستعجلة. */
+    public function selectionUnitPrice(int $sessions, bool $urgent = false): ?float
+    {
+        return match (true) {
+            $urgent => $this->tierUnitPrice('urgent'),
+            $sessions === \App\Services\PricingStorefrontCatalog::SMALL_SESSIONS => $this->tierUnitPrice('small'),
+            $sessions === \App\Services\PricingStorefrontCatalog::BULK_SESSIONS => $this->tierUnitPrice('bulk'),
+            default => null,
+        };
     }
 
     public function packageSubjectCount(): int

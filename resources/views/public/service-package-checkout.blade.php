@@ -30,6 +30,7 @@
   $displaySessions = (int) ($checkoutQuote['sessions'] ?? $package->units_count);
   $displayUnit = isset($checkoutQuote['unit']) ? (float) $checkoutQuote['unit'] : null;
   $displayTotal = isset($checkoutQuote['total']) ? (float) $checkoutQuote['total'] : null;
+  $payAmountLabel = $displayTotal !== null ? format_money($displayTotal, 0) : $package->formattedPrice();
 @endphp
 
 @push('head')
@@ -274,7 +275,7 @@
               <div id="fawaterk-api-result" class="mc-co-alert is-info" hidden></div>
               <button type="button" id="fawaterk-api-pay-btn" class="mc-btn mc-btn--lg mc-btn--secondary mc-co-pay-btn" disabled>
                 <i class="fas fa-lock" aria-hidden="true"></i>
-                {{ $isRtl ? 'متابعة الدفع' : 'Continue payment' }} · {{ $package->formattedPrice() }}
+                {{ $isRtl ? 'متابعة الدفع' : 'Continue payment' }} · {{ $payAmountLabel }}
               </button>
             @elseif($fawaterakActive)
               <div class="mc-co-callout">
@@ -305,7 +306,7 @@
                 @endif
                 <button type="submit" class="mc-btn mc-btn--lg mc-btn--outline mc-co-pay-btn">
                   <i class="fab fa-stripe-s" aria-hidden="true"></i>
-                  {{ $isRtl ? 'الدفع عبر Stripe' : 'Pay with Stripe' }} · {{ $package->formattedPrice() }}
+                  {{ $isRtl ? 'الدفع عبر Stripe' : 'Pay with Stripe' }} · {{ $payAmountLabel }}
                 </button>
               </form>
             @endif
@@ -327,7 +328,7 @@
                 @endif
                 <button type="submit" class="mc-btn mc-btn--lg mc-btn--primary mc-co-pay-btn">
                   <i class="fas fa-credit-card" aria-hidden="true"></i>
-                  {{ $isRtl ? 'الدفع عبر NeoLeap (مدى / بطاقة)' : 'Pay with NeoLeap' }} · {{ $package->formattedPrice() }}
+                  {{ $isRtl ? 'الدفع عبر NeoLeap (مدى / بطاقة)' : 'Pay with NeoLeap' }} · {{ $payAmountLabel }}
                 </button>
               </form>
             @elseif($neoleapMis && ! $canPayOnline)
@@ -345,7 +346,7 @@
                 @csrf
                 <button type="submit" class="mc-btn mc-btn--lg mc-btn--outline mc-co-paypal">
                   <i class="fab fa-paypal" aria-hidden="true"></i>
-                  {{ $isRtl ? 'الدفع عبر PayPal' : 'Pay with PayPal' }} · {{ $package->formattedPrice() }}
+                  {{ $isRtl ? 'الدفع عبر PayPal' : 'Pay with PayPal' }} · {{ $payAmountLabel }}
                 </button>
               </form>
             @elseif(! $fawaterakActive && ! $stripeActive && $paypalMis)
@@ -361,7 +362,7 @@
                   <p>{{ $isRtl ? '1) اختر حساب حصتك المستلم من القائمة 2) حوّل المبلغ من تطبيقك البنكي 3) ارفع صورة الإيصال 4) اضغط «تأكيد التحويل والشراء».' : '1) Choose Hesetak receiving account 2) Transfer from your bank 3) Upload receipt 4) Tap Confirm transfer & purchase.' }}</p>
                 </div>
               </div>
-              <p class="mc-co-offline__pkg">{{ $package->name }} · {{ $package->formattedPrice() }}</p>
+              <p class="mc-co-offline__pkg">{{ $package->name }} · {{ $payAmountLabel }}</p>
               <form method="POST" action="{{ route('public.service-packages.store', $package) }}" enctype="multipart/form-data" x-data="{isSubmitting:false}" @submit="isSubmitting = true" class="mc-cco-manual">
                 @csrf
                 <input type="hidden" name="payment_method" value="bank_transfer">
@@ -440,7 +441,7 @@
   <div class="mc-co-dock__inner">
     <div>
       <span>{{ $package->name }}</span>
-      <strong>{{ $package->formattedPrice() }}</strong>
+      <strong>{{ $payAmountLabel }}</strong>
     </div>
     @if($canPayOnline)
       <a href="#mc-co-pay-title" class="mc-btn mc-btn--md mc-btn--secondary">{{ $isRtl ? 'إلى الدفع' : 'Go to pay' }}</a>

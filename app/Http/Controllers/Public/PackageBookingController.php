@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Services\CustomServicePackagePricingService;
 use App\Services\OneToOneAvailabilityService;
 use App\Services\PackageCart;
+use App\Services\PackageSlotProposalService;
 use App\Services\PublicInstructorDirectory;
 use App\Support\AcademicSubjectMatcher;
 use App\Support\AppTimezone;
@@ -127,8 +128,7 @@ class PackageBookingController extends Controller
             $sessions = $request->filled('sessions')
                 ? max(1, min(200, $request->integer('sessions')))
                 : ($weekly * $weeks);
-            $unit = (float) $servicePackage->pricePerUnit();
-            $total = round($unit * $sessions, 2);
+            ['unit' => $unit, 'total' => $total] = $this->selectionPricing($servicePackage, $sessions);
         }
 
         $subjectName = $subjectId
@@ -206,8 +206,7 @@ class PackageBookingController extends Controller
             $sessions = $request->filled('sessions')
                 ? max(1, min(200, $request->integer('sessions')))
                 : ($weekly * $weeks);
-            $unit = (float) $servicePackage->pricePerUnit();
-            $total = round($unit * $sessions, 2);
+            ['unit' => $unit, 'total' => $total] = $this->selectionPricing($servicePackage, $sessions);
         }
 
         $viewerTz = AppTimezone::forUser(auth()->user());
@@ -228,8 +227,20 @@ class PackageBookingController extends Controller
                 'starts_at' => $starts->toIso8601String(),
                 'label' => $local->locale(app()->getLocale())->translatedFormat('D j M، g:i').' '.$periodAr,
                 'period' => $period,
+                'date' => $local->format('Y-m-d'),
+                'date_label' => $local->locale(app()->getLocale())->translatedFormat('l j F'),
+                'time_label' => $local->format('g:i A'),
             ];
         })->values();
+
+        $slotsByDate = $slots->groupBy('date')->map(fn ($group) => [
+            'label' => $group->first()['date_label'],
+            'slots' => $group->map(fn (array $slot) => [
+                'iso' => $slot['starts_at'],
+                'time' => $slot['time_label'],
+                'period' => $slot['period'],
+            ])->values()->all(),
+        ])->all();
 
         $profile = $instructor->instructorProfile;
 
@@ -238,6 +249,7 @@ class PackageBookingController extends Controller
             'instructor' => $instructor,
             'profile' => $profile,
             'slots' => $slots,
+            'slotsByDate' => $slotsByDate,
             'yearId' => $yearId,
             'subjectId' => $subjectId,
             'weekly' => $weekly,
@@ -262,8 +274,6 @@ class PackageBookingController extends Controller
             'weekly_sessions' => $request->filled('weekly_sessions') ? $request->input('weekly_sessions') : null,
             'weeks' => $request->filled('weeks') ? $request->input('weeks') : null,
             'sessions' => $request->filled('sessions') ? $request->input('sessions') : null,
-            'propose_date' => $request->filled('propose_date') ? $request->input('propose_date') : null,
-            'propose_hour' => $request->filled('propose_hour') ? $request->input('propose_hour') : null,
         ]);
 
         $data = $request->validate([
@@ -276,10 +286,11 @@ class PackageBookingController extends Controller
             'schedule_notes' => ['nullable', 'string', 'max:1000'],
             'suggested_slots' => ['nullable', 'array'],
             'suggested_slots.*' => ['string', 'max:64'],
-            'propose_date' => ['nullable', 'date'],
-            'propose_hour' => ['nullable', 'integer', 'min:1', 'max:12'],
-            'propose_minute' => ['nullable', 'in:00,15,30,45'],
-            'propose_period' => ['nullable', 'in:AM,PM'],
+            'proposed' => ['nullable', 'array', 'max:'.PackageSlotProposalService::MAX_SLOTS],
+            'proposed.*.date' => ['nullable', 'date'],
+            'proposed.*.hour' => ['nullable', 'integer', 'min:1', 'max:12'],
+            'proposed.*.minute' => ['nullable', 'in:00,15,30,45'],
+            'proposed.*.period' => ['nullable', 'in:AM,PM'],
         ]);
 
         $weekly = (int) ($data['weekly_sessions'] ?? 2);
@@ -287,18 +298,20 @@ class PackageBookingController extends Controller
         $sessions = (int) ($data['sessions'] ?? ($weekly * $weeks));
 
         $notes = trim((string) ($data['schedule_notes'] ?? ''));
-        $picked = collect($data['suggested_slots'] ?? [])->filter()->take(12)->values()->all();
+        $viewerTz = AppTimezone::forUser(auth()->user());
+        $picked = collect($data['suggested_slots'] ?? [])->filter()->take(PackageSlotProposalService::MAX_SLOTS)
+            ->map(fn ($iso) => $this->formatSlotForNotes((string) $iso, $viewerTz))
+            ->filter()
+            ->all();
         if ($picked !== []) {
-            $notes = trim($notes."\nمواعيد مختارة: ".implode(', ', $picked));
+            $notes = trim($notes."\nمواعيد مختارة: ".implode(' ، ', $picked));
         }
-        if (! empty($data['propose_date']) && ! empty($data['propose_hour']) && ! empty($data['propose_period'])) {
-            $notes = trim($notes.sprintf(
-                "\nموعد مقترح: %s %d:%s %s",
-                $data['propose_date'],
-                (int) $data['propose_hour'],
-                $data['propose_minute'] ?? '00',
-                $data['propose_period']
-            ));
+        $proposedLabels = PackageSlotProposalService::parseCustomSlots($data['proposed'] ?? [], $viewerTz)
+            ->map(fn ($slot) => $this->formatSlotForNotes($slot->toIso8601String(), $viewerTz))
+            ->filter()
+            ->all();
+        if ($proposedLabels !== []) {
+            $notes = trim($notes."\nمواعيد مقترحة: ".implode(' ، ', $proposedLabels));
         }
 
         $subjectId = isset($data['subject_id']) ? (int) $data['subject_id'] : null;
@@ -328,6 +341,35 @@ class PackageBookingController extends Controller
         return redirect()
             ->route('public.package-cart.index')
             ->with('success', 'أُضيفت الباقة إلى السلة.');
+    }
+
+    /**
+     * سعر الحصة والإجمالي لعدد حصص مختار: سعر الإدارة لـ 2/8 إن وُجد، وإلا سعر الباقة.
+     *
+     * @return array{unit: float, total: float}
+     */
+    private function selectionPricing(ServicePackage $package, int $sessions): array
+    {
+        $tierUnit = $package->selectionUnitPrice($sessions);
+        if ($tierUnit !== null) {
+            return ['unit' => $tierUnit, 'total' => round($tierUnit * $sessions, 2)];
+        }
+
+        $unit = (float) $package->pricePerUnit();
+        $total = $sessions === (int) $package->units_count
+            ? round((float) $package->price, 2)
+            : round($unit * $sessions, 2);
+
+        return ['unit' => $unit, 'total' => $total];
+    }
+
+    private function formatSlotForNotes(string $iso, string $timezone): ?string
+    {
+        try {
+            return Carbon::parse($iso)->timezone($timezone)->format('Y-m-d g:i A');
+        } catch (\Throwable) {
+            return null;
+        }
     }
 
     public function cart(): View

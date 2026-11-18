@@ -45,7 +45,7 @@ class PackageCart
         }
 
         $sessions = max(1, (int) ($item['sessions'] ?? $package->units_count ?: 1));
-        $unit = (float) $package->pricePerUnit();
+        $unit = $package->selectionUnitPrice($sessions) ?? (float) $package->pricePerUnit();
         $total = round($unit * $sessions, 2);
         if ((float) $package->price > 0 && (int) $package->units_count > 0 && empty($item['sessions'])) {
             $total = (float) $package->price;

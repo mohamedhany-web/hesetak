@@ -9,6 +9,14 @@
         'live' => 'border-emerald-100 bg-emerald-50 text-emerald-700',
         'active' => 'border-line bg-accent-soft text-accent',
         'inactive' => 'border-line bg-canvas text-muted',
+        'expired' => 'border-rose-100 bg-rose-50 text-rose-700',
+        'scheduled' => 'border-amber-100 bg-amber-50 text-amber-700',
+    ];
+    $pageLabels = [
+        'home' => 'الرئيسية',
+        'pricing' => 'الأسعار /pricing',
+        'courses' => 'الكورسات /courses',
+        'package_teachers' => 'صفحة معلمي الباقة',
     ];
 @endphp
 
@@ -48,6 +56,7 @@
                     <tr>
                         <th class="px-4 py-3 text-start font-medium">العنوان</th>
                         <th class="px-4 py-3 text-start font-medium">مقتطف النص</th>
+                        <th class="px-4 py-3 text-start font-medium">الصفحة</th>
                         <th class="px-4 py-3 text-start font-medium">الفترة</th>
                         <th class="px-4 py-3 text-start font-medium">عدد الظهور/زائر</th>
                         <th class="px-4 py-3 text-start font-medium">الحالة</th>
@@ -60,9 +69,12 @@
                             if ($ad->is_active && $ad->starts_at <= now() && $ad->ends_at >= now()) {
                                 $statusKey = 'live';
                                 $statusLabel = 'يعرض الآن';
+                            } elseif ($ad->is_active && $ad->ends_at < now()) {
+                                $statusKey = 'expired';
+                                $statusLabel = 'منتهي — جدّد الفترة ليظهر';
                             } elseif ($ad->is_active) {
-                                $statusKey = 'active';
-                                $statusLabel = 'نشط';
+                                $statusKey = 'scheduled';
+                                $statusLabel = 'مجدول';
                             } else {
                                 $statusKey = 'inactive';
                                 $statusLabel = 'معطل';
@@ -71,6 +83,7 @@
                         <tr class="hover:bg-canvas/60">
                             <td class="px-4 py-3 font-semibold text-ink">{{ $ad->title }}</td>
                             <td class="max-w-[200px] truncate px-4 py-3 text-muted">{{ Str::limit(strip_tags($ad->body ?? ''), 50) }}</td>
+                            <td class="px-4 py-3 text-muted">{{ $pageLabels[$ad->page_key ?: 'home'] ?? $ad->page_key }}</td>
                             <td class="px-4 py-3 tabular-nums text-muted">{{ $ad->starts_at->format('Y-m-d') }} ← → {{ $ad->ends_at->format('Y-m-d') }}</td>
                             <td class="px-4 py-3 tabular-nums text-ink">{{ $ad->max_views_per_visitor }}</td>
                             <td class="px-4 py-3">

@@ -63,6 +63,11 @@
                     <span class="{{ $labelClass }}">الحد الافتراضي لكل طالب</span>
                     <input type="number" min="0" max="50" name="default_limit" value="{{ old('default_limit', $trialCreditDefault ?? 1) }}" class="{{ $fieldClass }}" required>
                 </label>
+                <label class="block">
+                    <span class="{{ $labelClass }}">مدة الحصة التجريبية (دقيقة)</span>
+                    <input type="number" min="5" max="180" name="duration_minutes" value="{{ old('duration_minutes', $trialDurationMinutes ?? 20) }}" class="{{ $fieldClass }}" required>
+                    <span class="mt-1 block text-[11px] text-muted">تُطبَّق على الحجوزات الجديدة (الافتراضي 20 دقيقة).</span>
+                </label>
             </div>
             @if(!empty($trialCreditPackages))
                 <div class="overflow-x-auto rounded-xl border border-line">

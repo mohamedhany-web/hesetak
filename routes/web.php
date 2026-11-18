@@ -494,6 +494,7 @@ Route::post('/service-packages/custom/orders/{order}/fawaterak/pay', [\App\Http\
     ->name('public.service-packages.custom.fawaterak.pay');
 Route::get('/service-packages/{servicePackage}/teachers', [\App\Http\Controllers\Public\PackageBookingController::class, 'teachers'])->name('public.package-booking.teachers');
 Route::get('/service-packages/{servicePackage}/teachers/{instructor}', [\App\Http\Controllers\Public\PackageBookingController::class, 'slots'])->name('public.package-booking.slots');
+Route::post('/service-packages/{servicePackage}/propose-slots', [\App\Http\Controllers\Public\PackageSlotProposalController::class, 'store'])->name('public.package-booking.propose');
 Route::post('/service-packages/{servicePackage}/cart', [\App\Http\Controllers\Public\PackageBookingController::class, 'addToCart'])->name('public.package-booking.add-cart');
 Route::get('/package-cart', [\App\Http\Controllers\Public\PackageBookingController::class, 'cart'])->name('public.package-cart.index');
 Route::post('/package-cart/remove', [\App\Http\Controllers\Public\PackageBookingController::class, 'removeFromCart'])->name('public.package-cart.remove');
@@ -2336,6 +2337,8 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::get('/free-trial-bookings/{freeTrialBooking}', [\App\Http\Controllers\Instructor\FreeTrialBookingController::class, 'show'])->name('free-trial-bookings.show');
         Route::post('/free-trial-bookings/{freeTrialBooking}/accept', [\App\Http\Controllers\Instructor\FreeTrialBookingController::class, 'accept'])->name('free-trial-bookings.accept');
         Route::post('/free-trial-bookings/{freeTrialBooking}/reject', [\App\Http\Controllers\Instructor\FreeTrialBookingController::class, 'reject'])->name('free-trial-bookings.reject');
+        Route::get('/package-slot-proposals', [\App\Http\Controllers\Instructor\PackageSlotProposalController::class, 'index'])->name('package-slot-proposals.index');
+        Route::post('/package-slot-proposals/{proposal}/respond', [\App\Http\Controllers\Instructor\PackageSlotProposalController::class, 'respond'])->name('package-slot-proposals.respond');
 
         Route::get('/private-messages', [\App\Http\Controllers\Instructor\PrivateMessagesController::class, 'index'])->name('private-messages.index');
         Route::get('/private-messages/with/{student}', [\App\Http\Controllers\Instructor\PrivateMessagesController::class, 'openWith'])->name('private-messages.with');

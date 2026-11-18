@@ -18,6 +18,13 @@
         <a href="{{ route('admin.service-packages.index') }}" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl border border-line bg-surface px-4 text-sm">باقات الحصص</a>
     </section>
 
+    <div class="rounded-2xl border border-line bg-canvas-muted px-4 py-3 text-sm text-muted">
+        <strong class="text-ink">أي سعر يُعتمد؟</strong>
+        بطاقات المواد في <a href="{{ route('admin.pricing-storefront.index') }}" class="font-semibold text-accent underline">أسعار الواجهة</a>
+        تُسعَّر من باقة المادة نفسها (سعر الحصة + أسعار 2 / 8 / المستعجلة) وهو المعروض والمحصَّل.
+        هذه المصفوفة تُستخدم فقط للباقات التي ليس لها سعر خاص من «أسعار الواجهة».
+    </div>
+
     @if(session('success'))
         <div class="rounded-2xl border border-line bg-surface px-4 py-3 text-sm text-ink">{{ session('success') }}</div>
     @endif

@@ -119,6 +119,31 @@
                            value="{{ old('duration_days', $pkg->duration_days ?? 60) }}">
                 </div>
             </div>
+
+            <div class="border-t border-line pt-5">
+                <h4 class="text-sm font-semibold text-ink">سعر الحصة حسب نوع الشراء (اختياري)</h4>
+                <p class="mt-1 text-xs text-muted">
+                    حدّد سعر الحصة الواحدة لكل خيار يظهر للزائر في صفحة الباقات. اترك الخانة فارغة ليُحسب الخيار تلقائياً من «سعر الحصة» أعلاه وقواعد الخصم.
+                    السعر المدخل هنا هو نفسه المعروض والمحصَّل في الدفع.
+                </p>
+                <div class="mt-4 grid gap-5 md:grid-cols-3">
+                    <div>
+                        <label class="{{ $label }}" for="unit_price_small">سعر الحصة — باقة 2 حصص</label>
+                        <input id="unit_price_small" type="number" step="0.01" min="0" name="unit_price_small" class="{{ $field }}"
+                               value="{{ old('unit_price_small', $pkg->unit_price_small ?? '') }}" placeholder="تلقائي">
+                    </div>
+                    <div>
+                        <label class="{{ $label }}" for="unit_price_bulk">سعر الحصة — باقة 8 حصص</label>
+                        <input id="unit_price_bulk" type="number" step="0.01" min="0" name="unit_price_bulk" class="{{ $field }}"
+                               value="{{ old('unit_price_bulk', $pkg->unit_price_bulk ?? '') }}" placeholder="تلقائي">
+                    </div>
+                    <div>
+                        <label class="{{ $label }}" for="unit_price_urgent">سعر الحصة المستعجلة</label>
+                        <input id="unit_price_urgent" type="number" step="0.01" min="0" name="unit_price_urgent" class="{{ $field }}"
+                               value="{{ old('unit_price_urgent', $pkg->unit_price_urgent ?? '') }}" placeholder="تلقائي">
+                    </div>
+                </div>
+            </div>
         </article>
         <script>
             (function () {

@@ -89,6 +89,7 @@ class FreeTrialBookingController extends Controller
             'stats' => $stats,
             'goalOptions' => FreeTrialBooking::goalOptions(),
             'trialCreditDefault' => FreeTrialCreditSettings::defaultLimit(),
+            'trialDurationMinutes' => FreeTrialCreditSettings::durationMinutes(),
             'trialCreditPackages' => FreeTrialCreditSettings::packageLimitRows(),
         ]);
     }
@@ -97,11 +98,13 @@ class FreeTrialBookingController extends Controller
     {
         $data = $request->validate([
             'default_limit' => ['required', 'integer', 'min:0', 'max:50'],
+            'duration_minutes' => ['required', 'integer', 'min:5', 'max:180'],
             'package_limits' => ['nullable', 'array'],
             'package_limits.*' => ['nullable', 'integer', 'min:0', 'max:50'],
         ]);
 
         FreeTrialCreditSettings::setDefaultLimit((int) $data['default_limit']);
+        FreeTrialCreditSettings::setDurationMinutes((int) $data['duration_minutes']);
         foreach (($data['package_limits'] ?? []) as $packageId => $limit) {
             $pid = (int) $packageId;
             if ($pid <= 0) {

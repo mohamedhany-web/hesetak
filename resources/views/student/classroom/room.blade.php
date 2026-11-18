@@ -2845,10 +2845,13 @@
                     mxGracefulEndMeeting('انتهت المدة المسموح بها — جاري حفظ التسجيل وإنهاء الاجتماع');
                     return;
                 }
-                var mins = Math.floor(diff / 60000);
-                var secs = Math.floor((diff % 60000) / 1000);
-                var fullText = 'الوقت المتبقي: ' + mins + ':' + String(secs).padStart(2, '0');
-                var shortText = mins + ':' + String(secs).padStart(2, '0');
+                var totalSecs = Math.floor(diff / 1000);
+                var hrs = Math.floor(totalSecs / 3600);
+                var mins = Math.floor((totalSecs % 3600) / 60);
+                var secs = totalSecs % 60;
+                var clock = hrs + ':' + String(mins).padStart(2, '0') + ':' + String(secs).padStart(2, '0');
+                var fullText = 'الوقت المتبقي: ' + clock;
+                var shortText = clock;
                 if (timerChip) timerChip.textContent = fullText;
                 if (timerChipMobile) timerChipMobile.textContent = shortText;
             }

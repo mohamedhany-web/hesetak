@@ -363,7 +363,16 @@ class ClassroomController extends Controller
         // العدّ التنازلي: لا نطرد أحداً لأن started_at أُحرق بدخول مبكر.
         // للحصص 1:1 نفضّل scheduled_for كنقطة أساس عند وجودها.
         $isLinkedOneToOne = filled($meeting->one_to_one_session_id);
-        if ($isLinkedOneToOne && $meeting->scheduled_for) {
+        $meetingStartsAt = null;
+        $isTrialSession = $isLinkedOneToOne && (bool) ($meeting->oneToOneSession?->is_complimentary ?? false);
+        if ($isTrialSession && ! $canManageMeeting && $meeting->scheduled_for) {
+            // الحصة التجريبية: عدّاد ثابت من وقت البدء الفعلي إلى نهاية المدة — لا يُعاد ضبطه عند تحديث الصفحة.
+            $meetingStartsAt = $meeting->scheduled_for->copy();
+            if ($meeting->started_at && $meeting->started_at->gt($meetingStartsAt)) {
+                $meetingStartsAt = $meeting->started_at->copy();
+            }
+            $meetingEndsAt = $meetingStartsAt->copy()->addMinutes($effectiveDurationMinutes);
+        } elseif ($isLinkedOneToOne && $meeting->scheduled_for) {
             $anchor = $meeting->scheduled_for->copy();
             if ($meeting->started_at && $meeting->started_at->gt($anchor)) {
                 $anchor = $meeting->started_at->copy();
@@ -427,6 +436,8 @@ class ClassroomController extends Controller
                 'maxDurationMinutes',
                 'effectiveDurationMinutes',
                 'meetingEndsAt',
+                'meetingStartsAt',
+                'isTrialSession',
                 'useInstructorRoutes',
                 'canManageMeeting',
                 'enableSilentAutoRecording',

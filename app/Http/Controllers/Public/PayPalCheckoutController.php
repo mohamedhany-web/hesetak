@@ -111,10 +111,13 @@ class PayPalCheckoutController extends Controller
         $yearId = $request->filled('academic_year_id') ? $request->integer('academic_year_id') : null;
         $subjectId = $request->filled('academic_subject_id') ? $request->integer('academic_subject_id') : null;
         $curriculumType = $request->input('curriculum_type');
+        $selection = \App\Support\PackageCheckoutSelection::recall((int) $servicePackage->id);
         $quote = app(\App\Services\ServiceSessionRateService::class)->quotePackage(
             $servicePackage,
             $yearId,
             is_string($curriculumType) ? $curriculumType : null,
+            $selection['sessions'],
+            $selection['urgent'],
         );
 
         if ((float) $quote['total'] < 0.01) {
@@ -142,6 +145,7 @@ class PayPalCheckoutController extends Controller
             $meta = array_merge($meta, [
                 'quoted_unit_price' => $quote['unit'],
                 'quoted_total' => $quote['total'],
+                'quoted_sessions' => ($quote['source'] ?? null) === \App\Services\ServiceSessionRateService::SOURCE_SELECTION ? ($quote['units'] ?? null) : null,
                 'curriculum_type' => $quote['curriculum_type'],
                 'academic_year_id' => $quote['academic_year_id'] ?? $yearId,
                 'academic_subject_id' => $subjectId ?: ($meta['academic_subject_id'] ?? $servicePackage->academic_subject_id),
@@ -167,6 +171,8 @@ class PayPalCheckoutController extends Controller
                 'academic_year_id' => $yearId,
                 'academic_subject_id' => $subjectId,
                 'curriculum_type' => is_string($curriculumType) ? $curriculumType : null,
+                'sessions' => $selection['sessions'],
+                'urgent' => $selection['urgent'],
             ]);
         }
 

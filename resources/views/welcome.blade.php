@@ -32,6 +32,9 @@
     <meta name="theme-color" content="#1E4E8C">
     <link rel="stylesheet" href="{{ route('assets.landing.css', ['sheet' => 'mycourses']) }}?v={{ $mcVer }}">
     <link rel="stylesheet" href="{{ route('assets.landing.css', ['sheet' => 'meras-shop']) }}?v={{ $shopVer }}">
+    {{-- أيقونات Font Awesome (زر واتساب العائم) — نفس تحميل بقية الصفحات --}}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" media="print" onload="this.media='all'">
+    <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"></noscript>
     @include('partials.figma-capture-head')
 </head>
 <body class="mc-body mc-body--shop">

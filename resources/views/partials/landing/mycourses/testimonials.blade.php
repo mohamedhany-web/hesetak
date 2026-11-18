@@ -29,7 +29,7 @@
           @if($t->isImageType() && $photo)
             <blockquote class="mc-quote mc-quote--image">
               <div class="mc-quote__media">
-                <img src="{{ $photo }}" alt="{{ $name }}" width="640" height="480" loading="lazy" decoding="async">
+                <img src="{{ $photo }}" alt="{{ $name }}" width="640" height="480" loading="eager" decoding="async">
               </div>
               <div class="mc-quote__who">
                 <strong>{{ $name }}</strong>
@@ -41,7 +41,7 @@
               <p>“{{ $body }}”</p>
               <div class="mc-quote__who">
                 @if($photo)
-                  <img class="mc-quote__avatar mc-quote__avatar--img" src="{{ $photo }}" width="42" height="42" alt="" loading="lazy">
+                  <img class="mc-quote__avatar mc-quote__avatar--img" src="{{ $photo }}" width="42" height="42" alt="" loading="eager">
                 @else
                   <span class="mc-quote__avatar" aria-hidden="true">{{ $initial }}</span>
                 @endif

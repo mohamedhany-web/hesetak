@@ -159,6 +159,7 @@
             var roomExitUrl = @json($roomExitUrl);
             var roomStatusUrl = @json($roomStatusUrl);
             var meetingEndsAt = {!! json_encode(optional($meetingEndsAt ?? null)->toIso8601String()) !!};
+            var meetingStartsAt = {!! json_encode(optional($meetingStartsAt ?? null)->toIso8601String()) !!};
             var timerChip = document.getElementById('meeting-timer-chip');
             var timerChipMobile = document.getElementById('meeting-timer-chip-mobile');
             var curriculumStateUrl = @json($curriculumStateUrl);
@@ -191,23 +192,34 @@
                 setTimeout(function () { window.location.href = roomExitUrl; }, 5500);
             }
 
+            function formatClock(totalSeconds) {
+                var h = Math.floor(totalSeconds / 3600);
+                var m = Math.floor((totalSeconds % 3600) / 60);
+                var sec = totalSeconds % 60;
+                return h + ':' + String(m).padStart(2, '0') + ':' + String(sec).padStart(2, '0');
+            }
+
             function tickMeetingTimer() {
                 if (sessionEnded) return;
                 if (!meetingEndsAt) return;
-                var end = new Date(meetingEndsAt).getTime();
-                var diff = end - Date.now();
-                if (diff <= 0) {
+                var now = Date.now();
+                if (meetingStartsAt) {
+                    var untilStart = Math.ceil((new Date(meetingStartsAt).getTime() - now) / 1000);
+                    if (untilStart > 0) {
+                        if (timerChip) timerChip.textContent = 'تبدأ الحصة بعد: ' + formatClock(untilStart);
+                        if (timerChipMobile) timerChipMobile.textContent = formatClock(untilStart);
+                        return;
+                    }
+                }
+                var left = Math.ceil((new Date(meetingEndsAt).getTime() - now) / 1000);
+                if (left <= 0) {
                     if (timerChip) timerChip.textContent = 'انتهت المدة المخططة — بانتظار إنهاء المضيف';
                     if (timerChipMobile) timerChipMobile.textContent = 'انتهت المدة';
                     // لا نطرد الطالب تلقائياً من العدّاد فقط — الإغلاق الرسمي عبر roomStatus.ended
                     return;
                 }
-                var mins = Math.floor(diff / 60000);
-                var secs = Math.floor((diff % 60000) / 1000);
-                var fullText = 'الوقت المتبقي: ' + mins + ':' + String(secs).padStart(2, '0');
-                var shortText = mins + ':' + String(secs).padStart(2, '0');
-                if (timerChip) timerChip.textContent = fullText;
-                if (timerChipMobile) timerChipMobile.textContent = shortText;
+                if (timerChip) timerChip.textContent = 'الوقت المتبقي: ' + formatClock(left);
+                if (timerChipMobile) timerChipMobile.textContent = formatClock(left);
             }
             setInterval(tickMeetingTimer, 1000);
             tickMeetingTimer();

@@ -15,7 +15,8 @@ use InvalidArgumentException;
 
 class FreeTrialBookingService
 {
-    public const DURATION_MINUTES = 20;
+    /** القيمة الافتراضية فقط — المدة الفعلية من FreeTrialCreditSettings::durationMinutes(). */
+    public const DURATION_MINUTES = FreeTrialCreditSettings::DEFAULT_DURATION_MINUTES;
 
     /**
      * مواعيد المعلم الفاضية من جدوله الخاص (ليس نوافذ إدارة عامة).
@@ -46,7 +47,7 @@ class FreeTrialBookingService
 
         $from = ($from ?? now())->copy();
         $to = ($to ?? now()->addDays(14))->copy()->endOfDay();
-        $duration = self::DURATION_MINUTES;
+        $duration = FreeTrialCreditSettings::durationMinutes();
         $clockTz = AppTimezone::forInstructorId($instructorId);
         $viewerTz = AppTimezone::normalize($viewerTimezone) ?? AppTimezone::forUser(auth()->user());
         $locale = app()->getLocale();
@@ -102,7 +103,7 @@ class FreeTrialBookingService
             ?? AppTimezone::timezoneForUsState($data['us_state'] ?? null)
             ?? AppTimezone::academy();
 
-        $duration = self::DURATION_MINUTES;
+        $duration = FreeTrialCreditSettings::durationMinutes();
         $starts = null;
         if (! empty($data['starts_at'])) {
             $starts = AppTimezone::parseAppointmentInput((string) $data['starts_at'], $viewerTz);
@@ -223,6 +224,10 @@ class FreeTrialBookingService
         if ($requirePackage && ! StudentEntitlementService::hasActivePrivatePackage((int) $student->id)) {
             throw new InvalidArgumentException('الحصة المجانية متاحة فقط للطلاب المشتركين في باقة.');
         }
+        // حجز الطالب لنفسه يلتزم بحد الحصص التجريبية المضبوط من الإدارة (الافتراضي: حصة واحدة).
+        if (! $bookedBy || (int) $bookedBy->id === (int) $student->id) {
+            FreeTrialCreditSettings::assertStudentMayBook($student);
+        }
 
         $viewerTz = AppTimezone::normalize($data['timezone'] ?? null)
             ?? AppTimezone::forUser($student);
@@ -237,8 +242,8 @@ class FreeTrialBookingService
         $starts = $starts->utc()->startOfMinute();
 
         $duration = isset($data['duration_minutes'])
-            ? max(15, min(self::DURATION_MINUTES, (int) $data['duration_minutes']))
-            : self::DURATION_MINUTES;
+            ? max(5, min(FreeTrialCreditSettings::durationMinutes(), (int) $data['duration_minutes']))
+            : FreeTrialCreditSettings::durationMinutes();
         $requireAvailability = array_key_exists('require_availability', $data)
             ? (bool) $data['require_availability']
             : true;
@@ -369,7 +374,7 @@ class FreeTrialBookingService
 
         $duration = isset($data['duration_minutes'])
             ? max(15, min(180, (int) $data['duration_minutes']))
-            : max(15, (int) ($booking->duration_minutes ?: self::DURATION_MINUTES));
+            : max(15, (int) ($booking->duration_minutes ?: FreeTrialCreditSettings::durationMinutes()));
 
         $notes = isset($data['notes']) ? trim((string) $data['notes']) : null;
         if ($notes === '') {

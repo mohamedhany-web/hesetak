@@ -131,6 +131,9 @@ class PricingStorefrontController extends Controller
             'units_count' => ['required', 'integer', 'min:1', 'max:500'],
             'session_minutes' => ['required', 'integer', 'min:15', 'max:240'],
             'duration_days' => ['nullable', 'integer', 'min:1', 'max:730'],
+            'unit_price_small' => ['nullable', 'numeric', 'min:0'],
+            'unit_price_bulk' => ['nullable', 'numeric', 'min:0'],
+            'unit_price_urgent' => ['nullable', 'numeric', 'min:0'],
             'is_active' => ['nullable', 'boolean'],
             'show_in_storefront' => ['nullable', 'boolean'],
             'subject_visible' => ['nullable', 'boolean'],
@@ -174,6 +177,14 @@ class PricingStorefrontController extends Controller
             'currency' => (string) config('currency.code', 'SAR'),
             'is_active' => $request->boolean('is_active'),
         ];
+        if (Schema::hasColumn('service_packages', 'unit_price_small')) {
+            foreach (['unit_price_small', 'unit_price_bulk', 'unit_price_urgent'] as $tierColumn) {
+                $tierValue = $data[$tierColumn] ?? null;
+                $payload[$tierColumn] = is_numeric($tierValue) && (float) $tierValue > 0
+                    ? round((float) $tierValue, 2)
+                    : null;
+            }
+        }
         if (Schema::hasColumn('service_packages', 'show_in_storefront')) {
             $payload['show_in_storefront'] = $request->boolean('show_in_storefront');
         }

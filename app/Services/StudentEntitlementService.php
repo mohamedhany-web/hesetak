@@ -36,7 +36,14 @@ class StudentEntitlementService
         $subjectId = isset($context['academic_subject_id']) ? (int) $context['academic_subject_id'] : null;
         $curriculumType = isset($context['curriculum_type']) ? (string) $context['curriculum_type'] : null;
 
-        $quote = app(ServiceSessionRateService::class)->quotePackage($package, $yearId ?: null, $curriculumType);
+        $selectedSessions = isset($context['sessions']) ? (int) $context['sessions'] : null;
+        $quote = app(ServiceSessionRateService::class)->quotePackage(
+            $package,
+            $yearId ?: null,
+            $curriculumType,
+            $selectedSessions,
+            (bool) ($context['urgent'] ?? false),
+        );
         // لا نثق بـ quoted_* من العميل — السعر دائماً من الخادم
         $amount = (float) $quote['total'];
         $unit = (float) $quote['unit'];
@@ -52,6 +59,7 @@ class StudentEntitlementService
         $meta = array_filter([
             'quoted_unit_price' => $unit,
             'quoted_total' => $amount,
+            'quoted_sessions' => $quote['source'] === ServiceSessionRateService::SOURCE_SELECTION ? ($quote['units'] ?? null) : null,
             'curriculum_type' => $quote['curriculum_type'],
             'academic_year_id' => $quote['academic_year_id'] ?? $yearId,
             'academic_subject_id' => $subjectId ?: $package->academic_subject_id,
@@ -214,10 +222,12 @@ class StudentEntitlementService
             if ($package->isPremier()) {
                 $entitlement = self::grantPremierPlan((int) $order->user_id, $package, (int) $order->id);
             } else {
+                $quotedSessions = (int) data_get($order->custom_package_data, 'quoted_sessions', 0);
                 $entitlement = self::grant(
                     userId: (int) $order->user_id,
                     package: $package,
                     orderId: (int) $order->id,
+                    unitsOverride: $quotedSessions > 0 && ! $package->isCommercialPlan() ? $quotedSessions : null,
                 );
             }
 

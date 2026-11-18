@@ -6,6 +6,14 @@
   $freeSlots = $bookableSlots ?? collect();
 @endphp
 
+@if(auth()->check() && \App\Services\FreeTrialCreditSettings::remainingForStudent(auth()->user()) <= 0)
+  <div class="mc-tp-free" id="mc-tp-free-used">
+    <p class="mc-tp-alert">{{ $isRtl
+      ? 'استخدمت رصيد الحصص التجريبية المسموح لحسابك. يمكنك تثبيت جدولك من رصيد باقتك.'
+      : 'You have used your allowed free trial sessions. You can lock your schedule from your package credits.' }}</p>
+  </div>
+@else
+
 <div class="mc-tp-free" id="mc-tp-free" data-instructor-id="{{ $instructorUser->id }}" data-instructor-uuid="{{ $instructorUser->uuid }}">
   <div class="mc-tp-free__head">
     <span class="mc-package__badge">{{ $isRtl ? 'بعد الاشتراك' : 'After subscribe' }}</span>
@@ -218,3 +226,4 @@
   }
 })();
 </script>
+@endif

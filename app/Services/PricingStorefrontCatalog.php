@@ -54,7 +54,23 @@ class PricingStorefrontCatalog
         $sessions = max(1, (int) ($sessionsOverride ?? $package->units_count));
         $track = (string) ($package->curriculum_type ?? '');
         $standard = $this->standardRule();
-        $baseUnit = $this->unitPriceFor($yearId, $track ?: 'saudi', $standard);
+
+        // سعر حصة محدد صراحةً لهذا الخيار (2 / 8 / مستعجلة) من إدارة الباقة — له الأولوية.
+        $tierUnit = $package->selectionUnitPrice($isUrgent ? 1 : $sessions, $isUrgent);
+        if ($tierUnit !== null) {
+            $tierSessions = $isUrgent ? 1 : $sessions;
+
+            return [
+                'sessions' => $tierSessions,
+                'unit' => $tierUnit,
+                'total' => $this->niceMoney($tierUnit * $tierSessions),
+                'currency' => (string) ($package->currencyCode() ?: platform_currency()),
+            ];
+        }
+        // نفس مرجع سعر البطاقة: سعر باقة المادة أولاً ثم مصفوفة تسعير الحصة الموحّد.
+        $baseUnit = $package->hasOwnStorefrontPrice()
+            ? $this->niceMoney($package->pricePerUnit())
+            : $this->unitPriceFor($yearId, $track ?: 'saudi', $standard);
 
         if ($baseUnit <= 0) {
             $fallback = $this->rates->quotePackage($package, $yearId, $track ?: null);
@@ -267,7 +283,7 @@ class PricingStorefrontCatalog
         $options[] = $this->optionRow(
             kind: 'bulk',
             sessions: $bulkSessions,
-            unit: $this->unitAfterDiscount($unit, $bulkSessions, $standard),
+            unit: $package?->tierUnitPrice('bulk') ?? $this->unitAfterDiscount($unit, $bulkSessions, $standard),
             currency: $currency,
             package: $package,
             yearId: $yearId,
@@ -277,16 +293,17 @@ class PricingStorefrontCatalog
         $options[] = $this->optionRow(
             kind: 'small',
             sessions: $smallSessions,
-            unit: $this->unitAfterDiscount($unit, $smallSessions, $standard),
+            unit: $package?->tierUnitPrice('small') ?? $this->unitAfterDiscount($unit, $smallSessions, $standard),
             currency: $currency,
             package: $package,
             yearId: $yearId,
             subjectId: $subjectId,
         );
 
-        if ($urgent) {
-            // سعر المستعجلة كما أدخله الأدمن في قواعد التسعير — بدون أرضية تلقائية.
-            $urgentUnit = $this->niceMoney((float) $urgent->price_per_session);
+        // سعر المستعجلة: سعر الباقة الخاص إن وُجد، وإلا قاعدة التسعير العامة — بدون أرضية تلقائية.
+        $urgentUnit = $package?->tierUnitPrice('urgent')
+            ?? ($urgent ? $this->niceMoney((float) $urgent->price_per_session) : null);
+        if ($urgentUnit !== null) {
             $options[] = $this->optionRow(
                 kind: 'urgent',
                 sessions: 1,

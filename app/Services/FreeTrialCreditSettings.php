@@ -17,6 +17,24 @@ class FreeTrialCreditSettings
 
     public const KEY_PER_PACKAGE_PREFIX = 'free_trial_credit_limit_package_';
 
+    public const KEY_DURATION_MINUTES = 'free_trial_duration_minutes';
+
+    public const DEFAULT_DURATION_MINUTES = 20;
+
+    /** مدة الحصة التجريبية بالدقائق (قابلة للتعديل من الإدارة). */
+    public static function durationMinutes(): int
+    {
+        $raw = Setting::getValue(self::KEY_DURATION_MINUTES);
+        $minutes = (int) ($raw !== null && $raw !== '' ? $raw : self::DEFAULT_DURATION_MINUTES);
+
+        return max(5, min(180, $minutes));
+    }
+
+    public static function setDurationMinutes(int $minutes): void
+    {
+        Setting::setValue(self::KEY_DURATION_MINUTES, (string) max(5, min(180, $minutes)));
+    }
+
     public static function defaultLimit(): int
     {
         $raw = Setting::getValue(self::KEY_DEFAULT_LIMIT);
