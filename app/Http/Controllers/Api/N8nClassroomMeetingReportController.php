@@ -42,6 +42,10 @@ class N8nClassroomMeetingReportController extends Controller
         $report->fill($validated);
         $report->save();
 
+        if ($report->status === 'completed') {
+            \App\Services\OneToOneSessionService::accrueEarningsForMeetingReport($report);
+        }
+
         return response()->json([
             'success' => true,
             'report_id' => $report->id,

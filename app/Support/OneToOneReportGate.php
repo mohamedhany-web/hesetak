@@ -86,6 +86,23 @@ class OneToOneReportGate
         $session->forceFill(['report_required_at' => now()])->save();
     }
 
+    /**
+     * تقرير مكتوب فعلياً (ملخص نصي مكتمل) — شرط تسجيل مستحق المعلم.
+     */
+    public static function sessionHasWrittenReport(OneToOneSession $session): bool
+    {
+        $session->loadMissing('classroomMeeting.reports');
+        $meeting = $session->classroomMeeting;
+        if (! $meeting) {
+            return false;
+        }
+
+        return ($meeting->reports ?? collect())->contains(
+            fn (ClassroomMeetingReport $report) => $report->status === 'completed'
+                && trim((string) ($report->summary ?? '')) !== ''
+        );
+    }
+
     public static function sessionHasUsableReport(OneToOneSession $session): bool
     {
         $session->loadMissing('classroomMeeting.reports');

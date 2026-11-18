@@ -5,7 +5,10 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\AgreementPayment;
 use App\Models\InstructorAgreement;
+use App\Models\OneToOneSession;
 use App\Models\User;
+use App\Services\OneToOneSessionService;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
 /**
@@ -81,13 +84,41 @@ class InstructorAccountController extends Controller
             'from_consultations' => $consultationPayments->sum('amount'),
         ];
 
+        $perSessionAgreement = OneToOneSessionService::activePerSessionAgreement((int) $instructor->id);
+        $awaitingReportSessions = OneToOneSession::query()
+            ->with(['student:id,name'])
+            ->where('instructor_id', $instructor->id)
+            ->where('status', OneToOneSession::STATUS_COMPLETED)
+            ->latest('scheduled_at')
+            ->limit(60)
+            ->get()
+            ->reject(fn (OneToOneSession $session) => OneToOneSessionService::hasAccruedEarning($session))
+            ->values();
+
         return view('admin.accounting.instructor-accounts.show', compact(
             'instructor',
             'agreements',
             'payments',
             'activationPayments',
             'consultationPayments',
-            'totals'
+            'totals',
+            'perSessionAgreement',
+            'awaitingReportSessions'
         ));
+    }
+
+    /** اعتماد مستحق حصة يدوياً (مثلاً تعذّر توليد التقرير) حسب اتفاقية المعلم. */
+    public function approveSessionEarning(User $instructor, OneToOneSession $session): RedirectResponse
+    {
+        abort_unless((int) $session->instructor_id === (int) $instructor->id, 404);
+
+        $added = OneToOneSessionService::accrueInstructorEarningWhenReported($session, true);
+
+        return back()->with(
+            $added ? 'success' : 'error',
+            $added
+                ? 'تم اعتماد مستحق الحصة حسب الاتفاقية.'
+                : 'لم يُسجَّل مستحق: تأكد من وجود اتفاقية نشطة بالجلسة وبسعر أكبر من صفر، أو أن المستحق مسجّل مسبقاً.'
+        );
     }
 }

@@ -2002,6 +2002,7 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
 
         Route::get('/accounting/instructor-accounts', [\App\Http\Controllers\Admin\InstructorAccountController::class, 'index'])->name('accounting.instructor-accounts.index');
         Route::get('/accounting/instructor-accounts/{instructor}', [\App\Http\Controllers\Admin\InstructorAccountController::class, 'show'])->name('accounting.instructor-accounts.show');
+        Route::post('/accounting/instructor-accounts/{instructor}/sessions/{session}/approve-earning', [\App\Http\Controllers\Admin\InstructorAccountController::class, 'approveSessionEarning'])->name('accounting.instructor-accounts.approve-session-earning');
 
         Route::get('/accounting/reports', [\App\Http\Controllers\Admin\AccountingReportsController::class, 'index'])->name('accounting.reports');
         Route::get('/accounting/reports/export', [\App\Http\Controllers\Admin\AccountingReportsController::class, 'export'])->name('accounting.reports.export');

@@ -66,6 +66,61 @@
         @endforeach
     </section>
 
+    @if(session('success'))
+        <div class="rounded-2xl border border-line bg-surface px-4 py-3 text-sm text-ink">{{ session('success') }}</div>
+    @endif
+    @if(session('error'))
+        <div class="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{{ session('error') }}</div>
+    @endif
+
+    <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
+        <div class="border-b border-line px-4 py-4 sm:px-5">
+            <h3 class="text-base font-semibold text-ink">مستحقات الحصص الفردية</h3>
+            <p class="mt-0.5 text-xs text-muted">
+                يُضاف رصيد المعلم تلقائياً عند اكتمال الحصة وكتابة تقريرها، بسعر الحصة في اتفاقيته النشطة (بالجلسة).
+                @if($perSessionAgreement)
+                    سعر الحصة الحالي: <strong class="text-ink">{{ number_format((float) ($perSessionAgreement->salary_per_session ?: $perSessionAgreement->rate), 2) }} {{ currency_symbol() }}</strong>
+                    — {{ $perSessionAgreement->title ?? $perSessionAgreement->agreement_number }}
+                @else
+                    <strong class="text-red-600">لا توجد اتفاقية نشطة بالجلسة لهذا المعلم — لن يُسجَّل له مستحق.</strong>
+                @endif
+            </p>
+        </div>
+        @if($awaitingReportSessions->isNotEmpty())
+            <div class="admin-table-wrap overflow-x-auto">
+                <table class="min-w-full text-sm">
+                    <thead class="border-b border-line bg-canvas/60 text-xs text-muted">
+                        <tr>
+                            <th class="px-4 py-3 text-start font-medium">الحصة</th>
+                            <th class="px-4 py-3 text-start font-medium">الطالب</th>
+                            <th class="px-4 py-3 text-start font-medium">الموعد</th>
+                            <th class="px-4 py-3 text-start font-medium">الحالة</th>
+                            <th class="px-4 py-3 text-start font-medium">إجراء</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-line">
+                        @foreach($awaitingReportSessions as $oto)
+                            <tr>
+                                <td class="px-4 py-3 font-mono text-xs text-muted">#{{ $oto->id }}</td>
+                                <td class="px-4 py-3 text-ink-soft">{{ $oto->student?->name ?? '—' }}</td>
+                                <td class="px-4 py-3 text-xs tabular-nums text-muted">{{ $oto->scheduled_at?->format('Y-m-d H:i') ?? '—' }}</td>
+                                <td class="px-4 py-3 text-xs text-muted">بانتظار تقرير الحصة — لم يُضَف المستحق بعد</td>
+                                <td class="px-4 py-3">
+                                    <form method="POST" action="{{ route('admin.accounting.instructor-accounts.approve-session-earning', [$instructor, $oto]) }}" onsubmit="return confirm('اعتماد مستحق هذه الحصة بدون تقرير؟')">
+                                        @csrf
+                                        <button type="submit" class="btn-press inline-flex h-8 items-center rounded-lg border border-line px-3 text-xs font-medium text-ink hover:border-accent/30 hover:text-accent">اعتماد يدوي</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        @else
+            <div class="px-4 py-6 text-center text-sm text-muted">لا توجد حصص مكتملة بانتظار تقرير.</div>
+        @endif
+    </article>
+
     <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
         <div class="border-b border-line px-4 py-4 sm:px-5">
             <h3 class="text-base font-semibold text-ink">الاتفاقيات</h3>

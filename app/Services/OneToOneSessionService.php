@@ -936,50 +936,96 @@ class OneToOneSessionService
                 $meeting->update(['ended_at' => now()]);
             }
 
-            self::accrueInstructorSessionEarning($session);
+            // المستحق يُسجَّل بعد كتابة تقرير الحصة فقط (راجع accrueInstructorEarningWhenReported).
+            self::accrueInstructorEarningWhenReported($session);
 
             OneToOneSessionRatingService::notifyStudentToRate($session->fresh());
         });
     }
 
     /**
-     * تسجيل مستحق المعلم من الاتفاقية النشطة عند إكمال حصة 1:1.
+     * مستحق المعلم يُسجَّل بعد إكمال الحصة **وكتابة تقريرها**، حسب اتفاقيته (سعر الحصة).
+     * $force: اعتماد يدوي من الإدارة بدون تقرير.
+     *
+     * @return bool true إن أُضيف المستحق الآن
      */
-    private static function accrueInstructorSessionEarning(OneToOneSession $session): void
+    public static function accrueInstructorEarningWhenReported(OneToOneSession $session, bool $force = false): bool
     {
-        if (! $session->instructor_id || ! \Illuminate\Support\Facades\Schema::hasTable('agreement_payments')) {
+        $session->refresh();
+        if ($session->status !== OneToOneSession::STATUS_COMPLETED) {
+            return false;
+        }
+        if (! $force && ! \App\Support\OneToOneReportGate::sessionHasWrittenReport($session)) {
+            return false;
+        }
+
+        return self::accrueInstructorSessionEarning($session);
+    }
+
+    /** عند اكتمال تقرير اجتماع: يسجَّل مستحق الحصص المكتملة المرتبطة بالاجتماع. */
+    public static function accrueEarningsForMeetingReport(\App\Models\ClassroomMeetingReport $report): void
+    {
+        if (! $report->classroom_meeting_id) {
             return;
         }
 
-        $agreement = \App\Models\InstructorAgreement::query()
+        OneToOneSession::query()
+            ->where('classroom_meeting_id', $report->classroom_meeting_id)
+            ->where('status', OneToOneSession::STATUS_COMPLETED)
+            ->get()
+            ->each(fn (OneToOneSession $session) => self::accrueInstructorEarningWhenReported($session));
+    }
+
+    public static function earningMarker(OneToOneSession $session): string
+    {
+        return 'حصة 1:1 #'.$session->id;
+    }
+
+    public static function hasAccruedEarning(OneToOneSession $session): bool
+    {
+        return \App\Models\AgreementPayment::query()
             ->where('instructor_id', $session->instructor_id)
+            ->where('type', \App\Models\AgreementPayment::TYPE_HOURLY_TEACHING)
+            ->where('description', 'like', '%'.self::earningMarker($session).'%')
+            ->exists();
+    }
+
+    /** الاتفاقية النشطة بالجلسة للمعلم (مصدر سعر الحصة). */
+    public static function activePerSessionAgreement(int $instructorId): ?\App\Models\InstructorAgreement
+    {
+        return \App\Models\InstructorAgreement::query()
+            ->where('instructor_id', $instructorId)
             ->where('status', \App\Models\InstructorAgreement::STATUS_ACTIVE)
             ->where(function ($q) {
                 $q->where('billing_type', \App\Models\InstructorAgreement::BILLING_PER_SESSION)
-                    ->orWhere('type', \App\Models\InstructorAgreement::BILLING_PER_SESSION);
+                    ->orWhereNull('billing_type');
+            })
+            // سعر حصة فقط: «سعر الساعة/الحصة» أو سعر حصة صريح — وليس راتباً شهرياً أو سعر كورس.
+            ->where(function ($q) {
+                $q->where('type', 'hourly_rate')->orWhere('salary_per_session', '>', 0);
             })
             ->latest('start_date')
             ->latest('id')
             ->first();
+    }
 
+    /**
+     * تسجيل مستحق المعلم من الاتفاقية النشطة لحصة 1:1 مكتملة.
+     */
+    private static function accrueInstructorSessionEarning(OneToOneSession $session): bool
+    {
+        if (! $session->instructor_id || ! \Illuminate\Support\Facades\Schema::hasTable('agreement_payments')) {
+            return false;
+        }
+
+        $agreement = self::activePerSessionAgreement((int) $session->instructor_id);
         if (! $agreement) {
-            return;
+            return false;
         }
 
         $amount = (float) ($agreement->salary_per_session ?: $agreement->rate ?: 0);
-        if ($amount <= 0) {
-            return;
-        }
-
-        $marker = 'حصة 1:1 #'.$session->id;
-        $exists = \App\Models\AgreementPayment::query()
-            ->where('agreement_id', $agreement->id)
-            ->where('instructor_id', $session->instructor_id)
-            ->where('type', \App\Models\AgreementPayment::TYPE_HOURLY_TEACHING)
-            ->where('description', 'like', '%'.$marker.'%')
-            ->exists();
-        if ($exists) {
-            return;
+        if ($amount <= 0 || self::hasAccruedEarning($session)) {
+            return false;
         }
 
         \App\Models\AgreementPayment::create([
@@ -988,10 +1034,12 @@ class OneToOneSessionService
             'type' => \App\Models\AgreementPayment::TYPE_HOURLY_TEACHING,
             'amount' => $amount,
             'status' => \App\Models\AgreementPayment::STATUS_APPROVED,
-            'description' => 'مستحق '.$marker.' حسب الاتفاقية',
+            'description' => 'مستحق '.self::earningMarker($session).' حسب الاتفاقية',
             'payment_date' => now(),
             'created_by' => auth()->id(),
         ]);
+
+        return true;
     }
 
     /**
