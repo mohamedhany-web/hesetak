@@ -940,6 +940,7 @@ class OneToOneSessionService
             self::accrueInstructorEarningWhenReported($session);
 
             OneToOneSessionRatingService::notifyStudentToRate($session->fresh());
+            OneToOneSessionReportService::remindInstructor($session->fresh(['student', 'instructor']));
         });
     }
 

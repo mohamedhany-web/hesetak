@@ -1006,6 +1006,8 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::get('/one-to-one-sessions/{oneToOneSession}', [\App\Http\Controllers\Student\OneToOneSessionController::class, 'show'])->name('student.one-to-one-sessions.show');
         Route::post('/one-to-one-sessions/{oneToOneSession}/book', [\App\Http\Controllers\Student\OneToOneSessionController::class, 'book'])->name('student.one-to-one-sessions.book');
         Route::post('/one-to-one-sessions/{oneToOneSession}/rate', [\App\Http\Controllers\Student\OneToOneSessionController::class, 'rate'])->name('student.one-to-one-sessions.rate');
+        Route::get('/session-reports', [\App\Http\Controllers\Student\SessionReportController::class, 'index'])->name('student.session-reports.index');
+        Route::get('/session-reports/{report}', [\App\Http\Controllers\Student\SessionReportController::class, 'show'])->name('student.session-reports.show');
         Route::post('/instructors/{instructor}/book-slot', [\App\Http\Controllers\Student\OneToOneSessionController::class, 'bookWithInstructor'])->name('student.one-to-one-sessions.book-instructor');
 
         // كورسات بريفيت — محاضرات خاصة + رسائل مع المعلم
@@ -2338,6 +2340,9 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::get('/free-trial-bookings/{freeTrialBooking}', [\App\Http\Controllers\Instructor\FreeTrialBookingController::class, 'show'])->name('free-trial-bookings.show');
         Route::post('/free-trial-bookings/{freeTrialBooking}/accept', [\App\Http\Controllers\Instructor\FreeTrialBookingController::class, 'accept'])->name('free-trial-bookings.accept');
         Route::post('/free-trial-bookings/{freeTrialBooking}/reject', [\App\Http\Controllers\Instructor\FreeTrialBookingController::class, 'reject'])->name('free-trial-bookings.reject');
+        Route::get('/session-reports', [\App\Http\Controllers\Instructor\SessionReportController::class, 'index'])->name('session-reports.index');
+        Route::get('/one-to-one-sessions/{oneToOneSession}/report', [\App\Http\Controllers\Instructor\SessionReportController::class, 'edit'])->name('session-reports.edit');
+        Route::post('/one-to-one-sessions/{oneToOneSession}/report', [\App\Http\Controllers\Instructor\SessionReportController::class, 'save'])->name('session-reports.save');
         Route::get('/package-slot-proposals', [\App\Http\Controllers\Instructor\PackageSlotProposalController::class, 'index'])->name('package-slot-proposals.index');
         Route::post('/package-slot-proposals/{proposal}/respond', [\App\Http\Controllers\Instructor\PackageSlotProposalController::class, 'respond'])->name('package-slot-proposals.respond');
 

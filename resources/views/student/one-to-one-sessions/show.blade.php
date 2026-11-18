@@ -229,6 +229,20 @@
         @endif
 
         @if($isCompleted)
+            @php $teacherReport = $session->teacherReport; @endphp
+            <section class="st-panel" style="margin-top:1rem" aria-label="{{ $isRtl ? 'تقرير الحصة' : 'Session report' }}">
+                <div class="st-section-head">
+                    <div>
+                        <h2>{{ $isRtl ? 'تقرير المعلم عن الحصة' : 'Teacher report' }}</h2>
+                        <p>{{ $teacherReport
+                            ? ($isRtl ? 'كتب لك المعلم تقريراً عن هذه الحصة.' : 'Your teacher wrote a report for this session.')
+                            : ($isRtl ? 'سيصلك تقرير المعلم هنا بعد رفعه.' : 'The teacher report will appear here once uploaded.') }}</p>
+                    </div>
+                </div>
+                @if($teacherReport)
+                    <a href="{{ route('student.session-reports.show', $teacherReport) }}" class="st-pill st-pill--solid">{{ $isRtl ? 'عرض التقرير' : 'View report' }}</a>
+                @endif
+            </section>
             <section class="st-panel" style="margin-top:1rem" aria-label="{{ $isRtl ? 'تقييم الحصة' : 'Session rating' }}">
                 <div class="st-section-head">
                     <div>

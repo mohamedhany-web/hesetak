@@ -35,7 +35,7 @@ class OneToOneSessionController extends Controller
     {
         abort_unless($oneToOneSession->student_id === auth()->id(), 403);
 
-        $with = ['course', 'instructor', 'classroomMeeting', 'enrollment'];
+        $with = ['course', 'instructor', 'classroomMeeting', 'enrollment', 'teacherReport'];
         if (OneToOneSessionRatingService::isReady()) {
             $with[] = 'rating';
         }

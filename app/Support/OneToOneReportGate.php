@@ -24,20 +24,17 @@ class OneToOneReportGate
                             ->where('scheduled_at', '<', now()->subHour());
                     });
             })
+            ->whereDoesntHave('teacherReport')
             ->where(function (Builder $q) {
-                // No meeting linked, or meeting has no usable report.
-                $q->whereNull('classroom_meeting_id')
-                    ->orWhereDoesntHave('classroomMeeting', function (Builder $m) {
-                        $m->whereHas('reports', function (Builder $r) {
-                            $r->where(function (Builder $filled) {
-                                $filled->where(function (Builder $s) {
-                                    $s->whereNotNull('summary')->where('summary', '!=', '');
-                                })->orWhere(function (Builder $t) {
-                                    $t->whereNotNull('title')->where('title', '!=', '');
-                                });
-                            });
-                        });
+                // قبل تاريخ الإلزام: يكفي تقرير الاجتماع الآلي. بعده: تقرير المعلم للطالب إلزامي.
+                $q->where(function (Builder $legacy) {
+                    $legacy->where(function (Builder $before) {
+                        $before->whereNull('scheduled_at')->orWhere('scheduled_at', '<', self::teacherReportMandatoryFrom());
                     });
+                    self::applyLacksMeetingReport($legacy);
+                })->orWhere(function (Builder $mandatory) {
+                    $mandatory->where('scheduled_at', '>=', self::teacherReportMandatoryFrom());
+                });
             });
 
         if ($instructorId) {
@@ -45,6 +42,31 @@ class OneToOneReportGate
         }
 
         return $query->orderByDesc('scheduled_at')->orderByDesc('id');
+    }
+
+    /** بداية إلزام تقرير المعلم للطالب بعد كل حصة (الحصص السابقة لا تُحجب). */
+    public static function teacherReportMandatoryFrom(): string
+    {
+        return '2026-11-19 00:00:00';
+    }
+
+    /** لا يوجد تقرير اجتماع (آلي) قابل للاستخدام. */
+    private static function applyLacksMeetingReport(Builder $query): void
+    {
+        $query->where(function (Builder $q) {
+            $q->whereNull('classroom_meeting_id')
+                ->orWhereDoesntHave('classroomMeeting', function (Builder $m) {
+                    $m->whereHas('reports', function (Builder $r) {
+                        $r->where(function (Builder $filled) {
+                            $filled->where(function (Builder $s) {
+                                $s->whereNotNull('summary')->where('summary', '!=', '');
+                            })->orWhere(function (Builder $t) {
+                                $t->whereNotNull('title')->where('title', '!=', '');
+                            });
+                        });
+                    });
+                });
+        });
     }
 
     public static function instructorHasOverdueReports(int $instructorId): bool
@@ -91,6 +113,10 @@ class OneToOneReportGate
      */
     public static function sessionHasWrittenReport(OneToOneSession $session): bool
     {
+        if ($session->teacherReport()->exists()) {
+            return true;
+        }
+
         $session->loadMissing('classroomMeeting.reports');
         $meeting = $session->classroomMeeting;
         if (! $meeting) {

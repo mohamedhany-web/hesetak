@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Collection;
 
 class OneToOneSession extends Model
@@ -49,6 +50,11 @@ class OneToOneSession extends Model
             'report_required_at' => 'datetime',
             'student_unlocked_at' => 'datetime',
         ];
+    }
+
+    public function teacherReport(): HasOne
+    {
+        return $this->hasOne(OneToOneSessionReport::class, 'one_to_one_session_id');
     }
 
     public function isComplimentary(): bool

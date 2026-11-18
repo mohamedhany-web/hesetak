@@ -169,5 +169,20 @@
             </div>
         @endif
     </section>
+
+    @if($session->status === \App\Models\OneToOneSession::STATUS_COMPLETED)
+        @php $hasTeacherReport = $session->teacherReport()->exists(); @endphp
+        <section class="id-panel" aria-label="تقرير الحصة" style="margin-top:1rem">
+            <header class="id-panel__head">
+                <div>
+                    <h2>تقرير الحصة للطالب</h2>
+                    <p class="id-panel__hint">{{ $hasTeacherReport ? 'تم إرسال التقرير للطالب.' : 'رفع التقرير إلزامي بعد كل حصة مكتملة.' }}</p>
+                </div>
+                <a href="{{ route('instructor.session-reports.edit', $session) }}" class="id-btn {{ $hasTeacherReport ? 'id-btn--outline' : 'id-btn--gold' }}">
+                    {{ $hasTeacherReport ? 'تعديل التقرير' : 'كتابة التقرير الآن' }}
+                </a>
+            </header>
+        </section>
+    @endif
 </div>
 @endsection
