@@ -32,7 +32,7 @@
         ['route' => 'student.live-sessions.index', 'match' => ['student.live-sessions.*', 'student.live-recordings.*'], 'label' => __('student_timeline.nav_live_sessions'), 'fa' => 'fas fa-broadcast-tower', 'ui' => 'show_live_broadcast'],
         ['route' => 'student.library.files', 'match' => ['student.library.home', 'student.library.files', 'student.library.materials'], 'label' => __('student_timeline.lib_files_title'), 'fa' => 'fas fa-folder-open', 'ui' => 'show_libraries'],
         ['route' => 'student.library.curriculum', 'match' => ['student.library.curriculum', 'curriculum-library.*'], 'label' => __('student_timeline.nav_library_curriculum'), 'fa' => 'fas fa-sitemap', 'ui' => 'show_libraries'],
-        ['route' => 'student.library.videos', 'match' => ['student.library.videos'], 'label' => __('student_timeline.nav_library_videos'), 'fa' => 'fas fa-film', 'ui' => 'show_libraries'],
+        ['route' => 'student.library.videos', 'match' => ['student.library.videos'], 'label' => __('student_timeline.nav_library_videos'), 'fa' => 'fas fa-film', 'ui' => 'show_library_videos'],
         ['route' => 'student.private-messages.index', 'match' => ['student.private-messages.*'], 'label' => __('student_timeline.nav_feed'), 'icon' => 'community.svg', 'ui' => 'show_classes'],
     ];
 

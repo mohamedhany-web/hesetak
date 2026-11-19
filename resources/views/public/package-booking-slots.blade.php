@@ -56,6 +56,7 @@
         <input type="hidden" name="instructor_id" value="{{ $instructor->id }}">
         @if($yearId)<input type="hidden" name="year_id" value="{{ (int) $yearId }}">@endif
         @if($subjectId)<input type="hidden" name="subject_id" value="{{ (int) $subjectId }}">@endif
+        <input type="hidden" name="curriculum_type" value="{{ $curriculum ?? '' }}">
         <input type="hidden" name="weekly_sessions" value="{{ (int) $weekly }}">
         <input type="hidden" name="weeks" value="{{ (int) $weeks }}">
         <input type="hidden" name="sessions" value="{{ (int) $sessions }}">
@@ -142,7 +143,7 @@
               <i class="fas fa-paper-plane" aria-hidden="true"></i> {{ $isRtl ? 'إرسال المواعيد للمعلم' : 'Send times to teacher' }}
             </button>
             <button type="submit" class="mc-btn mc-btn--lg mc-btn--outline">{{ $isRtl ? 'أضف للسلة وتابع' : 'Add to cart & continue' }}</button>
-            <a href="{{ route('public.package-booking.teachers', ['servicePackage' => $package->id, 'year' => $yearId, 'subject' => $subjectId, 'weekly' => $weekly, 'weeks' => $weeks]) }}" class="mc-btn mc-btn--lg mc-btn--soft">{{ $isRtl ? 'رجوع للمعلمين' : 'Back to teachers' }}</a>
+            <a href="{{ route('public.package-booking.teachers', ['servicePackage' => $package->id, 'curriculum' => $curriculum ?? '', 'year' => $yearId, 'subject' => $subjectId, 'weekly' => $weekly, 'weeks' => $weeks]) }}" class="mc-btn mc-btn--lg mc-btn--soft">{{ $isRtl ? 'رجوع للمعلمين' : 'Back to teachers' }}</a>
           </div>
         </div>
       </form>

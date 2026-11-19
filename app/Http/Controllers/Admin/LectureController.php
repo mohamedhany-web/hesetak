@@ -65,7 +65,7 @@ class LectureController extends Controller
             'teams_registration_link' => 'nullable|url',
             'teams_meeting_link' => 'nullable|url',
             'recording_url' => 'nullable|url',
-            'video_platform' => 'nullable|in:bunny',
+            'video_platform' => 'nullable|string|max:32',
             'scheduled_at' => 'required|date',
             'timezone' => AppTimezone::inputRules(),
             'duration_minutes' => 'required|integer|min:1',
@@ -79,10 +79,10 @@ class LectureController extends Controller
         ]);
 
         if (!empty($validated['recording_url'])) {
-            $validated['video_platform'] = 'bunny';
             if (!\App\Helpers\VideoHelper::isValidVideoUrl($validated['recording_url'])) {
-                return back()->withErrors(['recording_url' => 'يسمح فقط بروابط Bunny Stream (mediadelivery.net).'])->withInput();
+                return back()->withErrors(['recording_url' => 'رابط الفيديو غير صالح أو غير مدعوم (Bunny Stream أو YouTube أو Vimeo أو رابط فيديو مباشر).'])->withInput();
             }
+            $validated['video_platform'] = \App\Helpers\VideoHelper::resolvePlatform($validated['recording_url']);
         } else {
             $validated['video_platform'] = null;
         }
@@ -157,7 +157,7 @@ class LectureController extends Controller
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
             'recording_url' => 'nullable|url',
-            'video_platform' => 'nullable|in:bunny',
+            'video_platform' => 'nullable|string|max:32',
             'scheduled_at' => 'required|date',
             'timezone' => AppTimezone::inputRules(),
             'duration_minutes' => 'required|integer|min:1',
@@ -169,10 +169,10 @@ class LectureController extends Controller
         ]);
 
         if (!empty($validated['recording_url'])) {
-            $validated['video_platform'] = 'bunny';
             if (!\App\Helpers\VideoHelper::isValidVideoUrl($validated['recording_url'])) {
-                return back()->withErrors(['recording_url' => 'يسمح فقط بروابط Bunny Stream (mediadelivery.net).'])->withInput();
+                return back()->withErrors(['recording_url' => 'رابط الفيديو غير صالح أو غير مدعوم (Bunny Stream أو YouTube أو Vimeo أو رابط فيديو مباشر).'])->withInput();
             }
+            $validated['video_platform'] = \App\Helpers\VideoHelper::resolvePlatform($validated['recording_url']);
         } else {
             $validated['video_platform'] = null;
         }

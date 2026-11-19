@@ -1552,6 +1552,7 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
                 Route::post('/presign-upload', [\App\Http\Controllers\Admin\LibraryVideoController::class, 'presignUpload'])->name('presign');
                 Route::post('/complete-upload', [\App\Http\Controllers\Admin\LibraryVideoController::class, 'completeUpload'])->name('complete');
                 Route::post('/proxy-upload', [\App\Http\Controllers\Admin\LibraryVideoController::class, 'proxyUpload'])->name('proxy');
+                Route::get('/{libraryVideo}/watch', [\App\Http\Controllers\Admin\LibraryVideoController::class, 'watch'])->name('watch');
                 Route::get('/{libraryVideo}/edit', [\App\Http\Controllers\Admin\LibraryVideoController::class, 'edit'])->name('edit');
                 Route::put('/{libraryVideo}', [\App\Http\Controllers\Admin\LibraryVideoController::class, 'update'])->name('update');
                 Route::post('/{libraryVideo}/toggle', [\App\Http\Controllers\Admin\LibraryVideoController::class, 'togglePublish'])->name('toggle');

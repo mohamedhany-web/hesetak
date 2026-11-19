@@ -144,6 +144,21 @@ class VideoHelper
     }
 
     /**
+     * منصة التشغيل الفعلية: تُستنتج من الرابط أولاً (لتصحيح قيم قديمة محفوظة خطأً)، ثم القيمة المخزّنة.
+     */
+    public static function resolvePlatform(?string $url, ?string $storedPlatform = null): ?string
+    {
+        $detected = self::getVideoSource($url);
+        if (in_array($detected, ['bunny', 'youtube', 'vimeo', 'direct'], true)) {
+            return $detected;
+        }
+
+        $stored = strtolower(trim((string) $storedPlatform));
+
+        return $stored !== '' ? $stored : null;
+    }
+
+    /**
      * التحقق من صحة رابط الفيديو
      */
     public static function isValidVideoUrl($url)

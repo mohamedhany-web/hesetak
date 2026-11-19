@@ -42,6 +42,40 @@ class PricingStorefrontCatalog
     }
 
     /**
+     * سعر الحصة والإجمالي لعدد حصص مختار (أسابيع × حصص/أسبوع) — مصدر واحد لصفحات الحجز والسلة والدفع:
+     * سعر الإدارة لـ 2/8 → سعر الباقة الثابت (للعدد الأصلي/المتنوعة) → تسعير المرحلة والمنهج مع خصومات الإدارة.
+     *
+     * @return array{unit: float, total: float}
+     */
+    public function quoteForSelection(
+        ServicePackage $package,
+        int $sessions,
+        ?int $yearId = null,
+        ?int $subjectId = null,
+        ?string $curriculumType = null,
+    ): array {
+        $sessions = max(1, $sessions);
+
+        $tierUnit = $package->selectionUnitPrice($sessions);
+        if ($tierUnit !== null) {
+            return ['unit' => $tierUnit, 'total' => round($tierUnit * $sessions, 2)];
+        }
+
+        $packageUnit = (float) $package->pricePerUnit();
+        $isOriginalCount = $package->isMixedPackage() || $sessions === (int) $package->units_count;
+        if ($isOriginalCount && (float) $package->price > 0) {
+            return ['unit' => $packageUnit, 'total' => round((float) $package->price, 2)];
+        }
+
+        $quote = $this->quoteForCheckout($package, $yearId, $subjectId, false, $sessions, $curriculumType);
+        if ($quote !== null && (float) $quote['total'] > 0) {
+            return ['unit' => (float) $quote['unit'], 'total' => (float) $quote['total']];
+        }
+
+        return ['unit' => $packageUnit, 'total' => round($packageUnit * $sessions, 2)];
+    }
+
+    /**
      * @return array{sessions: int, unit: float, total: float, currency: string}|null
      */
     public function quoteForCheckout(
@@ -50,9 +84,12 @@ class PricingStorefrontCatalog
         ?int $subjectId,
         bool $isUrgent,
         ?int $sessionsOverride = null,
+        ?string $curriculumOverride = null,
     ): ?array {
         $sessions = max(1, (int) ($sessionsOverride ?? $package->units_count));
-        $track = (string) ($package->curriculum_type ?? '');
+        $track = trim((string) $curriculumOverride) !== ''
+            ? trim((string) $curriculumOverride)
+            : (string) ($package->curriculum_type ?? '');
         $standard = $this->standardRule();
 
         // سعر حصة محدد صراحةً لهذا الخيار (2 / 8 / مستعجلة) من إدارة الباقة — له الأولوية.

@@ -11,6 +11,7 @@ use App\Models\LectureWatchProgress;
 use App\Models\StudentCourseEnrollment;
 use App\Services\LectureMaterialStorage;
 use App\Services\PlatformCourseCertificateService;
+use App\Services\StudentCourseAccessService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -28,8 +29,9 @@ class MyCourseController extends Controller
         $user = \App\Support\ActiveChildContext::resolve($actor) ?? $actor;
 
         // الكورسات المفعلة للطالب (أو الابن لولي الأمر)
-        $activeCourses = $user->activeCourses()
+        $activeCourses = StudentCourseAccessService::accessibleCourses($user)
             ->with(['academicYear', 'academicSubject', 'teacher', 'lessons'])
+            ->orderByDesc('advanced_courses.id')
             ->paginate(12);
 
         // إضافة نقاط الطالب من أسئلة الفيديو لكل كورس
@@ -41,9 +43,9 @@ class MyCourseController extends Controller
 
         // إحصائيات
         $stats = [
-            'total_active' => $user->activeCourses()->count(),
+            'total_active' => StudentCourseAccessService::accessibleCourses($user)->count(),
             'total_completed' => $user->courseEnrollments()->where('status', 'completed')->count(),
-            'total_hours' => $user->activeCourses()->sum('duration_hours'),
+            'total_hours' => StudentCourseAccessService::accessibleCourses($user)->sum('duration_hours'),
             'avg_progress' => $this->calculateAverageProgress($user),
         ];
 
@@ -58,7 +60,7 @@ class MyCourseController extends Controller
         $user = Auth::user();
 
         // التحقق من أن الطالب مسجل في الكورس
-        $course = $user->activeCourses()
+        $course = StudentCourseAccessService::accessibleCourses($user)
             ->with([
                 'academicYear',
                 'academicSubject',
@@ -133,7 +135,7 @@ class MyCourseController extends Controller
         $user = Auth::user();
 
         // التحقق من أن الطالب مسجل في الكورس
-        $course = $user->activeCourses()
+        $course = StudentCourseAccessService::accessibleCourses($user)
             ->with([
                 'academicYear',
                 'academicSubject',
@@ -314,11 +316,13 @@ class MyCourseController extends Controller
     public function getLectureData($courseId, $lectureId)
     {
         $user = Auth::user();
-        $course = $user->activeCourses()->findOrFail($courseId);
+        $course = StudentCourseAccessService::accessibleCourses($user)->findOrFail($courseId);
         $lecture = $course->lectures()->findOrFail($lectureId);
 
         $recordingUrl = $lecture->recording_url ? trim($lecture->recording_url) : null;
-        $videoPlatform = $lecture->video_platform ? trim(strtolower($lecture->video_platform)) : null;
+        $videoPlatform = $recordingUrl
+            ? \App\Helpers\VideoHelper::resolvePlatform($recordingUrl, $lecture->video_platform)
+            : ($lecture->video_platform ? trim(strtolower($lecture->video_platform)) : null);
 
         if ((! $recordingUrl) && $lecture->recording_file_path) {
             $recordingUrl = route('my-courses.lectures.recording-stream', [$courseId, $lectureId]);
@@ -401,7 +405,7 @@ class MyCourseController extends Controller
     public function streamLectureRecording($courseId, $lectureId)
     {
         $user = Auth::user();
-        $course = $user->activeCourses()->findOrFail($courseId);
+        $course = StudentCourseAccessService::accessibleCourses($user)->findOrFail($courseId);
         $lecture = $course->lectures()->findOrFail($lectureId);
 
         abort_unless($lecture->recording_file_path, 404);
@@ -440,7 +444,7 @@ class MyCourseController extends Controller
     public function downloadLectureMaterial($courseId, $lectureId, $materialId)
     {
         $user = Auth::user();
-        $course = $user->activeCourses()->findOrFail($courseId);
+        $course = StudentCourseAccessService::accessibleCourses($user)->findOrFail($courseId);
         $lecture = $course->lectures()->findOrFail($lectureId);
         $material = LectureMaterial::where('lecture_id', $lecture->id)
             ->where('id', $materialId)
@@ -456,7 +460,7 @@ class MyCourseController extends Controller
     public function updateLectureProgress(Request $request, $courseId, $lectureId): JsonResponse
     {
         $user = Auth::user();
-        $course = $user->activeCourses()->findOrFail($courseId);
+        $course = StudentCourseAccessService::accessibleCourses($user)->findOrFail($courseId);
         $lecture = $course->lectures()->findOrFail($lectureId);
 
         $data = $request->validate([
@@ -506,7 +510,7 @@ class MyCourseController extends Controller
     public function submitLectureVideoQuestionAnswer(Request $request, $courseId, $lectureId, $videoQuestionId): JsonResponse
     {
         $user = Auth::user();
-        $course = $user->activeCourses()->findOrFail($courseId);
+        $course = StudentCourseAccessService::accessibleCourses($user)->findOrFail($courseId);
         $lecture = $course->lectures()->findOrFail($lectureId);
         $videoQuestion = LectureVideoQuestion::where('id', $videoQuestionId)
             ->where('lecture_id', $lecture->id)
@@ -541,7 +545,7 @@ class MyCourseController extends Controller
         $user = Auth::user();
 
         // التحقق من أن الطالب مسجل في الكورس
-        $course = $user->activeCourses()->findOrFail($courseId);
+        $course = StudentCourseAccessService::accessibleCourses($user)->findOrFail($courseId);
         $lesson = $course->lessons()->findOrFail($lessonId);
 
         // التحقق من أن الدرس نشط
@@ -593,7 +597,7 @@ class MyCourseController extends Controller
         $user = Auth::user();
 
         // التحقق من أن الطالب مسجل في الكورس
-        $course = $user->activeCourses()->findOrFail($courseId);
+        $course = StudentCourseAccessService::accessibleCourses($user)->findOrFail($courseId);
         $lesson = $course->lessons()->findOrFail($lessonId);
 
         $watchTime = (int) $request->input('watch_time', 0);
@@ -625,7 +629,7 @@ class MyCourseController extends Controller
         // تحديث التقدم الإجمالي للكورس
         $this->updateCourseProgress($user->id, $courseId);
 
-        $course = $user->activeCourses()->findOrFail($courseId);
+        $course = StudentCourseAccessService::accessibleCourses($user)->findOrFail($courseId);
         $sections = $course->activeSections()->with(['activeItems' => fn ($q) => $q->with('item')])->orderBy('order')->get();
         foreach ($sections as $section) {
             foreach ($section->activeItems as $curriculumItem) {

@@ -24,7 +24,10 @@
             ? \DB::table('lectures')->where('id', $lecture->id)->value('recording_file_path')
             : ($lecture->recording_file_path ?? null);
         $recordingUrlFinal = $recordingUrl ? trim($recordingUrl) : ($lecture->recording_url ? trim($lecture->recording_url) : null);
-        $videoPlatformFinal = $videoPlatform ? trim(strtolower($videoPlatform)) : ($lecture->video_platform ? trim(strtolower($lecture->video_platform)) : null);
+        $videoPlatformStored = $videoPlatform ? trim(strtolower($videoPlatform)) : ($lecture->video_platform ? trim(strtolower($lecture->video_platform)) : null);
+        $videoPlatformFinal = $recordingUrlFinal
+            ? \App\Helpers\VideoHelper::resolvePlatform($recordingUrlFinal, $videoPlatformStored)
+            : $videoPlatformStored;
         $recordingFileUrl = $recordingFilePath
             ? route('my-courses.lectures.recording-stream', [$course->id, $lecture->id])
             : null;
@@ -704,6 +707,14 @@ function courseFocusMode() {
                 this.showVideoPlayer = true;
                 this.currentLessonVideoUrl = lecture.recording_url;
                 let platform = (lecture.video_platform && String(lecture.video_platform).trim()) ? String(lecture.video_platform).trim().toLowerCase() : null;
+                // الرابط أدق من القيمة المخزّنة (قد تكون «bunny» لرابط YouTube)
+                const detectedFromUrl = (function (u) {
+                    if (u.includes('youtube.com') || u.includes('youtu.be')) return 'youtube';
+                    if (u.includes('vimeo.com')) return 'vimeo';
+                    if (u.includes('mediadelivery.net')) return 'bunny';
+                    return null;
+                })(lecture.recording_url);
+                if (detectedFromUrl) platform = detectedFromUrl;
                 if (!platform) {
                     const u = lecture.recording_url;
                     if (u.includes('youtube.com') || u.includes('youtu.be')) platform = 'youtube';

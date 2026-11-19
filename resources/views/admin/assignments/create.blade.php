@@ -148,8 +148,8 @@
                 <div>
                     <label class="{{ $labelClass }}" for="status">الحالة <span class="text-rose-500">*</span></label>
                     <select name="status" id="status" class="{{ $fieldClass }}">
-                        <option value="draft" {{ old('status', 'draft') == 'draft' ? 'selected' : '' }}>مسودة</option>
-                        <option value="published" {{ old('status') == 'published' ? 'selected' : '' }}>منشور</option>
+                        <option value="draft" {{ old('status', 'published') == 'draft' ? 'selected' : '' }}>مسودة</option>
+                        <option value="published" {{ old('status', 'published') == 'published' ? 'selected' : '' }}>منشور</option>
                         <option value="archived" {{ old('status') == 'archived' ? 'selected' : '' }}>مؤرشف</option>
                     </select>
                     @error('status')

@@ -104,6 +104,7 @@
                         </td>
                         <td class="px-4 py-3">
                             <div class="flex flex-wrap gap-2">
+                                <a href="{{ route('admin.libraries.videos.watch', $video) }}" class="text-accent hover:underline">مشاهدة</a>
                                 <a href="{{ route('admin.libraries.videos.edit', $video) }}" class="text-accent hover:underline">تعديل</a>
                                 <button type="submit" form="destroy-{{ $video->id }}" class="text-danger hover:underline" onclick="return confirm('حذف الفيديو؟')">حذف</button>
                             </div>

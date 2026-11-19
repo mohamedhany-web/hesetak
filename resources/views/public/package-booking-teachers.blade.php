@@ -126,9 +126,6 @@
               </select>
             @endif
           </label>
-          @if(request()->filled('sessions'))
-            <input type="hidden" name="sessions" value="{{ (int) request('sessions') }}">
-          @endif
           <div class="mc-field">
             <label>{{ $isRtl ? 'حصص / أسبوع' : 'Lessons / week' }}</label>
             <div class="mc-filters">
@@ -151,12 +148,7 @@
 
     <div>
       @if($isMixed)
-        @php
-          $visibleSubjects = $selectedSubjectIds !== []
-            ? $subjects->whereIn('id', $selectedSubjectIds)
-            : $subjects;
-        @endphp
-        @forelse($visibleSubjects->values() as $subjectIndex => $subject)
+        @forelse(($visibleSubjects ?? collect())->values() as $subjectIndex => $subject)
           @php $subjectTeachers = $teachersBySubject[(int) $subject->id] ?? collect(); @endphp
           <section class="mc-card pbt-section" id="pbt-subject-{{ (int) $subject->id }}">
             <header class="pbt-section__head">
@@ -187,7 +179,7 @@
                           @endforeach
                         </div>
                       @endif
-                      <a class="mc-btn mc-btn--md mc-btn--primary" style="margin-top:auto" href="{{ route('public.package-booking.slots', array_filter(['servicePackage' => $package->id, 'instructor' => $u, 'year' => $yearId, 'subject' => $subject->id, 'sessions' => $sessions])) }}">
+                      <a class="mc-btn mc-btn--md mc-btn--primary" style="margin-top:auto" href="{{ route('public.package-booking.slots', array_filter(['servicePackage' => $package->id, 'instructor' => $u, 'curriculum' => $curriculum, 'year' => $yearId, 'subject' => $subject->id, 'sessions' => $sessions])) }}">
                         {{ $isRtl ? 'مواعيد هذه المادة' : 'Slots for this subject' }}
                       </a>
                     </article>
@@ -222,7 +214,7 @@
                     @endforeach
                   </div>
                 @endif
-                <a class="mc-btn mc-btn--md mc-btn--primary" style="margin-top:auto" href="{{ route('public.package-booking.slots', array_filter(['servicePackage' => $package->id, 'instructor' => $u, 'year' => $yearId, 'subject' => $subjectId, 'weekly' => $weekly, 'weeks' => $weeks, 'sessions' => $sessions])) }}">
+                <a class="mc-btn mc-btn--md mc-btn--primary" style="margin-top:auto" href="{{ route('public.package-booking.slots', array_filter(['servicePackage' => $package->id, 'instructor' => $u, 'curriculum' => $curriculum, 'year' => $yearId, 'subject' => $subjectId, 'weekly' => $weekly, 'weeks' => $weeks, 'sessions' => $sessions])) }}">
                   {{ $isRtl ? 'استكشاف المواعيد' : 'Explore slots' }}
                 </a>
               </article>

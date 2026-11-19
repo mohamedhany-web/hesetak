@@ -31,6 +31,8 @@ return [
     'show_classes' => false,
     'show_live_broadcast' => false,
     'show_libraries' => false,
+    // فيديوهات المكتبة العامة: تُفتح تلقائياً عند وجود فيديو عام منشور أو باقة مكتبات (student_ui)
+    'show_library_videos' => false,
     // تُفتح تلقائياً عند hasActiveRecordedCourses() عبر student_ui()
     'show_assignments' => true,
     'show_exams' => true,

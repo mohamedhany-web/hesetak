@@ -97,6 +97,7 @@ class ServiceSessionRateService
             null,
             $urgent,
             $selectedSessions,
+            $curriculumType,
         );
         if ($quote === null || (float) $quote['total'] <= 0) {
             return null;

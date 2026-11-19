@@ -98,8 +98,8 @@
         <div class="id-field id-field--span2">
             <label for="status">{{ __('common.status') }} <span style="color:#B91C1C">*</span></label>
             <select name="status" id="status" required class="id-select">
-                <option value="draft" @selected(old('status', 'draft') === 'draft')>{{ __('instructor.draft') }}</option>
-                <option value="published" @selected(old('status') === 'published')>{{ __('instructor.published') }}</option>
+                <option value="draft" @selected(old('status', 'published') === 'draft')>{{ __('instructor.draft') }}</option>
+                <option value="published" @selected(old('status', 'published') === 'published')>{{ __('instructor.published') }}</option>
                 <option value="archived" @selected(old('status') === 'archived')>{{ __('instructor.archived') }}</option>
             </select>
             @error('status')

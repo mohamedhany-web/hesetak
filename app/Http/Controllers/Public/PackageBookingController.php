@@ -11,6 +11,7 @@ use App\Services\CustomServicePackagePricingService;
 use App\Services\OneToOneAvailabilityService;
 use App\Services\PackageCart;
 use App\Services\PackageSlotProposalService;
+use App\Services\PricingStorefrontCatalog;
 use App\Services\PublicInstructorDirectory;
 use App\Support\AcademicSubjectMatcher;
 use App\Support\AppTimezone;
@@ -50,13 +51,12 @@ class PackageBookingController extends Controller
         $isMixed = $servicePackage->isMixedPackage();
         $maxSubjects = $servicePackage->maxSelectableSubjects();
 
+        // بعد أول تغيير فلتر يصل year/curriculum في الطلب → المواد من كتالوج المنهج والمرحلة المختارين.
+        $userFiltered = $request->has('year') || $request->has('curriculum');
+        $curriculum = trim((string) $request->query('curriculum', $servicePackage->curriculum_type ?? ''));
         $yearId = $request->filled('year')
             ? $request->integer('year')
-            : ($servicePackage->academic_year_id ? (int) $servicePackage->academic_year_id : null);
-        $subjectId = $request->filled('subject')
-            ? $request->integer('subject')
-            : ($servicePackage->academic_subject_id ? (int) $servicePackage->academic_subject_id : null);
-        $curriculum = trim((string) $request->query('curriculum', $servicePackage->curriculum_type ?? ''));
+            : (! $userFiltered && $servicePackage->academic_year_id ? (int) $servicePackage->academic_year_id : null);
 
         $years = Schema::hasTable('academic_years')
             ? AcademicYear::query()
@@ -65,42 +65,32 @@ class PackageBookingController extends Controller
                 ->ordered()
                 ->get(['id', 'name', 'slug', 'curriculum_type'])
             : collect();
-        $packageSubjects = $servicePackage->relationLoaded('subjects') && $servicePackage->subjects->isNotEmpty()
-            ? $servicePackage->subjects->sortBy([['order', 'asc'], ['name', 'asc']])->values()
-            : collect(array_filter([$servicePackage->academicSubject]));
-        if ($packageSubjects->isNotEmpty()) {
-            $subjects = $packageSubjects;
-            if ($yearId) {
-                $subjects = $subjects->filter(function ($subject) use ($yearId) {
-                    if ((int) ($subject->academic_year_id ?? 0) === (int) $yearId) {
-                        return true;
-                    }
-                    if ($subject->relationLoaded('years')) {
-                        return $subject->years->contains('id', (int) $yearId);
-                    }
 
-                    return method_exists($subject, 'years')
-                        && $subject->years()->where('academic_years.id', $yearId)->exists();
-                })->values();
-            }
-            if ($curriculum !== '') {
-                $subjects = $subjects->filter(
-                    fn ($subject) => $subject->matchesCurriculumType($curriculum)
-                )->values();
-            }
-        } else {
-            $subjects = Schema::hasTable('academic_subjects')
-                ? AcademicSubject::query()
-                    ->active()
-                    ->when($yearId, fn ($q) => $q->forYear($yearId))
-                    ->when($curriculum !== '', fn ($q) => $q->forCurriculumType($curriculum))
-                    ->ordered()
-                    ->get(['id', 'name', 'slug', 'academic_year_id', 'curriculum_type'])
-                : collect();
+        $subjects = $this->subjectsForSelection($servicePackage, $yearId, $curriculum, $userFiltered);
+
+        $subjectId = $request->filled('subject')
+            ? $request->integer('subject')
+            : (! $userFiltered && $servicePackage->academic_subject_id ? (int) $servicePackage->academic_subject_id : null);
+        if ($subjectId && ! $subjects->contains('id', $subjectId)) {
+            $subjectId = null;
         }
 
+        $selectedSubjectIds = collect($request->input('subjects', []))
+            ->map(fn ($id) => (int) $id)
+            ->filter(fn ($id) => $id > 0 && $subjects->contains('id', $id))
+            ->unique()
+            ->values()
+            ->all();
+        if ($selectedSubjectIds === [] && $subjectId) {
+            $selectedSubjectIds = [$subjectId];
+        }
+
+        $visibleSubjects = $selectedSubjectIds !== []
+            ? $subjects->whereIn('id', $selectedSubjectIds)->values()
+            : ($userFiltered ? collect() : $subjects->take(24)->values());
+
         $teachersBySubject = $isMixed
-            ? $this->buildTeachersBySubject($subjects, $yearId, $curriculum)
+            ? $this->buildTeachersBySubject($visibleSubjects, $yearId, $curriculum)
             : [];
 
         $profiles = collect();
@@ -125,10 +115,8 @@ class PackageBookingController extends Controller
                 $weekly = 2;
             }
             $weeks = max(1, min(16, $weeks));
-            $sessions = $request->filled('sessions')
-                ? max(1, min(200, $request->integer('sessions')))
-                : ($weekly * $weeks);
-            ['unit' => $unit, 'total' => $total] = $this->selectionPricing($servicePackage, $sessions);
+            $sessions = $this->resolveSessionsCount($request, $weekly, $weeks);
+            ['unit' => $unit, 'total' => $total] = $this->selectionPricing($servicePackage, $sessions, $yearId, $subjectId, $curriculum);
         }
 
         $subjectName = $subjectId
@@ -149,21 +137,12 @@ class PackageBookingController extends Controller
                     : sprintf('%d حصة · %d أسبوعياً × %d أسابيع', $sessions, $weekly, $weeks))
                 : sprintf('%d sessions · %d / week × %d weeks', $sessions, $weekly, $weeks));
 
-        $selectedSubjectIds = collect($request->input('subjects', []))
-            ->map(fn ($id) => (int) $id)
-            ->filter(fn ($id) => $id > 0)
-            ->unique()
-            ->values()
-            ->all();
-        if ($selectedSubjectIds === [] && $subjectId) {
-            $selectedSubjectIds = [$subjectId];
-        }
-
         return view('public.package-booking-teachers', [
             'package' => $servicePackage,
             'displayName' => $displayName,
             'scheduleCopy' => $scheduleCopy,
-            'lockSubject' => ! $isMixed && (bool) $subjectId,
+            'lockSubject' => false,
+            'visibleSubjects' => $visibleSubjects,
             'isMixed' => $isMixed,
             'maxSubjects' => $maxSubjects,
             'teachersBySubject' => $teachersBySubject,
@@ -196,6 +175,7 @@ class PackageBookingController extends Controller
 
         $yearId = $request->integer('year') ?: null;
         $subjectId = $request->integer('subject') ?: null;
+        $curriculum = trim((string) $request->query('curriculum', ''));
         $weekly = max(1, min(6, $request->integer('weekly') ?: 2));
         $weeks = max(1, min(16, $request->integer('weeks') ?: 4));
         if ($servicePackage->isMixedPackage()) {
@@ -203,10 +183,8 @@ class PackageBookingController extends Controller
             $unit = (float) $servicePackage->pricePerUnit();
             $total = round((float) $servicePackage->price, 2);
         } else {
-            $sessions = $request->filled('sessions')
-                ? max(1, min(200, $request->integer('sessions')))
-                : ($weekly * $weeks);
-            ['unit' => $unit, 'total' => $total] = $this->selectionPricing($servicePackage, $sessions);
+            $sessions = $this->resolveSessionsCount($request, $weekly, $weeks);
+            ['unit' => $unit, 'total' => $total] = $this->selectionPricing($servicePackage, $sessions, $yearId, $subjectId, $curriculum);
         }
 
         $viewerTz = AppTimezone::forUser(auth()->user());
@@ -252,6 +230,7 @@ class PackageBookingController extends Controller
             'slotsByDate' => $slotsByDate,
             'yearId' => $yearId,
             'subjectId' => $subjectId,
+            'curriculum' => $curriculum,
             'weekly' => $weekly,
             'weeks' => $weeks,
             'sessions' => $sessions,
@@ -274,9 +253,11 @@ class PackageBookingController extends Controller
             'weekly_sessions' => $request->filled('weekly_sessions') ? $request->input('weekly_sessions') : null,
             'weeks' => $request->filled('weeks') ? $request->input('weeks') : null,
             'sessions' => $request->filled('sessions') ? $request->input('sessions') : null,
+            'curriculum_type' => $request->filled('curriculum_type') ? $request->input('curriculum_type') : null,
         ]);
 
         $data = $request->validate([
+            'curriculum_type' => ['nullable', 'string', 'max:32'],
             'year_id' => ['nullable', 'integer'],
             'subject_id' => ['nullable', 'integer'],
             'instructor_id' => ['nullable', 'integer'],
@@ -328,6 +309,7 @@ class PackageBookingController extends Controller
                 'package_id' => (int) $servicePackage->id,
                 'year_id' => isset($data['year_id']) ? (int) $data['year_id'] : null,
                 'subject_id' => $subjectId,
+                'curriculum_type' => $data['curriculum_type'] ?? null,
                 'instructor_id' => isset($data['instructor_id']) ? (int) $data['instructor_id'] : null,
                 'weekly_sessions' => $weekly,
                 'sessions' => $sessions,
@@ -344,23 +326,76 @@ class PackageBookingController extends Controller
     }
 
     /**
-     * سعر الحصة والإجمالي لعدد حصص مختار: سعر الإدارة لـ 2/8 إن وُجد، وإلا سعر الباقة.
-     *
-     * @return array{unit: float, total: float}
+     * عدد الحصص = حصص/أسبوع × الأسابيع عند تغيير أيٍّ منهما؛ وإلا العدد القادم من بطاقة الباقة (sessions).
      */
-    private function selectionPricing(ServicePackage $package, int $sessions): array
+    private function resolveSessionsCount(Request $request, int $weekly, int $weeks): int
     {
-        $tierUnit = $package->selectionUnitPrice($sessions);
-        if ($tierUnit !== null) {
-            return ['unit' => $tierUnit, 'total' => round($tierUnit * $sessions, 2)];
+        if ($request->filled('sessions') && ! $request->filled('weekly') && ! $request->filled('weeks')) {
+            return max(1, min(200, $request->integer('sessions')));
         }
 
-        $unit = (float) $package->pricePerUnit();
-        $total = $sessions === (int) $package->units_count
-            ? round((float) $package->price, 2)
-            : round($unit * $sessions, 2);
+        return max(1, min(200, $weekly * $weeks));
+    }
 
-        return ['unit' => $unit, 'total' => $total];
+    /**
+     * @return array{unit: float, total: float}
+     */
+    private function selectionPricing(ServicePackage $package, int $sessions, ?int $yearId = null, ?int $subjectId = null, ?string $curriculum = null): array
+    {
+        return app(PricingStorefrontCatalog::class)->quoteForSelection($package, $sessions, $yearId, $subjectId, $curriculum);
+    }
+
+    /**
+     * مواد الاختيار: كتالوج المنهج والمرحلة المختارين بعد الفلترة، وإلا مواد الباقة المحددة من الإدارة.
+     *
+     * @return \Illuminate\Support\Collection<int, AcademicSubject>
+     */
+    private function subjectsForSelection(ServicePackage $package, ?int $yearId, string $curriculum, bool $userFiltered)
+    {
+        if (! $userFiltered) {
+            $fromPackage = $this->packageSubjectsFor($package, $yearId, $curriculum);
+            if ($fromPackage->isNotEmpty()) {
+                return $fromPackage;
+            }
+        }
+
+        if (! Schema::hasTable('academic_subjects')) {
+            return collect();
+        }
+
+        return AcademicSubject::query()
+            ->active()
+            ->when($yearId, fn ($q) => $q->forYear($yearId))
+            ->when($curriculum !== '', fn ($q) => $q->forCurriculumType($curriculum))
+            ->ordered()
+            ->limit(200)
+            ->get(['id', 'name', 'slug', 'academic_year_id', 'curriculum_type']);
+    }
+
+    /**
+     * @return \Illuminate\Support\Collection<int, AcademicSubject>
+     */
+    private function packageSubjectsFor(ServicePackage $package, ?int $yearId, string $curriculum)
+    {
+        $subjects = $package->relationLoaded('subjects') && $package->subjects->isNotEmpty()
+            ? $package->subjects->sortBy([['order', 'asc'], ['name', 'asc']])->values()
+            : collect(array_filter([$package->academicSubject]));
+
+        if ($yearId) {
+            $subjects = $subjects->filter(function ($subject) use ($yearId) {
+                if ((int) ($subject->academic_year_id ?? 0) === $yearId) {
+                    return true;
+                }
+
+                return method_exists($subject, 'years')
+                    && $subject->years()->where('academic_years.id', $yearId)->exists();
+            });
+        }
+        if ($curriculum !== '') {
+            $subjects = $subjects->filter(fn ($subject) => $subject->matchesCurriculumType($curriculum));
+        }
+
+        return $subjects->values();
     }
 
     private function formatSlotForNotes(string $iso, string $timezone): ?string

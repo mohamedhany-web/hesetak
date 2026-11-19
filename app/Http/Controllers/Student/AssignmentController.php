@@ -7,6 +7,7 @@ use App\Models\Assignment;
 use App\Models\AssignmentSubmission;
 use App\Support\ActiveChildContext;
 use App\Services\AssignmentFileStorage;
+use App\Services\StudentCourseAccessService;
 use Illuminate\Filesystem\AwsS3V3Adapter;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -48,11 +49,7 @@ class AssignmentController extends Controller
         }
 
         $courseIds = $user->courseEnrollments()->pluck('advanced_course_id')
-            ->merge(
-                \App\Models\OneToOneSession::query()
-                    ->where('student_id', $user->id)
-                    ->pluck('advanced_course_id')
-            )
+            ->merge(StudentCourseAccessService::courseIds($user))
             ->filter()
             ->unique()
             ->values();
@@ -436,7 +433,7 @@ class AssignmentController extends Controller
         $user = Auth::user();
         $courseId = $assignment->advanced_course_id ?? $assignment->course_id;
 
-        if (! $courseId || ! $user->isEnrolledIn($courseId)) {
+        if (! StudentCourseAccessService::canAccessCourse($user, $courseId)) {
             abort(403);
         }
 

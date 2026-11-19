@@ -7,6 +7,7 @@ use App\Models\LibraryVideo;
 use App\Models\StudentServiceEntitlement;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Schema;
 
 /**
@@ -56,8 +57,35 @@ class LibraryFolderAccessService
             return self::canAccessFolder($user, $video->folder);
         }
 
-        // فيديو عام بدون مجلد: ضمن باقة المكتبات فقط
-        return self::hasAnyLibraryEntitlement($user);
+        // فيديو عام منشور بدون مجلد: متاح لكل الطلاب (التقييد بالباقة يتم عبر مجلد «يتطلب باقة»)
+        return true;
+    }
+
+    /**
+     * هل يوجد فيديو عام منشور متاح بلا باقة (بدون مجلد أو داخل مجلد مجاني)؟ — لإظهار تبويب الفيديوهات للطلاب.
+     */
+    public static function hasPublicVideos(): bool
+    {
+        if (! Schema::hasTable('library_videos')) {
+            return false;
+        }
+
+        return Cache::remember('library.has_public_videos', 60, function (): bool {
+            return LibraryVideo::query()
+                ->published()
+                ->where(function (Builder $audience) {
+                    $audience->where('audience', LibraryVideo::AUDIENCE_GENERAL)->orWhereNull('audience');
+                })
+                ->where(function (Builder $folder) {
+                    $folder->whereNull('library_folder_id')
+                        ->orWhereIn('library_folder_id', LibraryFolder::query()
+                            ->active()
+                            ->whereNull('instructor_id')
+                            ->where('requires_library_entitlement', false)
+                            ->select('id'));
+                })
+                ->exists();
+        });
     }
 
     /**
@@ -198,10 +226,8 @@ class LibraryFolderAccessService
                             $folderQ->whereRaw('1 = 0');
                         }
 
-                        // بدون مجلد: يتطلب باقة مكتبات
-                        if ($hasLibraryEntitlement) {
-                            $folderQ->orWhereNull('library_folder_id');
-                        }
+                        // بدون مجلد: متاح لكل الطلاب
+                        $folderQ->orWhereNull('library_folder_id');
                     });
                 });
 

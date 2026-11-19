@@ -148,7 +148,7 @@ class LibraryFolderController extends Controller
 
         $slug = trim((string) ($data['slug'] ?? ''));
         if ($slug === '') {
-            $slug = Str::slug($data['name_en'] ?? $data['name_ar']) ?: ('folder-'.Str::random(6));
+            $slug = LibraryFolder::uniqueSlugFor($data['name_en'] ?? $data['name_ar'], $folder?->id);
         }
 
         $theme = $data['content_theme'] ?? \App\Support\FamilyLibraryThemes::GENERAL;
@@ -168,7 +168,7 @@ class LibraryFolderController extends Controller
             'academic_year_id' => $data['academic_year_id'] ?? null,
             'kind' => $data['kind'],
             'content_theme' => $theme,
-            'requires_library_entitlement' => $request->boolean('requires_library_entitlement', true),
+            'requires_library_entitlement' => $request->boolean('requires_library_entitlement'),
         ];
     }
 }

@@ -9,6 +9,7 @@ use App\Models\LibraryFolder;
 use App\Models\OneToOneSession;
 use App\Services\LectureMaterialStorage;
 use App\Services\LibraryFolderAccessService;
+use App\Services\StudentCourseAccessService;
 use App\Services\StudentScheduleService;
 use App\Support\FamilyLibraryThemes;
 use App\Helpers\VideoHelper;
@@ -24,9 +25,9 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class StudentHomeExtrasController extends Controller
 {
-    private function denyLegacyLibraries(): ?RedirectResponse
+    private function denyLegacyLibraries(string $uiKey = 'show_libraries'): ?RedirectResponse
     {
-        if (student_ui('show_libraries')) {
+        if (student_ui($uiKey)) {
             return null;
         }
 
@@ -101,7 +102,7 @@ class StudentHomeExtrasController extends Controller
 
         if (Schema::hasTable('student_course_enrollments') && Schema::hasTable('advanced_courses')) {
             try {
-                $curriculumCourseCount = $user->activeCourses()->count();
+                $curriculumCourseCount = StudentCourseAccessService::courseIds($user)->count();
             } catch (\Throwable) {
                 $curriculumCourseCount = DB::table('student_course_enrollments')
                     ->where('user_id', $user->id)
@@ -670,7 +671,7 @@ class StudentHomeExtrasController extends Controller
 
     public function videos(Request $request): View|RedirectResponse
     {
-        if ($deny = $this->denyLegacyLibraries()) {
+        if ($deny = $this->denyLegacyLibraries('show_library_videos')) {
             return $deny;
         }
 
@@ -885,10 +886,7 @@ class StudentHomeExtrasController extends Controller
         $private = collect();
 
         if ($canCourses && Schema::hasTable('lectures') && Schema::hasTable('student_course_enrollments')) {
-            $courseIds = DB::table('student_course_enrollments')
-                ->where('user_id', $user->id)
-                ->when(Schema::hasColumn('student_course_enrollments', 'status'), fn ($query) => $query->where('status', 'active'))
-                ->pluck('advanced_course_id');
+            $courseIds = StudentCourseAccessService::courseIds($user);
 
             if ($courseIds->isNotEmpty()) {
                 $courseLectures = Lecture::query()

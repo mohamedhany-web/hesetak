@@ -146,6 +146,22 @@ class LibraryVideoController extends Controller
             ->with('success', 'تم إضافة فيديو عام #'.$video->id.' (يظهر للطلاب حسب باقة المكتبة).');
     }
 
+    /**
+     * معاينة الفيديو للإدارة للتأكد من أنه يعمل قبل ظهوره للطلاب.
+     */
+    public function watch(LibraryVideo $libraryVideo): View
+    {
+        $url = $libraryVideo->getUrl();
+        $embedUrl = $url ? VideoHelper::getEmbedUrl($url) : null;
+        $directUrl = $url && ! $embedUrl ? (VideoHelper::getDirectVideoUrl($url) ?: $url) : null;
+
+        return view('admin.libraries.videos.watch', [
+            'video' => $libraryVideo->loadMissing('folder'),
+            'embedUrl' => $embedUrl,
+            'directUrl' => $directUrl,
+        ]);
+    }
+
     public function edit(LibraryVideo $libraryVideo): View
     {
         return view('admin.libraries.videos.form', [

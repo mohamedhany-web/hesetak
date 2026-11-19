@@ -45,13 +45,15 @@ class PackageCart
         }
 
         $sessions = max(1, (int) ($item['sessions'] ?? $package->units_count ?: 1));
-        $unit = $package->selectionUnitPrice($sessions) ?? (float) $package->pricePerUnit();
-        $total = round($unit * $sessions, 2);
-        if ((float) $package->price > 0 && (int) $package->units_count > 0 && empty($item['sessions'])) {
-            $total = (float) $package->price;
-            $sessions = (int) $package->units_count;
-            $unit = $package->pricePerUnit();
-        }
+        $quote = app(PricingStorefrontCatalog::class)->quoteForSelection(
+            $package,
+            $sessions,
+            isset($item['year_id']) ? (int) $item['year_id'] ?: null : null,
+            isset($item['subject_id']) ? (int) $item['subject_id'] ?: null : null,
+            isset($item['curriculum_type']) ? trim((string) $item['curriculum_type']) ?: null : null,
+        );
+        $unit = $quote['unit'];
+        $total = $quote['total'];
 
         $entry = [
             'key' => uniqid('pkg_', true),

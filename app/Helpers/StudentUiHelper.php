@@ -26,6 +26,14 @@ if (! function_exists('student_ui')) {
             }
         }
 
+        if ($key === 'show_library_videos' && auth()->check()) {
+            $user = auth()->user();
+            if (\App\Services\LibraryFolderAccessService::hasPublicVideos()
+                || ($user && \App\Services\LibraryFolderAccessService::hasAnyLibraryEntitlement($user))) {
+                return true;
+            }
+        }
+
         if ($key === 'show_libraries' && auth()->check()) {
             $user = auth()->user();
             if ($user && \App\Services\LibraryFolderAccessService::hasAnyLibraryEntitlement($user)) {

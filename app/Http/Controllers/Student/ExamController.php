@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Student;
 use App\Http\Controllers\Controller;
 use App\Models\Exam;
 use App\Models\ExamAttempt;
+use App\Services\StudentCourseAccessService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -17,7 +18,7 @@ class ExamController extends Controller
     public function index()
     {
         $user = Auth::user();
-        $onlineCourseIds = $user->activeCourses()->pluck('advanced_courses.id');
+        $onlineCourseIds = StudentCourseAccessService::courseIds($user);
 
         $availableExams = Exam::whereIn('advanced_course_id', $onlineCourseIds)
             ->available()
@@ -44,7 +45,7 @@ class ExamController extends Controller
         $user = Auth::user();
 
         // التحقق من إمكانية الوصول (أونلاين)
-        $canAccess = $exam->advanced_course_id && $user->isEnrolledIn($exam->advanced_course_id);
+        $canAccess = StudentCourseAccessService::canAccessCourse($user, $exam->advanced_course_id);
         if (!$canAccess) {
             return redirect()->route('my-courses.index')
                 ->with('error', 'غير مصرح لك بالوصول لهذا الامتحان');
@@ -101,7 +102,7 @@ class ExamController extends Controller
     {
         $user = Auth::user();
 
-        $canAccess = $exam->advanced_course_id && $user->isEnrolledIn($exam->advanced_course_id);
+        $canAccess = StudentCourseAccessService::canAccessCourse($user, $exam->advanced_course_id);
         if (!$canAccess || !$exam->canAttempt($user->id)) {
             return redirect()->route('student.exams.index')
                 ->with('error', 'غير مصرح لك ببدء هذا الامتحان');

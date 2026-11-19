@@ -44,13 +44,31 @@ class LibraryFolder extends Model
     {
         static::saving(function (self $folder) {
             if (blank($folder->slug)) {
-                $base = $folder->name_en ?: $folder->name_ar;
-                $folder->slug = Str::slug($base) ?: ('folder-'.Str::random(6));
+                $folder->slug = self::uniqueSlugFor($folder->name_en ?: $folder->name_ar, $folder->id);
             }
             if (blank($folder->kind)) {
                 $folder->kind = self::KIND_VIDEOS;
             }
         });
+    }
+
+    /**
+     * slug فريد (يمنع خطأ التكرار عند تسمية مجلدين بنفس الاسم).
+     */
+    public static function uniqueSlugFor(?string $name, ?int $ignoreId = null): string
+    {
+        $base = Str::slug((string) $name) ?: 'folder';
+        $slug = $base;
+        $suffix = 2;
+
+        while (self::query()
+            ->where('slug', $slug)
+            ->when($ignoreId, fn ($q) => $q->where('id', '!=', $ignoreId))
+            ->exists()) {
+            $slug = $base.'-'.$suffix++;
+        }
+
+        return $slug;
     }
 
     public function recordings(): HasMany
