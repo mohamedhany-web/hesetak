@@ -104,15 +104,19 @@
                            class="{{ $fieldClass }}" dir="ltr">
                     @error('max_views_per_visitor')<p class="mt-1 text-xs font-medium text-danger">{{ $message }}</p>@enderror
                 </div>
-                <div>
-                    <label class="{{ $labelClass }}">الصفحة المستهدفة</label>
-                    <select name="page_key" class="{{ $fieldClass }}">
-                        @php $pk = old('page_key', $popupAd->page_key ?? 'home'); @endphp
-                        <option value="home" @selected($pk === 'home')>الرئيسية</option>
-                        <option value="pricing" @selected($pk === 'pricing')>الأسعار /pricing</option>
-                        <option value="courses" @selected($pk === 'courses')>الكورسات /courses</option>
-                        <option value="package_teachers" @selected($pk === 'package_teachers')>صفحة معلمي الباقة</option>
-                    </select>
+                <div class="sm:col-span-2">
+                    <label class="{{ $labelClass }}">الصفحات المستهدفة (يمكن اختيار أكثر من صفحة) <span class="text-danger">*</span></label>
+                    @php $selectedPages = (array) old('page_keys', $popupAd->targetPages()); @endphp
+                    <div class="flex flex-wrap gap-3">
+                        @foreach(\App\Models\PopupAd::PAGE_KEYS as $key => $label)
+                            <label class="inline-flex items-center gap-2 rounded-xl border border-line px-3 py-2 text-sm text-ink">
+                                <input type="checkbox" name="page_keys[]" value="{{ $key }}" @checked(in_array($key, $selectedPages, true))
+                                       class="size-4 rounded border-line text-accent focus:ring-accent/20">
+                                {{ $label }}
+                            </label>
+                        @endforeach
+                    </div>
+                    @error('page_keys')<p class="mt-1 text-xs font-medium text-danger">{{ $message }}</p>@enderror
                 </div>
                 <div>
                     <label class="{{ $labelClass }}">تأخير الظهور (ثوانٍ)</label>

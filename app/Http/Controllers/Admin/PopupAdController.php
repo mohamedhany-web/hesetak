@@ -29,7 +29,8 @@ class PopupAdController extends Controller
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:'.config('upload_limits.max_upload_kb'),
             'link_url' => 'nullable|url|max:500',
             'cta_text' => ['nullable', 'string', 'max:100', new \App\Rules\NoDemoPlaceholder],
-            'page_key' => 'nullable|in:home,pricing,courses,package_teachers',
+            'page_keys' => 'required|array|min:1',
+            'page_keys.*' => ['string', \Illuminate\Validation\Rule::in(array_keys(PopupAd::PAGE_KEYS))],
             'delay_seconds' => 'nullable|integer|min:0|max:600',
             'starts_at' => 'required|date',
             'duration_days' => 'required|integer|min:1|max:365',
@@ -37,6 +38,7 @@ class PopupAdController extends Controller
             'is_active' => 'boolean',
         ]);
 
+        $pageKeys = array_values(array_unique($validated['page_keys']));
         $startsAt = Carbon::parse($validated['starts_at']);
         $endsAt = $startsAt->copy()->addDays((int) $validated['duration_days']);
 
@@ -50,7 +52,8 @@ class PopupAdController extends Controller
             'image' => $imagePath,
             'link_url' => $validated['link_url'] ?? null,
             'cta_text' => $validated['cta_text'] ?? null,
-            'page_key' => $validated['page_key'] ?? PopupAd::PAGE_HOME,
+            'page_key' => $pageKeys[0],
+            'page_keys' => $pageKeys,
             'delay_seconds' => (int) ($validated['delay_seconds'] ?? 30),
             'starts_at' => $startsAt,
             'ends_at' => $endsAt,
@@ -76,7 +79,8 @@ class PopupAdController extends Controller
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:'.config('upload_limits.max_upload_kb'),
             'link_url' => 'nullable|url|max:500',
             'cta_text' => ['nullable', 'string', 'max:100', new \App\Rules\NoDemoPlaceholder],
-            'page_key' => 'nullable|in:home,pricing,courses,package_teachers',
+            'page_keys' => 'required|array|min:1',
+            'page_keys.*' => ['string', \Illuminate\Validation\Rule::in(array_keys(PopupAd::PAGE_KEYS))],
             'delay_seconds' => 'nullable|integer|min:0|max:600',
             'starts_at' => 'required|date',
             'duration_days' => 'required|integer|min:1|max:365',
@@ -84,6 +88,7 @@ class PopupAdController extends Controller
             'is_active' => 'boolean',
         ]);
 
+        $pageKeys = array_values(array_unique($validated['page_keys']));
         $startsAt = Carbon::parse($validated['starts_at']);
         $endsAt = $startsAt->copy()->addDays((int) $validated['duration_days']);
 
@@ -92,7 +97,8 @@ class PopupAdController extends Controller
             'body' => $validated['body'],
             'link_url' => $validated['link_url'] ?? null,
             'cta_text' => $validated['cta_text'] ?? null,
-            'page_key' => $validated['page_key'] ?? PopupAd::PAGE_HOME,
+            'page_key' => $pageKeys[0],
+            'page_keys' => $pageKeys,
             'delay_seconds' => (int) ($validated['delay_seconds'] ?? 30),
             'starts_at' => $startsAt,
             'ends_at' => $endsAt,

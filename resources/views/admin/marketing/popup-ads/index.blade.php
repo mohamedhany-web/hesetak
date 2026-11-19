@@ -1,7 +1,7 @@
 @extends('layouts.admin')
 
-@section('title', 'الإعلانات المنبثقة - الصفحة الرئيسية')
-@section('page_title', 'الإعلانات المنبثقة (الصفحة الرئيسية)')
+@section('title', 'الإعلانات المنبثقة')
+@section('page_title', 'الإعلانات المنبثقة')
 
 @section('content')
 @php
@@ -83,7 +83,7 @@
                         <tr class="hover:bg-canvas/60">
                             <td class="px-4 py-3 font-semibold text-ink">{{ $ad->title }}</td>
                             <td class="max-w-[200px] truncate px-4 py-3 text-muted">{{ Str::limit(strip_tags($ad->body ?? ''), 50) }}</td>
-                            <td class="px-4 py-3 text-muted">{{ $pageLabels[$ad->page_key ?: 'home'] ?? $ad->page_key }}</td>
+                            <td class="px-4 py-3 text-muted">{{ collect($ad->targetPages())->map(fn ($k) => $pageLabels[$k] ?? $k)->implode('، ') }}</td>
                             <td class="px-4 py-3 tabular-nums text-muted">{{ $ad->starts_at->format('Y-m-d') }} ← → {{ $ad->ends_at->format('Y-m-d') }}</td>
                             <td class="px-4 py-3 tabular-nums text-ink">{{ $ad->max_views_per_visitor }}</td>
                             <td class="px-4 py-3">

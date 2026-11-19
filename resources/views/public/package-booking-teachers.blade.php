@@ -19,7 +19,7 @@
       <p class="mc-eyebrow">{{ $isRtl ? 'المسار: الباقة → المعلمون' : 'Flow: package → teachers' }}</p>
       <h1>{{ $displayName ?? $package->name }}</h1>
       @if(!empty($scheduleCopy))
-        <p class="mc-lead"><strong>{{ $scheduleCopy }}</strong></p>
+        <p class="mc-lead" id="pbt-schedule"><strong>{{ $scheduleCopy }}</strong></p>
       @endif
       @if($package->description)
         <p class="mc-lead">{{ $package->description }}</p>
@@ -130,23 +130,23 @@
             <label>{{ $isRtl ? 'حصص / أسبوع' : 'Lessons / week' }}</label>
             <div class="mc-filters">
               @foreach($weeklyOptions as $opt)
-                <label class="mc-chip"><input type="radio" name="weekly" value="{{ $opt }}" @checked((int)$weekly === (int)$opt) onchange="this.form.submit()"> {{ $opt }}</label>
+                <label class="mc-chip"><input type="radio" name="weekly" value="{{ $opt }}" @checked((int)$weekly === (int)$opt) onchange="window.__pbtRefresh(this.form)"> {{ $opt }}</label>
               @endforeach
             </div>
           </div>
           <label class="mc-field">{{ $isRtl ? 'عدد الأسابيع' : 'Weeks' }}
-            <input type="number" min="1" max="16" name="weeks" value="{{ (int)$weeks }}" class="mc-input" onchange="this.form.submit()">
+            <input type="number" min="1" max="16" name="weeks" value="{{ (int)$weeks }}" class="mc-input" onchange="window.__pbtRefresh(this.form)" oninput="window.__pbtRefresh(this.form, 450)">
           </label>
         @endif
       </form>
-      <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid color-mix(in srgb, var(--mc-ink,#0b1b33) 12%, transparent)">
-        <p>{{ $isRtl ? 'الحصص' : 'Sessions' }}: <strong>{{ (int)$sessions }}</strong>@if($isMixed) <span style="opacity:.75">({{ $isRtl ? 'مثبّت من الإدارة' : 'set by admin' }})</span>@endif</p>
+      <div id="pbt-summary" style="margin-top:1rem;padding-top:1rem;border-top:1px solid color-mix(in srgb, var(--mc-ink,#0b1b33) 12%, transparent)">
+        <p>{{ $isRtl ? 'الحصص' : 'Sessions' }}: <strong data-pbt-sessions>{{ (int)$sessions }}</strong>@if($isMixed) <span style="opacity:.75">({{ $isRtl ? 'مثبّت من الإدارة' : 'set by admin' }})</span>@endif</p>
         <p>{{ $isRtl ? 'سعر الحصة' : 'Per lesson' }}: <strong>{{ format_money($unitPrice, 2) }}</strong></p>
         <p>{{ $isRtl ? 'الإجمالي' : 'Total' }}: <strong>{{ format_money($totalPrice, 2) }}</strong></p>
       </div>
     </aside>
 
-    <div>
+    <div id="pbt-main">
       @if($isMixed)
         @forelse(($visibleSubjects ?? collect())->values() as $subjectIndex => $subject)
           @php $subjectTeachers = $teachersBySubject[(int) $subject->id] ?? collect(); @endphp
@@ -288,9 +288,55 @@
   form.addEventListener('submit', remember);
   var origSubmit = form.submit;
   form.submit = function () { remember(); return origSubmit.call(form); };
+
+  // تحديث فوري لعدد الحصص الكامل والسعر والإجمالي عند تغيير حصص/أسبوع أو الأسابيع (بدون إعادة تحميل الصفحة).
+  var timer = null;
+  var seq = 0;
+  window.__pbtRefresh = function (f, delay) {
+    var params = new URLSearchParams(new FormData(f));
+    var weekly = parseInt(params.get('weekly') || '0', 10);
+    var weeks = Math.max(1, Math.min(16, parseInt(params.get('weeks') || '0', 10) || 0));
+    var counter = document.querySelector('[data-pbt-sessions]');
+    if (counter && weekly && weeks) counter.textContent = String(weekly * weeks);
+    clearTimeout(timer);
+    timer = setTimeout(function () {
+      var mine = ++seq;
+      var url = location.pathname + '?' + params.toString();
+      fetch(url, { credentials: 'same-origin', headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+        .then(function (r) { if (!r.ok) throw new Error('bad'); return r.text(); })
+        .then(function (html) {
+          if (mine !== seq) return;
+          var doc = new DOMParser().parseFromString(html, 'text/html');
+          ['pbt-schedule', 'pbt-summary', 'pbt-main'].forEach(function (id) {
+            var fresh = doc.getElementById(id), current = document.getElementById(id);
+            if (fresh && current) current.innerHTML = fresh.innerHTML;
+          });
+          history.replaceState(null, '', url);
+        })
+        .catch(function () { f.submit(); });
+    }, delay || 0);
+  };
 })();
 </script>
 @if($isMixed)
+<div id="pbt-upsell" class="pbt-upsell" role="dialog" aria-modal="true" aria-labelledby="pbt-upsell-text" hidden>
+  <div class="pbt-upsell__backdrop" data-pbt-upsell-close></div>
+  <div class="pbt-upsell__card">
+    <button type="button" class="pbt-upsell__x" data-pbt-upsell-close aria-label="{{ $isRtl ? 'إغلاق' : 'Close' }}">&times;</button>
+    <i class="fas fa-layer-group pbt-upsell__icon" aria-hidden="true"></i>
+    <p id="pbt-upsell-text" class="pbt-upsell__text">{{ $isRtl ? 'اضغط للحصول على باقة بمواد دراسية أكثر' : 'Tap to get a package with more subjects' }}</p>
+    <a class="mc-btn mc-btn--md mc-btn--primary" href="{{ route('public.pricing') }}#mc-pricing-storefront">{{ $isRtl ? 'احصل على الباقة الحين' : 'Get the package now' }}</a>
+  </div>
+</div>
+<style>
+  .pbt-upsell { position: fixed; inset: 0; z-index: 2147482000; display: flex; align-items: center; justify-content: center; padding: 1rem; }
+  .pbt-upsell[hidden] { display: none; }
+  .pbt-upsell__backdrop { position: absolute; inset: 0; background: rgba(15,23,42,.55); backdrop-filter: blur(3px); }
+  .pbt-upsell__card { position: relative; width: min(100%, 26rem); padding: 1.75rem 1.5rem; border-radius: 1.2rem; background: #fff; text-align: center; box-shadow: 0 28px 60px -24px rgba(15,23,42,.5); }
+  .pbt-upsell__x { position: absolute; top: .6rem; inset-inline-end: .7rem; width: 2.1rem; height: 2.1rem; border: 0; border-radius: 50%; background: #f1f5f9; font-size: 1.3rem; line-height: 1; cursor: pointer; }
+  .pbt-upsell__icon { font-size: 1.8rem; color: var(--mc-gold, #c9952a); margin-bottom: .6rem; }
+  .pbt-upsell__text { margin: 0 0 1.1rem; font-weight: 800; font-size: 1.05rem; line-height: 1.6; color: var(--mc-ink, #0b1b33); }
+</style>
 <script>
 window.__hesetakCapSubjects = function (el) {
   var cap = parseInt(el.getAttribute('data-subject-cap') || '0', 10);
@@ -303,9 +349,19 @@ window.__hesetakCapSubjects = function (el) {
   if (counter) counter.textContent = Math.min(checked.length, cap) + ' / ' + cap;
   if (checked.length > cap) {
     el.checked = false;
-    alert({{ \Illuminate\Support\Js::from($isRtl ? 'تجاوزت الحد الأقصى لعدد المواد.' : 'Subject limit exceeded.') }});
+    if (counter) counter.textContent = cap + ' / ' + cap;
+    var modal = document.getElementById('pbt-upsell');
+    if (modal) modal.hidden = false;
   }
 };
+(function () {
+  var modal = document.getElementById('pbt-upsell');
+  if (!modal) return;
+  modal.querySelectorAll('[data-pbt-upsell-close]').forEach(function (n) {
+    n.addEventListener('click', function () { modal.hidden = true; });
+  });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') modal.hidden = true; });
+})();
 </script>
 @endif
 @include('partials.popup-ad', ['ad' => $activePopupAd ?? null])

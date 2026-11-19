@@ -82,6 +82,9 @@ return Application::configure(basePath: dirname(__DIR__))
         // Security Headers - يجب أن يكون أول middleware
         $middleware->append(\App\Http\Middleware\SecurityHeadersMiddleware::class);
 
+        // عدّاد ظهور الإعلانات المنبثقة يُكتب من JavaScript ويُقرأ في الخادم
+        $middleware->encryptCookies(except: ['popup_ad_views']);
+
         // Webhooks / API callbacks (from external systems) should not require CSRF.
         $middleware->validateCsrfTokens(except: [
             'api/n8n/*',

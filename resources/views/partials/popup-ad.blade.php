@@ -211,11 +211,19 @@
     }
     var closeBtn = document.getElementById('popup-ad-close');
     var shown = false;
-    function markSeen() {
-        if (!adId) return;
-        var maxAge = 60 * 60 * 24;
-        document.cookie = 'popup_ad_seen=' + encodeURIComponent(adId) + '; path=/; max-age=' + maxAge + '; SameSite=Lax';
+    function readViews() {
+        var m = document.cookie.match(/(?:^|;\s*)popup_ad_views=([^;]*)/);
+        if (!m) return {};
+        try { var v = JSON.parse(decodeURIComponent(m[1])); return (v && typeof v === 'object') ? v : {}; } catch (e) { return {}; }
     }
+    // عدّاد ظهور هذا الإعلان لهذا الزائر (يُقرأ في الخادم لاختيار الإعلان التالي بعد استنفاد المرات)
+    function countView() {
+        if (!adId) return;
+        var views = readViews();
+        views[adId] = (parseInt(views[adId] || 0, 10) || 0) + 1;
+        document.cookie = 'popup_ad_views=' + encodeURIComponent(JSON.stringify(views)) + '; path=/; max-age=' + (60 * 60 * 24 * 30) + '; SameSite=Lax';
+    }
+    function markSeen() {}
     function hide() {
         markSeen();
         overlay.style.opacity = '0';
@@ -229,6 +237,7 @@
     function show() {
         if (shown) return;
         shown = true;
+        countView();
         overlay.style.display = 'flex';
         overlay.style.opacity = '1';
         overlay.style.pointerEvents = 'auto';
